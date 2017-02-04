@@ -1,0 +1,25 @@
+linuxmuster-base7 (7.0.0-3ubuntu0) lmn7-testing; urgency=low
+
+  * removed mail components.
+  * setup: added global-admin user creation.
+  * added workstation import script (linuxmuster-import-devices.py).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 04 Feb 2017 11:50:47 +0100
+
+linuxmuster-base7 (7.0.0-2ubuntu0) lmn7-testing; urgency=low
+
+  * improved handling of custom setup.ini.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 26 Jan 2017 20:55:30 +0100
+
+linuxmuster-base7 (7.0.0-1ubuntu0) lmn7-testing; urgency=low
+
+  * added -c|--config option to setup.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 26 Jan 2017 20:29:29 +0100
+
+linuxmuster-base7 (7.0.0-0ubuntu0) lmn7-testing; urgency=low
+
+  * initial release.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 09 Nov 2016 17:14:33 +0100

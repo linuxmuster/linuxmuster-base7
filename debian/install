@@ -1,0 +1,4 @@
+etc/*		etc/
+lib/*           usr/lib/linuxmuster/
+sbin/*		usr/sbin/
+share/*		usr/share/linuxmuster/

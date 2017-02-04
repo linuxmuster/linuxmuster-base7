@@ -1,0 +1,10 @@
+#
+# List of base intranet ports which are mandatory for workstation import.
+# Allowed for all intranet workstations.
+# Don't edit!
+#
+
+# protocol (tcp|udp) portlist
+
+tcp rsync,1001,2048,4013
+udp 67:69,1025:1650,4011:4013,4015,4019,4025,5000,8500:8510,9999:10500

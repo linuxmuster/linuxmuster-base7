@@ -1,0 +1,10 @@
+# define room and host access to printers
+#
+# printer name  list of rooms    list of hosts
+#
+# all hosts in room1 and room2 and host1 and host2 are allowed to access printer1
+#printer1      room1,room2      host1,host2
+#
+# only host3 is allowed to access printer2
+#printer2      -                host3
+#

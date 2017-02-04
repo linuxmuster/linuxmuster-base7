@@ -1,0 +1,13 @@
+# /etc/linuxmuster/blocked_ports
+#
+# intranet ports which can be blocked
+#
+# Note: If want to remove a port/service here, you must add it to allowed_ports
+#
+# Thomas Schmitt <thomas@linuxmuster.net>
+# 07.01.2013
+#
+
+# protocoll (udp|tcp)  list of ports/services
+
+tcp ftp-data:ssh,smtp,imaps,www,242,https

@@ -1,0 +1,14 @@
+# /etc/network/interfaces
+#
+# thomas@linuxmuster.net
+# 20160914
+#
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# source other interface definitions
+source /etc/network/interfaces.d/*

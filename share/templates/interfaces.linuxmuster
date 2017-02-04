@@ -1,0 +1,16 @@
+# /etc/network/interfaces.d/linuxmuster
+#
+# thomas@linuxmuster.net
+# 20170131
+#
+
+auto @@iface@@
+iface @@iface@@ inet static
+        address @@serverip@@
+        netmask @@netmask@@
+        network @@network@@
+        broadcast @@broadcast@@
+        gateway @@gatewayip@@
+        # dns-* options are implemented by the resolvconf package, if installed
+        dns-nameservers @@serverip@@
+        dns-search @@domainname@@

@@ -1,2 +1,2 @@
 # linuxmuster-base7
-Mangement scripts for linuxmuster.net V7
+Management scripts for linuxmuster.net V7

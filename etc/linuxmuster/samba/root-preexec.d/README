@@ -1,0 +1,15 @@
+/etc/linuxmuster/samba/root-preexec.d
+
+Shell scripts placed in this directory will be executed by
+/usr/sbin/samba-userlog via run-parts when user logs in to samba.
+
+Variables which are available during runtime:
+* USERNAME : login name of user logging in.
+* REALNAME : real name of user logging in.
+* PGROUP   : primary group of user logging in.
+* HOMEDIR  : path to user's homedir.
+* HOSTNAME : name of host from which user logs in.
+* IP       : ip address of host from which user logs in.
+
+Thomas Schmitt
+03.05.2013

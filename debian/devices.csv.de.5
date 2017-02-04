@@ -1,0 +1,152 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH WORKSTATIONS 5 "30. Oktober 2014"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+/etc/linuxmuster/devices.csv \(em Zentrale Konfigurationsdatei für den Workstationimport bei linuxmuster.net 7
+.
+.PP
+.SH ÜBERSICHT
+.
+Jede Zeile beschreibt ein Gerät (Computer, Drucker, ...)  und hat die folgende Syntax:
+.sp
+.B Raum;Hostname;Gruppe;MAC;IP;1;1;1;1;1;PXE;Optionen
+.
+.PP
+.SH BEISPIEL
+.
+r66;r66-pc03;hd;00:11:22:3A:4B:5F;10.20.66.3;1;1;1;1;1;1
+.PP
+.SH BESCHREIBUNG
+.
+Anhand der Einträge in dieser Datei werden die in der Schule vorhandenen
+Computer und sonstigen Geräte dem System bekanntgemacht.
+Dabei werden unter anderem IP-Adressen vergeben,
+Maschinenaccounts für die Domänenanmeldung sowie
+Accounts für den Klassenarbeitsmodus eingerichtet.
+Computer, die nicht in der Datei
+.B workstations
+aufgelistet sind, können nicht auf den Server zugreifen.
+.br
+Auch Drucker, Switche und andere Geräte im Schulnetz
+können hier verwaltet werden.
+.br
+Nach jeder Änderung an der Datei muss der Befehl
+.B import_workstations
+aufgerufen werden (als root).
+.br
+Zeilen, die mit einer Raute beginnen,
+werden als Kommentarzeilen aufgefasst und ignoriert.
+Achtung: Bearbeitet man die Datei über den Reiter
+.B Hosts
+in der Schulkonsole, so werden Kommentarzeilen gelöscht.
+.
+.PP
+.SH FELDER
+.
+Die Felder werden durch Strichpunkte getrennt
+und haben folgende Bedeutung:
+.TP
+.B Feld 1: Raum
+.br
+Der Name des Raumes, in dem der Rechner steht.
+Anhand dieses Namens werden die Computer in der Schulkonsole
+den Räumen zugeordnet.
+.TP
+.B Feld 2: Gruppe
+.br
+Die Rechnergruppe, zu der der Computer gehört.
+Computer in derselben Rechnergruppe erhalten
+von Linbo dasselbe Image.
+Ist eine Integration in Linbo nicht erforderlich
+(etwa für Drucker, siehe Feld
+.B PXE
+), so wird dieses Feld nicht ausgewertet.
+.TP
+.B Feld 3: Hostname
+.br
+Der eindeutige Hostname.
+Zulässige Zeichen sind Kleinbuchstaben und Ziffern
+sowie der Bindestrich
+(der nicht an erster oder letzter Stelle stehen darf).
+.TP
+.B Feld 4: MAC-Adresse
+.br
+Die MAC-Adresse im Format 01:23:45:AB:CD:EF
+(auch Kleinbuchstaben sind zulässig)
+.TP
+.B Feld 5: IP-Adresse
+.br
+Bei der Vergabe der IP-Adressen ist Folgendes zu beachten:
+.RS
+.HP 2
+\(em\ Die IP-Adresse muss eindeutig sein
+.HP 2
+\(em\ Die IP-Adresse muss in dem bei der Installation
+festgelegten Bereich liegen, etwa 10.16.x.x bis 10.31.x.x
+.HP 2
+\(em\ Keine der vier Zahlen darf 0 oder 255 sein
+.HP 2
+\(em\ Bei allen Rechnern in einem Raum müssen
+die ersten drei Zahlen übereinstimmen.
+Beispielsweise gehören alle Rechner mit einer IP-Adresse
+der Form 10.17.113.x zum selben Raum.
+.RE
+.TP
+.B Feld 6: MSOffice-Key für Reaktivierung nach Synchronisation
+.br
+Feld derzeit ungenutzt.
+.TP
+.B Feld 7: Windows-MAK- oder OEM-Key für Reaktivierung nach Synchronisation
+.br
+Feld derzeit ungenutzt.
+.TP
+.B Feld 8: Momentan unbenutzt. Für linuxmuster.net reserviert
+.br
+Für zukünftige, jetzt noch nicht vorhersehbare Angaben zum Rechner.
+.br
+Zulässige Zeichen: [0-9a-zA-Z_-.,]
+.TP
+.B Feld 9: Dauerhaft unbenutzt von linuxmuster.net
+.br
+Kann vom Netzwerkbetreuer genutzt werden.
+.br
+Zulässige Zeichen: [0-9a-zA-Z_-.,]
+.TP
+.B Feld 10: Account flag (number)
+.br
+0: Device ohne Account, mit Firewall
+.br
+1: Device ohne Account, ohne Firewall
+.br
+2-6: ???
+.TP
+.B Feld 11: PXE Flag (number)
+.br
+0: kein PXE-Boot, kein Imaging, mit Sambakonto
+.br
+1: LINBO-PXE-Boot, verwaltet von LINBO, mit Sambakonto
+.br
+2: LINBO-PXE-Boot, verwaltet von LINBO & OPSI, mit Sambakonto
+.br
+3: OPSI-PXE-Boot, verwaltet von OPSI, mit Sambakonto
+.TP
+.SH SEE ALSO
+.BR sophomorix-workstation (8),
+
+.
+.SH AUTOR
+Jörg Richter <mail@jrichter.de> und Rüdiger Beck <jeffbeck@web.de>

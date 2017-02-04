@@ -1,0 +1,9 @@
+#
+# List of allowed intranet ports.
+# Allowed only for imported workstations.
+#
+
+# protocol tcp|udp        portlist
+
+tcp domain,ldap,ldaps,ipp,auth,sunrpc,netbios-ssn,microsoft-ds,1095:1125,6881:6969,webcache
+udp domain,netbios-ns,netbios-dgm,9000:9100
