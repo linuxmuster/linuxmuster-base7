@@ -51,5 +51,8 @@ for f in os.listdir(constants.TPLDIR):
     except IOError:
         print('Cannot write ' + target)
 
+# compatibility link
+os.system('ln -sf ' + constants.WIMPORTDATA + ' ' + constants.SYSDIR + '/workstations')
+
 # start network interface
 os.system('service networking restart')

@@ -2,15 +2,18 @@
 #
 # j_linbo.py
 # thomas@linuxmuster.net
-# 20170131
+# 20170204
 #
 
 import configparser
 import constants
 import os
+import re
 
 from functions import setupComment
 from functions import backupCfg
+from functions import readTextfile
+from functions import writeTextfile
 
 print ('### ' + os.path.basename(__file__))
 
@@ -47,6 +50,29 @@ s.read(startconf)
 s.set('LINBO', 'Server', serverip)
 with open(startconf, 'w') as config:
     s.write(config)
+
+# bittorrent service
+defaultconf = '/etc/default/bittorrent'
+rc, content = readTextfile(defaultconf)
+if rc == False:
+    exit(1)
+content = re.sub(r'\nSTART_BTTRACK=.*\n', '\nSTART_BTTRACK=1\n', content, re.IGNORECASE)
+content = re.sub(r'\n[#]*ALLOWED_DIR=.*\n', '\nALLOWED_DIR=' + constants.LINBODIR + '\n', content, re.IGNORECASE)
+rc = writeTextfile(defaultconf, content, 'w')
+if rc == False:
+    exit(1)
+os.system('service bittorrent stop')
+os.system('service bittorrent start')
+
+# linbo-bittorrent service
+defaultconf = '/etc/default/linbo-bittorrent'
+rc, content = readTextfile(defaultconf)
+if rc == False:
+    exit(1)
+content = re.sub(r'\nSTART_BITTORRENT=.*\n', '\nSTART_BITTORRENT=1\n', content, re.IGNORECASE)
+rc = writeTextfile(defaultconf, content, 'w')
+if rc == False:
+    exit(1)
 
 # linbofs update
 os.system('update-linbofs')

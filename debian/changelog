@@ -1,3 +1,15 @@
+linuxmuster-base7 (7.0.0-5ubuntu0) lmn7-testing; urgency=low
+
+  * setup: added creation of sophomorix-admin user.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 04 Feb 2017 21:13:11 +0100
+
+linuxmuster-base7 (7.0.0-4ubuntu0) lmn7-testing; urgency=low
+
+  * setup: activation linbo torrent per default.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 04 Feb 2017 17:25:06 +0100
+
 linuxmuster-base7 (7.0.0-3ubuntu0) lmn7-testing; urgency=low
 
   * removed mail components.
