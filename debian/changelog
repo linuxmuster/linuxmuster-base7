@@ -1,10 +1,12 @@
 linuxmuster-base7 (7.0.0-3ubuntu0) lmn7-testing; urgency=low
 
   * removed mail components.
-  * setup: added global-admin user creation.
+  * setup:
+    - splitted samba scripts.
+    - added global-admin user creation.
   * added workstation import script (linuxmuster-import-devices.py).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 04 Feb 2017 11:50:47 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 04 Feb 2017 13:50:26 +0100
 
 linuxmuster-base7 (7.0.0-2ubuntu0) lmn7-testing; urgency=low
 
