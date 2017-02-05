@@ -2,7 +2,7 @@
 #
 # b_dialog.py
 # thomas@linuxmuster.net
-# 20170128
+# 20170205
 #
 
 import constants
@@ -16,9 +16,11 @@ from functions import isValidHostname
 from functions import isValidDomainname
 from functions import isValidHostIpv4
 from functions import isValidPassword
+from functions import printScript
 from IPy import IP
 
-print ('### ' + os.path.basename(__file__))
+printScript('', 'begin')
+printScript(os.path.basename(__file__))
 
 # get network interfaces
 iface_list, iface_default = detectedInterfaces()

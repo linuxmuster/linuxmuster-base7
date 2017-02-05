@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices.py
 # thomas@linuxmuster.net
-# 20170204
+# 20170205
 #
 
 import configparser
@@ -18,6 +18,7 @@ from functions import getGrubPart
 from functions import getStartconfOsValues
 from functions import getStartconfOption
 from functions import getStartconfPartnr
+from functions import printScript
 from functions import readTextfile
 from functions import setGlobalStartconfOption
 from functions import writeTextfile
@@ -31,15 +32,26 @@ i.read(constants.SETUPINI)
 serverip = i.get('setup', 'serverip')
 opsiip = i.get('setup', 'opsiip')
 
+# start message
+printScript(os.path.basename(__file__), 'begin')
+
 # do sophomorix-devices first
-os.system('sophomorix-device')
+msg = 'Processing sophomorix-device:'
+printScript(msg)
+result = os.system('sophomorix-device')
+msg = 'sophomorix-device finished '
+if result != 0:
+    printScript(msg + 'with errors!')
+    sys.exit(result)
+else:
+    printScript(msg + 'successfully!')
 
 # write grub cfgs
 def doGrubCfg(startconf, group, kopts):
     grubcfg = constants.LINBOGRUBDIR + '/' + group + '.cfg'
     rc, content = readTextfile(grubcfg)
     if rc == True and not constants.MANAGEDSTR in content:
-        print('####   > Keeping pxe configuration.')
+        printScript('  > Keeping pxe configuration.')
         return True
     # get grub partition name of cache
     cache = getStartconfOption(startconf, 'LINBO', 'Cache')
@@ -47,11 +59,11 @@ def doGrubCfg(startconf, group, kopts):
     # if cache is not defined provide a forced netboot cfg
     if cacheroot == None:
         netboottpl = constants.LINBOTPLDIR + '/grub.cfg.forced_netboot'
-        print('####   > Creating minimal pxe configuration. start.conf is incomplete!')
+        printScript('  > Creating minimal pxe configuration. start.conf is incomplete!')
         rc = os.system('cp ' + netboottpl + ' ' + grubcfg)
         return
     else:
-        print('####   > Creating pxe configuration.')
+        printScript('  > Creating pxe configuration.')
     # create gobal part for group cfg
     globaltpl = constants.LINBOTPLDIR + '/grub.cfg.global'
     rc, content = readTextfile(globaltpl)
@@ -91,7 +103,8 @@ def doLinboStartconf(group):
     startconf = constants.LINBODIR + '/start.conf.' + group
     # provide simple start.conf if there is none for this group
     if not os.path.isfile(startconf):
-        print('####   > Creating minimal start.conf. Further configuration is necessary!')
+        msg = '  > Creating minimal start.conf. Further configuration is necessary!'
+        printScript(msg, '', True)
         os.system('cp ' + constants.LINBODIR + '/start.conf ' + startconf)
     # read values from start.conf
     group_s = getStartconfOption(startconf, 'LINBO', 'Group')
@@ -131,7 +144,8 @@ def doLinboStartconf(group):
     doGrubCfg(startconf, group, kopts_r)
 
 # write conf for dhcp clients
-print('#### Processing dhcp clients:')
+printScript('', 'begin')
+printScript('Processing dhcp clients:')
 f = open(devices, newline='')
 reader = csv.reader(f, delimiter=';', quoting=csv.QUOTE_NONE)
 d = open(constants.DHCPDEVCONF, 'w')
@@ -149,7 +163,7 @@ for row in reader:
         htype = 'IP-Host : '
     else:
         htype = 'PXE-Host: '
-    print('#### * ' + htype + host)
+    printScript('* ' + htype + host)
     d.write('host ' + ip + ' {\n')
     d.write('  hardware ethernet ' + mac + ';\n')
     d.write('  fixed-address ' + ip + ';\n')
@@ -171,11 +185,33 @@ for row in reader:
 d.close()
 f.close()
 
-# restart dhcp service
-os.system('service isc-dhcp-server restart')
-
 # write pxe configs for collected groups
-print('#### Processing pxe groups:')
+printScript('', 'begin')
+printScript('Processing pxe groups:')
 for group in pxe_groups:
-    print('#### * ' + group)
+    msg = '* ' + group
+    printScript(msg)
     doLinboStartconf(group)
+
+# restart services
+printScript('', 'begin')
+printScript('Restarting services:')
+maxlen = 17
+RC = 0
+for service in ['isc-dhcp-server', 'linbo-bittorrent', 'linbo-multicast']:
+    gaplen = maxlen - len(service)
+    msg = '* ' + service + ' ' * gaplen + '... '
+    printScript(msg, '', False, False, True)
+    for action in ['stop', 'start']:
+        result = os.system('service ' + service + ' ' + action)
+        if result != 0:
+            RC = result
+    if RC == 0:
+        printScript('OK!', '', True, True, False, len(msg))
+    else:
+        printScript('Failed!', '', True, True, False, len(msg))
+
+# end message
+printScript(os.path.basename(__file__), 'end')
+
+sys.exit(RC)

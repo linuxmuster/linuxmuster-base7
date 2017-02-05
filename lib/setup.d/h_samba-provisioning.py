@@ -2,15 +2,17 @@
 #
 # e_samba-provisioning.py
 # thomas@linuxmuster.net
-# 20170130204
+# 20170205
 #
 
 import configparser
 import constants
 import os
 from functions import randompassword
+from functions import printScript
 
-print ('### ' + os.path.basename(__file__))
+printScript('', 'begin')
+printScript(os.path.basename(__file__))
 
 # stop services
 os.system('service smbd stop')
@@ -44,7 +46,7 @@ os.system('ln -sf ' + constants.ADADMINSECRET + ' ' + constants.SOPHOSYSDIR + '/
 
 # provisioning
 #os.system('samba-tool domain provision --use-xattrs=yes --use-rfc2307 --server-role=dc --domain=' + sambadomain + ' --realm=' + REALM + ' --adminpass=' + adadminpw)
-os.system('samba-tool domain provision --use-xattrs=yes --server-role=dc --domain=' + sambadomain + ' --realm=' + REALM + ' --adminpass=' + adadminpw)
+os.system('samba-tool domain provision --use-xattrs=yes --server-role=dc --domain=' + sambadomain + ' --realm=' + REALM + ' --adminpass="' + adadminpw + '"')
 
 # provide dns forwarder in smb.conf
 s = configparser.ConfigParser()

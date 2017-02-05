@@ -3,10 +3,11 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20170201
+# 20170205
 #
 
 import configparser
+import datetime
 import netifaces
 import os
 import re
@@ -16,8 +17,41 @@ import socket
 import string
 
 from contextlib import closing
-from datetime import datetime
 from IPy import IP
+
+# print with or without linefeed
+def printLf(msg, lf):
+    if lf == True:
+        print(msg)
+    else:
+        print(msg, end='', flush=True)
+
+# print script output
+def printScript(msg='', header='', lf=True, noleft=False, noright=False, offset=0):
+    linelen = 78
+    borderlen = 4
+    border = '#' * borderlen
+    sep = '-' * linelen
+    if header == 'begin' or header == 'end':
+        printLf(sep, lf)
+        if msg == '':
+            return True
+        if header == 'begin':
+            headermsg = 'startet'
+        else:
+            headermsg = 'finished'
+        now = datetime.datetime.now()
+        msg = msg + ' ' + headermsg + ' at ' + str(now).split('.')[0]
+    if noleft == False:
+        line = border + ' ' + msg
+    else:
+        line = msg
+    if noright == False:
+        gaplen = linelen - len(msg) - borderlen * 2 - 1 - offset
+        line = line + ' ' * gaplen + border
+    printLf(line, lf)
+    if header == 'begin' or header == 'end':
+        printLf(sep, lf)
 
 # return grub name of partition's device name
 def getGrubPart(partition):
@@ -286,7 +320,7 @@ def detectedInterfaces():
 
 # return datetime string
 def dtStr():
-    return "{:%Y%m%d%H%M%S}".format(datetime.now())
+    return "{:%Y%m%d%H%M%S}".format(datetime.datetime.now())
 
 # return setup comment for modified configfiles
 def setupComment():

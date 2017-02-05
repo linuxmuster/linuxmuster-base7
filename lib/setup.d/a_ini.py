@@ -2,15 +2,17 @@
 #
 # a_ini.py
 # thomas@linuxmuster.net
-# 20170126
+# 20170205
 #
 
 import configparser
 import constants
 import os
+import sys
 from functions import detectedInterfaces
+from functions import printScript
 
-print ('### ' + os.path.basename(__file__))
+printScript(os.path.basename(__file__))
 
 # get network interfaces
 iface_list, iface_default = detectedInterfaces()
@@ -29,6 +31,7 @@ if not os.path.isfile(constants.SETUPINI):
             setup.write(outfile)
     except:
         print('Cannot write ' + constants.SETUPINI + '!')
+        sys.exit(1)
 
 # read defaults and setup ini files, test values and fill them with defaults if empty
 defaults.read(constants.DEFAULTSINI)
@@ -56,3 +59,4 @@ try:
         os.system('chmod 600 ' + constants.SETUPINI)
 except:
     print('Cannot write ' + constants.SETUPINI + '!')
+    sys.exit(1)

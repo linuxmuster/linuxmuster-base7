@@ -2,18 +2,21 @@
 #
 # e_dhcp.py
 # thomas@linuxmuster.net
-# 20160915
+# 20170205
 #
 
 import configparser
 import constants
 import os
 import re
+import sys
 
 from functions import setupComment
 from functions import backupCfg
+from functions import printScript
 
-print ('### ' + os.path.basename(__file__))
+printScript('', 'begin')
+printScript(os.path.basename(__file__))
 
 # read INIFILE
 i = configparser.ConfigParser()
@@ -29,7 +32,7 @@ try:
         filedata = infile.read()
 except:
     print('Cannot read ' + configfile + '!')
-    exit(1)
+    sys.exit(1)
 
 # replace old setup comment
 filedata = re.sub(r'# modified by linuxmuster-setup.*\n', '', filedata)
@@ -51,7 +54,7 @@ try:
         outfile.write(filedata)
 except:
     print('Cannot write ' + configfile + '!')
-    exit(1)
+    sys.exit(1)
 
 # restart dhcp service
 os.system('service isc-dhcp-server stop')

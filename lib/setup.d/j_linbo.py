@@ -2,20 +2,23 @@
 #
 # j_linbo.py
 # thomas@linuxmuster.net
-# 20170204
+# 20170205
 #
 
 import configparser
 import constants
 import os
 import re
+import sys
 
 from functions import setupComment
 from functions import backupCfg
 from functions import readTextfile
 from functions import writeTextfile
+from functions import printScript
 
-print ('### ' + os.path.basename(__file__))
+printScript('', 'begin')
+printScript(os.path.basename(__file__))
 
 # read INIFILE, get schoolname
 i = configparser.ConfigParser()
@@ -35,7 +38,7 @@ try:
         outfile.write(filedata)
 except:
     print('Cannot write ' + configfile + '!')
-    exit(1)
+    sys.exit(1)
 
 # permissions
 os.system('chmod 600 ' + configfile)
@@ -60,7 +63,7 @@ content = re.sub(r'\nSTART_BTTRACK=.*\n', '\nSTART_BTTRACK=1\n', content, re.IGN
 content = re.sub(r'\n[#]*ALLOWED_DIR=.*\n', '\nALLOWED_DIR=' + constants.LINBODIR + '\n', content, re.IGNORECASE)
 rc = writeTextfile(defaultconf, content, 'w')
 if rc == False:
-    exit(1)
+    sys.exit(1)
 os.system('service bittorrent stop')
 os.system('service bittorrent start')
 
@@ -68,11 +71,11 @@ os.system('service bittorrent start')
 defaultconf = '/etc/default/linbo-bittorrent'
 rc, content = readTextfile(defaultconf)
 if rc == False:
-    exit(1)
+    sys.exit(1)
 content = re.sub(r'\nSTART_BITTORRENT=.*\n', '\nSTART_BITTORRENT=1\n', content, re.IGNORECASE)
 rc = writeTextfile(defaultconf, content, 'w')
 if rc == False:
-    exit(1)
+    sys.exit(1)
 
 # linbofs update
 os.system('update-linbofs')

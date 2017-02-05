@@ -2,17 +2,20 @@
 #
 # d_templates.py
 # thomas@linuxmuster.net
-# 20160915
+# 20170205
 #
 
 import configparser
 import constants
 import os
+import sys
 
 from functions import setupComment
 from functions import backupCfg
+from functions import printScript
 
-print ('### ' + os.path.basename(__file__))
+printScript('', 'begin')
+printScript(os.path.basename(__file__))
 
 # read INIFILE
 i = configparser.ConfigParser()
@@ -35,7 +38,8 @@ for f in os.listdir(constants.TPLDIR):
             infile.seek(0)
             filedata = infile.read()
     except IOError:
-        print('Cannot read ' + source)
+        print('Cannot read ' + source + '!')
+        sys.exit(1)
     target = firstline.partition(' ')[2]
     # do not overwrite specified configfiles if they exist
     if (f in do_not_overwrite and os.path.isfile(target)):
@@ -50,6 +54,7 @@ for f in os.listdir(constants.TPLDIR):
             outfile.write(filedata)
     except IOError:
         print('Cannot write ' + target)
+        sys.exit(1)
 
 # compatibility link
 os.system('ln -sf ' + constants.WIMPORTDATA + ' ' + constants.SYSDIR + '/workstations')

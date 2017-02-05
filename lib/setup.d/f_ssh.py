@@ -2,21 +2,24 @@
 #
 # f_ssh.py
 # thomas@linuxmuster.net
-# 20170129
+# 20170205
 #
 
 import configparser
 import constants
 import getpass
 import os
-import re
 import paramiko
+import re
+import sys
 
 from functions import setupComment
 from functions import backupCfg
 from functions import check_socket
+from functions import printScript
 
-print ('### ' + os.path.basename(__file__))
+printScript('', 'begin')
+printScript(os.path.basename(__file__))
 
 # enter firewall password
 def enterFwPassword():
@@ -51,7 +54,7 @@ for a in crypto_list:
         os.system('ssh-keygen -t ' + a + ' -f ' + rootkey + a + ' -N ""')
     except:
         print('Cannot create ' + a + ' ssh keys!')
-        quit()
+        sys.exit(1)
 
 # restart ssh service
 os.system('service ssh restart')
@@ -72,7 +75,7 @@ for p in [22, 222]:
         sshport = p
         break
 if fwssh == 'false':
-    quit()
+    sys.exit(1)
 
 # establish ssh connection to firewall
 print('Establishing a ssh connection to the firewall ...')
@@ -83,7 +86,7 @@ try:
     print(' ... success!')
 except:
     print(' ... failed!')
-    quit()
+    sys.exit(1)
 
 # create .ssh dir
 print('Create ssh dir on firewall.')

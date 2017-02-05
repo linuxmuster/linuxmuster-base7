@@ -2,7 +2,7 @@
 #
 # g_ssl.py
 # thomas@linuxmuster.net
-# 20160915
+# 20170205
 #
 
 """
@@ -22,8 +22,10 @@ from certgen import (
     createCertRequest,
     createCertificate,
 )
+from functions import printScript
 
-print ('### ' + os.path.basename(__file__))
+printScript('', 'begin')
+printScript(os.path.basename(__file__))
 
 # read INIFILE
 i = configparser.ConfigParser()

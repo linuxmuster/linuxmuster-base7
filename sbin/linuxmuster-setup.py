@@ -10,6 +10,7 @@ import getopt
 import importlib
 import os
 import sys
+from functions import printScript
 
 def usage():
     print('Usage: linuxmuster-setup.py [options]')
@@ -47,6 +48,8 @@ for o, a in opts:
     else:
         assert False, "unhandled option"
 
+# start message
+printScript(os.path.basename(__file__), 'begin')
 
 # work off setup modules
 setup_modules = os.listdir(constants.SETUPDIR)
@@ -57,3 +60,5 @@ for f in setup_modules:
         continue
     m = os.path.splitext(f)[0]
     importlib.import_module(m)
+
+printScript(os.path.basename(__file__), 'end')
