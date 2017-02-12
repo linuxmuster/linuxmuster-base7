@@ -2,35 +2,77 @@
 #
 # e_samba-users.py
 # thomas@linuxmuster.net
-# 20170205
+# 20170212
 #
 
 import configparser
 import constants
 import os
-from functions import randompassword
+import sys
+from functions import randomPassword
 from functions import printScript
+from functions import subProc
+
+title = os.path.basename(__file__).replace('.py', '').split('_')[1]
+logfile = constants.LOGDIR + '/setup.' + title + '.log'
 
 printScript('', 'begin')
-printScript(os.path.basename(__file__))
+printScript(title)
 
-# read INIFILE
-i = configparser.ConfigParser()
-i.read(constants.SETUPINI)
-adminpw = i.get('setup', 'adminpw')
-domainname = i.get('setup', 'domainname')
+# read setup ini
+msg = 'Reading setup data '
+printScript(msg, '', False, False, True)
+setupini = constants.SETUPINI
+try:
+    setup = configparser.ConfigParser()
+    setup.read(setupini)
+    adminpw = setup.get('setup', 'adminpw')
+    domainname = setup.get('setup', 'domainname')
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
 
 # create sophomorix admin user
-sophadminpw = randompassword(16)
-with open(constants.SOPHADMINSECRET, 'w') as secret:
-    secret.write(sophadminpw)
-os.system('chmod 600 ' + constants.SOPHADMINSECRET)
-os.system('samba-tool user create sophomorix-admin "' + sophadminpw + '"')
-os.system('samba-tool user setexpiry sophomorix-admin --noexpiry')
-os.system('samba-tool group addmembers "Domain Admins" sophomorix-admin')
+msg = 'Calculating random password for sophomorix-admin '
+printScript(msg, '', False, False, True)
+try:
+    sophadminpw = randomPassword(16)
+    with open(constants.SOPHADMINSECRET, 'w') as secret:
+        secret.write(sophadminpw)
+    subProc('chmod 600 ' + constants.SOPHADMINSECRET, logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+msg = 'Creating samba account for sophomorix-admin '
+printScript(msg, '', False, False, True)
+try:
+    subProc('samba-tool user create sophomorix-admin "' + sophadminpw + '"', logfile)
+    subProc('samba-tool user setexpiry sophomorix-admin --noexpiry', logfile)
+    subProc('samba-tool group addmembers "Domain Admins" sophomorix-admin', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
 
 # create global-admin
-os.system('sophomorix-admin --create global-admin --school global --password "' + adminpw + '"')
+msg = 'Creating samba account for global-admin '
+printScript(msg, '', False, False, True)
+try:
+    subProc('sophomorix-admin --create global-admin --school global --password ' + adminpw, logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
 
 # create default-school, no connection to ad
-os.system('sophomorix-school --create --school default-school')
+msg = 'Creating ou for default-school '
+printScript(msg, '', False, False, True)
+try:
+    subProc('sophomorix-school --create --school default-school', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)

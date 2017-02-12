@@ -3,13 +3,15 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20170205
+# 20170211
 #
 
 import configparser
 import datetime
+import getpass
 import netifaces
 import os
+import paramiko
 import re
 import random
 import shutil
@@ -18,6 +20,39 @@ import string
 
 from contextlib import closing
 from IPy import IP
+from subprocess import Popen, PIPE, STDOUT
+
+# append stdout to logfile
+class tee(object):
+    def __init__(self, *files):
+        self.files = files
+    def write(self, obj):
+        for f in self.files:
+            f.write(obj)
+            f.flush() # If you want the output to be visible immediately
+    def flush(self) :
+        for f in self.files:
+            f.flush()
+
+def subProc(cmd, logfile=None):
+    try:
+        if logfile != None:
+            l = open(logfile, 'a')
+            l.write('-' * 78 + '\n')
+            now = str(datetime.datetime.now()).split('.')[0]
+            l.write('#### ' + now + ' ' * (68 - len(now)) + ' ####\n')
+            l.write('#### ' + cmd + ' ' * (68 - len(cmd)) + ' ####\n')
+            l.write('-' * 78 + '\n')
+            l.flush()
+            p = Popen(cmd, shell=True, universal_newlines=True, stdout=l, stderr=STDOUT)
+        else:
+            p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
+        p.wait()
+        if logfile != None:
+            l.close()
+        return True
+    except:
+        return False
 
 # print with or without linefeed
 def printLf(msg, lf):
@@ -47,11 +82,64 @@ def printScript(msg='', header='', lf=True, noleft=False, noright=False, offset=
     else:
         line = msg
     if noright == False:
-        gaplen = linelen - len(msg) - borderlen * 2 - 1 - offset
-        line = line + ' ' * gaplen + border
+        padding = linelen - len(msg) - borderlen * 2 - 2 - offset
+        if noleft == True:
+            line = '.' * padding + msg + ' ' + border
+        else:
+            line = line + ' ' * padding + ' ' + border
     printLf(line, lf)
     if header == 'begin' or header == 'end':
         printLf(sep, lf)
+
+# establish pw less ssh connection to ip & port
+def doSshLink(ip, port, secret):
+    msg = '* Processing ssh link to host ' + ip + ' on port ' + str(port) + ':'
+    printScript(msg)
+    # test connection on ip and port
+    msg = '  > Testing connection '
+    printScript(msg, '', False, False, True)
+    if checkSocket(ip, port):
+        printScript(' Open!', '', True, True, False, len(msg))
+    else:
+        printScript(' Closed!', '', True, True, False, len(msg))
+        return False
+    # establish ssh connection to ip on port
+    msg = '  > Establishing connection '
+    printScript(msg, '', False, False, True)
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        ssh.connect(ip, port=port, username='root', password=secret)
+        printScript(' Success!', '', True, True, False, len(msg))
+    except:
+        printScript(' Failed!', '', True, True, False, len(msg))
+        return False
+    # create .ssh dir on remote host
+    sshdir = '/root/.ssh'
+    msg = '  > Creating ' + sshdir + ' '
+    printScript(msg, '', False, False, True)
+    try:
+        stdin, stdout, stderr = ssh.exec_command('mkdir -p ' + sshdir)
+        printScript(' Success!', '', True, True, False, len(msg))
+    except:
+        printScript(' Failed!', '', True, True, False, len(msg))
+        return False
+    # copy public key to firewall
+    pubkey = sshdir + '/id_ecdsa.pub'
+    authorized_keys = sshdir + '/authorized_keys'
+    msg = '  > Transfering public key '
+    printScript(msg, '', False, False, True)
+    try:
+        ftp = ssh.open_sftp()
+        ftp.put(pubkey, authorized_keys)
+        printScript(' Success!', '', True, True, False, len(msg))
+    except:
+        printScript(' Failed!', '', True, True, False, len(msg))
+        return False
+    # close connections
+    ftp.close()
+    ssh.close()
+    return True
 
 # return grub name of partition's device name
 def getGrubPart(partition):
@@ -108,6 +196,18 @@ def writeTextfile(tfile, content, flag):
         return True
     except:
         print('Failed to write ' + tfile + '!')
+        return False
+
+# modify ini file
+def modIni(inifile, section, option, value):
+    try:
+        i = configparser.ConfigParser()
+        i.read(inifile)
+        i.set(section, option, value)
+        with open(inifile, 'w') as outfile:
+            i.write(outfile)
+        return True
+    except:
         return False
 
 # return linbo start.conf as string and modified to be used as ini file
@@ -226,7 +326,7 @@ def getStartconfOsValues(startconf):
     except:
         return None
 
-def check_socket(host, port):
+def checkSocket(host, port):
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
         sock.settimeout(2)
         if sock.connect_ex((host, port)) == 0:
@@ -234,43 +334,52 @@ def check_socket(host, port):
         else:
             return False
 
-def has_numbers(password):
+def hasNumbers(password):
     return any(char.isdigit() for char in password)
 
-def randompassword(size):
+def randomPassword(size):
   chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
   while True:
       password = ''.join(random.choice(chars) for x in range(size))
-      if has_numbers(password) == True:
+      if hasNumbers(password) == True:
           break
   return password
 
 def isValidHostname(hostname):
-    if (len(hostname) > 63 or hostname[0] == '-' or hostname[-1] == '-'):
-        return False
-    allowed = re.compile(r'[a-z0-9\-]*$', re.IGNORECASE)
-    if allowed.match(hostname):
-        return True
-    else:
+    try:
+        if (len(hostname) > 63 or hostname[0] == '-' or hostname[-1] == '-'):
+            return False
+        allowed = re.compile(r'[a-z0-9\-]*$', re.IGNORECASE)
+        if allowed.match(hostname):
+            return True
+        else:
+            return False
+    except:
         return False
 
 def isValidDomainname(domainname):
-    for label in domainname.split('.'):
-        if not isValidHostname(label):
-            return False
-    return True
+    try:
+        for label in domainname.split('.'):
+            if not isValidHostname(label):
+                return False
+        return True
+    except:
+        return False
 
 def isValidHostIpv4(ip):
-    ipv4 = IP(ip)
-    if not ipv4.version() == 4:
-        return False
-    ipv4str = IP(ipv4).strNormal(0)
-    if (int(ipv4str.split('.')[0]) == 0 or int(ipv4str.split('.')[3]) == 0):
-        return False
-    for i in ipv4str.split('.'):
-        if int(i) > 254:
+    try:
+        ipv4 = IP(ip)
+        if not ipv4.version() == 4:
             return False
-    return True
+        ipv4str = IP(ipv4).strNormal(0)
+        if (int(ipv4str.split('.')[0]) == 0 or int(ipv4str.split('.')[3]) == 0):
+            return False
+        for i in ipv4str.split('.'):
+            if int(i) > 254:
+                return False
+        return True
+    except:
+        return False
 
 def isValidPassword(password):
     """
@@ -282,30 +391,49 @@ def isValidPassword(password):
         1 uppercase letter or more
         1 lowercase letter or more
     """
-
     # calculating the length
     length_error = len(password) < 7
-
     # searching for digits
     digit_error = re.search(r"\d", password) is None
-
     # searching for uppercase
     uppercase_error = re.search(r"[A-Z]", password) is None
-
     # searching for lowercase
     lowercase_error = re.search(r"[a-z]", password) is None
-
     # searching for symbols
     if digit_error == True:
         digit_error = False
         symbol_error = re.search(r"[!#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None
     else:
         symbol_error = False
-
     # overall result
     password_ok = not ( length_error or digit_error or uppercase_error or lowercase_error or symbol_error )
-
     return password_ok
+
+# enter password
+def enterPassword(pwtype='the', validate=True, repeat=True):
+    msg = '#### Enter ' + pwtype + ' password: '
+    re_msg = '#### Please re-enter ' + pwtype + ' password: '
+    while True:
+        password = getpass.getpass(msg)
+        if validate == True and not isValidPassword(password):
+            printScript('Weak password! A password is considered strong if it contains:')
+            printScript(' * 7 characters length or more')
+            printScript(' * 1 digit or 1 symbol or more')
+            printScript(' * 1 uppercase letter or more')
+            printScript(' * 1 lowercase letter or more')
+            continue
+        elif password == '' or password == None:
+            continue
+        if repeat == True:
+            password_repeated = getpass.getpass(re_msg)
+            if password != password_repeated:
+                printScript('Passwords do not match!')
+                continue
+            else:
+                break
+        else:
+            break
+    return password
 
 # return detected network interfaces
 def detectedInterfaces():
@@ -317,6 +445,20 @@ def detectedInterfaces():
     else:
         iface_default = ''
     return iface_list, iface_default
+
+# return default network interface
+def getDefaultIface():
+    route = "/proc/net/route"
+    with open(route) as f:
+        for line in f.readlines():
+            try:
+                iface, dest, _, flags, _, _, _, _, _, _, _, =  line.strip().split()
+                if dest != '00000000' or not int(flags, 16) & 2:
+                    continue
+                return iface
+            except:
+                continue
+    return None
 
 # return datetime string
 def dtStr():

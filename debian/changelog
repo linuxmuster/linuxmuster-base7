@@ -1,9 +1,23 @@
+linuxmuster-base7 (7.0.0-7ubuntu0) lmn7-testing; urgency=low
+
+  * further setup improvements:
+    - provide smb.conf with shares.
+    - derive missing network values.
+    - added opsi ssh link handling.
+    - added devices.csv entry creation for firewall and opsi server.
+    - setup dialog in english.
+    - improved error handling and script output.
+    - improved subprocess handling.
+    - improved password handling.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 12 Feb 2017 11:45:35 +0100
+
 linuxmuster-base7 (7.0.0-6ubuntu0) lmn7-testing; urgency=low
 
   * improved console output
   * setup: improved password handling and admin user creation.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 05 Feb 2017 16:13:26 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 06 Feb 2017 11:44:13 +0100
 
 linuxmuster-base7 (7.0.0-5ubuntu0) lmn7-testing; urgency=low
 

@@ -2,7 +2,7 @@
 #
 # j_linbo.py
 # thomas@linuxmuster.net
-# 20170205
+# 20170212
 #
 
 import configparser
@@ -16,66 +16,118 @@ from functions import backupCfg
 from functions import readTextfile
 from functions import writeTextfile
 from functions import printScript
+from functions import modIni
+from functions import isValidPassword
+from functions import enterPassword
+from functions import subProc
+
+title = os.path.basename(__file__).replace('.py', '').split('_')[1]
+logfile = constants.LOGDIR + '/setup.' + title + '.log'
 
 printScript('', 'begin')
-printScript(os.path.basename(__file__))
+printScript(title)
 
 # read INIFILE, get schoolname
-i = configparser.ConfigParser()
-i.read(constants.SETUPINI)
-adminpw = i.get('setup', 'adminpw')
-serverip = i.get('setup', 'serverip')
+msg = 'Reading setup data '
+printScript(msg, '', False, False, True)
+setupini = constants.SETUPINI
+try:
+    setup = configparser.ConfigParser()
+    setup.read(setupini)
+    serverip = setup.get('setup', 'serverip')
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
 
-# rsyncd secrets
+# test adminpw
+try:
+    adminpw = setup.get('setup', 'adminpw')
+except:
+    adminpw=''
+if not isValidPassword(adminpw):
+    printScript('There is no admin password!')
+    adminpw = enterPassword('admin', True)
+    if not isValidPassword(adminpw):
+        printScript('No valid admin password! Aborting!')
+        sys.exit(1)
+    else:
+        msg = 'Saving admin password to setup.ini '
+        printScript(msg, '', False, False, True)
+        rc = modIni(constants.SETUPINI, 'setup', 'adminpw', adminpw)
+        if rc == True:
+            printScript(' Success!', '', True, True, False, len(msg))
+        else:
+            printScript(' Failed!', '', True, True, False, len(msg))
+            sys.exit(1)
+
+# write linbo auth data to rsyncd.secrets
+msg = 'Creating rsync secrets file '
+printScript(msg, '', False, False, True)
 configfile = '/etc/rsyncd.secrets'
-
-# create filedata
 filedata = setupComment() + '\n' + 'linbo:' + adminpw + '\n'
-
-# write configfile
 try:
     with open(configfile, 'w') as outfile:
         outfile.write(filedata)
+    # set permissions
+    subProc('chmod 600 ' + configfile, logfile)
+    # restart rsync service
+    subProc('service rsync restart', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
 except:
-    print('Cannot write ' + configfile + '!')
+    printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# permissions
-os.system('chmod 600 ' + configfile)
-
-# restart services
-os.system('service rsync restart')
-
-# default start.conf
+# set serverip in default start.conf
 startconf = constants.LINBODIR + '/start.conf'
-s = configparser.ConfigParser(strict=False)
-s.read(startconf)
-s.set('LINBO', 'Server', serverip)
-with open(startconf, 'w') as config:
-    s.write(config)
+msg = 'Writing server ip to default start.conf '
+printScript(msg, '', False, False, True)
+try:
+    s = configparser.ConfigParser(strict=False)
+    s.read(startconf)
+    s.set('LINBO', 'Server', serverip)
+    with open(startconf, 'w') as config:
+        s.write(config)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
 
 # bittorrent service
-defaultconf = '/etc/default/bittorrent'
-rc, content = readTextfile(defaultconf)
-if rc == False:
-    exit(1)
-content = re.sub(r'\nSTART_BTTRACK=.*\n', '\nSTART_BTTRACK=1\n', content, re.IGNORECASE)
-content = re.sub(r'\n[#]*ALLOWED_DIR=.*\n', '\nALLOWED_DIR=' + constants.LINBODIR + '\n', content, re.IGNORECASE)
-rc = writeTextfile(defaultconf, content, 'w')
-if rc == False:
+msg = 'Activating bittorrent tracker '
+printScript(msg, '', False, False, True)
+try:
+    defaultconf = '/etc/default/bittorrent'
+    rc, content = readTextfile(defaultconf)
+    content = re.sub(r'\nSTART_BTTRACK=.*\n', '\nSTART_BTTRACK=1\n', content, re.IGNORECASE)
+    content = re.sub(r'\n[#]*ALLOWED_DIR=.*\n', '\nALLOWED_DIR=' + constants.LINBODIR + '\n', content, re.IGNORECASE)
+    writeTextfile(defaultconf, content, 'w')
+    subProc('service bittorrent stop', logfile)
+    subProc('service bittorrent start', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
-os.system('service bittorrent stop')
-os.system('service bittorrent start')
 
 # linbo-bittorrent service
-defaultconf = '/etc/default/linbo-bittorrent'
-rc, content = readTextfile(defaultconf)
-if rc == False:
-    sys.exit(1)
-content = re.sub(r'\nSTART_BITTORRENT=.*\n', '\nSTART_BITTORRENT=1\n', content, re.IGNORECASE)
-rc = writeTextfile(defaultconf, content, 'w')
-if rc == False:
+msg = 'Activating linbo-bittorrent service '
+printScript(msg, '', False, False, True)
+try:
+    defaultconf = '/etc/default/linbo-bittorrent'
+    rc, content = readTextfile(defaultconf)
+    content = re.sub(r'\nSTART_BITTORRENT=.*\n', '\nSTART_BITTORRENT=1\n', content, re.IGNORECASE)
+    writeTextfile(defaultconf, content, 'w')
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
 # linbofs update
-os.system('update-linbofs')
+msg = 'Starting update-linbofs '
+printScript(msg, '', False, False, True)
+try:
+    subProc('update-linbofs', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)

@@ -2,7 +2,7 @@
 #
 # linuxmuster-setup.py
 # thomas@linuxmuster.net
-# 20170126
+# 20170211
 #
 
 import constants
@@ -11,6 +11,7 @@ import importlib
 import os
 import sys
 from functions import printScript
+from functions import tee
 
 def usage():
     print('Usage: linuxmuster-setup.py [options]')
@@ -47,6 +48,17 @@ for o, a in opts:
         sys.exit()
     else:
         assert False, "unhandled option"
+
+# open logfile
+global logfile
+logfile = constants.SETUPLOG
+try:
+    l = open(logfile, 'w')
+    orig_out = sys.stdout
+    sys.stdout = tee(sys.stdout, l)
+except:
+    fail('Cannot open logfile ' + logfile + ' !')
+    sys.exit()
 
 # start message
 printScript(os.path.basename(__file__), 'begin')

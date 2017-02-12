@@ -2,7 +2,7 @@
 #
 # g_ssl.py
 # thomas@linuxmuster.net
-# 20170205
+# 20170212
 #
 
 """
@@ -15,6 +15,7 @@ from __future__ import print_function
 import configparser
 import constants
 import os
+import sys
 
 from OpenSSL import crypto
 from certgen import (
@@ -23,50 +24,96 @@ from certgen import (
     createCertificate,
 )
 from functions import printScript
+from functions import subProc
+
+title = os.path.basename(__file__).replace('.py', '').split('_')[1]
+logfile = constants.LOGDIR + '/setup.' + title + '.log'
 
 printScript('', 'begin')
-printScript(os.path.basename(__file__))
+printScript(title)
 
-# read INIFILE
-i = configparser.ConfigParser()
-i.read(constants.SETUPINI)
-schoolname = i.get('setup', 'schoolname')
-servername = i.get('setup', 'servername')
+# read setup ini
+msg = 'Reading setup data '
+printScript(msg, '', False, False, True)
+setupini = constants.SETUPINI
+try:
+    setup = configparser.ConfigParser()
+    setup.read(setupini)
+    schoolname = setup.get('setup', 'schoolname')
+    servername = setup.get('setup', 'servername')
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
 
+# key & cert files to create
 ssldir = constants.SSLDIR
 caprivkeyfile = ssldir + '/CA.key'
 cacertfile = ssldir + '/CA.crt'
 srvprivkeyfile = ssldir + '/server.key'
 srvcertfile = ssldir + '/server.crt'
 
+# CA cert stuff
 cakey = createKeyPair(crypto.TYPE_RSA, 2048)
 careq = createCertRequest(cakey, CN=schoolname)
 # CA certificate is valid for five years.
 cacert = createCertificate(careq, (careq, cakey), 0, (0, 60*60*24*365*5))
 
-print('Creating Certificate Authority private key in "' + caprivkeyfile + '".')
-with open(caprivkeyfile, 'w') as capkey:
-    capkey.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, cakey).decode('utf-8'))
+msg = 'Creating private CA key '
+printScript(msg, '', False, False, True)
+try:
+    with open(caprivkeyfile, 'w') as capkey:
+        capkey.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, cakey).decode('utf-8'))
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
 
-print('Creating Certificate Authority certificate in "' + cacertfile + '".')
-with open(cacertfile, 'w') as ca:
-    ca.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cacert).decode('utf-8'))
+msg = 'Creating CA certificate '
+printScript(msg, '', False, False, True)
+try:
+    with open(cacertfile, 'w') as ca:
+        ca.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cacert).decode('utf-8'))
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
 
+# server cert stuff
 pkey = createKeyPair(crypto.TYPE_RSA, 2048)
 req = createCertRequest(pkey, CN=servername)
 # Certificates are valid for ten years.
 cert = createCertificate(req, (cacert, cakey), 1, (0, 60*60*24*365*10))
 
-print('Creating Certificate ' + servername + ' private key in "' + srvprivkeyfile + '".')
-with open(srvprivkeyfile, 'w') as leafpkey:
-    leafpkey.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey).decode('utf-8'))
+msg = 'Creating private server key '
+printScript(msg, '', False, False, True)
+try:
+    with open(srvprivkeyfile, 'w') as leafpkey:
+        leafpkey.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey).decode('utf-8'))
+    printScript( 'Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
 
-print('Creating Certificate ' + servername + ' certificate in "' + srvcertfile + '".')
-with open(srvcertfile, 'w') as leafcert:
-    leafcert.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode('utf-8'))
+msg = 'Creating server certificate '
+printScript(msg, '', False, False, True)
+try:
+    with open(srvcertfile, 'w') as leafcert:
+        leafcert.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode('utf-8'))
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
 
 # permissions
-os.system('chgrp -R ssl-cert ' + ssldir)
-os.system('chmod 750 ' + ssldir)
-os.system('chmod 640 ' + ssldir + '/*')
-os.system('chmod 600 ' + caprivkeyfile)
+msg = 'Ensure key and certificate permissions '
+printScript(msg, '', False, False, True)
+try:
+    subProc('chgrp -R ssl-cert ' + ssldir, logfile)
+    subProc('chmod 750 ' + ssldir, logfile)
+    subProc('chmod 640 ' + ssldir + '/*', logfile)
+    subProc('chmod 600 ' + caprivkeyfile, logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)

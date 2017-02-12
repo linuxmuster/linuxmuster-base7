@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices.py
 # thomas@linuxmuster.net
-# 20170205
+# 20170210
 #
 
 import configparser
@@ -200,16 +200,16 @@ maxlen = 17
 RC = 0
 for service in ['isc-dhcp-server', 'linbo-bittorrent', 'linbo-multicast']:
     gaplen = maxlen - len(service)
-    msg = '* ' + service + ' ' * gaplen + '... '
+    msg = '* ' + service + ' '
     printScript(msg, '', False, False, True)
     for action in ['stop', 'start']:
         result = os.system('service ' + service + ' ' + action)
         if result != 0:
             RC = result
     if RC == 0:
-        printScript('OK!', '', True, True, False, len(msg))
+        printScript(' OK!', '', True, True, False, len(msg))
     else:
-        printScript('Failed!', '', True, True, False, len(msg))
+        printScript(' Failed!', '', True, True, False, len(msg))
 
 # end message
 printScript(os.path.basename(__file__), 'end')
