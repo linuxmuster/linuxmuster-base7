@@ -2,7 +2,7 @@
 #
 # a_ini.py
 # thomas@linuxmuster.net
-# 20170212
+# 20170213
 #
 
 import configparser
@@ -180,8 +180,8 @@ except:
     dhcprange = ''
 if dhcprange == '':
     try:
-        dhcprange1 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + '100'
-        dhcprange2 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + '200'
+        dhcprange1 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '100'
+        dhcprange2 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '200'
         dhcprange = dhcprange1 + ' ' + dhcprange2
         setup.set('setup', 'dhcprange', dhcprange)
     except:

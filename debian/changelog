@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.0.0-8ubuntu0) lmn7-testing; urgency=low
+
+  * added user example files.
+  * fixed dhcp range.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 13 Feb 2017 20:27:17 +0100
+
 linuxmuster-base7 (7.0.0-7ubuntu0) lmn7-testing; urgency=low
 
   * further setup improvements:
@@ -10,7 +17,7 @@ linuxmuster-base7 (7.0.0-7ubuntu0) lmn7-testing; urgency=low
     - improved subprocess handling.
     - improved password handling.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 12 Feb 2017 11:45:35 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 12 Feb 2017 11:59:16 +0100
 
 linuxmuster-base7 (7.0.0-6ubuntu0) lmn7-testing; urgency=low
 
