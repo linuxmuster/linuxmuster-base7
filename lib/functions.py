@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20170211
+# 20170214
 #
 
 import configparser
@@ -159,6 +159,7 @@ def getGrubPart(partition):
         elif re.findall(r'nvme0n[0-9]p', partition):
             partnr = re.sub(r'nvme0n[0-9]p', '', partition)
             hdnr = re.search(r'nvme0n(.+?)p[0-9]', partition).group(1)
+            hdnr = hdnr - 1
         else:
             return None
     except:

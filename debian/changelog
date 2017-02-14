@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.0-9ubuntu0) lmn7-testing; urgency=low
+
+  * import-devices: nvme partnr fix.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 13 Feb 2017 20:27:17 +0100
+
 linuxmuster-base7 (7.0.0-8ubuntu0) lmn7-testing; urgency=low
 
   * added user example files.
