@@ -7,6 +7,7 @@
 
 import configparser
 import constants
+import glob
 import os
 import sys
 from functions import randomPassword
@@ -62,6 +63,11 @@ except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
+# alte smb.conf löschen
+smbconf = '/etc/samba/smb.conf'
+if os.path.isfile(smbconf):
+    map(os.unlink, glob.glob(smbconf))
+
 # provisioning samba
 msg = 'Provisioning samba '
 printScript(msg, '', False, False, True)
@@ -104,7 +110,6 @@ except:
 # set dns forwarder
 msg = 'Setting dns forwarder to ' + dnsforwarder
 printScript(msg, '', False, False, True)
-smbconf = '/etc/samba/smb.conf'
 try:
     samba = configparser.ConfigParser()
     samba.read(smbconf)
