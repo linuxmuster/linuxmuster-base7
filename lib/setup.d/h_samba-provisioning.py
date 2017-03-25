@@ -2,7 +2,7 @@
 #
 # e_samba-provisioning.py
 # thomas@linuxmuster.net
-# 20170212
+# 20170324
 #
 
 import configparser
@@ -31,14 +31,6 @@ except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# save old smb.conf
-smbconf = '/etc/samba/smb.conf'
-smbconf_old = smbconf + '.old'
-if os.path.isfile(smbconf_old):
-    os.remove(smbconf_old)
-if os.path.isfile(smbconf):
-    os.rename(smbconf, smbconf_old )
-
 # read setup ini
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
@@ -46,7 +38,7 @@ setupini = constants.SETUPINI
 try:
     setup = configparser.ConfigParser()
     setup.read(setupini)
-    REALM = setup.get('setup', 'domainname').upper()
+    realm = setup.get('setup', 'domainname').upper()
     sambadomain = setup.get('setup', 'sambadomain')
     dnsforwarder = setup.get('setup', 'gatewayip')
     domainname = setup.get('setup', 'domainname')
@@ -74,7 +66,7 @@ except:
 msg = 'Provisioning samba '
 printScript(msg, '', False, False, True)
 try:
-    subProc('samba-tool domain provision --use-xattrs=yes --server-role=dc --domain=' + sambadomain + ' --realm=' + REALM + ' --adminpass=' + adadminpw, logfile)
+    subProc('samba-tool domain provision --use-xattrs=yes --server-role=dc --domain=' + sambadomain + ' --realm=' + realm + ' --adminpass=' + adadminpw, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -104,9 +96,21 @@ msg = 'Provisioning sophomorix samba schema '
 printScript(msg, '', False, False, True)
 try:
     subProc('sophomorix-samba --schema-load', logfile)
-    # provide smb.conf prepared before
-    smbconf_setup = smbconf + '.setup'
-    subProc('mv ' + smbconf_setup + ' ' + smbconf, logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# set dns forwarder
+msg = 'Setting dns forwarder to ' + dnsforwarder
+printScript(msg, '', False, False, True)
+smbconf = '/etc/samba/smb.conf'
+try:
+    samba = configparser.ConfigParser()
+    samba.read(smbconf)
+    samba.set('global', 'dns forwarder', dnsforwarder)
+    with open (smbconf, 'w') as outfile:
+        samba.write(outfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

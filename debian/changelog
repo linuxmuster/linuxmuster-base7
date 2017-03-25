@@ -1,8 +1,24 @@
+linuxmuster-base7 (7.0.0-11ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-setup.py: fixed opsi password query.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 25 Mar 2017 14:32:28 +0100
+
+linuxmuster-base7 (7.0.0-10ubuntu0) lmn7-testing; urgency=low
+
+  * functions.py, subProc: fixed returncodes.
+  * linuxmuster-setup.py:
+    - fixed logging of stderr.
+    - optimized ini file handling.
+    - removed deprecated lmn62 share definitions from smb.conf.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 25 Mar 2017 14:29:21 +0100
+
 linuxmuster-base7 (7.0.0-9ubuntu0) lmn7-testing; urgency=low
 
   * import-devices: nvme partnr fix.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 13 Feb 2017 20:27:17 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 18 Feb 2017 21:49:46 +0100
 
 linuxmuster-base7 (7.0.0-8ubuntu0) lmn7-testing; urgency=low
 

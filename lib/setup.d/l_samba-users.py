@@ -2,7 +2,7 @@
 #
 # e_samba-users.py
 # thomas@linuxmuster.net
-# 20170212
+# 20170324
 #
 
 import configparser

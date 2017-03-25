@@ -2,7 +2,7 @@
 #
 # b_dialog.py
 # thomas@linuxmuster.net
-# 20170212
+# 20170325
 #
 
 import constants
@@ -289,9 +289,8 @@ if isValidHostIpv4(opsiip):
                 sys.exit(1)
         if opsipw == opsipw_repeated:
             break
-
-print('Opsi root password: ' + opsipw)
-setup.set('setup', 'opsipw', opsipw)
+    print('Opsi root password: ' + opsipw)
+    setup.set('setup', 'opsipw', opsipw)
 
 # write INIFILE
 msg = 'Writing input to setup ini file '

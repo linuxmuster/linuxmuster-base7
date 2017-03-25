@@ -2,7 +2,7 @@
 #
 # linuxmuster-setup.py
 # thomas@linuxmuster.net
-# 20170211
+# 20170324
 #
 
 import constants
@@ -11,6 +11,7 @@ import importlib
 import os
 import sys
 from functions import printScript
+from functions import subProc
 from functions import tee
 
 def usage():
@@ -38,8 +39,8 @@ for o, a in opts:
         unattended = True
     elif o in ("-c", "--config"):
         if os.path.isfile(a):
-            os.system('cp ' + a + ' ' + constants.CUSTOMINI)
-            os.system('chmod 600 ' + constants.CUSTOMINI)
+            subProc('cp ' + a + ' ' + constants.CUSTOMINI)
+            subProc('chmod 600 ' + constants.CUSTOMINI)
         else:
             usage()
             sys.exit()
@@ -52,10 +53,13 @@ for o, a in opts:
 # open logfile
 global logfile
 logfile = constants.SETUPLOG
+subProc('touch ' + logfile)
+subProc('chmod 600 ' + logfile)
 try:
     l = open(logfile, 'w')
     orig_out = sys.stdout
     sys.stdout = tee(sys.stdout, l)
+    sys.stderr = tee(sys.stderr, l)
 except:
     fail('Cannot open logfile ' + logfile + ' !')
     sys.exit()

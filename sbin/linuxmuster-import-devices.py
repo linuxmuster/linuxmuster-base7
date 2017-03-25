@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices.py
 # thomas@linuxmuster.net
-# 20170210
+# 20170322
 #
 
 import configparser
@@ -27,10 +27,11 @@ from functions import writeTextfile
 devices = constants.WIMPORTDATA
 
 # read INIFILE
-i = configparser.ConfigParser()
-i.read(constants.SETUPINI)
-serverip = i.get('setup', 'serverip')
-opsiip = i.get('setup', 'opsiip')
+setup = configparser.ConfigParser()
+setup.read(constants.SETUPINI)
+serverip = setup.get('setup', 'serverip')
+opsiip = setup.get('setup', 'opsiip')
+domainname = setup.get('setup', 'domainname')
 
 # start message
 printScript(os.path.basename(__file__), 'begin')
@@ -143,7 +144,7 @@ def doLinboStartconf(group):
     # process grub cfgs
     doGrubCfg(startconf, group, kopts_r)
 
-# write conf for dhcp clients
+# iterate over devices
 printScript('', 'begin')
 printScript('Processing dhcp clients:')
 f = open(devices, newline='')
@@ -164,6 +165,7 @@ for row in reader:
     else:
         htype = 'PXE-Host: '
     printScript('* ' + htype + host)
+    # write conf for dhcp clients
     d.write('host ' + ip + ' {\n')
     d.write('  hardware ethernet ' + mac + ';\n')
     d.write('  fixed-address ' + ip + ';\n')

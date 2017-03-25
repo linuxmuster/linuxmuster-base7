@@ -3,10 +3,11 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20170214
+# 20170322
 #
 
 import configparser
+import constants
 import datetime
 import getpass
 import netifaces
@@ -34,25 +35,40 @@ class tee(object):
         for f in self.files:
             f.flush()
 
+# invoke system commands
 def subProc(cmd, logfile=None):
     try:
+        rc = True
+        p = Popen(cmd, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
+        output, errors = p.communicate()
+        if p.returncode or errors:
+            rc = False
         if logfile != None:
             l = open(logfile, 'a')
             l.write('-' * 78 + '\n')
             now = str(datetime.datetime.now()).split('.')[0]
             l.write('#### ' + now + ' ' * (68 - len(now)) + ' ####\n')
             l.write('#### ' + cmd + ' ' * (68 - len(cmd)) + ' ####\n')
+            l.write(output)
+            if rc == False:
+                l.write(errors)
             l.write('-' * 78 + '\n')
-            l.flush()
-            p = Popen(cmd, shell=True, universal_newlines=True, stdout=l, stderr=STDOUT)
-        else:
-            p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
-        p.wait()
-        if logfile != None:
             l.close()
-        return True
+        return rc
     except:
         return False
+
+# samba-tool
+def sambaTool(options):
+    rc, adminpw = readTextfile(constants.ADADMINSECRET)
+    if rc == False:
+        return rc
+    logfile = constants.LOGDIR + '/samba-tool.log'
+    cmd = 'samba-tool ' + options + ' --username=Administrator --password=' + adminpw
+    # for debugging
+    #printScript(cmd)
+    rc = subProc(cmd, logfile)
+    return rc
 
 # print with or without linefeed
 def printLf(msg, lf):

@@ -2,7 +2,7 @@
 #
 # a_ini.py
 # thomas@linuxmuster.net
-# 20170213
+# 20170324
 #
 
 import configparser
@@ -24,26 +24,25 @@ logfile = constants.LOGDIR + '/setup.' + title + '.log'
 printScript('', 'begin')
 printScript(title)
 
-# custom or default setup ini file
-if os.path.isfile(constants.CUSTOMINI):
-    setupini = constants.CUSTOMINI
-    ini = 'custom'
-else:
-    setupini = constants.DEFAULTSINI
-    ini = 'default'
+# read ini files
+setup = configparser.ConfigParser()
+for i in [constants.DEFAULTSINI, constants.SETUPINI, constants.CUSTOMINI]:
+    # skip non existant file
+    if not os.path.isfile(i):
+        continue
+    # reading setup values
+    msg = 'Reading ' + i + ' '
+    printScript(msg, '', False, False, True)
+    try:
+        setup.read(i)
+        printScript(' Success!', '', True, True, False, len(msg))
+    except:
+        printScript(' Failed!', '', True, True, False, len(msg))
+        sys.exit(1)
 
-# reading setup values
-msg = 'Reading ' + ini + ' ini '
-printScript(msg, '', False, False, True)
-try:
-    setup = configparser.ConfigParser()
-    setup.read(setupini)
-    if ini == 'custom':
-        subProc('rm ' + constants.CUSTOMINI, logfile)
-    printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
-    sys.exit(1)
+# delete custom ini
+if os.path.isfile(constants.CUSTOMINI):
+    os.unlink(constants.CUSTOMINI)
 
 # compute missing values
 # from domainname
@@ -59,21 +58,21 @@ except:
     printScript(' not set!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# samba REALM
-msg = '* REALM '
+# samba realm
+msg = '* realm '
 printScript(msg, '', False, False, True)
 try:
-    REALM = setup.get('setup', 'REALM')
+    realm = setup.get('setup', 'realm')
 except:
-    REALM = ''
-if REALM == '' or REALM == None:
-    REALM = domainname.upper()
+    realm = ''
+if realm == '' or realm == None:
+    realm = domainname.upper()
     try:
-        setup.set('setup', 'REALM', REALM)
+        setup.set('setup', 'realm', realm)
     except:
         printScript(' failed to set!', '', True, True, False, len(msg))
         sys.exit(1)
-printScript(' ' + REALM, '', True, True, False, len(msg))
+printScript(' ' + realm, '', True, True, False, len(msg))
 
 # basedn
 msg = '* BaseDN '
@@ -106,20 +105,20 @@ except:
     sys.exit(1)
 
 # samba netbios name
-msg = '* NETBIOSNAME '
+msg = '* netbiosname '
 printScript(msg, '', False, False, True)
 try:
-    NETBIOSNAME = setup.get('setup', 'NETBIOSNAME')
+    netbiosname = setup.get('setup', 'netbiosname')
 except:
-    NETBIOSNAME = ''
-if not isValidHostname(NETBIOSNAME):
-    NETBIOSNAME = servername.upper()
+    netbiosname = ''
+if not isValidHostname(netbiosname):
+    netbiosname = servername.upper()
     try:
-        setup.set('setup', 'NETBIOSNAME', NETBIOSNAME)
+        setup.set('setup', 'netbiosname', netbiosname)
     except:
         printScript(' failed to set!', '', True, True, False, len(msg))
         sys.exit(1)
-printScript(' ' + NETBIOSNAME, '', True, True, False, len(msg))
+printScript(' ' + netbiosname, '', True, True, False, len(msg))
 
 # serverip
 msg = '* Server-IP '
@@ -255,22 +254,6 @@ except:
     printScript(' failed to set!', '', True, True, False, len(msg))
     sys.exit(1)
 printScript(' ' + iface, '', True, True, False, len(msg))
-
-# add missing setup options with default values
-if ini == 'custom':
-    msg = 'Adding missing setup values '
-    printScript(msg, '', False, False, True)
-    try:
-        defaults = configparser.ConfigParser()
-        defaults.read(constants.DEFAULTSINI)
-        for option in defaults.options('setup'):
-            if not option in setup.options('setup'):
-                value = defaults.get('setup', option)
-                setup.set('setup', option, value)
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
-        sys.exit(1)
 
 # write inifile finally
 msg = 'Writing setup ini file '
