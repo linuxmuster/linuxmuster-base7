@@ -19,11 +19,12 @@ def usage():
     print(' [options] may be:')
     print(' -c <file>, --config=<file> : path to ini file with setup values')
     print(' -u,        --unattended    : unattended mode, do not ask questions')
+    print(' -s,        --skip-fw       : skip firewall setup per ssh')
     print(' -h,        --help          : print this help')
 
 # get cli args
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "c:hu", ["config=", "help", "unattended"])
+    opts, args = getopt.getopt(sys.argv[1:], "c:hsu", ["config=", "help", "skip-fw", "unattended"])
 except getopt.GetoptError as err:
     # print help information and exit:
     print(err) # will print something like "option -a not recognized"
@@ -32,23 +33,6 @@ except getopt.GetoptError as err:
 
 # default values
 unattended = False
-
-# evaluate options
-for o, a in opts:
-    if o == "-u":
-        unattended = True
-    elif o in ("-c", "--config"):
-        if os.path.isfile(a):
-            subProc('cp ' + a + ' ' + constants.CUSTOMINI)
-            subProc('chmod 600 ' + constants.CUSTOMINI)
-        else:
-            usage()
-            sys.exit()
-    elif o in ("-h", "--help"):
-        usage()
-        sys.exit()
-    else:
-        assert False, "unhandled option"
 
 # open logfile
 global logfile
@@ -63,6 +47,25 @@ try:
 except:
     fail('Cannot open logfile ' + logfile + ' !')
     sys.exit()
+
+# evaluate options
+for o, a in opts:
+    if o == "-u":
+        unattended = True
+    if o == "-s":
+        subProc('touch ' + constants.SKIPFWFLAG)
+    elif o in ("-c", "--config"):
+        if os.path.isfile(a):
+            subProc('cp ' + a + ' ' + constants.CUSTOMINI)
+            subProc('chmod 600 ' + constants.CUSTOMINI)
+        else:
+            usage()
+            sys.exit()
+    elif o in ("-h", "--help"):
+        usage()
+        sys.exit()
+    else:
+        assert False, "unhandled option"
 
 # start message
 printScript(os.path.basename(__file__), 'begin')

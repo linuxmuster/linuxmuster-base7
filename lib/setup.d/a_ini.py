@@ -2,7 +2,7 @@
 #
 # a_ini.py
 # thomas@linuxmuster.net
-# 20170324
+# 20170329
 #
 
 import configparser
@@ -73,6 +73,22 @@ if realm == '' or realm == None:
         printScript(' failed to set!', '', True, True, False, len(msg))
         sys.exit(1)
 printScript(' ' + realm, '', True, True, False, len(msg))
+
+# sambadomain
+msg = '* sambadomain '
+printScript(msg, '', False, False, True)
+try:
+    sambadomain = setup.get('setup', 'sambadomain')
+except:
+    sambadomain = ''
+if sambadomain == '' or sambadomain == None:
+    sambadomain = domainname.split('.')[0].upper()
+    try:
+        setup.set('setup', 'sambadomain', sambadomain)
+    except:
+        printScript(' failed to set!', '', True, True, False, len(msg))
+        sys.exit(1)
+printScript(' ' + sambadomain, '', True, True, False, len(msg))
 
 # basedn
 msg = '* BaseDN '
@@ -254,6 +270,11 @@ except:
     printScript(' failed to set!', '', True, True, False, len(msg))
     sys.exit(1)
 printScript(' ' + iface, '', True, True, False, len(msg))
+
+# check if firewall setup shall be skipped
+if os.path.isfile(constants.SKIPFWFLAG):
+    setup.set('setup', 'skipfw', 'yes')
+    os.unlink(constants.SKIPFWFLAG)
 
 # write inifile finally
 msg = 'Writing setup ini file '

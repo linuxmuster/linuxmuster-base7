@@ -2,7 +2,7 @@
 #
 # f_ssh.py
 # thomas@linuxmuster.net
-# 20170212
+# 20170329
 #
 
 import configparser
@@ -37,32 +37,36 @@ try:
     setup.read(setupini)
     # get firewall ip
     firewallip = setup.get('setup', 'firewallip')
-    # get firewall root password
-    firewallpw = setup.get('setup', 'firewallpw')
+    # check if firewall shall be skipped
+    skipfw = setup.get('setup', 'skipfw').lower()
+    if skipfw == 'no':
+        # get firewall root password
+        firewallpw = setup.get('setup', 'firewallpw')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# test firewall and opsi passwords
-msg = 'Checking firewall password '
-printScript(msg, '', False, False, True)
-try:
-    nopw = False
-    if not isValidPassword(firewallpw):
-        nopw = True
-        printScript(' needs input:', '', True, True, False, len(msg))
-        firewallpw = enterPassword('firewall', False)
-        setup.set('setup', 'firewallpw', firewallpw)
-        modIni(setupini, 'setup', 'firewallpw', firewallpw)
-    else:
-        printScript(' Success!', '', True, True, False, len(msg))
-except:
-    if nopw == True:
-        msg = 'Firewall password '
-        printScript(msg, '', False, False, True)
-    printScript(' Failed!', '', True, True, False, len(msg))
-    sys.exit(1)
+# test firewall and opsi password
+if skipfw == 'no':
+    msg = 'Checking firewall password '
+    printScript(msg, '', False, False, True)
+    try:
+        nopw = False
+        if not isValidPassword(firewallpw):
+            nopw = True
+            printScript(' needs input:', '', True, True, False, len(msg))
+            firewallpw = enterPassword('firewall', False)
+            setup.set('setup', 'firewallpw', firewallpw)
+            modIni(setupini, 'setup', 'firewallpw', firewallpw)
+        else:
+            printScript(' Success!', '', True, True, False, len(msg))
+    except:
+        if nopw == True:
+            msg = 'Firewall password '
+            printScript(msg, '', False, False, True)
+        printScript(' Failed!', '', True, True, False, len(msg))
+        sys.exit(1)
 
 # get opsi ip if set
 opsiip = setup.get('setup', 'opsiip')
@@ -133,8 +137,13 @@ if os.path.isfile(known_hosts):
     subProc('rm -f ' + known_hosts, logfile)
 
 # iterate ips and ports
-items = [(firewallip, 22, firewallpw), (firewallip, 222, firewallpw)]
 success = []
+if skipfw == 'no':
+    items = [(firewallip, 22, firewallpw), (firewallip, 222, firewallpw)]
+else:
+    items = []
+    # ping firewallip to get arp entry
+    subProc('ping -c2 ' + firewallip, logfile)
 if isValidHostIpv4(opsiip):
     items.append((opsiip, 22, opsipw))
 for item in items:
@@ -150,7 +159,7 @@ rc = 0
 for item in items:
     ip = item[0]
     if not ip in success:
-        printScript('No SSH connection to host ' + ip + ' available!')
+        printScript('No connection to host ' + ip + ' available!')
         rc = 1
 if rc == 1:
     sys.exit(rc)

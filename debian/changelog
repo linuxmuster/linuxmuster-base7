@@ -1,8 +1,22 @@
-linuxmuster-base7 (7.0.0-12ubuntu0) lmn7-testing; urgency=low
+linuxmuster-base7 (7.0.0-14ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-setup.py:
+    - compute sambadomain from first part of domainname.
+    - added option to skip firewall setup.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 29 Mar 2017 11:07:14 +0200
+
+linuxmuster-base7 (7.0.0-13ubuntu0) lmn7-testing; urgency=low
 
   * linuxmuster-setup.py: fixed missing old smb.conf deletion.
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 25 Mar 2017 23:01:16 +0100
+
+linuxmuster-base7 (7.0.0-12ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-setup.py: fixed missing old smb.conf deletion.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 29 Mar 2017 09:56:13 +0200
 
 linuxmuster-base7 (7.0.0-11ubuntu0) lmn7-testing; urgency=low
 

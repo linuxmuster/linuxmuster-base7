@@ -2,7 +2,7 @@
 #
 # b_dialog.py
 # thomas@linuxmuster.net
-# 20170325
+# 20170329
 #
 
 import constants
@@ -106,15 +106,9 @@ basedn = 'DC=' + domainname.replace('.', ',DC=')
 setup.set('setup', 'basedn', basedn)
 
 # sambadomain
-while True:
-    rc, sambadomain = dialog.inputbox('Enter the samba domain name:', height=16, width=64, init=setup.get('setup', 'sambadomain'))
-    if rc == 'cancel':
-        sys.exit(1)
-    if isValidDomainname(sambadomain):
-        break
-
+sambadomain = domainname.split('.')[0].upper()
 print('Samba domain: ' + sambadomain)
-setup.set('setup', 'sambadomain', sambadomain.upper())
+setup.set('setup', 'sambadomain', sambadomain)
 
 # serverip
 while True:
@@ -259,21 +253,22 @@ print('Admin password: ' + adminpw)
 setup.set('setup', 'adminpw', adminpw)
 
 # firewall root password
-while True:
-    rc, firewallpw = dialog.passwordbox('Enter the firewall root password:')
-    if rc == 'cancel':
-        sys.exit(1)
-    if firewallpw == '':
-        continue
-    else:
-        rc, firewallpw_repeated = dialog.passwordbox('Re-enter the firewall root password:')
+skipfw = setup.get('setup', 'skipfw').lower()
+if skipfw == 'no':
+    while True:
+        rc, firewallpw = dialog.passwordbox('Enter the firewall root password:')
         if rc == 'cancel':
             sys.exit(1)
-    if firewallpw == firewallpw_repeated:
-        break
-
-print('Firewall root password: ' + firewallpw)
-setup.set('setup', 'firewallpw', firewallpw)
+        if firewallpw == '':
+            continue
+        else:
+            rc, firewallpw_repeated = dialog.passwordbox('Re-enter the firewall root password:')
+            if rc == 'cancel':
+                sys.exit(1)
+        if firewallpw == firewallpw_repeated:
+            break
+    print('Firewall root password: ' + firewallpw)
+    setup.set('setup', 'firewallpw', firewallpw)
 
 # opsi root password
 if isValidHostIpv4(opsiip):
