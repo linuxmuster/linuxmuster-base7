@@ -67,6 +67,9 @@ for f in os.listdir(constants.TPLDIR):
             placeholder = '@@' + value + '@@'
             if placeholder in filedata:
                 filedata = filedata.replace(placeholder, setup.get('setup', value))
+        # set LINBODIR
+        if '@@linbodir@@' in filedata:
+            filedata = filedata.replace('@@linbodir@@', constants.LINBODIR)
         # backup file
         if f not in do_not_backup:
             backupCfg(target)

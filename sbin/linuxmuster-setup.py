@@ -2,7 +2,7 @@
 #
 # linuxmuster-setup.py
 # thomas@linuxmuster.net
-# 20170324
+# 20170331
 #
 
 import constants
@@ -50,9 +50,9 @@ except:
 
 # evaluate options
 for o, a in opts:
-    if o == "-u":
+    if o in ("-u", "--unattended"):
         unattended = True
-    if o == "-s":
+    elif o in ("-s", "--skipfw"):
         subProc('touch ' + constants.SKIPFWFLAG)
     elif o in ("-c", "--config"):
         if os.path.isfile(a):

@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20170206
+# 20170331
 #
 
 # don't change this file
@@ -32,7 +32,7 @@ CUSTOMINI = CACHEDIR + '/custom.ini'
 SKIPFWFLAG = CACHEDIR + '/.skipfw'
 SETUPINI = VARDIR + '/setup.ini'
 DEFAULTSINI = SHAREDIR + '/setupdefaults.ini'
-LINBODIR = '/var/linbo'
+LINBODIR = '/srv/linbo'
 LINBOGRUBDIR = LINBODIR + '/boot/grub'
 LINBOLOGDIR = LOGDIR + '/linbo'
 LINBOSHAREDIR = SHAREDIR + '/linbo'
