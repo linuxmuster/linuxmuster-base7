@@ -2,7 +2,7 @@
 #
 # e_samba-provisioning.py
 # thomas@linuxmuster.net
-# 20170324
+# 20170403
 #
 
 import configparser
@@ -66,7 +66,7 @@ except:
 # alte smb.conf löschen
 smbconf = '/etc/samba/smb.conf'
 if os.path.isfile(smbconf):
-    map(os.unlink, glob.glob(smbconf))
+    os.unlink(smbconf)
 
 # provisioning samba
 msg = 'Provisioning samba '
