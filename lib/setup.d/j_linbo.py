@@ -2,7 +2,7 @@
 #
 # j_linbo.py
 # thomas@linuxmuster.net
-# 20170212
+# 20170405
 #
 
 import configparser
@@ -71,8 +71,11 @@ try:
         outfile.write(filedata)
     # set permissions
     subProc('chmod 600 ' + configfile, logfile)
+    # enable rsync service
+    subProc('systemctl enable rsync.service', logfile)
     # restart rsync service
-    subProc('service rsync restart', logfile)
+    subProc('service rsync stop', logfile)
+    subProc('service rsync start', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
