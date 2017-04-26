@@ -107,13 +107,15 @@ except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# set dns forwarder
-msg = 'Setting dns forwarder to ' + dnsforwarder + ' '
+# set dns forwarder & global options
+msg = 'Updating smb.conf with dnsforwarder & other global options '
 printScript(msg, '', False, False, True)
 try:
     samba = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     samba.read(smbconf)
     samba.set('global', 'dns forwarder', dnsforwarder)
+    samba.set('global', 'registry shares', 'yes')
+    samba.set('global', 'host msdfs', 'yes')
     with open (smbconf, 'w') as outfile:
         samba.write(outfile)
     printScript(' Success!', '', True, True, False, len(msg))
