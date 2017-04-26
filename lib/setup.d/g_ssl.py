@@ -2,7 +2,7 @@
 #
 # g_ssl.py
 # thomas@linuxmuster.net
-# 20170212
+# 20170426
 #
 
 """
@@ -37,7 +37,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser()
+    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     schoolname = setup.get('setup', 'schoolname')
     servername = setup.get('setup', 'servername')

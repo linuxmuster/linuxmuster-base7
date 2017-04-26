@@ -2,7 +2,7 @@
 #
 # e_samba-users.py
 # thomas@linuxmuster.net
-# 20170324
+# 20170426
 #
 
 import configparser
@@ -24,7 +24,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser()
+    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     adminpw = setup.get('setup', 'adminpw')
     domainname = setup.get('setup', 'domainname')
@@ -50,7 +50,6 @@ msg = 'Creating samba account for sophomorix-admin '
 printScript(msg, '', False, False, True)
 try:
     subProc('samba-tool user create sophomorix-admin "' + sophadminpw + '"', logfile)
-    subProc('samba-tool user setexpiry sophomorix-admin --noexpiry', logfile)
     subProc('samba-tool group addmembers "Domain Admins" sophomorix-admin', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
@@ -66,6 +65,19 @@ try:
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
+
+
+# no expiry for Administrator password
+msg = 'No expiry for administrative passwords '
+printScript(msg, '', False, False, True)
+try:
+    for i in ['Administrator', 'global-admin', 'sophomorix-admin']:
+        subProc('samba-tool user setexpiry ' + i + ' --noexpiry', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
 
 # create default-school, no connection to ad
 msg = 'Creating ou for default-school '

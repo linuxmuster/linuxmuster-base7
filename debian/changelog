@@ -1,3 +1,15 @@
+linuxmuster-base7 (7.0.0-18ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-setup.py:
+    - set all administrative passwords to noexpiry.
+    - set default domain to linuxmuster.lan.
+    - added notification to setup dialog that the first part of the internet domain name is used
+      as samba domain name.
+    - set configparser's inline_comment_prefixes to '#' & ';'.
+    - fixed realm in setup dialog.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 26 Apr 2017 16:24:51 +0200
+
 linuxmuster-base7 (7.0.0-17ubuntu0) lmn7-testing; urgency=low
 
   * linuxmuster-setup.py, j_linbo.py: added rsync service activation.

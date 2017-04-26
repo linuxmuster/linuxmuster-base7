@@ -2,7 +2,7 @@
 #
 # b_dialog.py
 # thomas@linuxmuster.net
-# 20170329
+# 20170426
 #
 
 import constants
@@ -31,7 +31,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser()
+    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
@@ -94,7 +94,7 @@ setup.set('setup', 'servername', servername)
 
 # domainname
 while True:
-    rc, domainname = dialog.inputbox('Enter the internet domain name:', height=16, width=64, init=setup.get('setup', 'domainname'))
+    rc, domainname = dialog.inputbox('Note that the first part of the domain name is used automatically as samba domain. Enter the internet domain name:', height=16, width=64, init=setup.get('setup', 'domainname'))
     if rc == 'cancel':
         sys.exit(1)
     if isValidDomainname(domainname):
@@ -103,7 +103,11 @@ while True:
 print('Domain name: ' + domainname)
 setup.set('setup', 'domainname', domainname)
 basedn = 'DC=' + domainname.replace('.', ',DC=')
+print('BaseDN: ' + basedn)
 setup.set('setup', 'basedn', basedn)
+realm = domainname.upper()
+print('REALM: ' + realm)
+setup.set('setup', 'realm', realm)
 
 # sambadomain
 sambadomain = domainname.split('.')[0].upper()

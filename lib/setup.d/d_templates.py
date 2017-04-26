@@ -2,7 +2,7 @@
 #
 # d_templates.py
 # thomas@linuxmuster.net
-# 20170212
+# 20170426
 #
 
 import configparser
@@ -27,10 +27,10 @@ printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
     # setupdefaults.ini
-    defaults = configparser.ConfigParser()
+    defaults = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     defaults.read(constants.DEFAULTSINI)
     # setup.ini
-    setup = configparser.ConfigParser()
+    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     # interface to use
     iface = setup.get('setup', 'iface')

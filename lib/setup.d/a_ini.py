@@ -2,7 +2,7 @@
 #
 # a_ini.py
 # thomas@linuxmuster.net
-# 20170329
+# 20170426
 #
 
 import configparser
@@ -25,7 +25,7 @@ printScript('', 'begin')
 printScript(title)
 
 # read ini files
-setup = configparser.ConfigParser()
+setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
 for i in [constants.DEFAULTSINI, constants.SETUPINI, constants.CUSTOMINI]:
     # skip non existant file
     if not os.path.isfile(i):

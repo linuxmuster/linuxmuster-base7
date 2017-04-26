@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20170322
+# 20170426
 #
 
 import configparser
@@ -218,7 +218,7 @@ def writeTextfile(tfile, content, flag):
 # modify ini file
 def modIni(inifile, section, option, value):
     try:
-        i = configparser.ConfigParser()
+        i = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
         i.read(inifile)
         i.set(section, option, value)
         with open(inifile, 'w') as outfile:

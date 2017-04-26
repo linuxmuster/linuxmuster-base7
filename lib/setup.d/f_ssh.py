@@ -2,7 +2,7 @@
 #
 # f_ssh.py
 # thomas@linuxmuster.net
-# 20170329
+# 20170426
 #
 
 import configparser
@@ -33,7 +33,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser()
+    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     # get firewall ip
     firewallip = setup.get('setup', 'firewallip')

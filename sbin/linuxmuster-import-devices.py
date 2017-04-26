@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices.py
 # thomas@linuxmuster.net
-# 20170322
+# 20170426
 #
 
 import configparser
@@ -27,7 +27,7 @@ from functions import writeTextfile
 devices = constants.WIMPORTDATA
 
 # read INIFILE
-setup = configparser.ConfigParser()
+setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
 setup.read(constants.SETUPINI)
 serverip = setup.get('setup', 'serverip')
 opsiip = setup.get('setup', 'opsiip')

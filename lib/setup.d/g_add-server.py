@@ -2,7 +2,7 @@
 #
 # g_add-server.py
 # thomas@linuxmuster.net
-# 20170212
+# 20170426
 #
 
 import configparser
@@ -28,7 +28,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser()
+    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     firewallip = setup.get('setup', 'firewallip')
     opsiip = setup.get('setup', 'opsiip')
