@@ -2,7 +2,7 @@
 #
 # c_fstab.py
 # thomas@linuxmuster.net
-# 20170212
+# 20170428
 #
 
 import constants
@@ -24,24 +24,35 @@ printScript(title)
 config = FSTabConfig(path='/etc/fstab')
 config.load()
 c = 0
+mountpoints = ['/', '/srv']
 while True:
-    if config.tree.filesystems[c].mountpoint == '/':
-        msg = 'Modifying mount options for / '
-        printScript(msg, '', False, False, True)
-        try:
-            config.tree.filesystems[c].options = constants.ROOTMNTOPTS
-            config.save()
-            printScript(' Success!', '', True, True, False, len(msg))
-        except:
-            printScript(' Failed!', '', True, True, False, len(msg))
-            sys.exit(1)
-        msg = 'Remounting / '
-        printScript(msg, '', False, False, True)
-        try:
-            subProc('mount -o remount /', logfile)
-            printScript(' Success!', '', True, True, False, len(msg))
-        except:
-            printScript(' Failed!', '', True, True, False, len(msg))
-            sys.exit(1)
+    # try all fstab entries
+    try:
+        for i in mountpoints:
+            # if mountpoint matches change mount options
+            if config.tree.filesystems[c].mountpoint == i:
+                msg = 'Modifying mount options for ' + i + ' '
+                printScript(msg, '', False, False, True)
+                try:
+                    # get mount options from constants
+                    config.tree.filesystems[c].options = constants.ROOTMNTOPTS
+                    # save fstab
+                    config.save()
+                    printScript(' Success!', '', True, True, False, len(msg))
+                except:
+                    printScript(' Failed!', '', True, True, False, len(msg))
+                    sys.exit(1)
+                msg = 'Remounting ' + i + ' '
+                printScript(msg, '', False, False, True)
+                # try to remount filesystem with new options
+                try:
+                    subProc('mount -o remount ' + i, logfile)
+                    printScript(' Success!', '', True, True, False, len(msg))
+                except:
+                    printScript(' Failed!', '', True, True, False, len(msg))
+                    sys.exit(1)
+        # next entry
+        c += 1
+    # break if entries ran out
+    except:
         break
-    c += 1

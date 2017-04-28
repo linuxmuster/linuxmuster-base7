@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.0-20ubuntu0) lmn7-testing; urgency=low
+
+  * setup: added fstab mount options for /srv.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 28 Apr 2017 12:50:11 +0200
+
 linuxmuster-base7 (7.0.0-19ubuntu0) lmn7-testing; urgency=low
 
   * setup smb.conf update, added global options 'registry shares = yes' and
