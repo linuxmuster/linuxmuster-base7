@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices.py
 # thomas@linuxmuster.net
-# 20170426
+# 20170512
 #
 
 import configparser
@@ -153,7 +153,7 @@ d = open(constants.DHCPDEVCONF, 'w')
 pxe_groups = []
 for row in reader:
     try:
-        room, host, group, mac, ip, field6, field7, field8, field9, field10, pxe = row
+        room, host, group, mac, ip, field6, field7, dhcpopts, field9, field10, pxe = row
     except:
         continue
     if room[:1] == '#' or room[:1] == ';':
@@ -170,6 +170,10 @@ for row in reader:
     d.write('  hardware ethernet ' + mac + ';\n')
     d.write('  fixed-address ' + ip + ';\n')
     d.write('  option host-name "' + host + '";\n')
+    # dhcp options have to be 5 chars minimum
+    if len(dhcpopts) > 4:
+        for opt in dhcpopts.split(','):
+            d.write('  ' + opt + ';\n')
     if pxe == '1' or pxe == '2' or pxe == '22':
         d.write('  option extensions-path "' + group + '";\n')
     elif pxe == '3':

@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.0.0-21ubuntu0) lmn7-testing; urgency=low
+
+  * device import:
+    - get host specific dhcp options from field 8 of devices file and write
+      it to devices.conf.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 12 May 2017 18:30:00 +0200
+
 linuxmuster-base7 (7.0.0-20ubuntu0) lmn7-testing; urgency=low
 
   * setup: added fstab mount options for /srv.
