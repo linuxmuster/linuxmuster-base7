@@ -1,10 +1,10 @@
 linuxmuster-base7 (7.0.0-21ubuntu0) lmn7-testing; urgency=low
 
-  * device import:
-    - get host specific dhcp options from field 8 of devices file and write
-      it to devices.conf.
+  * linuxmuster-import-devices.py:
+    - process host specific dhcp options from field 8 of devices.csv.
+    - create grub cfg links for every pxe host in LINBOGRUBDIR/hostcfg.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 12 May 2017 18:30:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 14 May 2017 13:49:16 +0200
 
 linuxmuster-base7 (7.0.0-20ubuntu0) lmn7-testing; urgency=low
 

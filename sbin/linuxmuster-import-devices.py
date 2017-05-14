@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices.py
 # thomas@linuxmuster.net
-# 20170512
+# 20170514
 #
 
 import configparser
@@ -144,6 +144,12 @@ def doLinboStartconf(group):
     # process grub cfgs
     doGrubCfg(startconf, group, kopts_r)
 
+
+# delete old config links
+# start.conf-ip
+os.system('find ' + constants.LINBODIR + ' -name start.conf-\* -type l -exec rm {} \;')
+os.system('find ' + constants.LINBOGRUBDIR + '/hostcfg -name \*.cfg -type l -exec rm {} \;')
+
 # iterate over devices
 printScript('', 'begin')
 printScript('Processing dhcp clients:')
@@ -170,21 +176,29 @@ for row in reader:
     d.write('  hardware ethernet ' + mac + ';\n')
     d.write('  fixed-address ' + ip + ';\n')
     d.write('  option host-name "' + host + '";\n')
-    # dhcp options have to be 5 chars minimum
+    # dhcp options have to be 5 chars minimum to get processed
     if len(dhcpopts) > 4:
         for opt in dhcpopts.split(','):
             d.write('  ' + opt + ';\n')
+    #
     if pxe == '1' or pxe == '2' or pxe == '22':
         d.write('  option extensions-path "' + group + '";\n')
     elif pxe == '3':
         d.write('  next-server ' + opsiip + ';\n')
         d.write('  filename "' + constants.OPSIPXEFILE + '";\n')
     d.write('}\n')
-    # link group's start.conf to host's one
+    # create per host links to corresponding group configs
     if pxe != '0':
+        # start.conf
         groupconf = 'start.conf.' + group
         hostlink = constants.LINBODIR + '/start.conf-' + ip
-        os.system('ln -sf ' + groupconf + ' ' + hostlink)
+        if not os.path.isfile(hostlink):
+            os.system('ln -sf ' + groupconf + ' ' + hostlink)
+        # grub config
+        groupconf = '../' + group + '.cfg'
+        hostlink = constants.LINBOGRUBDIR + '/hostcfg/' + host + '.cfg'
+        if not os.path.isfile(hostlink):
+            os.system('ln -sf ' + groupconf + ' ' + hostlink)
     # collect groups with pxe for later use
     if not group in pxe_groups and pxe != '0':
         pxe_groups.append(group)
