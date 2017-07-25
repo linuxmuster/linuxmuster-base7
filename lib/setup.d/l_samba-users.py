@@ -2,7 +2,7 @@
 #
 # e_samba-users.py
 # thomas@linuxmuster.net
-# 20170426
+# 20170620
 #
 
 import configparser
@@ -60,7 +60,7 @@ except:
 msg = 'Creating samba account for global-admin '
 printScript(msg, '', False, False, True)
 try:
-    subProc('sophomorix-admin --create global-admin --school global --password ' + adminpw, logfile)
+    subProc('sophomorix-admin --create-global-admin global-admin --password ' + adminpw, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
