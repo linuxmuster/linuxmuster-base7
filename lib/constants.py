@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20170331
+# 20170726
 #
 
 # don't change this file
@@ -41,3 +41,13 @@ LINBOCACHEDIR = CACHEDIR + '/linbo'
 DHCPDEVCONF = '/etc/dhcp/devices.conf'
 OPSIPXEFILE = 'linux/pxelinux.0'
 MANAGEDSTR = '### managed by linuxmuster.net ###'
+
+# grub stuff
+GRUBCOMMONMODS = 'all_video boot chain configfile cpuid echo net ext2 extcmd fat \
+gettext gfxmenu gfxterm gzio http ntfs linux linux16 loadenv minicmd net part_gpt \
+part_msdos png progress read reiserfs search sleep terminal test tftp'
+# arch specific netboot modules
+GRUBEFIMODS = GRUBCOMMONMODS + ' efi_gop efi_uga efinet linuxefi'
+GRUBI386MODS = GRUBCOMMONMODS + ' biosdisk gfxterm_background normal ntldr pxe'
+GRUBISOMODS = 'iso9660 usb'
+GRUBFONT = 'unicode'

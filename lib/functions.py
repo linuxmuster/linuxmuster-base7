@@ -3,11 +3,12 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20170426
+# 20170726
 #
 
 import configparser
 import constants
+import csv
 import datetime
 import getpass
 import netifaces
@@ -362,6 +363,15 @@ def randomPassword(size):
           break
   return password
 
+def isValidMac(mac):
+    try:
+        if re.match("[0-9a-f]{2}([-:])[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$", mac.lower()):
+            return True
+        else:
+            return False
+    except:
+        return False
+
 def isValidHostname(hostname):
     try:
         if (len(hostname) > 63 or hostname[0] == '-' or hostname[-1] == '-'):
@@ -397,6 +407,27 @@ def isValidHostIpv4(ip):
         return True
     except:
         return False
+
+# returns hostname and row from workstations file, search with ip, mac and hostname
+def getHostname(devices, search):
+    try:
+        hostname = None
+        hostrow = None
+        f = open(devices, newline='')
+        reader = csv.reader(f, delimiter=';', quoting=csv.QUOTE_NONE)
+        for row in reader:
+            # skip lines
+            if not re.match(r'[a-zA-Z0-9]', row[0]):
+                continue
+            room, host, group, mac, ip, field6, field7, dhcpopts, field9, field10, pxe = row
+            if search == ip or search.upper() == mac.upper() or search.lower() == host.lower():
+                hostname = host.lower()
+                hostrow = row
+                break
+        f.close()
+    except:
+        print('getHostname(): Error reading file ' + devices + '!')
+    return hostname, hostrow
 
 def isValidPassword(password):
     """
