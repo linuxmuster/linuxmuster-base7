@@ -2,7 +2,7 @@
 #
 # e_samba-users.py
 # thomas@linuxmuster.net
-# 20170726
+# 20170728
 #
 
 import configparser
@@ -71,10 +71,10 @@ except:
     sys.exit(1)
 
 # create global bind user
-msg = 'Creating samba account for bind-user '
+msg = 'Creating samba account for global-binduser '
 printScript(msg, '', False, False, True)
 try:
-    subProc('sophomorix-admin --create-global-binduser bind-user --password ' + binduserpw, logfile)
+    subProc('sophomorix-admin --create-global-binduser global-binduser --password ' + binduserpw, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -85,7 +85,7 @@ except:
 msg = 'No expiry for administrative passwords '
 printScript(msg, '', False, False, True)
 try:
-    for i in ['Administrator', 'global-admin', 'sophomorix-admin', 'bind-user']:
+    for i in ['Administrator', 'global-admin', 'sophomorix-admin', 'global-binduser']:
         subProc('samba-tool user setexpiry ' + i + ' --noexpiry', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:

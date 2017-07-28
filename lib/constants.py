@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20170726
+# 20170728
 #
 
 # don't change this file
@@ -17,7 +17,7 @@ SCHOOLCONF = DEFAULTSCHOOL + '/school.conf'
 WIMPORTDATA = DEFAULTSCHOOL + '/devices.csv'
 SSLDIR = SYSDIR + '/ssl'
 SECRETDIR = SYSDIR + '/.secret'
-BINDUSERSECRET = SECRETDIR + '/bind-user'
+BINDUSERSECRET = SECRETDIR + '/global-binduser'
 SOPHADMINSECRET = SECRETDIR + '/sophomorix-admin'
 ADADMINSECRET = SECRETDIR + '/administrator'
 LIBDIR = '/usr/lib/linuxmuster'
