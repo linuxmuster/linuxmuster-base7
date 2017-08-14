@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# f_ssh.py
+# setup ssh keys and ssh links to additional servers
 # thomas@linuxmuster.net
-# 20170426
+# 20170814
 #
 
 import configparser
@@ -15,9 +15,8 @@ from functions import backupCfg
 from functions import checkSocket
 from functions import doSshLink
 from functions import isValidHostIpv4
-from functions import isValidPassword
-from functions import enterPassword
 from functions import printScript
+from functions import replaceInFile
 from functions import setupComment
 from functions import subProc
 from functions import modIni
@@ -36,61 +35,20 @@ try:
     setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     # get firewall ip
-    firewallip = setup.get('setup', 'firewallip')
+    serverip = setup.get('setup', 'serverip')
+    opsiip = setup.get('setup', 'opsiip')
+    mailip = setup.get('setup', 'mailip')
+    opsipw = setup.get('setup', 'opsipw')
+    mailpw = setup.get('setup', 'mailpw')
     # check if firewall shall be skipped
-    skipfw = setup.get('setup', 'skipfw').lower()
-    if skipfw == 'no':
+    skipfw = setup.getboolean('setup', 'skipfw')
+    if skipfw == False:
         # get firewall root password
         firewallpw = setup.get('setup', 'firewallpw')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
-
-# test firewall and opsi password
-if skipfw == 'no':
-    msg = 'Checking firewall password '
-    printScript(msg, '', False, False, True)
-    try:
-        nopw = False
-        if not isValidPassword(firewallpw):
-            nopw = True
-            printScript(' needs input:', '', True, True, False, len(msg))
-            firewallpw = enterPassword('firewall', False)
-            setup.set('setup', 'firewallpw', firewallpw)
-            modIni(setupini, 'setup', 'firewallpw', firewallpw)
-        else:
-            printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        if nopw == True:
-            msg = 'Firewall password '
-            printScript(msg, '', False, False, True)
-        printScript(' Failed!', '', True, True, False, len(msg))
-        sys.exit(1)
-
-# get opsi ip if set
-opsiip = setup.get('setup', 'opsiip')
-# get opsi server's root password
-if isValidHostIpv4(opsiip):
-    msg = 'Checking opsi server password '
-    printScript(msg, '', False, False, True)
-    try:
-        opsipw = setup.get('setup', 'opsipw')
-        nopw = False
-        if not isValidPassword(opsipw):
-            nopw = True
-            printScript(' needs input:', '', True, True, False, len(msg))
-            opsipw = enterPassword('opsi server', False)
-            setup.set('setup', 'opsipw', opsipw)
-            modIni(setupini, 'setup', 'opsipw', opsipw)
-        else:
-            printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        if nopw == True:
-            msg = 'Opsi server password '
-            printScript(msg, '', False, False, True)
-        printScript(' Failed!', '', True, True, False, len(msg))
-        sys.exit(1)
 
 # variables
 hostkey_prefix = '/etc/ssh/ssh_host_'
@@ -117,6 +75,9 @@ for a in crypto_list:
     printScript(msg, '', False, False, True)
     try:
         subProc('ssh-keygen -t ' + a + ' -f ' + rootkey_prefix + a + ' -N ""', logfile)
+        if a == 'rsa':
+            subProc('base64 ' + constants.SSHPUBKEY + ' > ' + constants.SSHPUBKEYB64, logfile)
+            rc = replaceInFile(constants.SSHPUBKEYB64, '\n', '')
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
@@ -136,16 +97,13 @@ except:
 if os.path.isfile(known_hosts):
     subProc('rm -f ' + known_hosts, logfile)
 
-# iterate ips and ports
+# install ssh link to additional servers
 success = []
-if skipfw == 'no':
-    items = [(firewallip, 22, firewallpw), (firewallip, 222, firewallpw)]
-else:
-    items = []
-    # ping firewallip to get arp entry
-    subProc('ping -c2 ' + firewallip, logfile)
+items = []
 if isValidHostIpv4(opsiip):
     items.append((opsiip, 22, opsipw))
+if (isValidHostIpv4(mailip) and mailip != serverip):
+    items.append((mailip, 22, mailpw))
 for item in items:
     ip = item[0]
     port = item[1]

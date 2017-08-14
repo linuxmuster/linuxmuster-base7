@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# e_samba-users.py
+# create samba users
 # thomas@linuxmuster.net
-# 20170728
+# 20170812
 #
 
 import configparser
@@ -38,13 +38,12 @@ msg = 'Calculating random passwords '
 printScript(msg, '', False, False, True)
 try:
     sophadminpw = randomPassword(16)
-    binduserpw = randomPassword(16)
     with open(constants.SOPHADMINSECRET, 'w') as secret:
         secret.write(sophadminpw)
-    subProc('chmod 600 ' + constants.SOPHADMINSECRET, logfile)
+    binduserpw = randomPassword(16)
     with open(constants.BINDUSERSECRET, 'w') as secret:
         secret.write(binduserpw)
-    subProc('chmod 600 ' + constants.BINDUSERSECRET, logfile)
+    subProc('chmod 400 ' + constants.SECRETDIR + '/*', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

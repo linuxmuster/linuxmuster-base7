@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# e_samba-provisioning.py
+# samba provisioning
 # thomas@linuxmuster.net
-# 20170426
+# 20170812
 #
 
 import configparser
@@ -11,6 +11,7 @@ import glob
 import os
 import sys
 from functions import randomPassword
+from functions import replaceInFile
 from functions import printScript
 from functions import subProc
 
@@ -72,7 +73,7 @@ if os.path.isfile(smbconf):
 msg = 'Provisioning samba '
 printScript(msg, '', False, False, True)
 try:
-    subProc('samba-tool domain provision --use-xattrs=yes --server-role=dc --domain=' + sambadomain + ' --realm=' + realm + ' --adminpass=' + adadminpw, logfile)
+    subProc('samba-tool domain provision --use-rfc2307 --use-xattrs=yes --server-role=dc --domain=' + sambadomain + ' --realm=' + realm + ' --adminpass=' + adadminpw, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -108,7 +109,7 @@ except:
     sys.exit(1)
 
 # set dns forwarder & global options
-msg = 'Updating smb.conf with dnsforwarder & other global options '
+msg = 'Updating smb.conf with global options '
 printScript(msg, '', False, False, True)
 try:
     samba = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
@@ -116,12 +117,21 @@ try:
     samba.set('global', 'dns forwarder', dnsforwarder)
     samba.set('global', 'registry shares', 'yes')
     samba.set('global', 'host msdfs', 'yes')
+    samba.set('global', 'tls enabled', 'yes')
+    samba.set('global', 'tls keyfile', constants.SERVERKEY)
+    samba.set('global', 'tls certfile', constants.SERVERCERT)
+    samba.set('global', 'tls cafile', constants.CACERT)
+    samba.set('global', 'tls verify peer', 'ca_and_name')
+    samba.set('global', 'ldap server require strong auth', 'no')
     with open (smbconf, 'w') as outfile:
         samba.write(outfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
+
+# repair smb.conf's idmap option
+replaceInFile(smbconf, 'idmap_ldb = use rfc2307 = yes', 'idmap_ldb:use rfc2307 = yes')
 
 # restart services
 msg = 'Restarting samba services '

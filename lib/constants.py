@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20170728
+# 20170814
 #
 
 # don't change this file
@@ -16,12 +16,28 @@ DEFAULTSCHOOL = SOPHOSYSDIR + '/default-school'
 SCHOOLCONF = DEFAULTSCHOOL + '/school.conf'
 WIMPORTDATA = DEFAULTSCHOOL + '/devices.csv'
 SSLDIR = SYSDIR + '/ssl'
+CAKEY = SSLDIR + '/cakey.pem'
+CACERT = SSLDIR + '/cacert.pem'
+CACERTCRT = SSLDIR + '/cacert.crt'
+CACERTB64 = CACERT + '.b64'
+SERVERKEY = SSLDIR + '/server.key.pem'
+SERVERCERT = SSLDIR + '/server.cert.pem'
+FWKEY = SSLDIR + '/firewall.key.pem'
+FWCERT = SSLDIR + '/firewall.cert.pem'
+FWKEYB64 = FWKEY + '.b64'
+FWCERTB64 = FWCERT + '.b64'
+MAILKEY = SSLDIR + '/mail.key.pem'
+MAILCERT = SSLDIR + '/mail.cert.pem'
+SSHPUBKEY = '/root/.ssh/id_rsa.pub'
+SSHPUBKEYB64 = SSHPUBKEY + '.b64'
 SECRETDIR = SYSDIR + '/.secret'
 BINDUSERSECRET = SECRETDIR + '/global-binduser'
 SOPHADMINSECRET = SECRETDIR + '/sophomorix-admin'
 ADADMINSECRET = SECRETDIR + '/administrator'
+CAKEYSECRET = SECRETDIR + '/cakey'
 LIBDIR = '/usr/lib/linuxmuster'
 SHAREDIR = '/usr/share/linuxmuster'
+EXAMPLEDIR = SHAREDIR + '/examples'
 CACHEDIR = '/var/cache/linuxmuster'
 VARDIR = '/var/lib/linuxmuster'
 LOGDIR = '/var/log/linuxmuster'
@@ -29,7 +45,7 @@ SETUPLOG = LOGDIR + '/setup.log'
 SETUPDIR = LIBDIR + '/setup.d'
 TPLDIR = SHAREDIR + '/templates'
 CUSTOMINI = CACHEDIR + '/custom.ini'
-SKIPFWFLAG = CACHEDIR + '/.skipfw'
+FWOSCONFTPL = SHAREDIR + '/firewall/opnsense/config.xml.tpl'
 SETUPINI = VARDIR + '/setup.ini'
 DEFAULTSINI = SHAREDIR + '/setupdefaults.ini'
 LINBODIR = '/srv/linbo'

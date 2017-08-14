@@ -2,7 +2,7 @@
 #
 # thomas@linuxmuster.net
 # GPL v3
-# 20170130
+# 20170812
 #
 # sources system constants and setup values for shell scripts
 
@@ -14,10 +14,7 @@ eval "$(sed -e :a -e '/\\$/N; s/\\\n//; ta' "$CONSTANTS" | grep ^[A-Z] | \
              s|=\([A-Z]\)|=$\1|g
              s|\[||g
              s|\]||g
-             s|'||g
-             s|, | |g
-             s|\([A-Z]\)=|\1=\"|g
-             s|$|\"|g")"
+             s|\([A-Z]\)=|\1=|g")"
 
 # read setup values
 if [ -e "$SETUPINI" ]; then

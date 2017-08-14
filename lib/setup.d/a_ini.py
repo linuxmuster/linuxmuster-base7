@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# a_ini.py
+# process setup ini files
 # thomas@linuxmuster.net
-# 20170426
+# 20170814
 #
 
 import configparser
@@ -160,6 +160,17 @@ except:
     sys.exit(1)
 printScript(' ' + netmask, '', True, True, False, len(msg))
 
+# netmask
+msg = '* Bitmask '
+printScript(msg, '', False, False, True)
+try:
+    bitmask = setup.get('setup', 'bitmask')
+    n = IP(serverip + '/' + bitmask, make_net=True)
+except:
+    printScript(' ' + bitmask + ' is not valid!', '', True, True, False, len(msg))
+    sys.exit(1)
+printScript(' ' + bitmask, '', True, True, False, len(msg))
+
 # network address
 msg = '* Network '
 printScript(msg, '', False, False, True)
@@ -270,11 +281,6 @@ except:
     printScript(' failed to set!', '', True, True, False, len(msg))
     sys.exit(1)
 printScript(' ' + iface, '', True, True, False, len(msg))
-
-# check if firewall setup shall be skipped
-if os.path.isfile(constants.SKIPFWFLAG):
-    setup.set('setup', 'skipfw', 'yes')
-    os.unlink(constants.SKIPFWFLAG)
 
 # write inifile finally
 msg = 'Writing setup ini file '

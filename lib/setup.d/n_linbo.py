@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# j_linbo.py
+# linbo setup
 # thomas@linuxmuster.net
 # 20170426
 #

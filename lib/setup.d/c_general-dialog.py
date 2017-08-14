@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# b_dialog.py
+# general setup
 # thomas@linuxmuster.net
-# 20170426
+# 20170814
 #
 
 import constants
@@ -33,6 +33,7 @@ setupini = constants.SETUPINI
 try:
     setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
+    serverip = setup.get('setup', 'serverip')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -42,8 +43,9 @@ except:
 iface_list, iface_default = detectedInterfaces()
 
 # begin dialog
+title = 'General Setup'
 dialog = Dialog(dialog="dialog")
-dialog.set_background_title("linuxmuster.net 7")
+dialog.set_background_title('linuxmuster.net 7: ' + title)
 button_names = {dialog.OK:     "OK",
                 dialog.CANCEL: "Cancel"}
 
@@ -82,8 +84,9 @@ setup.set('setup', 'state', state )
 """
 
 # servername
+ititle = title + ': Servername'
 while True:
-    rc, servername = dialog.inputbox('Enter the hostname of the main server:', height=16, width=64, init=setup.get('setup', 'servername'))
+    rc, servername = dialog.inputbox('Enter the hostname of the main server:', title=ititle, height=16, width=64, init=setup.get('setup', 'servername'))
     if rc == 'cancel':
         sys.exit(1)
     if isValidHostname(servername):
@@ -93,8 +96,9 @@ print('Server hostname: ' + servername)
 setup.set('setup', 'servername', servername)
 
 # domainname
+ititle = title + ': Domainname'
 while True:
-    rc, domainname = dialog.inputbox('Note that the first part of the domain name is used automatically as samba domain. Enter the internet domain name:', height=16, width=64, init=setup.get('setup', 'domainname'))
+    rc, domainname = dialog.inputbox('Note that the first part of the domain name is used automatically as samba domain. Enter the internet domain name:', title=ititle, height=16, width=64, init=setup.get('setup', 'domainname'))
     if rc == 'cancel':
         sys.exit(1)
     if isValidDomainname(domainname):
@@ -114,37 +118,13 @@ sambadomain = domainname.split('.')[0].upper()
 print('Samba domain: ' + sambadomain)
 setup.set('setup', 'sambadomain', sambadomain)
 
-# serverip
-while True:
-    rc, serveripnet = dialog.inputbox('Enter the server ip address with appended netmask (e.g. 10.0.0.1/255.255.0.0):', height=16, width=64, init=setup.get('setup', 'serverip') + '/' + setup.get('setup', 'netmask'))
-    if rc == 'cancel':
-        sys.exit(1)
-    try:
-        n = IP(serveripnet, make_net=True)
-        break
-    except ValueError:
-        print("Invalid entry!")
-
-serverip = serveripnet.split('/')[0]
-network = IP(n).strNormal(0)
-netmask = IP(n).strNormal(2).split('/')[1]
-broadcast = IP(n).strNormal(3).split('-')[1]
-
-print('Server-IP: ' + serverip)
-print('Network: ' + network)
-print('Netmask: ' + netmask)
-print('Broadcast: ' + broadcast)
-setup.set('setup', 'serverip', serverip)
-setup.set('setup', 'network', network)
-setup.set('setup', 'netmask', netmask)
-setup.set('setup', 'broadcast', broadcast)
-
 # dhcprange
+ititle = title + ': DHCP Range'
 dhcprange1 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '100'
 dhcprange2 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '200'
 dhcprange = dhcprange1 + ' ' + dhcprange2
 while True:
-    rc, dhcprange = dialog.inputbox('Enter the two ip addresses for the free dhcp range (space separated):', height=16, width=64, init=dhcprange)
+    rc, dhcprange = dialog.inputbox('Enter the two ip addresses for the free dhcp range (space separated):', title=ititle, height=16, width=64, init=dhcprange)
     if rc == 'cancel':
         sys.exit(1)
     dhcprange1 = dhcprange.split(' ')[0]
@@ -155,12 +135,13 @@ print('DHCP range: ' + dhcprange)
 setup.set('setup', 'dhcprange', dhcprange)
 
 # firewallip
+ititle = title + ': Firewall IP'
 try:
     firewallip=setup.get('setup', 'firewallip')
 except:
-    firewallip = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.254'
+    firewallip = gatewayip
 while True:
-    rc, firewallip = dialog.inputbox('Enter the ip address of the firewall:', height=16, width=64, init=firewallip)
+    rc, firewallip = dialog.inputbox('Enter the ip address of the firewall:', title=ititle, height=16, width=64, init=firewallip)
     if rc == 'cancel':
         sys.exit(1)
     if isValidHostIpv4(firewallip):
@@ -168,43 +149,14 @@ while True:
 print('Firewall ip: ' + firewallip)
 setup.set('setup', 'firewallip', firewallip)
 
-# gatewayip
-try:
-    gatewayip=setup.get('setup', 'gatewayip')
-except:
-    gatewayip = firewallip
-while True:
-    rc, gatewayip = dialog.inputbox('Enter the ip address of the gateway:', height=16, width=64, init=gatewayip)
-    if rc == 'cancel':
-        sys.exit(1)
-    if isValidHostIpv4(gatewayip):
-        break
-print('Gateway ip: ' + gatewayip)
-setup.set('setup', 'gatewayip', gatewayip)
-
-# dns forwarder
-try:
-    dnsforwarder=setup.get('setup', 'dnsforwarder')
-except:
-    dnsforwarder = gatewayip
-if not isValidHostIpv4(dnsforwarder):
-    dnsforwarder = gatewayip
-while True:
-    rc, dnsforwarder = dialog.inputbox('Enter the ip address of the dns forwarder:', height=16, width=64, init=dnsforwarder)
-    if rc == 'cancel':
-        sys.exit(1)
-    if isValidHostIpv4(dnsforwarder):
-        break
-print('DNS forwarder: ' + dnsforwarder)
-setup.set('setup', 'dnsforwarder', dnsforwarder)
-
 # opsi
+ititle = title + ': Opsi IP'
 try:
     opsiip=setup.get('setup', 'opsiip')
 except:
     opsiip = ''
 while True:
-    rc, opsiip = dialog.inputbox('Enter the ip address of the opsi server (optional):', height=16, width=64, init=opsiip)
+    rc, opsiip = dialog.inputbox('Enter the ip address of the opsi server (optional):', title=ititle, height=16, width=64, init=opsiip)
     if rc == 'cancel':
         sys.exit(1)
     if opsiip == '' or isValidHostIpv4(opsiip):
@@ -212,9 +164,25 @@ while True:
 print('Opsi ip: ' + opsiip)
 setup.set('setup', 'opsiip', opsiip)
 
-# smtprelay
+# mail
+ititle = title + ': Mail IP'
+try:
+    mailip=setup.get('setup', 'mailip')
+except:
+    mailip = ''
 while True:
-    rc, smtprelay = dialog.inputbox('Enter the ip address of the smtp relay server (optional):', height=16, width=64, init=setup.get('setup', 'smtprelay'))
+    rc, mailip = dialog.inputbox('Enter the ip address of the mail server (optional):', title=ititle, height=16, width=64, init=mailip)
+    if rc == 'cancel':
+        sys.exit(1)
+    if mailip == '' or isValidHostIpv4(mailip):
+        break
+print('Mail ip: ' + mailip)
+setup.set('setup', 'mailip', mailip)
+
+# smtprelay
+ititle = title + ': SMTP Relay IP'
+while True:
+    rc, smtprelay = dialog.inputbox('Enter the ip address of the smtp relay server (optional):', title=ititle, height=16, width=64, init=setup.get('setup', 'smtprelay'))
     if rc == 'cancel':
         sys.exit(1)
     if ('smtprelay' not in locals() or smtprelay == ''):
@@ -226,47 +194,36 @@ while True:
 print('SMTP relay ip: ' + smtprelay)
 setup.set('setup', 'smtprelay', smtprelay)
 
-# network interface to use
-if iface_default == '':
-    # create items for dialog
-    choices = []
-    for item in iface_list:
-        choices.append((item, ''))
-    rc, iface = dialog.menu('Select the network interface to use:', choices=choices)
-else:
-    iface = iface_default
-
-print('Iface: ' + iface)
-setup.set('setup', 'iface', iface)
-
 # global admin password
+ititle = title + ': Password of global-admin'
 while True:
-    rc, adminpw = dialog.passwordbox('Enter the password to use for the global-admin (Note: Input will be unvisible!):')
+    rc, adminpw = dialog.passwordbox('Enter the password to use for the global-admin (Note: Input will be unvisible!):', title=ititle)
     if rc == 'cancel':
         sys.exit(1)
     if isValidPassword(adminpw):
         break
 while True:
-    rc, adminpw_repeated = dialog.passwordbox('Re-enter the global-admin password:')
+    rc, adminpw_repeated = dialog.passwordbox('Re-enter the global-admin password:', title=ititle)
     if rc == 'cancel':
         sys.exit(1)
     if adminpw == adminpw_repeated:
         break
 
-print('Admin password: ' + adminpw)
+print('global-admin password: ' + adminpw)
 setup.set('setup', 'adminpw', adminpw)
 
 # firewall root password
-skipfw = setup.get('setup', 'skipfw').lower()
-if skipfw == 'no':
+ititle = title + ': Firewall root password'
+skipfw = setup.getboolean('setup', 'skipfw')
+if skipfw == False:
     while True:
-        rc, firewallpw = dialog.passwordbox('Enter the firewall root password:')
+        rc, firewallpw = dialog.passwordbox('Enter the firewall root password:', title=ititle)
         if rc == 'cancel':
             sys.exit(1)
         if firewallpw == '':
             continue
         else:
-            rc, firewallpw_repeated = dialog.passwordbox('Re-enter the firewall root password:')
+            rc, firewallpw_repeated = dialog.passwordbox('Re-enter the firewall root password:', title=ititle)
             if rc == 'cancel':
                 sys.exit(1)
         if firewallpw == firewallpw_repeated:
@@ -275,21 +232,40 @@ if skipfw == 'no':
     setup.set('setup', 'firewallpw', firewallpw)
 
 # opsi root password
+ititle = title + ': Opsi root password'
 if isValidHostIpv4(opsiip):
     while True:
-        rc, opsipw = dialog.passwordbox('Enter the opsi root password:')
+        rc, opsipw = dialog.passwordbox('Enter the opsi root password:', title=ititle)
         if rc == 'cancel':
             sys.exit(1)
         if opsipw == '':
             continue
         else:
-            rc, opsipw_repeated = dialog.passwordbox('Re-enter the opsi root password:')
+            rc, opsipw_repeated = dialog.passwordbox('Re-enter the opsi root password:', title=ititle)
             if rc == 'cancel':
                 sys.exit(1)
         if opsipw == opsipw_repeated:
             break
     print('Opsi root password: ' + opsipw)
     setup.set('setup', 'opsipw', opsipw)
+
+# mail root password
+ititle = title + ': Mail root password'
+if (isValidHostIpv4(mailip) and mailip != serverip):
+    while True:
+        rc, mailpw = dialog.passwordbox('Enter the mail root password:', title=ititle)
+        if rc == 'cancel':
+            sys.exit(1)
+        if opsipw == '':
+            continue
+        else:
+            rc, mailpw_repeated = dialog.passwordbox('Re-enter the mail root password:', title=ititle)
+            if rc == 'cancel':
+                sys.exit(1)
+        if mailpw == mailpw_repeated:
+            break
+    print('Mail root password: ' + mailpw)
+    setup.set('setup', 'mailpw', mailpw)
 
 # write INIFILE
 msg = 'Writing input to setup ini file '

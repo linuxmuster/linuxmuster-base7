@@ -1,3 +1,16 @@
+linuxmuster-base7 (7.0.0-25ubuntu0) lmn7-testing; urgency=low
+
+  * setup improvements:
+    - reworked ssl certificate creation.
+    - configured certificates for various services.
+    - netonly mode to configure the network initially.
+    - improved ssh link handling.
+    - added firewall setup.
+    - optimized sequence.
+  * added script to create test users.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 14 Aug 2017 20:48:34 +0200
+
 linuxmuster-base7 (7.0.0-24ubuntu0) lmn7-testing; urgency=low
 
   * changed bind-user to global-binduser.

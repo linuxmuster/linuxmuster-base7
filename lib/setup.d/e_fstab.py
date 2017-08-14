@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# c_fstab.py
+# patch fstab with mount options
 # thomas@linuxmuster.net
 # 20170428
 #

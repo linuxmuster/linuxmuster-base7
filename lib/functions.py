@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20170726
+# 20170814
 #
 
 import configparser
@@ -22,6 +22,7 @@ import string
 
 from contextlib import closing
 from IPy import IP
+from shutil import copyfile
 from subprocess import Popen, PIPE, STDOUT
 
 # append stdout to logfile
@@ -131,30 +132,21 @@ def doSshLink(ip, port, secret):
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
         return False
-    # create .ssh dir on remote host
+    # deploy public key to host
+    msg = '  > Deploying public key '
     sshdir = '/root/.ssh'
-    msg = '  > Creating ' + sshdir + ' '
     printScript(msg, '', False, False, True)
     try:
-        stdin, stdout, stderr = ssh.exec_command('mkdir -p ' + sshdir)
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
-        return False
-    # copy public key to firewall
-    pubkey = sshdir + '/id_ecdsa.pub'
-    authorized_keys = sshdir + '/authorized_keys'
-    msg = '  > Transfering public key '
-    printScript(msg, '', False, False, True)
-    try:
+        ssh.exec_command('mkdir -p ' + sshdir)
+        ssh.exec_command('chmod 700 ' + sshdir)
         ftp = ssh.open_sftp()
-        ftp.put(pubkey, authorized_keys)
+        ftp.put(sshdir + '/id_rsa.pub', sshdir + '/authorized_keys')
+        ftp.close()
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
         return False
     # close connections
-    ftp.close()
     ssh.close()
     return True
 
@@ -216,10 +208,29 @@ def writeTextfile(tfile, content, flag):
         print('Failed to write ' + tfile + '!')
         return False
 
-# modify ini file
+# replace string in file
+def replaceInFile(tfile, search, replace):
+    rc = False
+    try:
+        bakfile = tfile + '.bak'
+        copyfile(tfile, bakfile)
+        rc, content = readTextfile(tfile)
+        rc = writeTextfile(tfile, content.replace(search, replace), 'w')
+    except:
+        print('Failed to write ' + tfile + '!')
+        if os.path.isfile(bakfile):
+            copyfile(bakfile, tfile)
+    if os.path.isfile(bakfile):
+        os.unlink(bakfile)
+    return rc
+
+# modify and write ini file
 def modIni(inifile, section, option, value):
     try:
         i = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+        if not os.path.isfile(inifile):
+            # create inifile
+            writeTextfile(inifile, '[' + section + ']\n', 'w')
         i.read(inifile)
         i.set(section, option, value)
         with open(inifile, 'w') as outfile:
