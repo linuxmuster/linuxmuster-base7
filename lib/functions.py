@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20170814
+# 20170816
 #
 
 import configparser
@@ -507,6 +507,11 @@ def detectedInterfaces():
 
 # return default network interface
 def getDefaultIface():
+    # first try to get a single interface
+    iface_list, iface_default = detectedInterfaces()
+    if iface_default != '':
+        return iface_list, iface_default
+    # second if more than one get it by default route
     route = "/proc/net/route"
     with open(route) as f:
         for line in f.readlines():
@@ -514,10 +519,10 @@ def getDefaultIface():
                 iface, dest, _, flags, _, _, _, _, _, _, _, =  line.strip().split()
                 if dest != '00000000' or not int(flags, 16) & 2:
                     continue
-                return iface
+                return iface_list, iface
             except:
                 continue
-    return None
+    return iface_list, iface_default
 
 # return datetime string
 def dtStr():

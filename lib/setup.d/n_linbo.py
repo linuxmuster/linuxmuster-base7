@@ -2,7 +2,7 @@
 #
 # linbo setup
 # thomas@linuxmuster.net
-# 20170426
+# 20170816
 #
 
 import configparser
@@ -126,10 +126,11 @@ except:
     sys.exit(1)
 
 # linbofs update
-msg = 'Starting update-linbofs '
+msg = 'Reconfiguring linbo '
 printScript(msg, '', False, False, True)
 try:
-    subProc('update-linbofs', logfile)
+    subProc('rm -f' + constants.SYSDIR + '/linbo/*key*', logfile)
+    subProc('dpkg-reconfigure linuxmuster-linbo7', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

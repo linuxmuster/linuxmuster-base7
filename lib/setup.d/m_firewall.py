@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20170812
+# 20170816
 #
 
 import configparser
@@ -62,7 +62,7 @@ if not isValidHostIpv4(mailip):
     mailip = network.split('.')[0] + '.' + network.split('.')[1] + '.' + network.split('.')[2] + '.3'
 
 # establish ssh connection to firewall
-msg = '* Establishing ssh connection to firewall '
+msg = '* Establishing ssh connection '
 printScript(msg, '', False, False, True)
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -74,7 +74,7 @@ except:
     sys.exit(1)
 
 # get current config
-msg = '* Downloading current firewall configuration '
+msg = '* Downloading current configuration '
 printScript(msg, '', False, False, True)
 try:
     ftp = ssh.open_sftp()
@@ -109,7 +109,7 @@ except:
     sys.exit(1)
 
 # create new firewall configuration
-msg = '* Creating firewall configuration '
+msg = '* Creating xml configuration file '
 printScript(msg, '', False, False, True)
 try:
     # read template
@@ -138,7 +138,7 @@ except:
     sys.exit(1)
 
 # upload new configfile
-msg = '* Uploading new firewall configuration '
+msg = '* Uploading configuration file '
 printScript(msg, '', False, False, True)
 try:
     ftp.put(fwconftmp, fwconf)

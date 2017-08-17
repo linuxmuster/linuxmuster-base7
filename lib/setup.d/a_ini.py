@@ -2,7 +2,7 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20170814
+# 20170816
 #
 
 import configparser
@@ -271,10 +271,9 @@ try:
 except:
     iface = ''
 if iface == '' or iface == None:
-    iface = getDefaultIface()
-if iface == None:
+    iface_list, iface = getDefaultIface()
+if iface == '':
     printScript(' not set!', '', True, True, False, len(msg))
-    sys.exit(1)
 try:
     setup.set('setup', 'iface', iface)
 except:

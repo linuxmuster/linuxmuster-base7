@@ -2,7 +2,7 @@
 #
 # network setup
 # thomas@linuxmuster.net
-# 20170814
+# 20170816
 #
 
 import constants
@@ -11,7 +11,7 @@ import sys
 import configparser
 
 from dialog import Dialog
-from functions import detectedInterfaces
+from functions import getDefaultIface
 from functions import isValidHostIpv4
 from functions import printScript
 from functions import subProc
@@ -30,13 +30,14 @@ setupini = constants.SETUPINI
 try:
     setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
+    iface_default = setup.get('setup', 'iface')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
 # get network interfaces
-iface_list, iface_default = detectedInterfaces()
+iface_list, iface_default = getDefaultIface()
 
 # begin dialog
 title = 'Network Setup'
@@ -47,7 +48,7 @@ button_names = {dialog.OK:     "OK",
 
 # network interface to use
 ititle = title + ': Interface'
-if iface_default == '':
+if iface_default == '' or iface_default == None:
     # create items for dialog
     choices = []
     for item in iface_list:
