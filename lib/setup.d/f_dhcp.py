@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# e_dhcp.py
+# setup dhcp service
 # thomas@linuxmuster.net
-# 20170212
+# 20170426
 #
 
 import configparser
@@ -27,7 +27,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser()
+    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     iface = setup.get('setup', 'iface')
     printScript(' Success!', '', True, True, False, len(msg))

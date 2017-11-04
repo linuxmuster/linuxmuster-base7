@@ -1,8 +1,137 @@
+linuxmuster-base7 (7.0.0-26ubuntu0) lmn7-testing; urgency=low
+
+  * setup improvements:
+    - improved network interface detection.
+  * added dependency to samba-dsdb-modules.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 16 Aug 2017 20:57:13 +0200
+
+linuxmuster-base7 (7.0.0-25ubuntu0) lmn7-testing; urgency=low
+
+  * setup improvements:
+    - reworked ssl certificate creation.
+    - configured certificates for various services.
+    - netonly mode to configure the network initially.
+    - improved network interface detection.
+    - improved ssh link handling.
+    - added firewall setup.
+    - optimized sequence.
+  * added script to create test users.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 16 Aug 2017 11:53:05 +0200
+
+linuxmuster-base7 (7.0.0-24ubuntu0) lmn7-testing; urgency=low
+
+  * changed bind-user to global-binduser.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 28 Jul 2017 10:32:01 +0200
+
+linuxmuster-base7 (7.0.0-23ubuntu0) lmn7-testing; urgency=low
+
+  * added grub stuff to constants.py.
+  * added functions isValidMac() and getHostname() to functions.py.
+  * added bind-user creation to setup.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 26 Jul 2017 18:10:26 +0200
+
+linuxmuster-base7 (7.0.0-22ubuntu0) lmn7-testing; urgency=low
+
+  * changed sophomorix syntax for creation of global-admin account.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 20 Jun 2017 15:48:59 +0200
+
+linuxmuster-base7 (7.0.0-21ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-import-devices.py:
+    - process host specific dhcp options from field 8 of devices.csv.
+    - create grub cfg links for every pxe host in LINBOGRUBDIR/hostcfg.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 14 May 2017 13:49:16 +0200
+
+linuxmuster-base7 (7.0.0-20ubuntu0) lmn7-testing; urgency=low
+
+  * setup: added fstab mount options for /srv.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 28 Apr 2017 12:50:11 +0200
+
+linuxmuster-base7 (7.0.0-19ubuntu0) lmn7-testing; urgency=low
+
+  * setup smb.conf update, added global options 'registry shares = yes' and
+    'host msdfs = yes'.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 26 Apr 2017 17:38:55 +0200
+
+linuxmuster-base7 (7.0.0-18ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-setup.py:
+    - set all administrative passwords to noexpiry.
+    - set default domain to linuxmuster.lan.
+    - added notification to setup dialog that the first part of the internet domain name is used
+      as samba domain name.
+    - set configparser's inline_comment_prefixes to '#' & ';'.
+    - fixed realm in setup dialog.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 26 Apr 2017 16:24:51 +0200
+
+linuxmuster-base7 (7.0.0-17ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-setup.py, j_linbo.py: added rsync service activation.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 05 Apr 2017 21:56:28 +0200
+
+linuxmuster-base7 (7.0.0-16ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-setup.py: fixed smb.conf deletion.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 05 Apr 2017 21:50:17 +0200
+
+linuxmuster-base7 (7.0.0-15ubuntu0) lmn7-testing; urgency=low
+
+  * changed LINBODIR to /srv/linbo.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 31 Mar 2017 16:41:33 +0200
+
+linuxmuster-base7 (7.0.0-14ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-setup.py:
+    - compute sambadomain from first part of domainname.
+    - added option to skip firewall setup.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 29 Mar 2017 11:07:14 +0200
+
+linuxmuster-base7 (7.0.0-13ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-setup.py: fixed missing old smb.conf deletion.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 25 Mar 2017 23:01:16 +0100
+
+linuxmuster-base7 (7.0.0-12ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-setup.py: fixed missing old smb.conf deletion.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 29 Mar 2017 09:56:13 +0200
+
+linuxmuster-base7 (7.0.0-11ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-setup.py: fixed opsi password query.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 25 Mar 2017 14:32:28 +0100
+
+linuxmuster-base7 (7.0.0-10ubuntu0) lmn7-testing; urgency=low
+
+  * functions.py, subProc: fixed returncodes.
+  * linuxmuster-setup.py:
+    - fixed logging of stderr.
+    - optimized ini file handling.
+    - removed deprecated lmn62 share definitions from smb.conf.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 25 Mar 2017 14:29:21 +0100
+
 linuxmuster-base7 (7.0.0-9ubuntu0) lmn7-testing; urgency=low
 
   * import-devices: nvme partnr fix.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 13 Feb 2017 20:27:17 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 18 Feb 2017 21:49:46 +0100
 
 linuxmuster-base7 (7.0.0-8ubuntu0) lmn7-testing; urgency=low
 

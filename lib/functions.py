@@ -3,10 +3,12 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20170214
+# 20170816
 #
 
 import configparser
+import constants
+import csv
 import datetime
 import getpass
 import netifaces
@@ -20,6 +22,7 @@ import string
 
 from contextlib import closing
 from IPy import IP
+from shutil import copyfile
 from subprocess import Popen, PIPE, STDOUT
 
 # append stdout to logfile
@@ -34,25 +37,40 @@ class tee(object):
         for f in self.files:
             f.flush()
 
+# invoke system commands
 def subProc(cmd, logfile=None):
     try:
+        rc = True
+        p = Popen(cmd, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
+        output, errors = p.communicate()
+        if p.returncode or errors:
+            rc = False
         if logfile != None:
             l = open(logfile, 'a')
             l.write('-' * 78 + '\n')
             now = str(datetime.datetime.now()).split('.')[0]
             l.write('#### ' + now + ' ' * (68 - len(now)) + ' ####\n')
             l.write('#### ' + cmd + ' ' * (68 - len(cmd)) + ' ####\n')
+            l.write(output)
+            if rc == False:
+                l.write(errors)
             l.write('-' * 78 + '\n')
-            l.flush()
-            p = Popen(cmd, shell=True, universal_newlines=True, stdout=l, stderr=STDOUT)
-        else:
-            p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
-        p.wait()
-        if logfile != None:
             l.close()
-        return True
+        return rc
     except:
         return False
+
+# samba-tool
+def sambaTool(options):
+    rc, adminpw = readTextfile(constants.ADADMINSECRET)
+    if rc == False:
+        return rc
+    logfile = constants.LOGDIR + '/samba-tool.log'
+    cmd = 'samba-tool ' + options + ' --username=Administrator --password=' + adminpw
+    # for debugging
+    #printScript(cmd)
+    rc = subProc(cmd, logfile)
+    return rc
 
 # print with or without linefeed
 def printLf(msg, lf):
@@ -114,30 +132,21 @@ def doSshLink(ip, port, secret):
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
         return False
-    # create .ssh dir on remote host
+    # deploy public key to host
+    msg = '  > Deploying public key '
     sshdir = '/root/.ssh'
-    msg = '  > Creating ' + sshdir + ' '
     printScript(msg, '', False, False, True)
     try:
-        stdin, stdout, stderr = ssh.exec_command('mkdir -p ' + sshdir)
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
-        return False
-    # copy public key to firewall
-    pubkey = sshdir + '/id_ecdsa.pub'
-    authorized_keys = sshdir + '/authorized_keys'
-    msg = '  > Transfering public key '
-    printScript(msg, '', False, False, True)
-    try:
+        ssh.exec_command('mkdir -p ' + sshdir)
+        ssh.exec_command('chmod 700 ' + sshdir)
         ftp = ssh.open_sftp()
-        ftp.put(pubkey, authorized_keys)
+        ftp.put(sshdir + '/id_rsa.pub', sshdir + '/authorized_keys')
+        ftp.close()
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
         return False
     # close connections
-    ftp.close()
     ssh.close()
     return True
 
@@ -199,10 +208,29 @@ def writeTextfile(tfile, content, flag):
         print('Failed to write ' + tfile + '!')
         return False
 
-# modify ini file
+# replace string in file
+def replaceInFile(tfile, search, replace):
+    rc = False
+    try:
+        bakfile = tfile + '.bak'
+        copyfile(tfile, bakfile)
+        rc, content = readTextfile(tfile)
+        rc = writeTextfile(tfile, content.replace(search, replace), 'w')
+    except:
+        print('Failed to write ' + tfile + '!')
+        if os.path.isfile(bakfile):
+            copyfile(bakfile, tfile)
+    if os.path.isfile(bakfile):
+        os.unlink(bakfile)
+    return rc
+
+# modify and write ini file
 def modIni(inifile, section, option, value):
     try:
-        i = configparser.ConfigParser()
+        i = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+        if not os.path.isfile(inifile):
+            # create inifile
+            writeTextfile(inifile, '[' + section + ']\n', 'w')
         i.read(inifile)
         i.set(section, option, value)
         with open(inifile, 'w') as outfile:
@@ -346,6 +374,15 @@ def randomPassword(size):
           break
   return password
 
+def isValidMac(mac):
+    try:
+        if re.match("[0-9a-f]{2}([-:])[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$", mac.lower()):
+            return True
+        else:
+            return False
+    except:
+        return False
+
 def isValidHostname(hostname):
     try:
         if (len(hostname) > 63 or hostname[0] == '-' or hostname[-1] == '-'):
@@ -381,6 +418,27 @@ def isValidHostIpv4(ip):
         return True
     except:
         return False
+
+# returns hostname and row from workstations file, search with ip, mac and hostname
+def getHostname(devices, search):
+    try:
+        hostname = None
+        hostrow = None
+        f = open(devices, newline='')
+        reader = csv.reader(f, delimiter=';', quoting=csv.QUOTE_NONE)
+        for row in reader:
+            # skip lines
+            if not re.match(r'[a-zA-Z0-9]', row[0]):
+                continue
+            room, host, group, mac, ip, field6, field7, dhcpopts, field9, field10, pxe = row
+            if search == ip or search.upper() == mac.upper() or search.lower() == host.lower():
+                hostname = host.lower()
+                hostrow = row
+                break
+        f.close()
+    except:
+        print('getHostname(): Error reading file ' + devices + '!')
+    return hostname, hostrow
 
 def isValidPassword(password):
     """
@@ -449,6 +507,11 @@ def detectedInterfaces():
 
 # return default network interface
 def getDefaultIface():
+    # first try to get a single interface
+    iface_list, iface_default = detectedInterfaces()
+    if iface_default != '':
+        return iface_list, iface_default
+    # second if more than one get it by default route
     route = "/proc/net/route"
     with open(route) as f:
         for line in f.readlines():
@@ -456,10 +519,10 @@ def getDefaultIface():
                 iface, dest, _, flags, _, _, _, _, _, _, _, =  line.strip().split()
                 if dest != '00000000' or not int(flags, 16) & 2:
                     continue
-                return iface
+                return iface_list, iface
             except:
                 continue
-    return None
+    return iface_list, iface_default
 
 # return datetime string
 def dtStr():

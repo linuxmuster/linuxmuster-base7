@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# j_linbo.py
+# linbo setup
 # thomas@linuxmuster.net
-# 20170212
+# 20170816
 #
 
 import configparser
@@ -32,7 +32,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser()
+    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     serverip = setup.get('setup', 'serverip')
     printScript(' Success!', '', True, True, False, len(msg))
@@ -71,8 +71,11 @@ try:
         outfile.write(filedata)
     # set permissions
     subProc('chmod 600 ' + configfile, logfile)
+    # enable rsync service
+    subProc('systemctl enable rsync.service', logfile)
     # restart rsync service
-    subProc('service rsync restart', logfile)
+    subProc('service rsync stop', logfile)
+    subProc('service rsync start', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -123,10 +126,11 @@ except:
     sys.exit(1)
 
 # linbofs update
-msg = 'Starting update-linbofs '
+msg = 'Reconfiguring linbo '
 printScript(msg, '', False, False, True)
 try:
-    subProc('update-linbofs', logfile)
+    subProc('rm -f' + constants.SYSDIR + '/linbo/*key*', logfile)
+    subProc('dpkg-reconfigure linuxmuster-linbo7', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

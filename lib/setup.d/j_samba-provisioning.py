@@ -1,15 +1,17 @@
 #!/usr/bin/python3
 #
-# e_samba-provisioning.py
+# samba provisioning
 # thomas@linuxmuster.net
-# 20170212
+# 20170812
 #
 
 import configparser
 import constants
+import glob
 import os
 import sys
 from functions import randomPassword
+from functions import replaceInFile
 from functions import printScript
 from functions import subProc
 
@@ -31,22 +33,14 @@ except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# save old smb.conf
-smbconf = '/etc/samba/smb.conf'
-smbconf_old = smbconf + '.old'
-if os.path.isfile(smbconf_old):
-    os.remove(smbconf_old)
-if os.path.isfile(smbconf):
-    os.rename(smbconf, smbconf_old )
-
 # read setup ini
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser()
+    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
-    REALM = setup.get('setup', 'domainname').upper()
+    realm = setup.get('setup', 'domainname').upper()
     sambadomain = setup.get('setup', 'sambadomain')
     dnsforwarder = setup.get('setup', 'gatewayip')
     domainname = setup.get('setup', 'domainname')
@@ -70,11 +64,16 @@ except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
+# alte smb.conf löschen
+smbconf = '/etc/samba/smb.conf'
+if os.path.isfile(smbconf):
+    os.unlink(smbconf)
+
 # provisioning samba
 msg = 'Provisioning samba '
 printScript(msg, '', False, False, True)
 try:
-    subProc('samba-tool domain provision --use-xattrs=yes --server-role=dc --domain=' + sambadomain + ' --realm=' + REALM + ' --adminpass=' + adadminpw, logfile)
+    subProc('samba-tool domain provision --use-rfc2307 --use-xattrs=yes --server-role=dc --domain=' + sambadomain + ' --realm=' + realm + ' --adminpass=' + adadminpw, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -89,7 +88,7 @@ try:
     if os.path.isfile(krb5conf_dst):
         os.remove(krb5conf_dst)
         os.symlink(krb5conf_src, krb5conf_dst)
-        k = configparser.ConfigParser()
+        k = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
         k.read(krb5conf_dst)
         k.set('libdefaults', 'dns_lookup_realm', 'true')
         with open(krb5conf_dst, 'w') as config:
@@ -104,13 +103,35 @@ msg = 'Provisioning sophomorix samba schema '
 printScript(msg, '', False, False, True)
 try:
     subProc('sophomorix-samba --schema-load', logfile)
-    # provide smb.conf prepared before
-    smbconf_setup = smbconf + '.setup'
-    subProc('mv ' + smbconf_setup + ' ' + smbconf, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
+
+# set dns forwarder & global options
+msg = 'Updating smb.conf with global options '
+printScript(msg, '', False, False, True)
+try:
+    samba = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+    samba.read(smbconf)
+    samba.set('global', 'dns forwarder', dnsforwarder)
+    samba.set('global', 'registry shares', 'yes')
+    samba.set('global', 'host msdfs', 'yes')
+    samba.set('global', 'tls enabled', 'yes')
+    samba.set('global', 'tls keyfile', constants.SERVERKEY)
+    samba.set('global', 'tls certfile', constants.SERVERCERT)
+    samba.set('global', 'tls cafile', constants.CACERT)
+    samba.set('global', 'tls verify peer', 'ca_and_name')
+    samba.set('global', 'ldap server require strong auth', 'no')
+    with open (smbconf, 'w') as outfile:
+        samba.write(outfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# repair smb.conf's idmap option
+replaceInFile(smbconf, 'idmap_ldb = use rfc2307 = yes', 'idmap_ldb:use rfc2307 = yes')
 
 # restart services
 msg = 'Restarting samba services '

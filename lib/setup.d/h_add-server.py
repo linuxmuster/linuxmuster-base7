@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# g_add-server.py
+# add additional servers to devices.csv
 # thomas@linuxmuster.net
-# 20170212
+# 20170814
 #
 
 import configparser
@@ -28,10 +28,12 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser()
+    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     firewallip = setup.get('setup', 'firewallip')
     opsiip = setup.get('setup', 'opsiip')
+    mailip = setup.get('setup', 'mailip')
+    serverip = setup.get('setup', 'serverip')
     devicescsv = constants.WIMPORTDATA
     printScript(' Success!', '', True, True, False, len(msg))
 except:
@@ -41,6 +43,7 @@ except:
 # get mac address from arp cache
 def getMacFromArp(ip):
     try:
+        subProc('ping -c2 ' + ip, logfile)
         pid = Popen(["arp", "-n", ip], stdout=PIPE)
         arpout = pid.communicate()[0]
         mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})", str(arpout)).groups()[0]
@@ -52,7 +55,7 @@ def getMacFromArp(ip):
 def addServerDevice(hostname, mac, ip):
     if mac == '':
         return False
-    line = 'server;' + hostname + ';nopxe;' + mac + ';' + ip + ';;;;;0;0'
+    line = 'server;' + hostname + ';nopxe;' + mac + ';' + ip + ';;;;;1;0'
     rc, content = readTextfile(devicescsv)
     if rc == False:
         return rc
@@ -78,6 +81,9 @@ device_array.append(('firewall', firewallip))
 # opsi
 if isValidHostIpv4(opsiip):
     device_array.append(('opsi', opsiip))
+# mail
+if (isValidHostIpv4(mailip) and mailip != serverip):
+    device_array.append(('mail', mailip))
 
 # iterate
 printScript('Creating device entries for:')

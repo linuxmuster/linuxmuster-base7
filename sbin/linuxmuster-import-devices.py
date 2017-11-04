@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices.py
 # thomas@linuxmuster.net
-# 20170210
+# 20170514
 #
 
 import configparser
@@ -27,10 +27,11 @@ from functions import writeTextfile
 devices = constants.WIMPORTDATA
 
 # read INIFILE
-i = configparser.ConfigParser()
-i.read(constants.SETUPINI)
-serverip = i.get('setup', 'serverip')
-opsiip = i.get('setup', 'opsiip')
+setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+setup.read(constants.SETUPINI)
+serverip = setup.get('setup', 'serverip')
+opsiip = setup.get('setup', 'opsiip')
+domainname = setup.get('setup', 'domainname')
 
 # start message
 printScript(os.path.basename(__file__), 'begin')
@@ -143,7 +144,13 @@ def doLinboStartconf(group):
     # process grub cfgs
     doGrubCfg(startconf, group, kopts_r)
 
-# write conf for dhcp clients
+
+# delete old config links
+# start.conf-ip
+os.system('find ' + constants.LINBODIR + ' -name start.conf-\* -type l -exec rm {} \;')
+os.system('find ' + constants.LINBOGRUBDIR + '/hostcfg -name \*.cfg -type l -exec rm {} \;')
+
+# iterate over devices
 printScript('', 'begin')
 printScript('Processing dhcp clients:')
 f = open(devices, newline='')
@@ -152,7 +159,7 @@ d = open(constants.DHCPDEVCONF, 'w')
 pxe_groups = []
 for row in reader:
     try:
-        room, host, group, mac, ip, field6, field7, field8, field9, field10, pxe = row
+        room, host, group, mac, ip, field6, field7, dhcpopts, field9, field10, pxe = row
     except:
         continue
     if room[:1] == '#' or room[:1] == ';':
@@ -164,21 +171,34 @@ for row in reader:
     else:
         htype = 'PXE-Host: '
     printScript('* ' + htype + host)
+    # write conf for dhcp clients
     d.write('host ' + ip + ' {\n')
     d.write('  hardware ethernet ' + mac + ';\n')
     d.write('  fixed-address ' + ip + ';\n')
     d.write('  option host-name "' + host + '";\n')
+    # dhcp options have to be 5 chars minimum to get processed
+    if len(dhcpopts) > 4:
+        for opt in dhcpopts.split(','):
+            d.write('  ' + opt + ';\n')
+    #
     if pxe == '1' or pxe == '2' or pxe == '22':
         d.write('  option extensions-path "' + group + '";\n')
     elif pxe == '3':
         d.write('  next-server ' + opsiip + ';\n')
         d.write('  filename "' + constants.OPSIPXEFILE + '";\n')
     d.write('}\n')
-    # link group's start.conf to host's one
+    # create per host links to corresponding group configs
     if pxe != '0':
+        # start.conf
         groupconf = 'start.conf.' + group
         hostlink = constants.LINBODIR + '/start.conf-' + ip
-        os.system('ln -sf ' + groupconf + ' ' + hostlink)
+        if not os.path.isfile(hostlink):
+            os.system('ln -sf ' + groupconf + ' ' + hostlink)
+        # grub config
+        groupconf = '../' + group + '.cfg'
+        hostlink = constants.LINBOGRUBDIR + '/hostcfg/' + host + '.cfg'
+        if not os.path.isfile(hostlink):
+            os.system('ln -sf ' + groupconf + ' ' + hostlink)
     # collect groups with pxe for later use
     if not group in pxe_groups and pxe != '0':
         pxe_groups.append(group)

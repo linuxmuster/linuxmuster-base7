@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# z_final.py
+# final tasks
 # thomas@linuxmuster.net
 # 20170212
 #

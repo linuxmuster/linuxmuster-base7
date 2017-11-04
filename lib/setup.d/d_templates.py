@@ -1,18 +1,20 @@
 #!/usr/bin/python3
 #
-# d_templates.py
+# process config templates
 # thomas@linuxmuster.net
-# 20170212
+# 20170814
 #
 
 import configparser
 import constants
+import datetime
 import os
 import sys
 
 from functions import setupComment
 from functions import backupCfg
 from functions import printScript
+from functions import replaceInFile
 from functions import subProc
 
 title = os.path.basename(__file__).replace('.py', '').split('_')[1]
@@ -27,13 +29,16 @@ printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
     # setupdefaults.ini
-    defaults = configparser.ConfigParser()
+    defaults = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     defaults.read(constants.DEFAULTSINI)
     # setup.ini
-    setup = configparser.ConfigParser()
+    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     # interface to use
     iface = setup.get('setup', 'iface')
+    serverip = setup.get('setup', 'serverip')
+    dnsforwarder = setup.get('setup', 'dnsforwarder')
+    netonly = setup.getboolean('setup', 'netonly')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -49,6 +54,9 @@ do_not_backup = [ 'interfaces.linuxmuster', 'dovecot.linuxmuster.conf', 'smb.con
 
 printScript('Processing config templates:')
 for f in os.listdir(constants.TPLDIR):
+    # process interfaces only in netonly mode
+    if (netonly == True and 'interfaces' not in f):
+        continue
     source = constants.TPLDIR + '/' + f
     msg = ' * ' + f + ' '
     printScript(msg, '', False, False, True)
@@ -67,6 +75,9 @@ for f in os.listdir(constants.TPLDIR):
             placeholder = '@@' + value + '@@'
             if placeholder in filedata:
                 filedata = filedata.replace(placeholder, setup.get('setup', value))
+        # set LINBODIR
+        if '@@linbodir@@' in filedata:
+            filedata = filedata.replace('@@linbodir@@', constants.LINBODIR)
         # backup file
         if f not in do_not_backup:
             backupCfg(target)
@@ -78,8 +89,9 @@ for f in os.listdir(constants.TPLDIR):
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
 
-# compatibility link
-subProc('ln -sf ' + constants.WIMPORTDATA + ' ' + constants.SYSDIR + '/workstations', logfile)
+# patch nameserver in netonly mode
+if netonly == True:
+    rc = replaceInFile('/etc/network/interfaces.d/linuxmuster', 'dns-nameservers ' + serverip, 'dns-nameservers ' + dnsforwarder)
 
 # restart network interface
 msg = 'Restarting network '
@@ -90,3 +102,12 @@ try:
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
+
+# set server time
+msg = 'Adjusting server time '
+printScript(msg, '', False, False, True)
+subProc('service ntp stop', logfile)
+subProc('ntpdate pool.ntp.org', logfile)
+subProc('service ntp start', logfile)
+now = str(datetime.datetime.now()).split('.')[0]
+printScript(' ' + now, '', True, True, False, len(msg))
