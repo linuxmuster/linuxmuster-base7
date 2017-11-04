@@ -17,6 +17,10 @@ from functions import printScript
 from functions import subProc
 from IPy import IP
 
+import gettext
+t = gettext.translation('linuxmuster-base')
+_ = t.gettext
+
 title = os.path.basename(__file__).replace('.py', '').split('_')[1]
 logfile = constants.LOGDIR + '/setup.' + title + '.log'
 
@@ -40,20 +44,20 @@ except:
 iface_list, iface_default = getDefaultIface()
 
 # begin dialog
-title = 'Network Setup'
+title = _('Network Setup')
 dialog = Dialog(dialog="dialog")
 dialog.set_background_title('linuxmuster.net 7: ' + title)
-button_names = {dialog.OK:     "OK",
-                dialog.CANCEL: "Cancel"}
+button_names = {dialog.OK:     _('OK'),
+                dialog.CANCEL: _('Cancel')}
 
 # network interface to use
-ititle = title + ': Interface'
+ititle = title + ': ' + _('Interface')
 if iface_default == '' or iface_default == None:
     # create items for dialog
     choices = []
     for item in iface_list:
         choices.append((item, ''))
-    rc, iface = dialog.menu('Select the network interface to use:', choices=choices, title=ititle)
+    rc, iface = dialog.menu(_('Select the network interface:'), choices=choices, title=ititle)
 else:
     iface = iface_default
 
@@ -61,9 +65,9 @@ print('Iface: ' + iface)
 setup.set('setup', 'iface', iface)
 
 # serverip
-ititle = title + ': Server IP'
+ititle = title + ': ' + _('Server IP')
 while True:
-    rc, serveripnet = dialog.inputbox('Enter the server ip address with appended bitmask or netmask (e.g.  10.0.0.1/16 or 10.0.0.1/255.255.0.0):', title=ititle, height=16, width=64, init=setup.get('setup', 'serverip') + '/' + setup.get('setup', 'bitmask'))
+    rc, serveripnet = dialog.inputbox(_('Enter the server IP address with appended bitmask or netmask (e.g.  10.0.0.1/16 or 10.0.0.1/255.255.0.0):'), title=ititle, height=16, width=64, init=setup.get('setup', 'serverip') + '/' + setup.get('setup', 'bitmask'))
     if rc == 'cancel':
         sys.exit(1)
     try:
@@ -90,13 +94,13 @@ setup.set('setup', 'netmask', netmask)
 setup.set('setup', 'broadcast', broadcast)
 
 # gatewayip
-ititle = title + ': Gateway IP'
+ititle = title + ': ' + _('Gateway IP')
 try:
     gatewayip=setup.get('setup', 'gatewayip')
 except:
     gatewayip = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.254'
 while True:
-    rc, gatewayip = dialog.inputbox('Enter the ip address of the gateway:', title=ititle, height=16, width=64, init=gatewayip)
+    rc, gatewayip = dialog.inputbox(_('Enter the IP address of the gateway:'), title=ititle, height=16, width=64, init=gatewayip)
     if rc == 'cancel':
         sys.exit(1)
     if isValidHostIpv4(gatewayip):
@@ -105,7 +109,7 @@ print('Gateway ip: ' + gatewayip)
 setup.set('setup', 'gatewayip', gatewayip)
 
 # dns forwarder
-ititle = title + ': DNS IP'
+ititle = title + ': ' + _('DNS IP')
 try:
     dnsforwarder=setup.get('setup', 'dnsforwarder')
 except:
@@ -113,7 +117,7 @@ except:
 if not isValidHostIpv4(dnsforwarder):
     dnsforwarder = gatewayip
 while True:
-    rc, dnsforwarder = dialog.inputbox('Enter the ip address of the dns forwarder:', title=ititle, height=16, width=64, init=dnsforwarder)
+    rc, dnsforwarder = dialog.inputbox(_('Enter the IP address of the DNS forwarder:'), title=ititle, height=16, width=64, init=dnsforwarder)
     if rc == 'cancel':
         sys.exit(1)
     if isValidHostIpv4(dnsforwarder):

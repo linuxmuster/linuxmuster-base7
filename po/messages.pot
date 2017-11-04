@@ -1,184 +1,169 @@
-# Translators:
-# zefanja <npm@zefanjas.de>, 201>, 2017.
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: 7\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "POT-Creation-Date: 2017-11-04 11:00+ICT\n"
-"PO-Revision-Date: 2017-11-04 11:17+0700\n"
-"Last-Translator: zefanja <npm@zefanjas.de>, 2017\n"
-"Language-Team: German (https://www.transifex.com/linuxmusternet/teams/62586/"
-"de/)\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: ENCODING\n"
 "Generated-By: pygettext.py 1.5\n"
-"Language: de\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Gtranslator 2.91.7\n"
+
 
 #: lib/setup.d/b_network-dialog.py:47
 msgid "Network Setup"
-msgstr "Netzwerkeinrichtung"
+msgstr ""
 
 #: lib/setup.d/b_network-dialog.py:50 lib/setup.d/c_general-dialog.py:54
 msgid "OK"
-msgstr "OK"
+msgstr ""
 
 #: lib/setup.d/b_network-dialog.py:51 lib/setup.d/c_general-dialog.py:55
 msgid "Cancel"
-msgstr "Abbrechen"
+msgstr ""
 
 #: lib/setup.d/b_network-dialog.py:54
 msgid "Interface"
-msgstr "Interface"
+msgstr ""
 
 #: lib/setup.d/b_network-dialog.py:60
 msgid "Select the network interface:"
-msgstr "Abbrechen"
+msgstr ""
 
 #: lib/setup.d/b_network-dialog.py:68
 msgid "Server IP"
-msgstr "Server IP"
+msgstr ""
 
 #: lib/setup.d/b_network-dialog.py:70
-msgid ""
-"Enter the server IP address with appended bitmask or netmask (e.g.  "
-"10.0.0.1/16 or 10.0.0.1/255.255.0.0):"
+msgid "Enter the server IP address with appended bitmask or netmask (e.g.  10.0.0.1/16 or 10.0.0.1/255.255.0.0):"
 msgstr ""
-"Geben Sie die Server-IP-Adresse mit angehngter Bitmaske oder Netzmaske ein "
-"(z.B. 10.0.0.0.1/16 oder 10.0.0.0.1/255.255.0.0):"
 
 #: lib/setup.d/b_network-dialog.py:97
 msgid "Gateway IP"
-msgstr "Gateway IP"
+msgstr ""
 
 #: lib/setup.d/b_network-dialog.py:103
 msgid "Enter the IP address of the gateway:"
-msgstr "Geben Sie die IP-Adresse des Gateways ein:"
+msgstr ""
 
 #: lib/setup.d/b_network-dialog.py:112
 msgid "DNS IP"
-msgstr "DNS IP"
+msgstr ""
 
 #: lib/setup.d/b_network-dialog.py:120
 msgid "Enter the IP address of the DNS forwarder:"
-msgstr "Geben Sie die IP-Adresse des DNS-Forwarders ein:"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:51
 msgid "General Setup"
-msgstr "Allgemeine Einstellungen"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:92
 msgid "Servername"
-msgstr "Servername"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:94
 msgid "Enter the hostname of the main server:"
-msgstr "Geben Sie den Hostnamen des Hauptservers ein:"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:104
 msgid "Domainname"
-msgstr "Domainname"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:106
-msgid ""
-"Note that the first part of the domain name is used automatically as samba "
-"domain. Enter the internet domain name:"
+msgid "Note that the first part of the domain name is used automatically as samba domain. Enter the internet domain name:"
 msgstr ""
-"Geben Sie den Internet-Domnennamen ein. Beachten Sie, dass der erste Teil "
-"des Domain-Namens automatisch als Samba-Domne verwendet wird!"
 
 #: lib/setup.d/c_general-dialog.py:127
 msgid "DHCP Range"
-msgstr "DHCP-Bereich"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:132
 msgid "Enter the two IP addresses for the free DHCP range (space separated):"
 msgstr ""
-"Geben Sie die beiden IP-Adressen fr den freien DHCP-Bereich (Leerzeichen "
-"getrennt) ein:"
 
 #: lib/setup.d/c_general-dialog.py:143
 msgid "Firewall IP"
-msgstr "Firewall IP"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:149
 msgid "Enter the IP address of the firewall:"
-msgstr "Geben Sie die IP-Adresse der Firewall ein:"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:158
 msgid "Opsi IP"
-msgstr "Opsi IP"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:164
 msgid "Enter the IP address of the opsi server (optional):"
-msgstr "Geben Sie die IP-Adresse des Opsi-Servers ein (optional):"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:173
 msgid "Mail IP"
-msgstr "Mail IP"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:179
 msgid "Enter the IP address of the mail server (optional):"
-msgstr "Geben Sie die IP-Adresse des Mail-Servers ein (optional):"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:188
 msgid "SMTP Relay IP"
-msgstr "SMTP Relay IP"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:190
 msgid "Enter the IP address of the SMTP relay server (optional):"
-msgstr "Geben Sie die IP-Adresse des SMTP-Relay-Servers ein (optional):"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:203
 msgid "Password of global-admin"
-msgstr "Passwort von global-admin"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:205
-msgid ""
-"Enter the password to use for the global-admin (Note: Input will be "
-"unvisible!):"
+msgid "Enter the password to use for the global-admin (Note: Input will be unvisible!):"
 msgstr ""
-"Geben Sie das Passwort fr die global-admin ein (Hinweis: Die Eingabe ist "
-"nicht sichtbar!):"
 
 #: lib/setup.d/c_general-dialog.py:211
 msgid "Re-enter the global-admin password:"
-msgstr "Geben Sie das Passwort fr Global-Admin erneut ein:"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:221
 msgid "Firewall root password"
-msgstr "Firewall Root-Passwort"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:225
 msgid "Enter the firewall root password:"
-msgstr "Geben Sie das Root-Passwort der Firewall ein:"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:231
 msgid "Re-enter the firewall root password:"
-msgstr "Geben Sie das Root-Passwort der Firewall erneut ein:"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:240
 msgid "Opsi root password"
-msgstr "Opsi Root-Passwort"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:243
 msgid "Enter the opsi root password:"
-msgstr "Geben Sie das Opsi Root-Passwort ein:"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:249
 msgid "Re-enter the opsi root password:"
-msgstr "Geben Sie das Opsi Root-Passwort erneut ein:"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:258
 msgid "Mail root password"
-msgstr "Mail Root-Passwort"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:261
 msgid "Enter the mail root password:"
-msgstr "Geben Sie das Mail Root-Passwort ein:"
+msgstr ""
 
 #: lib/setup.d/c_general-dialog.py:267
 msgid "Re-enter the mail root password:"
-msgstr "Geben Sie das Mail Root-Passwort erneut ein:"
+msgstr ""
+

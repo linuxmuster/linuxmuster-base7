@@ -48,7 +48,7 @@ except:
 iface_list, iface_default = detectedInterfaces()
 
 # begin dialog
-title = 'General Setup'
+title = _('General Setup')
 dialog = Dialog(dialog="dialog")
 dialog.set_background_title('linuxmuster.net 7: ' + title)
 button_names = {dialog.OK:     _("OK"),
@@ -89,7 +89,7 @@ setup.set('setup', 'state', state )
 """
 
 # servername
-ititle = title + ': Servername'
+ititle = title + ': ' + _('Servername')
 while True:
     rc, servername = dialog.inputbox(_('Enter the hostname of the main server:'), title=ititle, height=16, width=64, init=setup.get('setup', 'servername'))
     if rc == 'cancel':
@@ -101,7 +101,7 @@ print('Server hostname: ' + servername)
 setup.set('setup', 'servername', servername)
 
 # domainname
-ititle = title + ': Domainname'
+ititle = title + ': ' + _('Domainname')
 while True:
     rc, domainname = dialog.inputbox(_('Note that the first part of the domain name is used automatically as samba domain. Enter the internet domain name:'), title=ititle, height=16, width=64, init=setup.get('setup', 'domainname'))
     if rc == 'cancel':
@@ -124,12 +124,12 @@ print('Samba domain: ' + sambadomain)
 setup.set('setup', 'sambadomain', sambadomain)
 
 # dhcprange
-ititle = title + ': DHCP Range'
+ititle = title + ': ' + _('DHCP Range')
 dhcprange1 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '100'
 dhcprange2 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '200'
 dhcprange = dhcprange1 + ' ' + dhcprange2
 while True:
-    rc, dhcprange = dialog.inputbox(_('Enter the two ip addresses for the free dhcp range (space separated):'), title=ititle, height=16, width=64, init=dhcprange)
+    rc, dhcprange = dialog.inputbox(_('Enter the two IP addresses for the free DHCP range (space separated):'), title=ititle, height=16, width=64, init=dhcprange)
     if rc == 'cancel':
         sys.exit(1)
     dhcprange1 = dhcprange.split(' ')[0]
@@ -140,13 +140,13 @@ print('DHCP range: ' + dhcprange)
 setup.set('setup', 'dhcprange', dhcprange)
 
 # firewallip
-ititle = title + ': Firewall IP'
+ititle = title + ': ' + _('Firewall IP')
 try:
     firewallip=setup.get('setup', 'firewallip')
 except:
     firewallip = gatewayip
 while True:
-    rc, firewallip = dialog.inputbox(_('Enter the ip address of the firewall:'), title=ititle, height=16, width=64, init=firewallip)
+    rc, firewallip = dialog.inputbox(_('Enter the IP address of the firewall:'), title=ititle, height=16, width=64, init=firewallip)
     if rc == 'cancel':
         sys.exit(1)
     if isValidHostIpv4(firewallip):
@@ -155,13 +155,13 @@ print('Firewall ip: ' + firewallip)
 setup.set('setup', 'firewallip', firewallip)
 
 # opsi
-ititle = title + ': Opsi IP'
+ititle = title + ': ' + _('Opsi IP')
 try:
     opsiip=setup.get('setup', 'opsiip')
 except:
     opsiip = ''
 while True:
-    rc, opsiip = dialog.inputbox(_('Enter the ip address of the opsi server (optional):'), title=ititle, height=16, width=64, init=opsiip)
+    rc, opsiip = dialog.inputbox(_('Enter the IP address of the opsi server (optional):'), title=ititle, height=16, width=64, init=opsiip)
     if rc == 'cancel':
         sys.exit(1)
     if opsiip == '' or isValidHostIpv4(opsiip):
@@ -170,13 +170,13 @@ print('Opsi ip: ' + opsiip)
 setup.set('setup', 'opsiip', opsiip)
 
 # mail
-ititle = title + ': Mail IP'
+ititle = title + ': ' + _('Mail IP')
 try:
     mailip=setup.get('setup', 'mailip')
 except:
     mailip = ''
 while True:
-    rc, mailip = dialog.inputbox(_('Enter the ip address of the mail server (optional):'), title=ititle, height=16, width=64, init=mailip)
+    rc, mailip = dialog.inputbox(_('Enter the IP address of the mail server (optional):'), title=ititle, height=16, width=64, init=mailip)
     if rc == 'cancel':
         sys.exit(1)
     if mailip == '' or isValidHostIpv4(mailip):
@@ -185,9 +185,9 @@ print('Mail ip: ' + mailip)
 setup.set('setup', 'mailip', mailip)
 
 # smtprelay
-ititle = title + ': SMTP Relay IP'
+ititle = title + ': ' + _('SMTP Relay IP')
 while True:
-    rc, smtprelay = dialog.inputbox(_('Enter the ip address of the smtp relay server (optional):'), title=ititle, height=16, width=64, init=setup.get('setup', 'smtprelay'))
+    rc, smtprelay = dialog.inputbox(_('Enter the IP address of the SMTP relay server (optional):'), title=ititle, height=16, width=64, init=setup.get('setup', 'smtprelay'))
     if rc == 'cancel':
         sys.exit(1)
     if ('smtprelay' not in locals() or smtprelay == ''):
@@ -200,7 +200,7 @@ print('SMTP relay ip: ' + smtprelay)
 setup.set('setup', 'smtprelay', smtprelay)
 
 # global admin password
-ititle = title + ': Password of global-admin'
+ititle = title + ': ' + _('Password of global-admin')
 while True:
     rc, adminpw = dialog.passwordbox(_('Enter the password to use for the global-admin (Note: Input will be unvisible!):'), title=ititle)
     if rc == 'cancel':
