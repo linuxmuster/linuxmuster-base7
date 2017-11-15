@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices.py
 # thomas@linuxmuster.net
-# 20170514
+# 20171114
 #
 
 import configparser
@@ -18,6 +18,7 @@ from functions import getGrubPart
 from functions import getStartconfOsValues
 from functions import getStartconfOption
 from functions import getStartconfPartnr
+from functions import getStartconfPartlabel
 from functions import printScript
 from functions import readTextfile
 from functions import setGlobalStartconfOption
@@ -56,7 +57,10 @@ def doGrubCfg(startconf, group, kopts):
         return True
     # get grub partition name of cache
     cache = getStartconfOption(startconf, 'LINBO', 'Cache')
-    cacheroot = getGrubPart(cache)
+    partnr = getStartconfPartnr(startconf, cache)
+    systemtype = getStartconfOption(startconf, 'LINBO', 'SystemType')
+    cacheroot = getGrubPart(cache, systemtype)
+    cachelabel = getStartconfPartlabel(startconf, partnr)
     # if cache is not defined provide a forced netboot cfg
     if cacheroot == None:
         netboottpl = constants.LINBOTPLDIR + '/grub.cfg.forced_netboot'
@@ -70,7 +74,7 @@ def doGrubCfg(startconf, group, kopts):
     rc, content = readTextfile(globaltpl)
     if rc == False:
         return rc
-    replace_list = [('@@group@@', group), ('@@cacheroot@@', cacheroot), ('@@kopts@@', kopts)]
+    replace_list = [('@@group@@', group), ('@@cachelabel@@', cachelabel), ('@@cacheroot@@', cacheroot), ('@@kopts@@', kopts)]
     for item in replace_list:
         content = content.replace(item[0], item[1])
     rc = writeTextfile(grubcfg, content, 'w')
@@ -82,17 +86,18 @@ def doGrubCfg(startconf, group, kopts):
     ostpl = constants.LINBOTPLDIR + '/grub.cfg.os'
     for oslist in oslists:
         osname, partition, kernel, initrd, kappend, osnr = oslist
-        osroot = getGrubPart(partition)
+        osroot = getGrubPart(partition, systemtype)
         ostype = getGrubOstype(osname)
         partnr = getStartconfPartnr(startconf, partition)
+        oslabel = getStartconfPartlabel(startconf, partnr)
         rc, content = readTextfile(ostpl)
         if rc == False:
             return rc
-        replace_list = [('@@group@@', group), ('@@cacheroot@@', cacheroot),
-            ('@@osname@@', osname), ('@@osnr@@', osnr), ('@@ostype@@', ostype),
-            ('@@osroot@@', osroot), ('@@partition@@', partition),
-            ('@@partnr@@', partnr), ('@@kernel@@', kernel), ('@@initrd@@', initrd),
-            ('@@kopts@@', kopts), ('@@append@@', kappend)]
+        replace_list = [('@@group@@', group), ('@@cachelabel@@', cachelabel),
+            ('@@cacheroot@@', cacheroot), ('@@osname@@', osname),
+            ('@@osnr@@', osnr), ('@@ostype@@', ostype), ('@@oslabel@@', oslabel),
+            ('@@osroot@@', osroot), ('@@partnr@@', partnr), ('@@kernel@@', kernel),
+            ('@@initrd@@', initrd), ('@@kopts@@', kopts), ('@@append@@', kappend)]
         for item in replace_list:
             content = content.replace(item[0], item[1])
         rc = writeTextfile(grubcfg, content, 'a')

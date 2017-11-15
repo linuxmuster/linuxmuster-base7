@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.0.0-27ubuntu0) lmn7-testing; urgency=low
+
+  * device import:
+    - added support for partition labels.
+    - fix grub disknr on efi/gpt partitions.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 14 Nov 2017 12:38:18 +0100
+
 linuxmuster-base7 (7.0.0-26ubuntu0) lmn7-testing; urgency=low
 
   * setup improvements:

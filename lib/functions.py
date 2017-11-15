@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20170816
+# 20171114
 #
 
 import configparser
@@ -151,7 +151,7 @@ def doSshLink(ip, port, secret):
     return True
 
 # return grub name of partition's device name
-def getGrubPart(partition):
+def getGrubPart(partition, systemtype):
     try:
         partition = partition.replace('/dev/', '')
         if re.findall(r'[hsv]d[a-z]', partition):
@@ -173,6 +173,10 @@ def getGrubPart(partition):
             return None
     except:
         return None
+    # increase disk number in case of efi system
+    if 'efi' in systemtype.lower():
+        hdnr = int(hdnr) + 1
+        hdnr = str(hdnr)
     return '(hd' + hdnr + ',' + partnr + ')'
 
 # return grub ostype
@@ -271,17 +275,30 @@ def getStartconfOption(startconf, section, option):
     except:
         return None
 
+# get partition label from start.conf
+def getStartconfPartlabel(startconf, partnr):
+    partnr = int(partnr)
+    rc, content = readStartconf(startconf)
+    if rc == False:
+        return ""
+    count = 1
+    for item in re.findall(r'\nLabel.*\n', content, re.IGNORECASE):
+        if count == partnr:
+            return item.split('#')[0].split('=')[1].strip()
+        count = count + 1
+    return ""
+
 # get number of partition
 def getStartconfPartnr(startconf, partition):
     rc, content = readStartconf(startconf)
     if rc == False:
-        return rc
+        return 0
     count = 1
     for item in re.findall(r'\nDev.*\n', content, re.IGNORECASE):
         if item.split('#')[0].split('=')[1].strip() == partition:
             return str(count)
         count = count + 1
-    return False
+    return 0
 
 # write global options to startconf
 def setGlobalStartconfOption(startconf, option, value):
