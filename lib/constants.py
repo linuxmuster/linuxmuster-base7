@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20170814
+# 20171121
 #
 
 # don't change this file
@@ -20,14 +20,6 @@ CAKEY = SSLDIR + '/cakey.pem'
 CACERT = SSLDIR + '/cacert.pem'
 CACERTCRT = SSLDIR + '/cacert.crt'
 CACERTB64 = CACERT + '.b64'
-SERVERKEY = SSLDIR + '/server.key.pem'
-SERVERCERT = SSLDIR + '/server.cert.pem'
-FWKEY = SSLDIR + '/firewall.key.pem'
-FWCERT = SSLDIR + '/firewall.cert.pem'
-FWKEYB64 = FWKEY + '.b64'
-FWCERTB64 = FWCERT + '.b64'
-MAILKEY = SSLDIR + '/mail.key.pem'
-MAILCERT = SSLDIR + '/mail.cert.pem'
 SSHPUBKEY = '/root/.ssh/id_rsa.pub'
 SSHPUBKEYB64 = SSHPUBKEY + '.b64'
 SECRETDIR = SYSDIR + '/.secret'

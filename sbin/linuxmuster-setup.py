@@ -2,7 +2,7 @@
 #
 # linuxmuster-setup.py
 # thomas@linuxmuster.net
-# 20170814
+# 20171121
 #
 
 import constants
@@ -59,7 +59,7 @@ for o, a in opts:
     elif o in ("-s", "--skipfw"):
         subProc('touch ' + constants.SKIPFWFLAG)
         skipfw = True
-    elif o in ("-n", "--network"):
+    elif o in ("-n", "--netonly"):
         netonly = True
     elif o in ("-c", "--config"):
         if os.path.isfile(a):

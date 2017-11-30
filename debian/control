@@ -9,6 +9,6 @@ Package: linuxmuster-base7
 Architecture: all
 Conflicts: dnsmasq-base
 Pre-Depends: python3
-Depends: coreutils, cups, printer-driver-cups-pdf, isc-dhcp-server, python3-ipy, python3-reconfigure, python3-apt, python3-netifaces, python3-dialog, python3-paramiko, openssl, ntp, samba, samba-dsdb-modules, smbclient, ldb-tools, krb5-user, linuxmuster-linbo7, screen, sophomorix-samba
+Depends: coreutils, cups, printer-driver-cups-pdf, isc-dhcp-server, python3-lxml, python3-ipy, python3-reconfigure, python3-apt, python3-netifaces, python3-dialog, python3-paramiko, openssl, ntp, ntpdate, samba, samba-dsdb-modules, smbclient, ldb-tools, krb5-user, linuxmuster-linbo7, screen, sophomorix-samba
 Description: linuxmuster.net configuration scripts
  This package provides configuration scripts for linuxmuster.net

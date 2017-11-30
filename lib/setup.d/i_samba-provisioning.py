@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20170812
+# 20171129
 #
 
 import configparser
@@ -44,6 +44,7 @@ try:
     sambadomain = setup.get('setup', 'sambadomain')
     dnsforwarder = setup.get('setup', 'gatewayip')
     domainname = setup.get('setup', 'domainname')
+    basedn = setup.get('setup', 'basedn')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -73,7 +74,7 @@ if os.path.isfile(smbconf):
 msg = 'Provisioning samba '
 printScript(msg, '', False, False, True)
 try:
-    subProc('samba-tool domain provision --use-rfc2307 --use-xattrs=yes --server-role=dc --domain=' + sambadomain + ' --realm=' + realm + ' --adminpass=' + adadminpw, logfile)
+    subProc('samba-tool domain provision --use-rfc2307 --server-role=dc --domain=' + sambadomain + ' --realm=' + realm + ' --adminpass=' + adadminpw, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -98,16 +99,6 @@ except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# loading sophomorix samba schema
-msg = 'Provisioning sophomorix samba schema '
-printScript(msg, '', False, False, True)
-try:
-    subProc('sophomorix-samba --schema-load', logfile)
-    printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
-    sys.exit(1)
-
 # set dns forwarder & global options
 msg = 'Updating smb.conf with global options '
 printScript(msg, '', False, False, True)
@@ -115,11 +106,12 @@ try:
     samba = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     samba.read(smbconf)
     samba.set('global', 'dns forwarder', dnsforwarder)
+    samba.set('global', 'idmap config * : range', '10000-99999')
     samba.set('global', 'registry shares', 'yes')
     samba.set('global', 'host msdfs', 'yes')
     samba.set('global', 'tls enabled', 'yes')
-    samba.set('global', 'tls keyfile', constants.SERVERKEY)
-    samba.set('global', 'tls certfile', constants.SERVERCERT)
+    samba.set('global', 'tls keyfile', constants.SSLDIR + '/server.key.pem')
+    samba.set('global', 'tls certfile', constants.SSLDIR + '/server.cert.pem')
     samba.set('global', 'tls cafile', constants.CACERT)
     samba.set('global', 'tls verify peer', 'ca_and_name')
     samba.set('global', 'ldap server require strong auth', 'no')
@@ -139,9 +131,22 @@ printScript(msg, '', False, False, True)
 try:
     subProc('systemctl daemon-reload', logfile)
     for s in services:
-        subProc('service ' + s + ' stop', logfile)
-    for s in services[::-1]:
-        subProc('service ' + s + ' start', logfile)
+        subProc('systemctl stop ' + s, logfile)
+    # start only samba-ad-dc service
+    subProc('systemctl unmask samba-ad-dc.service', logfile)
+    subProc('systemctl enable samba-ad-dc.service', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# loading sophomorix samba schema
+msg = 'Provisioning sophomorix samba schema '
+printScript(msg, '', False, False, True)
+try:
+    #subProc('sophomorix-samba --schema-load', logfile)
+    subProc('cd /usr/share/sophomorix/schema ; ./sophomorix_schema_add.sh ' + basedn + ' . -H /var/lib/samba/private/sam.ldb -writechanges', logfile)
+    subProc('systemctl start samba-ad-dc.service', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

@@ -268,7 +268,7 @@
   <interfaces>
     <wan>
       <enable>1</enable>
-      <if>vtnet0</if>
+      <if>@@wanif@@</if>
       <ipaddr>dhcp</ipaddr>
       <ipaddrv6>dhcp6</ipaddrv6>
       <subnet>32</subnet>
@@ -281,7 +281,7 @@
     </wan>
     <lan>
       <enable>1</enable>
-      <if>vtnet1</if>
+      <if>@@lanif@@</if>
       <ipaddr>@@firewallip@@</ipaddr>
       <subnet>@@bitmask@@</subnet>
       <ipaddrv6/>
@@ -292,7 +292,7 @@
       <gatewayv6/>
     </lan>
     <opt1>
-      <if>vtnet2</if>
+      <if>@@opt1if@@</if>
       <descr>OPT1</descr>
     </opt1>
   </interfaces>
@@ -379,9 +379,9 @@
       <interface>lan</interface>
       <ipprotocol>inet</ipprotocol>
       <statetype>keep state</statetype>
-      <descr>MAIL: ACCEPT</descr>
+      <descr>Docker: ACCEPT</descr>
       <source>
-        <address>@@mailip@@</address>
+        <address>@@dockerip@@</address>
       </source>
       <destination>
         <any>1</any>

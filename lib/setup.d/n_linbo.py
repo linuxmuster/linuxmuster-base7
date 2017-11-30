@@ -2,7 +2,7 @@
 #
 # linbo setup
 # thomas@linuxmuster.net
-# 20170816
+# 20171124
 #
 
 import configparser
@@ -126,10 +126,10 @@ except:
     sys.exit(1)
 
 # linbofs update
-msg = 'Reconfiguring linbo '
+msg = 'Reconfiguring linbo (may take a while) '
 printScript(msg, '', False, False, True)
 try:
-    subProc('rm -f' + constants.SYSDIR + '/linbo/*key*', logfile)
+    subProc('rm -f ' + constants.SYSDIR + '/linbo/*key*', logfile)
     subProc('dpkg-reconfigure linuxmuster-linbo7', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:

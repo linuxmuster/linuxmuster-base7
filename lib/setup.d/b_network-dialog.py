@@ -2,7 +2,7 @@
 #
 # network setup
 # thomas@linuxmuster.net
-# 20170816
+# 20171117
 #
 
 import constants
@@ -90,26 +90,26 @@ setup.set('setup', 'netmask', netmask)
 setup.set('setup', 'broadcast', broadcast)
 
 # gatewayip
-ititle = title + ': Gateway IP'
+ititle = title + ': Firewall/Gateway IP'
 try:
-    gatewayip=setup.get('setup', 'gatewayip')
+    firewallip=setup.get('setup', 'firewallip')
 except:
-    gatewayip = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.254'
+    firewallip = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.254'
 while True:
-    rc, gatewayip = dialog.inputbox('Enter the ip address of the gateway:', title=ititle, height=16, width=64, init=gatewayip)
+    rc, firewallip = dialog.inputbox('Enter the ip address of the gateway/firewall:', title=ititle, height=16, width=64, init=firewallip)
     if rc == 'cancel':
         sys.exit(1)
-    if isValidHostIpv4(gatewayip):
+    if isValidHostIpv4(firewallip):
         break
-print('Gateway ip: ' + gatewayip)
-setup.set('setup', 'gatewayip', gatewayip)
+print('Firewall ip: ' + firewallip)
+setup.set('setup', 'firewallip', firewallip)
 
 # dns forwarder
 ititle = title + ': DNS IP'
 try:
     dnsforwarder=setup.get('setup', 'dnsforwarder')
 except:
-    dnsforwarder = gatewayip
+    dnsforwarder = firewallip
 if not isValidHostIpv4(dnsforwarder):
     dnsforwarder = gatewayip
 while True:

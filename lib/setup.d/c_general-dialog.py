@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20170814
+# 20171122
 #
 
 import constants
@@ -134,20 +134,20 @@ while True:
 print('DHCP range: ' + dhcprange)
 setup.set('setup', 'dhcprange', dhcprange)
 
-# firewallip
-ititle = title + ': Firewall IP'
+# dockerip
+ititle = title + ': Docker host IP'
 try:
-    firewallip=setup.get('setup', 'firewallip')
+    dockerip=setup.get('setup', 'dockerip')
 except:
-    firewallip = gatewayip
+    dockerip = ''
 while True:
-    rc, firewallip = dialog.inputbox('Enter the ip address of the firewall:', title=ititle, height=16, width=64, init=firewallip)
+    rc, dockerip = dialog.inputbox('Enter the ip address of the docker host (optional):', title=ititle, height=16, width=64, init=dockerip)
     if rc == 'cancel':
         sys.exit(1)
-    if isValidHostIpv4(firewallip):
+    if isValidHostIpv4(dockerip) or dockerip == '':
         break
-print('Firewall ip: ' + firewallip)
-setup.set('setup', 'firewallip', firewallip)
+print('Docker host ip: ' + dockerip)
+setup.set('setup', 'dockerip', dockerip)
 
 # opsi
 ititle = title + ': Opsi IP'
@@ -165,13 +165,25 @@ print('Opsi ip: ' + opsiip)
 setup.set('setup', 'opsiip', opsiip)
 
 # mail
-ititle = title + ': Mail IP'
+nostatus = False
+serverstatus = False
+dockerstatus = False
+ititle = title + ': Mailserver IP'
 try:
     mailip=setup.get('setup', 'mailip')
+    if isValidHostIpv4(mailip) and mailip == serverip:
+        serverstatus = True
+    elif isValidHostIpv4(mailip) and mailip == dockerip:
+        dockerstatus = True
 except:
     mailip = ''
+    nostatus = True
 while True:
-    rc, mailip = dialog.inputbox('Enter the ip address of the mail server (optional):', title=ititle, height=16, width=64, init=mailip)
+    if dockerip != '':
+        rc, mailip = dialog.radiolist('Enter the ip address of the mail server (optional):', title=ititle, height=16, width=64, list_height=3, choices=[('', 'no mailserver', nostatus), (serverip, 'use server ip', serverstatus), (dockerip, 'use docker ip', dockerstatus)])
+    else:
+        rc, mailip = dialog.radiolist('Enter the ip address of the mail server (optional):', title=ititle, height=16, width=64, list_height=3, choices=[('', 'no mailserver', nostatus), (serverip, 'use server ip', serverstatus)])
+    #rc, mailip = dialog.inputbox('Enter the ip address of the mail server (optional):', title=ititle, height=16, width=64, init=mailip)
     if rc == 'cancel':
         sys.exit(1)
     if mailip == '' or isValidHostIpv4(mailip):
@@ -179,20 +191,52 @@ while True:
 print('Mail ip: ' + mailip)
 setup.set('setup', 'mailip', mailip)
 
-# smtprelay
-ititle = title + ': SMTP Relay IP'
-while True:
-    rc, smtprelay = dialog.inputbox('Enter the ip address of the smtp relay server (optional):', title=ititle, height=16, width=64, init=setup.get('setup', 'smtprelay'))
-    if rc == 'cancel':
-        sys.exit(1)
-    if ('smtprelay' not in locals() or smtprelay == ''):
+# smtp access data
+if mailip != '':
+    # smtp relay ip of fully qualified domain name
+    ititle = title + ': SMTP Relay IP'
+    try:
+        smtprelay=setup.get('setup', 'smtprelay')
+    except:
         smtprelay = ''
-        break
-    if (isValidHostIpv4(smtprelay) or isValidDomainname(smtprelay) or isValidHostIpv4(smtprelay)):
-        break
-
-print('SMTP relay ip: ' + smtprelay)
-setup.set('setup', 'smtprelay', smtprelay)
+    while True:
+        rc, smtprelay = dialog.inputbox('Enter the ip address or fqdn of the smtp relay (optional):', title=ititle, height=16, width=64, init=smtprelay)
+        if rc == 'cancel':
+            sys.exit(1)
+        if (isValidHostIpv4(smtprelay) or isValidDomainname(smtprelay) or smtprelay == ''):
+            break
+    print('SMTP relay ip: ' + smtprelay)
+    setup.set('setup', 'smtprelay', smtprelay)
+    # ask only if smtprelay is set
+    if smtprelay != '':
+        # smtp user
+        ititle = title + ': SMTP Username'
+        try:
+            smtpuser=setup.get('setup', 'smtpuser')
+        except:
+            smtpuser = ''
+        while True:
+            rc, smtpuser = dialog.inputbox('Enter the name of the smtp user:', title=ititle, height=16, width=64, init=smtpuser)
+            if rc == 'cancel':
+                sys.exit(1)
+            if smtpuser != '':
+                break
+        print('SMTP Username: ' + smtpuser)
+        setup.set('setup', 'smtpuser', smtpuser)
+        # smtp password
+        ititle = title + ': SMTP Password'
+        try:
+            smtppw=setup.get('setup', 'smtppw')
+        except:
+            smtppw = ''
+        while True:
+            rc, smtppw = dialog.inputbox('Enter the name of the smtp user:', title=ititle, height=16, width=64, init=smtppw)
+            if rc == 'cancel':
+                sys.exit(1)
+            if smtppw != '':
+                break
+        print('SMTP Password: ' + smtppw)
+        setup.set('setup', 'smtppw', smtppw)
 
 # global admin password
 ititle = title + ': Password of global-admin'
@@ -250,22 +294,22 @@ if isValidHostIpv4(opsiip):
     setup.set('setup', 'opsipw', opsipw)
 
 # mail root password
-ititle = title + ': Mail root password'
-if (isValidHostIpv4(mailip) and mailip != serverip):
+ititle = title + ': Docker root password'
+if isValidHostIpv4(dockerip):
     while True:
-        rc, mailpw = dialog.passwordbox('Enter the mail root password:', title=ititle)
+        rc, dockerpw = dialog.passwordbox('Enter the docker root password:', title=ititle)
         if rc == 'cancel':
             sys.exit(1)
-        if opsipw == '':
+        if dockerpw == '':
             continue
         else:
-            rc, mailpw_repeated = dialog.passwordbox('Re-enter the mail root password:', title=ititle)
+            rc, dockerpw_repeated = dialog.passwordbox('Re-enter the docker root password:', title=ititle)
             if rc == 'cancel':
                 sys.exit(1)
-        if mailpw == mailpw_repeated:
+        if dockerpw == dockerpw_repeated:
             break
-    print('Mail root password: ' + mailpw)
-    setup.set('setup', 'mailpw', mailpw)
+    print('Docker root password: ' + dockerpw)
+    setup.set('setup', 'dockerpw', dockerpw)
 
 # write INIFILE
 msg = 'Writing input to setup ini file '

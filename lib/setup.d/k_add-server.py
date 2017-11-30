@@ -2,13 +2,15 @@
 #
 # add additional servers to devices.csv
 # thomas@linuxmuster.net
-# 20170814
+# 20171123
 #
 
 import configparser
 import constants
 import os
+import random
 import re
+import sys
 
 from functions import printScript
 from functions import readTextfile
@@ -16,6 +18,7 @@ from functions import writeTextfile
 from functions import isValidHostIpv4
 from functions import subProc
 from subprocess import Popen, PIPE
+from uuid import getnode
 
 title = os.path.basename(__file__).replace('.py', '').split('_')[1]
 logfile = constants.LOGDIR + '/setup.' + title + '.log'
@@ -33,45 +36,52 @@ try:
     firewallip = setup.get('setup', 'firewallip')
     opsiip = setup.get('setup', 'opsiip')
     mailip = setup.get('setup', 'mailip')
+    dockerip = setup.get('setup', 'dockerip')
     serverip = setup.get('setup', 'serverip')
-    devicescsv = constants.WIMPORTDATA
+    iface = setup.get('setup', 'iface')
+    rc, devices = readTextfile(constants.WIMPORTDATA)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
+# get random mac address
+def getRandomMac(devices):
+    while True:
+        mac = "00:00:00:%02x:%02x:%02x" % (
+            random.randint(0, 255),
+            random.randint(0, 255),
+            random.randint(0, 255)
+            )
+        if not ';' + mac.upper() + ';' in devices:
+            break
+    return mac.upper()
+
 # get mac address from arp cache
 def getMacFromArp(ip):
-    try:
-        subProc('ping -c2 ' + ip, logfile)
-        pid = Popen(["arp", "-n", ip], stdout=PIPE)
-        arpout = pid.communicate()[0]
-        mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})", str(arpout)).groups()[0]
-    except:
-        mac = ''
-    return mac
+    mac = ''
+    subProc('ping -c2 ' + ip, logfile)
+    pid = Popen(["arp", "-n", ip], stdout=PIPE)
+    arpout = pid.communicate()[0]
+    mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})", str(arpout)).groups()[0]
+    return mac.upper()
 
 # add devices entry
-def addServerDevice(hostname, mac, ip):
+def addServerDevice(hostname, mac, ip, devices):
     if mac == '':
-        return False
+        return devices
     line = 'server;' + hostname + ';nopxe;' + mac + ';' + ip + ';;;;;1;0'
-    rc, content = readTextfile(devicescsv)
-    if rc == False:
-        return rc
-    if ';' + hostname + ';' in content:
-        content = '\n' + content + '\n'
-        content = re.sub(r'\n.+?;' + hostname + ';.+?\n', '\n' + line + '\n', content)
-        content = content[1:-1]
+    if ';' + hostname + ';' in devices:
+        devices = '\n' + devices + '\n'
+        devices = re.sub(r'\n.+?;' + hostname + ';.+?\n', '\n' + line + '\n', devices)
+        devices = devices[1:-1]
     else:
-        if content[-1] != '\n':
+        if devices[-1] != '\n':
             line = '\n' + line
         else:
             line = line + '\n'
-        content = content + line
-    rc = writeTextfile(devicescsv, content, 'w')
-    if rc == False:
-        return rc
+        devices = devices + line
+    return devices
 
 # collect array
 device_array = []
@@ -81,9 +91,9 @@ device_array.append(('firewall', firewallip))
 # opsi
 if isValidHostIpv4(opsiip):
     device_array.append(('opsi', opsiip))
-# mail
-if (isValidHostIpv4(mailip) and mailip != serverip):
-    device_array.append(('mail', mailip))
+# docker
+if isValidHostIpv4(dockerip):
+    device_array.append(('docker', dockerip))
 
 # iterate
 printScript('Creating device entries for:')
@@ -93,11 +103,21 @@ for item in device_array:
     msg = '* ' + hostname + ' '
     printScript(msg, '', False, False, True)
     # get mac address
-    mac = getMacFromArp(ip)
+    if ip == serverip:
+        h = iter(hex(getnode())[2:].zfill(12))
+        mac = ":".join(i + next(h) for i in h)
+    else:
+        mac = getMacFromArp(ip)
+    if mac == '':
+        mac = getRandomMac(devices)
     # create devices.csv entry
-    rc = addServerDevice(hostname, mac, ip)
+    devices = addServerDevice(hostname, mac, ip, devices)
     if rc == False:
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
     else:
         printScript(' ' + ip + ' ' + mac, '', True, True, False, len(msg))
+
+# finally write devices.csv
+if not writeTextfile(constants.WIMPORTDATA, devices, 'w'):
+    sys.exit(1)

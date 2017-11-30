@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20170814
+# 20171121
 #
 
 import configparser

@@ -1,3 +1,12 @@
+linuxmuster-base7 (7.0.0-28ubuntu0) lmn7-testing; urgency=low
+
+  * added docker and mailserver setup.
+  * samba modifications for ubuntu 17.10.
+  * fixed firewall interface handling.
+  * more fixes.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 29 Nov 2017 21:36:51 +0100
+
 linuxmuster-base7 (7.0.0-27ubuntu0) lmn7-testing; urgency=low
 
   * device import:

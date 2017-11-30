@@ -37,9 +37,9 @@ try:
     # get firewall ip
     serverip = setup.get('setup', 'serverip')
     opsiip = setup.get('setup', 'opsiip')
-    mailip = setup.get('setup', 'mailip')
+    dockerip = setup.get('setup', 'dockerip')
     opsipw = setup.get('setup', 'opsipw')
-    mailpw = setup.get('setup', 'mailpw')
+    dockerpw = setup.get('setup', 'dockerpw')
     # check if firewall shall be skipped
     skipfw = setup.getboolean('setup', 'skipfw')
     if skipfw == False:
@@ -102,8 +102,8 @@ success = []
 items = []
 if isValidHostIpv4(opsiip):
     items.append((opsiip, 22, opsipw))
-if (isValidHostIpv4(mailip) and mailip != serverip):
-    items.append((mailip, 22, mailpw))
+if isValidHostIpv4(dockerip):
+    items.append((dockerip, 22, dockerpw))
 for item in items:
     ip = item[0]
     port = item[1]
