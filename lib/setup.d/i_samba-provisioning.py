@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20171129
+# 20171201
 #
 
 import configparser
@@ -42,7 +42,7 @@ try:
     setup.read(setupini)
     realm = setup.get('setup', 'domainname').upper()
     sambadomain = setup.get('setup', 'sambadomain')
-    dnsforwarder = setup.get('setup', 'gatewayip')
+    dnsforwarder = setup.get('setup', 'firewallip')
     domainname = setup.get('setup', 'domainname')
     basedn = setup.get('setup', 'basedn')
     printScript(' Success!', '', True, True, False, len(msg))

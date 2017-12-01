@@ -2,7 +2,7 @@
 #
 # network setup
 # thomas@linuxmuster.net
-# 20171117
+# 20171201
 #
 
 import constants
@@ -110,8 +110,6 @@ try:
     dnsforwarder=setup.get('setup', 'dnsforwarder')
 except:
     dnsforwarder = firewallip
-if not isValidHostIpv4(dnsforwarder):
-    dnsforwarder = gatewayip
 while True:
     rc, dnsforwarder = dialog.inputbox('Enter the ip address of the dns forwarder:', title=ititle, height=16, width=64, init=dnsforwarder)
     if rc == 'cancel':

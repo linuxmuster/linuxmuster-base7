@@ -2,7 +2,7 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20170816
+# 20171201
 #
 
 import configparser
@@ -15,6 +15,8 @@ from functions import isValidHostname
 from functions import isValidDomainname
 from functions import isValidHostIpv4
 from functions import getDefaultIface
+from functions import readTextfile
+from functions import writeTextfile
 from functions import subProc
 from IPy import IP
 
@@ -24,9 +26,17 @@ logfile = constants.LOGDIR + '/setup.' + title + '.log'
 printScript('', 'begin')
 printScript(title)
 
+# patch prepare.ini if available to get it parsable by setup
+if os.path.isfile(constants.PREPINI):
+    rc, content = readTextfile(constants.PREPINI)
+    content = content.replace('hostip', 'serverip')
+    content = content.replace('hostname', 'servername')
+    content = content.replace('dnsip', 'dnsforwarder')
+    rc = writeTextfile(constants.PREPINI, content, 'w')
+
 # read ini files
 setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
-for i in [constants.DEFAULTSINI, constants.SETUPINI, constants.CUSTOMINI]:
+for i in [constants.DEFAULTSINI, constants.SETUPINI, constants.PREPINI, constants.CUSTOMINI]:
     # skip non existant file
     if not os.path.isfile(i):
         continue
@@ -39,10 +49,6 @@ for i in [constants.DEFAULTSINI, constants.SETUPINI, constants.CUSTOMINI]:
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
-
-# delete custom ini
-if os.path.isfile(constants.CUSTOMINI):
-    os.unlink(constants.CUSTOMINI)
 
 # compute missing values
 # from domainname
@@ -232,20 +238,20 @@ if not isValidHostIpv4(firewallip):
 printScript(' ' + firewallip, '', True, True, False, len(msg))
 
 # gatewayip
-msg = '* Gatewayip-IP '
-printScript(msg, '', False, False, True)
-try:
-    gatewayip = setup.get('setup', 'gatewayip')
-except:
-    gatewayip = ''
-if not isValidHostIpv4(gatewayip):
-    try:
-        gatewayip = firewallip
-        setup.set('setup', 'gatewayip', gatewayip)
-    except:
-        printScript(' failed to set!', '', True, True, False, len(msg))
-        sys.exit(1)
-printScript(' ' + gatewayip, '', True, True, False, len(msg))
+#msg = '* Gatewayip-IP '
+#printScript(msg, '', False, False, True)
+#try:
+#    gatewayip = setup.get('setup', 'gatewayip')
+#except:
+#    gatewayip = ''
+#if not isValidHostIpv4(gatewayip):
+#    try:
+#        gatewayip = firewallip
+#        setup.set('setup', 'gatewayip', gatewayip)
+#    except:
+#        printScript(' failed to set!', '', True, True, False, len(msg))
+#        sys.exit(1)
+#printScript(' ' + gatewayip, '', True, True, False, len(msg))
 
 # dnsforwarder
 msg = '* DNS forwarder '
@@ -256,7 +262,7 @@ except:
     dnsforwarder = ''
 if not isValidHostIpv4(dnsforwarder):
     try:
-        dnsforwarder = gatewayip
+        dnsforwarder = firewallip
         setup.set('setup', 'dnsforwarder', dnsforwarder)
     except:
         printScript(' failed to set!', '', True, True, False, len(msg))
@@ -293,3 +299,9 @@ try:
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
+
+# delete temporary ini files
+if os.path.isfile(constants.CUSTOMINI):
+    os.unlink(constants.CUSTOMINI)
+if os.path.isfile(constants.PREPINI):
+    os.unlink(constants.PREPINI)

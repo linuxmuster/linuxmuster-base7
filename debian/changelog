@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.0.0-29ubuntu0) lmn7-testing; urgency=low
+
+  * setup:
+    - fixed obsolete gateway ip.
+    - added evaluation of prepare.ini.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 01 Dec 2017 09:41:39 +0100
+
 linuxmuster-base7 (7.0.0-28ubuntu0) lmn7-testing; urgency=low
 
   * added docker and mailserver setup.

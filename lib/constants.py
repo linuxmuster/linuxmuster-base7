@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20171121
+# 20171201
 #
 
 # don't change this file
@@ -40,6 +40,7 @@ CUSTOMINI = CACHEDIR + '/custom.ini'
 FWOSCONFTPL = SHAREDIR + '/firewall/opnsense/config.xml.tpl'
 SETUPINI = VARDIR + '/setup.ini'
 DEFAULTSINI = SHAREDIR + '/setupdefaults.ini'
+PREPINI = CACHEDIR + '/prepare.ini'
 LINBODIR = '/srv/linbo'
 LINBOGRUBDIR = LINBODIR + '/boot/grub'
 LINBOLOGDIR = LOGDIR + '/linbo'
