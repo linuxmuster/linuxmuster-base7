@@ -2,7 +2,7 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20171201
+# 20180129
 #
 
 import configparser
@@ -25,14 +25,6 @@ logfile = constants.LOGDIR + '/setup.' + title + '.log'
 
 printScript('', 'begin')
 printScript(title)
-
-# patch prepare.ini if available to get it parsable by setup
-if os.path.isfile(constants.PREPINI):
-    rc, content = readTextfile(constants.PREPINI)
-    content = content.replace('hostip', 'serverip')
-    content = content.replace('hostname', 'servername')
-    content = content.replace('dnsip', 'dnsforwarder')
-    rc = writeTextfile(constants.PREPINI, content, 'w')
 
 # read ini files
 setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
@@ -222,7 +214,7 @@ if dhcprange == '':
 printScript(' ' + dhcprange1 + '-' + dhcprange2, '', True, True, False, len(msg))
 
 # firewallip
-msg = '* Firewall-IP '
+msg = '* Firewall IP '
 printScript(msg, '', False, False, True)
 try:
     firewallip = setup.get('setup', 'firewallip')
@@ -237,21 +229,25 @@ if not isValidHostIpv4(firewallip):
         sys.exit(1)
 printScript(' ' + firewallip, '', True, True, False, len(msg))
 
-# gatewayip
-#msg = '* Gatewayip-IP '
-#printScript(msg, '', False, False, True)
-#try:
-#    gatewayip = setup.get('setup', 'gatewayip')
-#except:
-#    gatewayip = ''
-#if not isValidHostIpv4(gatewayip):
-#    try:
-#        gatewayip = firewallip
-#        setup.set('setup', 'gatewayip', gatewayip)
-#    except:
-#        printScript(' failed to set!', '', True, True, False, len(msg))
-#        sys.exit(1)
-#printScript(' ' + gatewayip, '', True, True, False, len(msg))
+# dockerip
+msg = '* Dockerhost IP '
+printScript(msg, '', False, False, True)
+try:
+    dockerip = setup.get('setup', 'dockerip')
+    printScript(' ' + dockerip, '', True, True, False, len(msg))
+except:
+    dockerip = ''
+    printScript(' not set', '', True, True, False, len(msg))
+
+# mailip
+msg = '* Mailserver IP '
+printScript(msg, '', False, False, True)
+try:
+    mailip = setup.get('setup', 'mailip')
+    printScript(' ' + mailip, '', True, True, False, len(msg))
+except:
+    mailip = ''
+    printScript(' not set', '', True, True, False, len(msg))
 
 # dnsforwarder
 msg = '* DNS forwarder '

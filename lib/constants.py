@@ -50,6 +50,7 @@ LINBOCACHEDIR = CACHEDIR + '/linbo'
 DHCPDEVCONF = '/etc/dhcp/devices.conf'
 OPSIPXEFILE = 'linux/pxelinux.0'
 MANAGEDSTR = '### managed by linuxmuster.net ###'
+ROOTPW = 'Muster!'
 
 # grub stuff
 GRUBCOMMONMODS = 'all_video boot chain configfile cpuid echo net ext2 extcmd fat \

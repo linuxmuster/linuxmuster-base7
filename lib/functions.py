@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20171114
+# 20180129
 #
 
 import configparser
@@ -109,8 +109,29 @@ def printScript(msg='', header='', lf=True, noleft=False, noright=False, offset=
     if header == 'begin' or header == 'end':
         printLf(sep, lf)
 
+# get ip addresses from setup.init
+def getFromSetup():
+    setupini = constants.SETUPINI
+    serverip = ''
+    firewallip = ''
+    opsiip = ''
+    dockerip = ''
+    adminpw = ''
+    try:
+        setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+        setup.read(setupini)
+        serverip = setup.get('setup', 'serverip')
+        firewallip = setup.get('setup', 'firewallip')
+        opsiip = setup.get('setup', 'opsiip')
+        dockerip = setup.get('setup', 'dockerip')
+        adminpw = setup.get('setup', 'adminpw')
+    except:
+        pass
+    return serverip, firewallip, opsiip, dockerip, adminpw
+
 # establish pw less ssh connection to ip & port
 def doSshLink(ip, port, secret):
+    serverip, firewallip, opsiip, dockerip, adminpw = getFromSetup()
     msg = '* Processing ssh link to host ' + ip + ' on port ' + str(port) + ':'
     printScript(msg)
     # test connection on ip and port
@@ -146,8 +167,26 @@ def doSshLink(ip, port, secret):
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
         return False
-    # close connections
+    # close ssh connection
     ssh.close()
+    # prepare host
+    if serverip != '' and adminpw != '':
+        hostname = ''
+        if ip == opsiip:
+            hostname = 'opsi'
+        elif ip == dockerip:
+            hostname = 'docker'
+        if hostname != '':
+            msg = '  > Preparing ' + hostname + ' '
+            printScript(msg, '', False, False, True)
+            try:
+                cmd = 'ssh -oNumberOfPasswordPrompts=0 -oStrictHostKeyChecking=no -p ' + str(port) + ' ' + ip + ' /usr/sbin/linuxmuster-prepare.py -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw + '" -b'
+                logfile = constants.LOGDIR + '/setup.ssh.' + hostname + '.log'
+                subProc(cmd, logfile)
+                printScript(' Success!', '', True, True, False, len(msg))
+            except:
+                printScript(' Failed!', '', True, True, False, len(msg))
+                return False
     return True
 
 # return grub name of partition's device name

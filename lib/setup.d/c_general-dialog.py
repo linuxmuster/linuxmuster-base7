@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20171122
+# 20180129
 #
 
 import constants
@@ -135,7 +135,7 @@ print('DHCP range: ' + dhcprange)
 setup.set('setup', 'dhcprange', dhcprange)
 
 # dockerip
-ititle = title + ': Docker host IP'
+ititle = title + ': Dockerhost-IP'
 try:
     dockerip=setup.get('setup', 'dockerip')
 except:
@@ -150,7 +150,7 @@ print('Docker host ip: ' + dockerip)
 setup.set('setup', 'dockerip', dockerip)
 
 # opsi
-ititle = title + ': Opsi IP'
+ititle = title + ': Opsi-IP'
 try:
     opsiip=setup.get('setup', 'opsiip')
 except:
@@ -166,23 +166,23 @@ setup.set('setup', 'opsiip', opsiip)
 
 # mail
 nostatus = False
-serverstatus = False
-dockerstatus = False
+servermail = False
+dockermail = False
 ititle = title + ': Mailserver IP'
 try:
     mailip=setup.get('setup', 'mailip')
     if isValidHostIpv4(mailip) and mailip == serverip:
-        serverstatus = True
+        servermail = True
     elif isValidHostIpv4(mailip) and mailip == dockerip:
-        dockerstatus = True
+        dockermail = True
 except:
     mailip = ''
     nostatus = True
 while True:
     if dockerip != '':
-        rc, mailip = dialog.radiolist('Enter the ip address of the mail server (optional):', title=ititle, height=16, width=64, list_height=3, choices=[('', 'no mailserver', nostatus), (serverip, 'use server ip', serverstatus), (dockerip, 'use docker ip', dockerstatus)])
+        rc, mailip = dialog.radiolist('Enter the ip address of the mail server (optional):', title=ititle, height=16, width=64, list_height=3, choices=[('', 'no mailserver', nostatus), (serverip, 'use server ip', servermail), (dockerip, 'use docker ip', dockermail)])
     else:
-        rc, mailip = dialog.radiolist('Enter the ip address of the mail server (optional):', title=ititle, height=16, width=64, list_height=3, choices=[('', 'no mailserver', nostatus), (serverip, 'use server ip', serverstatus)])
+        rc, mailip = dialog.radiolist('Enter the ip address of the mail server (optional):', title=ititle, height=16, width=64, list_height=3, choices=[('', 'no mailserver', nostatus), (serverip, 'use server ip', servermail)])
     #rc, mailip = dialog.inputbox('Enter the ip address of the mail server (optional):', title=ititle, height=16, width=64, init=mailip)
     if rc == 'cancel':
         sys.exit(1)
@@ -239,77 +239,22 @@ if mailip != '':
         setup.set('setup', 'smtppw', smtppw)
 
 # global admin password
-ititle = title + ': Password of global-admin'
+ititle = title + ': Administrator password'
 while True:
-    rc, adminpw = dialog.passwordbox('Enter the password to use for the global-admin (Note: Input will be unvisible!):', title=ititle)
+    rc, adminpw = dialog.passwordbox('Enter the Administrator password (Note: Input will be unvisible!):', title=ititle)
     if rc == 'cancel':
         sys.exit(1)
     if isValidPassword(adminpw):
         break
 while True:
-    rc, adminpw_repeated = dialog.passwordbox('Re-enter the global-admin password:', title=ititle)
+    rc, adminpw_repeated = dialog.passwordbox('Re-enter the Administrator password:', title=ititle)
     if rc == 'cancel':
         sys.exit(1)
     if adminpw == adminpw_repeated:
         break
 
-print('global-admin password: ' + adminpw)
+print('Administrator password: ' + adminpw)
 setup.set('setup', 'adminpw', adminpw)
-
-# firewall root password
-ititle = title + ': Firewall root password'
-skipfw = setup.getboolean('setup', 'skipfw')
-if skipfw == False:
-    while True:
-        rc, firewallpw = dialog.passwordbox('Enter the firewall root password:', title=ititle)
-        if rc == 'cancel':
-            sys.exit(1)
-        if firewallpw == '':
-            continue
-        else:
-            rc, firewallpw_repeated = dialog.passwordbox('Re-enter the firewall root password:', title=ititle)
-            if rc == 'cancel':
-                sys.exit(1)
-        if firewallpw == firewallpw_repeated:
-            break
-    print('Firewall root password: ' + firewallpw)
-    setup.set('setup', 'firewallpw', firewallpw)
-
-# opsi root password
-ititle = title + ': Opsi root password'
-if isValidHostIpv4(opsiip):
-    while True:
-        rc, opsipw = dialog.passwordbox('Enter the opsi root password:', title=ititle)
-        if rc == 'cancel':
-            sys.exit(1)
-        if opsipw == '':
-            continue
-        else:
-            rc, opsipw_repeated = dialog.passwordbox('Re-enter the opsi root password:', title=ititle)
-            if rc == 'cancel':
-                sys.exit(1)
-        if opsipw == opsipw_repeated:
-            break
-    print('Opsi root password: ' + opsipw)
-    setup.set('setup', 'opsipw', opsipw)
-
-# mail root password
-ititle = title + ': Docker root password'
-if isValidHostIpv4(dockerip):
-    while True:
-        rc, dockerpw = dialog.passwordbox('Enter the docker root password:', title=ititle)
-        if rc == 'cancel':
-            sys.exit(1)
-        if dockerpw == '':
-            continue
-        else:
-            rc, dockerpw_repeated = dialog.passwordbox('Re-enter the docker root password:', title=ititle)
-            if rc == 'cancel':
-                sys.exit(1)
-        if dockerpw == dockerpw_repeated:
-            break
-    print('Docker root password: ' + dockerpw)
-    setup.set('setup', 'dockerpw', dockerpw)
 
 # write INIFILE
 msg = 'Writing input to setup ini file '
@@ -321,3 +266,16 @@ try:
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
+
+# set root password
+msg = 'Setting root password '
+printScript(msg, '', False, False, True)
+try:
+    subProc('echo "root:' + adminpw + '" | chpasswd', logfile)
+    if os.path.isdir('/home/linuxmuster'):
+        subProc('echo "linuxmuster:' + adminpw + '" | chpasswd', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+    

@@ -2,7 +2,7 @@
 #
 # setup ssh keys and ssh links to additional servers
 # thomas@linuxmuster.net
-# 20170814
+# 20180129
 #
 
 import configparser
@@ -38,8 +38,6 @@ try:
     serverip = setup.get('setup', 'serverip')
     opsiip = setup.get('setup', 'opsiip')
     dockerip = setup.get('setup', 'dockerip')
-    opsipw = setup.get('setup', 'opsipw')
-    dockerpw = setup.get('setup', 'dockerpw')
     # check if firewall shall be skipped
     skipfw = setup.getboolean('setup', 'skipfw')
     if skipfw == False:
@@ -101,14 +99,13 @@ if os.path.isfile(known_hosts):
 success = []
 items = []
 if isValidHostIpv4(opsiip):
-    items.append((opsiip, 22, opsipw))
+    items.append((opsiip, 22))
 if isValidHostIpv4(dockerip):
-    items.append((dockerip, 22, dockerpw))
+    items.append((dockerip, 22))
 for item in items:
     ip = item[0]
     port = item[1]
-    secret = item[2]
-    rc = doSshLink(ip, port, secret)
+    rc = doSshLink(ip, port, constants.ROOTPW)
     if rc == True:
         success.append(ip)
 

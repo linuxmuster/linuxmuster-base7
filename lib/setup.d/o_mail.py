@@ -42,7 +42,7 @@ try:
     # get setup various values
     mailip = setup.get('setup', 'mailip')
     serverip = setup.get('setup', 'serverip')
-    mailpw = setup.get('setup', 'dockerpw')
+    adminpw = setup.get('setup', 'adminpw')
     # get binduser password
     rc, binduserpw = readTextfile(constants.BINDUSERSECRET)
     printScript(' Success!', '', True, True, False, len(msg))
@@ -74,7 +74,7 @@ def main():
         ssh = paramiko.SSHClient()
         ssh.load_system_host_keys()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(mailip, 22, 'root', mailpw)
+        ssh.connect(mailip, 22, 'root', adminpw)
         try:
             ftp = ssh.open_sftp()
             printScript(' Success!', '', True, True, False, len(msg))

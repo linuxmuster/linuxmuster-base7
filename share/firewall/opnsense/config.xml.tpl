@@ -252,7 +252,7 @@
       <ldap_scope>subtree</ldap_scope>
       <ldap_basedn>@@basedn@@</ldap_basedn>
       <ldap_authcn>OU=GLOBAL,@@basedn@@;OU=SCHOOLS,@@basedn@@</ldap_authcn>
-      <ldap_extended_query/>
+      <ldap_extended_query>&amp;(objectClass=organizationalPerson)(memberOf=CN=internet,OU=Management,OU=default-school,OU=SCHOOLS,@@basedn@@)</ldap_extended_query>
       <ldap_attr_user>sAMAccountName</ldap_attr_user>
       <ldap_binddn>CN=global-binduser,OU=Management,OU=GLOBAL,@@basedn@@</ldap_binddn>
       <ldap_bindpw>@@binduserpw@@</ldap_bindpw>

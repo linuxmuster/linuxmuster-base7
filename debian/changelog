@@ -1,10 +1,21 @@
+linuxmuster-base7 (7.0.0-30ubuntu0) lmn7-testing; urgency=low
+
+  * setup:
+    - removed network setup.
+    - root password 'Muster!' is being expected on all associated appliances.
+    - administrator password is being set as new root password on all associated appliances.
+    - fixed serverip in prepare.ini.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 29 Jan 2018 15:24:32 +0100
+
 linuxmuster-base7 (7.0.0-29ubuntu0) lmn7-testing; urgency=low
 
   * setup:
     - fixed obsolete gateway ip.
     - added evaluation of prepare.ini.
+    - added internet group filter in firewall's config.xml.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 01 Dec 2017 09:41:39 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 02 Dec 2017 21:49:12 +0100
 
 linuxmuster-base7 (7.0.0-28ubuntu0) lmn7-testing; urgency=low
 

@@ -2,9 +2,10 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20171123
+# 20180129
 #
 
+import bcrypt
 import configparser
 import constants
 import os
@@ -34,13 +35,13 @@ try:
     serverip = setup.get('setup', 'serverip')
     bitmask = setup.get('setup', 'bitmask')
     firewallip = setup.get('setup', 'firewallip')
-    firewallpw = setup.get('setup', 'firewallpw')
     servername = setup.get('setup', 'servername')
     domainname = setup.get('setup', 'domainname')
     basedn = setup.get('setup', 'basedn')
     opsiip = setup.get('setup', 'opsiip')
     dockerip = setup.get('setup', 'dockerip')
     network = setup.get('setup', 'network')
+    adminpw = setup.get('setup', 'adminpw')
     # get timezone
     rc, timezone = readTextfile('/etc/timezone')
     timezone = timezone.replace('\n', '')
@@ -68,7 +69,7 @@ printScript(msg, '', False, False, True)
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 try:
-    ssh.connect(firewallip, port=22, username='root', password=firewallpw)
+    ssh.connect(firewallip, port=22, username='root', password=constants.ROOTPW)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -91,9 +92,6 @@ printScript(msg, '', False, False, True)
 try:
     rc, content = readTextfile(fwconftmp)
     config = ET.fromstring(content)
-    # get already configured root password hash
-    for user in config.iter('user'):
-        fwrootpw = user.find('password').text
     # get already configured wan, lan and op1 interfaces
     wanif = ''
     for wan in config.iter('wan'):
@@ -129,6 +127,9 @@ except:
 msg = '* Creating xml configuration file '
 printScript(msg, '', False, False, True)
 try:
+    # create password hash for new firewall password
+    hashedpw = bcrypt.hashpw(str.encode(adminpw), bcrypt.gensalt(10))
+    fwrootpw = hashedpw.decode()
     # read template
     rc, content = readTextfile(fwconftpl)
     # replace placeholders with values
