@@ -1,3 +1,20 @@
+linuxmuster-base7 (7.0.0-32ubuntu0) lmn7-testing; urgency=low
+
+  * setup:
+    - added sophomorix samba backup.
+    - removed dnsforwarder variable, use firewallip instead.
+    - added ssl cert & key rollout for docker and opsi appliances.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 09 Feb 2018 19:41:10 +0100
+
+linuxmuster-base7 (7.0.0-31ubuntu0) lmn7-testing; urgency=low
+
+  * setup:
+    - fixed deprecated variables.
+    - improved ssh key deployment.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 30 Jan 2018 09:59:59 +0100
+
 linuxmuster-base7 (7.0.0-30ubuntu0) lmn7-testing; urgency=low
 
   * setup:

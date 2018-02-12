@@ -2,7 +2,7 @@
 #
 # create samba users
 # thomas@linuxmuster.net
-# 20170812
+# 20180209
 #
 
 import configparser
@@ -44,6 +44,16 @@ try:
     with open(constants.BINDUSERSECRET, 'w') as secret:
         secret.write(binduserpw)
     subProc('chmod 400 ' + constants.SECRETDIR + '/*', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# samba backup
+msg = 'Backing up samba '
+printScript(msg, '', False, False, True)
+try:
+    subProc('sophomorix-samba --backup-samba without-users', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20171121
+# 20180130
 #
 
 import configparser
@@ -37,8 +37,7 @@ try:
     # interface to use
     iface = setup.get('setup', 'iface')
     serverip = setup.get('setup', 'serverip')
-    dnsforwarder = setup.get('setup', 'dnsforwarder')
-    netonly = setup.getboolean('setup', 'netonly')
+    firewallip = setup.get('setup', 'firewallip')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -54,9 +53,6 @@ do_not_backup = [ 'interfaces.linuxmuster', 'dovecot.linuxmuster.conf', 'smb.con
 
 printScript('Processing config templates:')
 for f in os.listdir(constants.TPLDIR):
-    # process interfaces only in netonly mode
-    if (netonly == True and 'interfaces' not in f):
-        continue
     source = constants.TPLDIR + '/' + f
     msg = ' * ' + f + ' '
     printScript(msg, '', False, False, True)
@@ -88,10 +84,6 @@ for f in os.listdir(constants.TPLDIR):
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
-
-# patch nameserver in netonly mode
-if netonly == True:
-    rc = replaceInFile('/etc/network/interfaces.d/linuxmuster', 'dns-nameservers ' + serverip, 'dns-nameservers ' + dnsforwarder)
 
 # restart network interface
 msg = 'Restarting network '

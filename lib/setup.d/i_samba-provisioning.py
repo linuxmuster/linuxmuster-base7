@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20171201
+# 20180209
 #
 
 import configparser
@@ -42,7 +42,7 @@ try:
     setup.read(setupini)
     realm = setup.get('setup', 'domainname').upper()
     sambadomain = setup.get('setup', 'sambadomain')
-    dnsforwarder = setup.get('setup', 'firewallip')
+    firewallip = setup.get('setup', 'firewallip')
     domainname = setup.get('setup', 'domainname')
     basedn = setup.get('setup', 'basedn')
     printScript(' Success!', '', True, True, False, len(msg))
@@ -105,7 +105,7 @@ printScript(msg, '', False, False, True)
 try:
     samba = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     samba.read(smbconf)
-    samba.set('global', 'dns forwarder', dnsforwarder)
+    samba.set('global', 'dns forwarder', firewallip)
     samba.set('global', 'idmap config * : range', '10000-99999')
     samba.set('global', 'registry shares', 'yes')
     samba.set('global', 'host msdfs', 'yes')
@@ -135,6 +135,17 @@ try:
     # start only samba-ad-dc service
     subProc('systemctl unmask samba-ad-dc.service', logfile)
     subProc('systemctl enable samba-ad-dc.service', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# backup samba before sophomorix modifies anything
+msg = 'Backing up samba '
+printScript(msg, '', False, False, True)
+try:
+    #subProc('sophomorix-samba --schema-load', logfile)
+    subProc('sophomorix-samba --backup-samba without-sophomorix-schema', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

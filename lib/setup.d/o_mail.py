@@ -2,7 +2,7 @@
 #
 # mailserver setup
 # thomas@linuxmuster.net
-# 20171123
+# 20180209
 #
 
 import configparser
@@ -28,7 +28,6 @@ printScript(title)
 # files
 mailcert =  constants.SSLDIR + '/mail.cert.pem'
 mailkey =  constants.SSLDIR + '/mail.key.pem'
-cacert =  constants.CACERT
 setuptmp = '/tmp/setup.ini'
 setuphelper = '/tmp/setup.sh'
 
@@ -61,7 +60,7 @@ def main():
         content = content + 'binduserpw = ' + binduserpw
         rc = writeTextfile(setuptmp, content, 'w')
         # create setup helper script
-        content = '#!/bin/bash\nmkdir -p ' + constants.SSLDIR + '\nmv /tmp/*.pem ' + constants.SSLDIR + '\napt-get update\napt-get -y install linuxmuster-mail\nlinuxmuster-mail.py -s -c ' + setuptmp + '\nsystemctl start linuxmuster-mail.service'
+        content = '#!/bin/bash\nmkdir -p ' + constants.SSLDIR + '\nmv /tmp/*.pem ' + constants.SSLDIR + '\napt-get update\napt-get -y install linuxmuster-mail\nlinuxmuster-mail.py -c ' + setuptmp + '\nsystemctl start linuxmuster-mail.service'
         rc = writeTextfile(setuphelper, content, 'w')
         printScript(' Success!', '', True, True, False, len(msg))
     except:
@@ -84,7 +83,7 @@ def main():
         # uploading data & certs
         msg = '* Uploading files to mailserver '
         printScript(msg, '', False, False, True)
-        for item in [setuptmp, setuphelper, mailcert, mailkey, cacert]:
+        for item in [setuptmp, setuphelper, mailcert, mailkey]:
             if not ftp.put(item, '/tmp/' + os.path.basename(item)):
                 printScript(' ' + os.path.basename(item) + ' failed!', '', True, True, False, len(msg))
                 sys.exit(1)

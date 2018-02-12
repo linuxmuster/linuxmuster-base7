@@ -2,7 +2,7 @@
 #
 # setup ssh keys and ssh links to additional servers
 # thomas@linuxmuster.net
-# 20180129
+# 20180130
 #
 
 import configparser
@@ -40,9 +40,6 @@ try:
     dockerip = setup.get('setup', 'dockerip')
     # check if firewall shall be skipped
     skipfw = setup.getboolean('setup', 'skipfw')
-    if skipfw == False:
-        # get firewall root password
-        firewallpw = setup.get('setup', 'firewallpw')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

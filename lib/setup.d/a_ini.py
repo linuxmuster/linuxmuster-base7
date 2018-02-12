@@ -2,7 +2,7 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20180129
+# 20180209
 #
 
 import configparser
@@ -248,22 +248,6 @@ try:
 except:
     mailip = ''
     printScript(' not set', '', True, True, False, len(msg))
-
-# dnsforwarder
-msg = '* DNS forwarder '
-printScript(msg, '', False, False, True)
-try:
-    dnsforwarder = setup.get('setup', 'dnsforwarder')
-except:
-    dnsforwarder = ''
-if not isValidHostIpv4(dnsforwarder):
-    try:
-        dnsforwarder = firewallip
-        setup.set('setup', 'dnsforwarder', dnsforwarder)
-    except:
-        printScript(' failed to set!', '', True, True, False, len(msg))
-        sys.exit(1)
-printScript(' ' + dnsforwarder, '', True, True, False, len(msg))
 
 # Network interface
 msg = '* Default network interface '

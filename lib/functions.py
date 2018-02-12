@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20180129
+# 20180130
 #
 
 import configparser
@@ -167,26 +167,50 @@ def doSshLink(ip, port, secret):
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
         return False
+    # deploy ssl cert & key to opsi or docker
+    hostname = ''
+    if ip == opsiip:
+        hostname = 'opsi'
+    elif ip == dockerip:
+        hostname = 'docker'
+    if hostname != '':
+        msg = '  > Deploying ssl certs & key '
+        keyfile = constants.SSLDIR + '/' + hostname + '.key.pem'
+        certfile = constants.SSLDIR + '/' + hostname + '.cert.pem'
+        printScript(msg, '', False, False, True)
+        try:
+            ssh.exec_command('mkdir -p ' + constants.SSLDIR)
+            ftp = ssh.open_sftp()
+            ftp.put(constants.CACERT, constants.CACERT)
+            ftp.put(keyfile, keyfile)
+            ftp.put(certfile, certfile)
+            ftp.close()
+            ssh.exec_command('chmod 640 ' + constants.SSLDIR + '/*.key.pem')
+            printScript(' Success!', '', True, True, False, len(msg))
+        except:
+            printScript(' Failed!', '', True, True, False, len(msg))
+            return False
     # close ssh connection
     ssh.close()
     # prepare host
-    if serverip != '' and adminpw != '':
-        hostname = ''
-        if ip == opsiip:
-            hostname = 'opsi'
-        elif ip == dockerip:
-            hostname = 'docker'
-        if hostname != '':
-            msg = '  > Preparing ' + hostname + ' '
-            printScript(msg, '', False, False, True)
-            try:
-                cmd = 'ssh -oNumberOfPasswordPrompts=0 -oStrictHostKeyChecking=no -p ' + str(port) + ' ' + ip + ' /usr/sbin/linuxmuster-prepare.py -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw + '" -b'
-                logfile = constants.LOGDIR + '/setup.ssh.' + hostname + '.log'
+    if serverip != '' and adminpw != '' and hostname != '':
+        msg = '  > Preparing ' + hostname + ' '
+        printScript(msg, '', False, False, True)
+        try:
+            sshcmd = 'ssh -oNumberOfPasswordPrompts=0 -oStrictHostKeyChecking=no -p ' + str(port) + ' ' + ip + ' '
+            preparecmd = sshcmd + '/usr/sbin/linuxmuster-prepare.py -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw
+            rebootcmd = sshcmd + '/sbin/reboot'
+            logfile = constants.LOGDIR + '/setup.ssh.' + hostname + '.log'
+            subProc(preparecmd, logfile)
+            subProc(rebootcmd, logfile)
+            knownhosts = '/root/.ssh/known_hosts'
+            if os.path.isfile(knownhosts):
+                cmd = 'ssh-keygen -f ' + knownhosts + ' -R ' + ip
                 subProc(cmd, logfile)
-                printScript(' Success!', '', True, True, False, len(msg))
-            except:
-                printScript(' Failed!', '', True, True, False, len(msg))
-                return False
+            printScript(' Success!', '', True, True, False, len(msg))
+        except:
+            printScript(' Failed!', '', True, True, False, len(msg))
+            return False
     return True
 
 # return grub name of partition's device name
