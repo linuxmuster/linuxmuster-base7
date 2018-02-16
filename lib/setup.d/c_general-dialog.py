@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20180129
+# 20180215
 #
 
 import constants
@@ -134,21 +134,6 @@ while True:
 print('DHCP range: ' + dhcprange)
 setup.set('setup', 'dhcprange', dhcprange)
 
-# dockerip
-ititle = title + ': Dockerhost-IP'
-try:
-    dockerip=setup.get('setup', 'dockerip')
-except:
-    dockerip = ''
-while True:
-    rc, dockerip = dialog.inputbox('Enter the ip address of the docker host (optional):', title=ititle, height=16, width=64, init=dockerip)
-    if rc == 'cancel':
-        sys.exit(1)
-    if isValidHostIpv4(dockerip) or dockerip == '':
-        break
-print('Docker host ip: ' + dockerip)
-setup.set('setup', 'dockerip', dockerip)
-
 # opsi
 ititle = title + ': Opsi-IP'
 try:
@@ -163,6 +148,21 @@ while True:
         break
 print('Opsi ip: ' + opsiip)
 setup.set('setup', 'opsiip', opsiip)
+
+# dockerip
+ititle = title + ': Dockerhost-IP'
+try:
+    dockerip=setup.get('setup', 'dockerip')
+except:
+    dockerip = ''
+while True:
+    rc, dockerip = dialog.inputbox('Enter the ip address of the docker host (optional):', title=ititle, height=16, width=64, init=dockerip)
+    if rc == 'cancel':
+        sys.exit(1)
+    if isValidHostIpv4(dockerip) or dockerip == '':
+        break
+print('Docker host ip: ' + dockerip)
+setup.set('setup', 'dockerip', dockerip)
 
 # mail
 nostatus = False
@@ -278,4 +278,3 @@ try:
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
-    

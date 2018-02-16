@@ -3,9 +3,10 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20180130
+# 20180215
 #
 
+import codecs
 import configparser
 import constants
 import csv
@@ -198,15 +199,15 @@ def doSshLink(ip, port, secret):
         printScript(msg, '', False, False, True)
         try:
             sshcmd = 'ssh -oNumberOfPasswordPrompts=0 -oStrictHostKeyChecking=no -p ' + str(port) + ' ' + ip + ' '
-            preparecmd = sshcmd + '/usr/sbin/linuxmuster-prepare.py -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw
+            preparecmd = sshcmd + '/usr/sbin/linuxmuster-prepare.py -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw + '"'
             rebootcmd = sshcmd + '/sbin/reboot'
             logfile = constants.LOGDIR + '/setup.ssh.' + hostname + '.log'
             subProc(preparecmd, logfile)
-            subProc(rebootcmd, logfile)
             knownhosts = '/root/.ssh/known_hosts'
             if os.path.isfile(knownhosts):
                 cmd = 'ssh-keygen -f ' + knownhosts + ' -R ' + ip
                 subProc(cmd, logfile)
+            subProc(rebootcmd, logfile)
             printScript(' Success!', '', True, True, False, len(msg))
         except:
             printScript(' Failed!', '', True, True, False, len(msg))
@@ -256,7 +257,7 @@ def readTextfile(tfile):
     if not os.path.isfile(tfile):
         return False, None
     try:
-        infile = open(tfile , 'r')
+        infile = codecs.open(tfile ,'r', encoding='utf-8', errors='ignore')
         content = infile.read()
         infile.close()
         return True, content

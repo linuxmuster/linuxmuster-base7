@@ -1,3 +1,13 @@
+linuxmuster-base7 (7.0.0-33ubuntu0) lmn7-testing; urgency=low
+
+  * setup:
+    - fix syntax error in ssh function.
+    - added opsi support.
+    - updated default ssl certificate data.
+  * linuxmuster-import-devices.py: fixed reading non utf-8 textfiles.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 15 Feb 2018 19:54:22 +0100
+
 linuxmuster-base7 (7.0.0-32ubuntu0) lmn7-testing; urgency=low
 
   * setup:

@@ -2,7 +2,7 @@
 #
 # mailserver setup
 # thomas@linuxmuster.net
-# 20180209
+# 20180214
 #
 
 import configparser
@@ -60,7 +60,13 @@ def main():
         content = content + 'binduserpw = ' + binduserpw
         rc = writeTextfile(setuptmp, content, 'w')
         # create setup helper script
-        content = '#!/bin/bash\nmkdir -p ' + constants.SSLDIR + '\nmv /tmp/*.pem ' + constants.SSLDIR + '\napt-get update\napt-get -y install linuxmuster-mail\nlinuxmuster-mail.py -c ' + setuptmp + '\nsystemctl start linuxmuster-mail.service'
+        content = '#!/bin/bash\nmkdir -p ' + constants.SSLDIR
+        content = content + '\nmv /tmp/*.pem ' + constants.SSLDIR
+        content = content + '\nchmod 640 ' + constants.SSLDIR + '/*.key.pem'
+        content = content + '\nln -sf ' + constants.SSLDIR + '/cacert.pem /etc/ssl/certs/cacert.pem'
+        content = content + '\napt-get update\napt-get -y install linuxmuster-mail'
+        content = content + '\nlinuxmuster-mail.py -c ' + setuptmp
+        content = content + '\nsystemctl start linuxmuster-mail.service'
         rc = writeTextfile(setuphelper, content, 'w')
         printScript(' Success!', '', True, True, False, len(msg))
     except:

@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices.py
 # thomas@linuxmuster.net
-# 20171114
+# 20180215
 #
 
 import configparser
@@ -19,6 +19,7 @@ from functions import getStartconfOsValues
 from functions import getStartconfOption
 from functions import getStartconfPartnr
 from functions import getStartconfPartlabel
+from functions import isValidHostIpv4
 from functions import printScript
 from functions import readTextfile
 from functions import setGlobalStartconfOption
@@ -149,6 +150,18 @@ def doLinboStartconf(group):
     # process grub cfgs
     doGrubCfg(startconf, group, kopts_r)
 
+# opsi
+def doOpsi():
+    sshcmd = 'ssh -oNumberOfPasswordPrompts=0 -oStrictHostKeyChecking=no'
+    rsynccmd = 'rsync -e "' + sshcmd + '"'
+    # upload workstations file
+    os.system(rsynccmd + ' ' + constants.WIMPORTDATA + ' ' + opsiip + ':' + constants.OPSIWSDATA)
+    # execute script
+    os.system(sshcmd + ' ' + opsiip + ' ' + constants.OPSIWSIMPORT + ' --quiet')
+    # download opsi host keys
+    os.system(rsynccmd + ' ' + opsiip + ':' + constants.OPSIPCKEYS + ' ' + constants.LINBOOPSIKEYS)
+    os.system('chmod 600 ' + constants.LINBOOPSIKEYS)
+
 
 # delete old config links
 # start.conf-ip
@@ -209,6 +222,10 @@ for row in reader:
         pxe_groups.append(group)
 d.close()
 f.close()
+
+# do opsi stuff if configured
+if opsiip != '':
+    doOpsi()
 
 # write pxe configs for collected groups
 printScript('', 'begin')
