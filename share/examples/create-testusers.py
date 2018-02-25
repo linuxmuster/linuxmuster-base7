@@ -2,7 +2,7 @@
 #
 # create a bunch of testusers
 # thomas@linuxmuster.net
-# 20170814
+# 20180225
 #
 
 import constants
@@ -65,6 +65,16 @@ msg = 'sophomorix-add '
 printScript(msg, '', False, False, True)
 try:
     subProc('sophomorix-add', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# quota
+msg = 'sophomorix-quota '
+printScript(msg, '', False, False, True)
+try:
+    subProc('sophomorix-quota', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

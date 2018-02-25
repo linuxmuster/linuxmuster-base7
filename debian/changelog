@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.0-34ubuntu0) lmn7-testing; urgency=low
+
+  * added quota support for test users.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 25 Feb 2018 15:32:42 +0100
+
 linuxmuster-base7 (7.0.0-33ubuntu0) lmn7-testing; urgency=low
 
   * setup:
