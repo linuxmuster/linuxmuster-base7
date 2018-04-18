@@ -2,7 +2,7 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20180209
+# 20180418
 #
 
 import configparser
@@ -28,15 +28,15 @@ printScript(title)
 
 # read ini files
 setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
-for i in [constants.DEFAULTSINI, constants.SETUPINI, constants.PREPINI, constants.CUSTOMINI]:
+for item in [constants.DEFAULTSINI, constants.SETUPINI, constants.CUSTOMINI, constants.PREPINI]:
     # skip non existant file
-    if not os.path.isfile(i):
+    if not os.path.isfile(item):
         continue
     # reading setup values
-    msg = 'Reading ' + i + ' '
+    msg = 'Reading ' + item + ' '
     printScript(msg, '', False, False, True)
     try:
-        setup.read(i)
+        setup.read(item)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
@@ -56,60 +56,22 @@ except:
     printScript(' not set!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# samba realm
-msg = '* realm '
-printScript(msg, '', False, False, True)
-try:
-    realm = setup.get('setup', 'realm')
-except:
-    realm = ''
-if realm == '' or realm == None:
-    realm = domainname.upper()
-    try:
-        setup.set('setup', 'realm', realm)
-    except:
-        printScript(' failed to set!', '', True, True, False, len(msg))
-        sys.exit(1)
-printScript(' ' + realm, '', True, True, False, len(msg))
-
+# derive values from domainname
+# realm
+setup.set('setup', 'realm', domainname.upper())
 # sambadomain
-msg = '* sambadomain '
-printScript(msg, '', False, False, True)
-try:
-    sambadomain = setup.get('setup', 'sambadomain')
-except:
-    sambadomain = ''
-if sambadomain == '' or sambadomain == None:
-    sambadomain = domainname.split('.')[0].upper()
-    try:
-        setup.set('setup', 'sambadomain', sambadomain)
-    except:
-        printScript(' failed to set!', '', True, True, False, len(msg))
-        sys.exit(1)
-printScript(' ' + sambadomain, '', True, True, False, len(msg))
-
+setup.set('setup', 'sambadomain', domainname.split('.')[0].upper())
 # basedn
-msg = '* BaseDN '
-printScript(msg, '', False, False, True)
-try:
-    basedn = setup.get('setup', 'basedn')
-except:
-    basedn = ''
-if basedn == '' or basedn == None:
-    try:
-        for i in domainname.split('.'):
-            basedn = basedn + 'DC=' + i + ','
-        setup.set('setup', 'basedn', basedn[:-1])
-    except:
-        printScript(' failed to set!', '', True, True, False, len(msg))
-        sys.exit(1)
-printScript(' ' + basedn, '', True, True, False, len(msg))
+basedn = ''
+for item in domainname.split('.'):
+    basedn = basedn + 'DC=' + item + ','
+setup.set('setup', 'basedn', basedn[:-1])
 
 # servername
 msg = '* Servername '
 printScript(msg, '', False, False, True)
 try:
-    servername = setup.get('setup', 'servername')
+    servername = setup.get('setup', 'hostname')
     if not isValidHostname(servername):
         printScript(' ' + servername + ' is not valid!', '', True, True, False, len(msg))
         sys.exit(1)
@@ -117,22 +79,11 @@ try:
 except:
     printScript(' not set!', '', True, True, False, len(msg))
     sys.exit(1)
+setup.set('setup', 'servername', servername)
 
-# samba netbios name
-msg = '* netbiosname '
-printScript(msg, '', False, False, True)
-try:
-    netbiosname = setup.get('setup', 'netbiosname')
-except:
-    netbiosname = ''
-if not isValidHostname(netbiosname):
-    netbiosname = servername.upper()
-    try:
-        setup.set('setup', 'netbiosname', netbiosname)
-    except:
-        printScript(' failed to set!', '', True, True, False, len(msg))
-        sys.exit(1)
-printScript(' ' + netbiosname, '', True, True, False, len(msg))
+# derive values from servername
+# netbiosname
+setup.set('setup', 'netbiosname', servername.upper())
 
 # serverip
 msg = '* Server-IP '
@@ -148,48 +99,23 @@ except:
     sys.exit(1)
 
 # netmask
-msg = '* Netmask '
-printScript(msg, '', False, False, True)
-try:
-    netmask = setup.get('setup', 'netmask')
-    n = IP(serverip + '/' + netmask, make_net=True)
-except:
-    printScript(' ' + netmask + ' is not valid!', '', True, True, False, len(msg))
-    sys.exit(1)
-printScript(' ' + netmask, '', True, True, False, len(msg))
-
-# netmask
 msg = '* Bitmask '
 printScript(msg, '', False, False, True)
 try:
     bitmask = setup.get('setup', 'bitmask')
-    n = IP(serverip + '/' + bitmask, make_net=True)
+    ip = IP(serverip + '/' + bitmask, make_net=True)
 except:
     printScript(' ' + bitmask + ' is not valid!', '', True, True, False, len(msg))
     sys.exit(1)
 printScript(' ' + bitmask, '', True, True, False, len(msg))
 
+# derive values from bitmask
+# netmask
+setup.set('setup', 'netmask', ip.netmask().strNormal(0))
 # network address
-msg = '* Network '
-printScript(msg, '', False, False, True)
-try:
-    network = IP(n).strNormal(0)
-    setup.set('setup', 'network', network)
-    printScript(' ' + network, '', True, True, False, len(msg))
-except:
-    printScript(' failed to set!', '', True, True, False, len(msg))
-    sys.exit(1)
-
+setup.set('setup', 'network', IP(ip).strNormal(0))
 # broadcast address
-msg = '* Broadcast '
-printScript(msg, '', False, False, True)
-try:
-    broadcast = IP(n).strNormal(3).split('-')[1]
-    setup.set('setup', 'broadcast', broadcast)
-    printScript(' ' + broadcast, '', True, True, False, len(msg))
-except:
-    printScript(' failed to set!', '', True, True, False, len(msg))
-    sys.exit(1)
+setup.set('setup', 'broadcast', ip.broadcast().strNormal(0))
 
 # dhcprange
 msg = '* DHCP range '
@@ -218,70 +144,79 @@ msg = '* Firewall IP '
 printScript(msg, '', False, False, True)
 try:
     firewallip = setup.get('setup', 'firewallip')
-except:
-    firewallip = ''
-if not isValidHostIpv4(firewallip):
-    try:
-        firewallip = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.254'
-        setup.set('setup', 'firewallip', firewallip)
-    except:
-        printScript(' failed to set!', '', True, True, False, len(msg))
+    if not isValidHostIpv4(firewallip):
+        printScript(' ' + firewallip + ' is not valid!', '', True, True, False, len(msg))
         sys.exit(1)
-printScript(' ' + firewallip, '', True, True, False, len(msg))
+    printScript(' ' + firewallip, '', True, True, False, len(msg))
+except:
+    printScript(' not set!', '', True, True, False, len(msg))
+    sys.exit(1)
 
 # dockerip
 msg = '* Dockerhost IP '
 printScript(msg, '', False, False, True)
 try:
     dockerip = setup.get('setup', 'dockerip')
-    printScript(' ' + dockerip, '', True, True, False, len(msg))
+    if dockerip == '':
+        printScript(' not set!', '', True, True, False, len(msg))
+    else:
+        if isValidHostIpv4(dockerip):
+            printScript(' ' + dockerip, '', True, True, False, len(msg))
+        else:
+            printScript(' ' + dockerip + ' is not valid!', '', True, True, False, len(msg))
+            sys.exit(1)
 except:
-    dockerip = ''
-    printScript(' not set', '', True, True, False, len(msg))
+    setup.set('setup', 'dockerip', '')
+    printScript(' not set!', '', True, True, False, len(msg))
 
 # mailip
 msg = '* Mailserver IP '
 printScript(msg, '', False, False, True)
 try:
     mailip = setup.get('setup', 'mailip')
-    printScript(' ' + mailip, '', True, True, False, len(msg))
+    if mailip == '':
+        printScript(' not set!', '', True, True, False, len(msg))
+    else:
+        if isValidHostIpv4(mailip):
+            printScript(' ' + mailip, '', True, True, False, len(msg))
+        else:
+            printScript(' ' + mailip + ' is not valid!', '', True, True, False, len(msg))
+            sys.exit(1)
 except:
-    mailip = ''
-    printScript(' not set', '', True, True, False, len(msg))
+    setup.set('setup', 'mailip', '')
+    printScript(' not set!', '', True, True, False, len(msg))
 
 # Network interface
-msg = '* Default network interface '
-printScript(msg, '', False, False, True)
-try:
-    iface = setup.get('setup', 'iface')
-except:
-    iface = ''
-if iface == '' or iface == None:
-    iface_list, iface = getDefaultIface()
-if iface == '':
-    printScript(' not set!', '', True, True, False, len(msg))
-try:
-    setup.set('setup', 'iface', iface)
-except:
-    printScript(' failed to set!', '', True, True, False, len(msg))
-    sys.exit(1)
-printScript(' ' + iface, '', True, True, False, len(msg))
+# msg = '* Default network interface '
+# printScript(msg, '', False, False, True)
+# try:
+#     iface = setup.get('setup', 'iface')
+# except:
+#     iface = ''
+# if iface == '' or iface == None:
+#     iface_list, iface = getDefaultIface()
+# if iface == '':
+#     printScript(' not set!', '', True, True, False, len(msg))
+# try:
+#     setup.set('setup', 'iface', iface)
+# except:
+#     printScript(' failed to set!', '', True, True, False, len(msg))
+#     sys.exit(1)
+# printScript(' ' + iface, '', True, True, False, len(msg))
 
 # write inifile finally
 msg = 'Writing setup ini file '
 printScript(msg, '', False, False, True)
-setupini = constants.SETUPINI
 try:
-    with open(setupini, 'w') as outfile:
+    with open(constants.SETUPINI, 'w') as outfile:
         setup.write(outfile)
-    subProc('chmod 600 ' + setupini, logfile)
+    subProc('chmod 600 ' + constants.SETUPINI, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
 # delete temporary ini files
-if os.path.isfile(constants.CUSTOMINI):
-    os.unlink(constants.CUSTOMINI)
-if os.path.isfile(constants.PREPINI):
-    os.unlink(constants.PREPINI)
+for item in [constants.CUSTOMINI, constants.PREPINI]:
+    if os.path.isfile(item):
+        os.unlink(item)

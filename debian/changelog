@@ -1,9 +1,21 @@
+linuxmuster-base7 (7.0.0-37ubuntu0) lmn7-testing; urgency=low
+
+  * setup consolidation:
+    - removed redundand items which are already served by
+      linuxmuster-prepare.py.
+    - merging prepare.ini and setup.ini at the beginning.
+    - disable unwanted services.
+  * sophomorix-admin password fix.
+  * improved password input.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 18 Apr 2018 20:13:42 +0200
+
 linuxmuster-base7 (7.0.0-36ubuntu0) lmn7-testing; urgency=low
 
   * removed sophomorix-admin.
   * disabled not needed samba services.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 16 Apr 2018 12:47:28 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 04 Apr 2018 13:19:36 +0200
 
 linuxmuster-base7 (7.0.0-35ubuntu0) lmn7-testing; urgency=low
 

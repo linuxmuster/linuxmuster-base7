@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20180215
+# 20180418
 #
 
 import constants
@@ -34,18 +34,20 @@ try:
     setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     serverip = setup.get('setup', 'serverip')
+    servername = setup.get('setup', 'servername')
+    domainname = setup.get('setup', 'domainname')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
 # get network interfaces
-iface_list, iface_default = detectedInterfaces()
+# iface_list, iface_default = detectedInterfaces()
 
 # begin dialog
-title = 'General Setup'
+title = 'linuxmuster.net 7: Setup for ' + servername + '.' + domainname
 dialog = Dialog(dialog="dialog")
-dialog.set_background_title('linuxmuster.net 7: ' + title)
+dialog.set_background_title(title)
 button_names = {dialog.OK:     "OK",
                 dialog.CANCEL: "Cancel"}
 
@@ -81,7 +83,6 @@ if rc == 'cancel':
 
 print('Bundesland: ' + state)
 setup.set('setup', 'state', state )
-"""
 
 # servername
 ititle = title + ': Servername'
@@ -117,6 +118,7 @@ setup.set('setup', 'realm', realm)
 sambadomain = domainname.split('.')[0].upper()
 print('Samba domain: ' + sambadomain)
 setup.set('setup', 'sambadomain', sambadomain)
+"""
 
 # dhcprange
 ititle = title + ': DHCP Range'
@@ -241,15 +243,16 @@ if mailip != '':
 # global admin password
 ititle = title + ': Administrator password'
 while True:
-    rc, adminpw = dialog.passwordbox('Enter the Administrator password (Note: Input will be unvisible!):', title=ititle)
+    rc, adminpw = dialog.passwordbox('Enter the Administrator password (Note: Input will be unvisible!):', title=ititle, insecure=True)
     if rc == 'cancel':
         sys.exit(1)
     if isValidPassword(adminpw):
-        break
-while True:
-    rc, adminpw_repeated = dialog.passwordbox('Re-enter the Administrator password:', title=ititle)
-    if rc == 'cancel':
-        sys.exit(1)
+        while True:
+            rc, adminpw_repeated = dialog.passwordbox('Re-enter the Administrator password:', title=ititle, insecure=True)
+            if rc == 'cancel':
+                sys.exit(1)
+            if isValidPassword(adminpw_repeated):
+                break
     if adminpw == adminpw_repeated:
         break
 

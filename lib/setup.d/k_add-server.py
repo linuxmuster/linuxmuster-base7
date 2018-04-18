@@ -38,7 +38,6 @@ try:
     mailip = setup.get('setup', 'mailip')
     dockerip = setup.get('setup', 'dockerip')
     serverip = setup.get('setup', 'serverip')
-    iface = setup.get('setup', 'iface')
     rc, devices = readTextfile(constants.WIMPORTDATA)
     printScript(' Success!', '', True, True, False, len(msg))
 except:

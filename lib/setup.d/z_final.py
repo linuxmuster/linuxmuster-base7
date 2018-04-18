@@ -2,7 +2,7 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20170212
+# 20180418
 #
 
 import constants
@@ -17,6 +17,18 @@ logfile = constants.LOGDIR + '/setup.' + title + '.log'
 
 printScript('', 'begin')
 printScript(title)
+
+# disable unwanted services
+unwanted = ['iscsid', 'dropbear', 'lxcfs']
+for item in unwanted:
+    msg = 'Disabling service ' + item + ' '
+    printScript(msg, '', False, False, True)
+    try:
+        subProc('systemctl stop ' + item + '.service', logfile)
+        subProc('systemctl disable ' + item + '.service', logfile)
+        printScript(' Success!', '', True, True, False, len(msg))
+    except:
+        printScript(' not installed!', '', True, True, False, len(msg))
 
 # import devices
 msg = 'Starting device import '

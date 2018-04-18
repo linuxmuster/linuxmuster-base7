@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20180404
+# 20180418
 #
 
 import configparser
@@ -34,19 +34,24 @@ try:
     # setup.ini
     setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
-    # interface to use
-    iface = setup.get('setup', 'iface')
+    adminpw = setup.get('setup', 'adminpw')
+    bitmask = setup.get('setup', 'bitmask')
+    broadcast = setup.get('setup', 'broadcast')
+    dhcprange = setup.get('setup', 'dhcprange')
+    domainname = setup.get('setup', 'domainname')
+    firewallip = setup.get('setup', 'firewallip')
+    linbodir = constants.LINBODIR
+    netbiosname = setup.get('setup', 'netbiosname')
+    netmask = setup.get('setup', 'netmask')
+    network = setup.get('setup', 'network')
+    realm = setup.get('setup', 'realm')
+    sambadomain = setup.get('setup', 'sambadomain')
     servername = setup.get('setup', 'servername')
     serverip = setup.get('setup', 'serverip')
-    firewallip = setup.get('setup', 'firewallip')
-    adminpw = setup.get('setup', 'adminpw')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
-
-# stop network interface
-subProc('ifconfig ' + iface + ' 0.0.0.0 down', logfile)
 
 # templates, whose corresponding configfiles must not be overwritten
 do_not_overwrite = 'dhcpd.custom.conf'
@@ -69,13 +74,19 @@ for f in os.listdir(constants.TPLDIR):
         if (f in do_not_overwrite and os.path.isfile(target)):
             printScript(' Success!', '', True, True, False, len(msg))
             continue
-        for value in defaults.options('setup'):
-            placeholder = '@@' + value + '@@'
-            if placeholder in filedata:
-                filedata = filedata.replace(placeholder, setup.get('setup', value))
-        # set LINBODIR
-        if '@@linbodir@@' in filedata:
-            filedata = filedata.replace('@@linbodir@@', constants.LINBODIR)
+        filedata = filedata.replace('@@bitmask@@', bitmask)
+        filedata = filedata.replace('@@broadcast@@', broadcast)
+        filedata = filedata.replace('@@dhcprange@@', dhcprange)
+        filedata = filedata.replace('@@domainname@@', domainname)
+        filedata = filedata.replace('@@firewallip@@', firewallip)
+        filedata = filedata.replace('@@linbodir@@', linbodir)
+        filedata = filedata.replace('@@netbiosname@@', netbiosname)
+        filedata = filedata.replace('@@netmask@@', netmask)
+        filedata = filedata.replace('@@network@@', network)
+        filedata = filedata.replace('@@realm@@', realm)
+        filedata = filedata.replace('@@sambadomain@@', sambadomain)
+        filedata = filedata.replace('@@servername@@', servername)
+        filedata = filedata.replace('@@serverip@@', serverip)
         # backup file
         if f not in do_not_backup:
             backupCfg(target)
@@ -91,7 +102,7 @@ for f in os.listdir(constants.TPLDIR):
 msg = 'Network setup '
 printScript(msg, '', False, False, True)
 try:
-    subProc('/usr/sbin/linuxmuster-prepare.py -x -s -u -p server -t ' + servername + ' -r ' + serverip + ' -a "' + adminpw + '"', logfile)
+    subProc('/usr/sbin/linuxmuster-prepare.py -x -s -u -p server -f ' + firewallip + ' -n ' + serverip + '/' + bitmask + ' -d ' + domainname + ' -t ' + servername + ' -r ' + serverip + ' -a "' + adminpw + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

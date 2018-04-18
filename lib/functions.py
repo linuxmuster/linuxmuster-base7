@@ -113,6 +113,8 @@ def printScript(msg='', header='', lf=True, noleft=False, noright=False, offset=
 # get ip addresses from setup.init
 def getFromSetup():
     setupini = constants.SETUPINI
+    domainname = ''
+    bitmask = ''
     serverip = ''
     firewallip = ''
     opsiip = ''
@@ -121,6 +123,8 @@ def getFromSetup():
     try:
         setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
         setup.read(setupini)
+        domainname = setup.get('setup', 'domainname')
+        bitmask = setup.get('setup', 'bitmask')
         serverip = setup.get('setup', 'serverip')
         firewallip = setup.get('setup', 'firewallip')
         opsiip = setup.get('setup', 'opsiip')
@@ -128,11 +132,11 @@ def getFromSetup():
         adminpw = setup.get('setup', 'adminpw')
     except:
         pass
-    return serverip, firewallip, opsiip, dockerip, adminpw
+    return domainname, bitmask, serverip, firewallip, opsiip, dockerip, adminpw
 
 # establish pw less ssh connection to ip & port
 def doSshLink(ip, port, secret):
-    serverip, firewallip, opsiip, dockerip, adminpw = getFromSetup()
+    domainname, bitmask, serverip, firewallip, opsiip, dockerip, adminpw = getFromSetup()
     msg = '* Processing ssh link to host ' + ip + ' on port ' + str(port) + ':'
     printScript(msg)
     # test connection on ip and port
@@ -201,7 +205,7 @@ def doSshLink(ip, port, secret):
         printScript(msg, '', False, False, True)
         try:
             sshcmd = 'ssh -oNumberOfPasswordPrompts=0 -oStrictHostKeyChecking=no -p ' + str(port) + ' ' + ip + ' '
-            preparecmd = sshcmd + '/usr/sbin/linuxmuster-prepare.py -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw + '"' + profile
+            preparecmd = sshcmd + '/usr/sbin/linuxmuster-prepare.py -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw + '"' + profile + ' -n ' + ip + '/' + bitmask + ' -d ' + domainname + ' -f ' + firewallip
             rebootcmd = sshcmd + '/sbin/reboot'
             logfile = constants.LOGDIR + '/setup.ssh.' + hostname + '.log'
             subProc(preparecmd, logfile)

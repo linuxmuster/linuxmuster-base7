@@ -2,7 +2,7 @@
 #
 # create samba users
 # thomas@linuxmuster.net
-# 20180416
+# 20180418
 #
 
 import configparser
@@ -37,9 +37,6 @@ except:
 msg = 'Calculating random passwords '
 printScript(msg, '', False, False, True)
 try:
-    sophadminpw = randomPassword(16)
-    with open(constants.SOPHADMINSECRET, 'w') as secret:
-        secret.write(sophadminpw)
     binduserpw = randomPassword(16)
     with open(constants.BINDUSERSECRET, 'w') as secret:
         secret.write(binduserpw)

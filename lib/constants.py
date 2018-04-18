@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20180215
+# 20180418
 #
 
 # don't change this file
@@ -24,7 +24,6 @@ SSHPUBKEY = '/root/.ssh/id_rsa.pub'
 SSHPUBKEYB64 = SSHPUBKEY + '.b64'
 SECRETDIR = SYSDIR + '/.secret'
 BINDUSERSECRET = SECRETDIR + '/global-binduser'
-SOPHADMINSECRET = SECRETDIR + '/sophomorix-admin'
 ADADMINSECRET = SECRETDIR + '/administrator'
 CAKEYSECRET = SECRETDIR + '/cakey'
 LIBDIR = '/usr/lib/linuxmuster'
@@ -40,7 +39,7 @@ CUSTOMINI = CACHEDIR + '/custom.ini'
 FWOSCONFTPL = SHAREDIR + '/firewall/opnsense/config.xml.tpl'
 SETUPINI = VARDIR + '/setup.ini'
 DEFAULTSINI = SHAREDIR + '/setupdefaults.ini'
-PREPINI = CACHEDIR + '/prepare.ini'
+PREPINI = VARDIR + '/prepare.ini'
 LINBODIR = '/srv/linbo'
 LINBOGRUBDIR = LINBODIR + '/boot/grub'
 LINBOLOGDIR = LOGDIR + '/linbo'
