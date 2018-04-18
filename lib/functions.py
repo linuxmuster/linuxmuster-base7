@@ -174,8 +174,10 @@ def doSshLink(ip, port, secret):
         hostname = 'opsi'
     elif ip == dockerip:
         hostname = 'docker'
+    profile = ''
     if hostname != '':
         msg = '  > Deploying ssl certs & key '
+        profile = ' -p ' + hostname
         keyfile = constants.SSLDIR + '/' + hostname + '.key.pem'
         certfile = constants.SSLDIR + '/' + hostname + '.cert.pem'
         printScript(msg, '', False, False, True)
@@ -199,7 +201,7 @@ def doSshLink(ip, port, secret):
         printScript(msg, '', False, False, True)
         try:
             sshcmd = 'ssh -oNumberOfPasswordPrompts=0 -oStrictHostKeyChecking=no -p ' + str(port) + ' ' + ip + ' '
-            preparecmd = sshcmd + '/usr/sbin/linuxmuster-prepare.py -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw + '"'
+            preparecmd = sshcmd + '/usr/sbin/linuxmuster-prepare.py -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw + '"' + profile
             rebootcmd = sshcmd + '/sbin/reboot'
             logfile = constants.LOGDIR + '/setup.ssh.' + hostname + '.log'
             subProc(preparecmd, logfile)

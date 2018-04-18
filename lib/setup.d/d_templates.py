@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20180130
+# 20180404
 #
 
 import configparser
@@ -36,8 +36,10 @@ try:
     setup.read(setupini)
     # interface to use
     iface = setup.get('setup', 'iface')
+    servername = setup.get('setup', 'servername')
     serverip = setup.get('setup', 'serverip')
     firewallip = setup.get('setup', 'firewallip')
+    adminpw = setup.get('setup', 'adminpw')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -86,14 +88,24 @@ for f in os.listdir(constants.TPLDIR):
         sys.exit(1)
 
 # restart network interface
-msg = 'Restarting network '
+msg = 'Network setup '
 printScript(msg, '', False, False, True)
 try:
-    subProc('service networking restart', logfile)
+    subProc('/usr/sbin/linuxmuster-prepare.py -x -s -u -p server -t ' + servername + ' -r ' + serverip + ' -a "' + adminpw + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
+
+# restart network interface
+#msg = 'Restarting network '
+#printScript(msg, '', False, False, True)
+#try:
+#    subProc('service networking restart', logfile)
+#    printScript(' Success!', '', True, True, False, len(msg))
+#except:
+#    printScript(' Failed!', '', True, True, False, len(msg))
+#    sys.exit(1)
 
 # set server time
 msg = 'Adjusting server time '

@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20180209
+# 20180416
 #
 
 import configparser
@@ -28,6 +28,10 @@ services = ['winbind', 'samba-ad-dc', 'smbd', 'nmbd']
 try:
     for s in services:
         subProc('service ' + s + ' stop', logfile)
+        if s == 'samba-ad-dc':
+            continue
+        # disabling not needed samba services
+        subProc('systemctl disable ' + s + '.service', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

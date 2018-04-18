@@ -2,7 +2,7 @@
 #
 # create samba users
 # thomas@linuxmuster.net
-# 20180209
+# 20180416
 #
 
 import configparser
@@ -54,16 +54,6 @@ msg = 'Backing up samba '
 printScript(msg, '', False, False, True)
 try:
     subProc('sophomorix-samba --backup-samba without-users', logfile)
-    printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
-    sys.exit(1)
-
-msg = 'Creating samba account for sophomorix-admin '
-printScript(msg, '', False, False, True)
-try:
-    subProc('samba-tool user create sophomorix-admin "' + sophadminpw + '"', logfile)
-    subProc('samba-tool group addmembers "Domain Admins" sophomorix-admin', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
