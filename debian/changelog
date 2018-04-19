@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.0.0-38ubuntu0) lmn7-testing; urgency=low
+
+  * systemd-resolved.service disabled.
+  * resolv.conf fix.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 19 Apr 2018 09:11:20 +0200
+
 linuxmuster-base7 (7.0.0-37ubuntu0) lmn7-testing; urgency=low
 
   * setup consolidation:

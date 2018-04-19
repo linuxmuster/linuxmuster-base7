@@ -2,11 +2,12 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20180418
+# 20180419
 #
 
 import configparser
 import constants
+import datetime
 import glob
 import os
 import sys
@@ -14,6 +15,7 @@ from functions import randomPassword
 from functions import replaceInFile
 from functions import printScript
 from functions import subProc
+from functions import writeTextfile
 
 title = os.path.basename(__file__).replace('.py', '').split('_')[1]
 logfile = constants.LOGDIR + '/setup.' + title + '.log'
@@ -24,7 +26,9 @@ printScript(title)
 # stop services
 msg = 'Stopping samba services '
 printScript(msg, '', False, False, True)
-services = ['winbind', 'samba-ad-dc', 'smbd', 'nmbd']
+
+#services = ['winbind', 'samba-ad-dc', 'smbd', 'nmbd']
+services = ['winbind', 'samba-ad-dc', 'smbd', 'systemd-resolved', 'samba-ad-dc']
 try:
     for service in services:
         subProc('systemctl stop ' + service + '.service', logfile)
@@ -159,8 +163,33 @@ except:
 msg = 'Provisioning sophomorix samba schema '
 printScript(msg, '', False, False, True)
 try:
-    #subProc('sophomorix-samba --schema-load', logfile)
     subProc('cd /usr/share/sophomorix/schema ; ./sophomorix_schema_add.sh ' + basedn + ' . -H /var/lib/samba/private/sam.ldb -writechanges', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# fixing resolv.conf
+msg = 'Fixing resolv.conf '
+printScript(msg, '', False, False, True)
+try:
+    resconf = '/etc/resolv.conf'
+    now = str(datetime.datetime.now()).split('.')[0]
+    header = '# created by linuxmuster-setup ' + now + '\n'
+    search = 'search ' + domainname + '\n'
+    nameserver = 'nameserver 127.0.0.1'
+    filedata = header + search + nameserver
+    os.unlink(resconf)
+    rc = writeTextfile(resconf, filedata, 'w')
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# starting samba service again
+msg = 'Starting samba ad dc service '
+printScript(msg, '', False, False, True)
+try:
     subProc('systemctl start samba-ad-dc.service', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
