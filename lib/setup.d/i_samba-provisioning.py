@@ -51,6 +51,7 @@ try:
     realm = setup.get('setup', 'domainname').upper()
     sambadomain = setup.get('setup', 'sambadomain')
     serverip = setup.get('setup', 'serverip')
+    servername = setup.get('setup', 'servername')
     firewallip = setup.get('setup', 'firewallip')
     domainname = setup.get('setup', 'domainname')
     basedn = setup.get('setup', 'basedn')
@@ -119,8 +120,8 @@ try:
     samba.set('global', 'registry shares', 'yes')
     samba.set('global', 'host msdfs', 'yes')
     samba.set('global', 'tls enabled', 'yes')
-    samba.set('global', 'tls keyfile', constants.SSLDIR + '/server.key.pem')
-    samba.set('global', 'tls certfile', constants.SSLDIR + '/server.cert.pem')
+    samba.set('global', 'tls keyfile', constants.SSLDIR + '/' + servername + '.key.pem')
+    samba.set('global', 'tls certfile', constants.SSLDIR + '/' + servername + '.cert.pem')
     samba.set('global', 'tls cafile', constants.CACERT)
     samba.set('global', 'tls verify peer', 'ca_and_name')
     samba.set('global', 'ldap server require strong auth', 'no')
@@ -205,9 +206,6 @@ try:
     schoolname = os.path.basename(constants.DEFAULTSCHOOL)
     sharepath = constants.SCHOOLSSHARE + '/' + schoolname
     sharecomment = schoolname + ' share'
-    # create config for default-school
-    subProc('sophomorix-postinst ' + schoolname)
-    # create share
     subProc('net conf addshare ' + schoolname + ' ' + sharepath + ' ' + constants.SCHOOLSSHAREOPTS + ' "' + sharecomment + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
