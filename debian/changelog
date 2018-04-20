@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.0-40ubuntu0) lmn7-testing; urgency=low
+
+  * added share creation for default-school.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 20 Apr 2018 11:16:53 +0200
+
 linuxmuster-base7 (7.0.0-39ubuntu0) lmn7-testing; urgency=low
 
   * smb.conf certificate name fix.

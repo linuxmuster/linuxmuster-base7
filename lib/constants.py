@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20180418
+# 20180420
 #
 
 # don't change this file
@@ -14,6 +14,8 @@ SYSDIR = '/etc/linuxmuster'
 SOPHOSYSDIR = SYSDIR + '/sophomorix'
 DEFAULTSCHOOL = SOPHOSYSDIR + '/default-school'
 SCHOOLCONF = DEFAULTSCHOOL + '/school.conf'
+SCHOOLSSHARE = '/srv/samba/schools'
+SCHOOLSSHAREOPTS = 'writeable=y guest_ok=y'
 WIMPORTDATA = DEFAULTSCHOOL + '/devices.csv'
 SSLDIR = SYSDIR + '/ssl'
 CAKEY = SSLDIR + '/cakey.pem'

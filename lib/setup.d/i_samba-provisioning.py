@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20180419
+# 20180420
 #
 
 import configparser
@@ -50,8 +50,8 @@ try:
     setup.read(setupini)
     realm = setup.get('setup', 'domainname').upper()
     sambadomain = setup.get('setup', 'sambadomain')
+    serverip = setup.get('setup', 'serverip')
     firewallip = setup.get('setup', 'firewallip')
-    servername = setup.get('setup', 'servername')
     domainname = setup.get('setup', 'domainname')
     basedn = setup.get('setup', 'basedn')
     printScript(' Success!', '', True, True, False, len(msg))
@@ -119,8 +119,8 @@ try:
     samba.set('global', 'registry shares', 'yes')
     samba.set('global', 'host msdfs', 'yes')
     samba.set('global', 'tls enabled', 'yes')
-    samba.set('global', 'tls keyfile', constants.SSLDIR + '/' + servername + '.key.pem')
-    samba.set('global', 'tls certfile', constants.SSLDIR + '/' + servername + '.cert.pem')
+    samba.set('global', 'tls keyfile', constants.SSLDIR + '/server.key.pem')
+    samba.set('global', 'tls certfile', constants.SSLDIR + '/server.cert.pem')
     samba.set('global', 'tls cafile', constants.CACERT)
     samba.set('global', 'tls verify peer', 'ca_and_name')
     samba.set('global', 'ldap server require strong auth', 'no')
@@ -178,8 +178,9 @@ try:
     now = str(datetime.datetime.now()).split('.')[0]
     header = '# created by linuxmuster-setup ' + now + '\n'
     search = 'search ' + domainname + '\n'
-    nameserver = 'nameserver 127.0.0.1'
-    filedata = header + search + nameserver
+    ns1 = 'nameserver ' + serverip + '\n'
+    ns2 = 'nameserver ' + firewallip
+    filedata = header + search + ns1 + ns2
     os.unlink(resconf)
     rc = writeTextfile(resconf, filedata, 'w')
     printScript(' Success!', '', True, True, False, len(msg))
@@ -192,6 +193,22 @@ msg = 'Starting samba ad dc service '
 printScript(msg, '', False, False, True)
 try:
     subProc('systemctl start samba-ad-dc.service', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# create default-school share
+msg = 'Creating default-school share '
+printScript(msg, '', False, False, True)
+try:
+    schoolname = os.path.basename(constants.DEFAULTSCHOOL)
+    sharepath = constants.SCHOOLSSHARE + '/' + schoolname
+    sharecomment = schoolname + ' share'
+    # create config for default-school
+    subProc('sophomorix-postinst ' + schoolname)
+    # create share
+    subProc('net conf addshare ' + schoolname + ' ' + sharepath + ' ' + constants.SCHOOLSSHAREOPTS + ' "' + sharecomment + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
