@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20180418
+# 20180428
 #
 
 import constants
@@ -45,7 +45,7 @@ except:
 # iface_list, iface_default = detectedInterfaces()
 
 # begin dialog
-title = 'linuxmuster.net 7: Setup for ' + servername + '.' + domainname
+title = 'linuxmuster.net 7: Setup for ' + servername + '.' + domainname + '\n\n'
 dialog = Dialog(dialog="dialog")
 dialog.set_background_title(title)
 button_names = {dialog.OK:     "OK",
@@ -84,6 +84,12 @@ if rc == 'cancel':
 print('Bundesland: ' + state)
 setup.set('setup', 'state', state )
 
+# sambadomain
+sambadomain = domainname.split('.')[0].upper()
+print('Samba domain: ' + sambadomain)
+setup.set('setup', 'sambadomain', sambadomain)
+"""
+
 # servername
 ititle = title + ': Servername'
 while True:
@@ -95,11 +101,12 @@ while True:
 
 print('Server hostname: ' + servername)
 setup.set('setup', 'servername', servername)
+setup.set('setup', 'hostname', servername)
 
 # domainname
 ititle = title + ': Domainname'
 while True:
-    rc, domainname = dialog.inputbox('Note that the first part of the domain name is used automatically as samba domain. Enter the internet domain name:', title=ititle, height=16, width=64, init=setup.get('setup', 'domainname'))
+    rc, domainname = dialog.inputbox('Note that the first part of the domain name is used automatically as samba domain. Enter the internet domain name:', title=ititle, height=16, width=64, init=domainname)
     if rc == 'cancel':
         sys.exit(1)
     if isValidDomainname(domainname):
@@ -113,12 +120,6 @@ setup.set('setup', 'basedn', basedn)
 realm = domainname.upper()
 print('REALM: ' + realm)
 setup.set('setup', 'realm', realm)
-
-# sambadomain
-sambadomain = domainname.split('.')[0].upper()
-print('Samba domain: ' + sambadomain)
-setup.set('setup', 'sambadomain', sambadomain)
-"""
 
 # dhcprange
 ititle = title + ': DHCP Range'
