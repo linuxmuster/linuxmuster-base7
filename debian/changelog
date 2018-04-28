@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.0-44ubuntu0) lmn7-testing; urgency=low
+
+  * moved devices.csv to global.devices.csv.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 28 Apr 2018 14:18:18 +0200
+
 linuxmuster-base7 (7.0.0-43ubuntu0) lmn7-testing; urgency=low
 
   * added command line parameters for all setup values.
