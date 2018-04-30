@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20180428
+# 20180420
 #
 
 # don't change this file
@@ -16,7 +16,7 @@ DEFAULTSCHOOL = SOPHOSYSDIR + '/default-school'
 SCHOOLCONF = DEFAULTSCHOOL + '/school.conf'
 SCHOOLSSHARE = '/srv/samba/schools'
 SCHOOLSSHAREOPTS = 'writeable=y guest_ok=y'
-WIMPORTDATA = SOPHOSYSDIR + '/global.devices.csv'
+WIMPORTDATA = DEFAULTSCHOOL + '/devices.csv'
 SSLDIR = SYSDIR + '/ssl'
 CAKEY = SSLDIR + '/cakey.pem'
 CACERT = SSLDIR + '/cacert.pem'
