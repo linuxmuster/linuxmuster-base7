@@ -2,7 +2,7 @@
 #
 # add additional servers to devices.csv
 # thomas@linuxmuster.net
-# 20171123
+# 20180502
 #
 
 import configparser
@@ -69,7 +69,7 @@ def getMacFromArp(ip):
 def addServerDevice(hostname, mac, ip, devices):
     if mac == '':
         return devices
-    line = 'server;' + hostname + ';nopxe;' + mac + ';' + ip + ';;;;;1;0'
+    line = 'server;' + hostname + ';nopxe;' + mac + ';' + ip + ';;;;server;;0'
     if ';' + hostname + ';' in devices:
         devices = '\n' + devices + '\n'
         devices = re.sub(r'\n.+?;' + hostname + ';.+?\n', '\n' + line + '\n', devices)

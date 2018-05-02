@@ -23,12 +23,12 @@
 .
 Jede Zeile beschreibt ein Gerät (Computer, Drucker, ...)  und hat die folgende Syntax:
 .sp
-.B Raum;Hostname;Gruppe;MAC;IP;1;1;1;1;1;PXE;Optionen
+.B Raum;Hostname;Gruppe;MAC;IP;1;1;1;computer;;PXE;Optionen
 .
 .PP
 .SH BEISPIEL
 .
-r66;r66-pc03;hd;00:11:22:3A:4B:5F;10.20.66.3;1;1;1;1;1;1
+r66;r66-pc03;hd;00:11:22:3A:4B:5F;10.20.66.3;1;1;1;computer;;1
 .PP
 .SH BESCHREIBUNG
 .
@@ -88,31 +88,11 @@ sowie der Bindestrich
 Die MAC-Adresse im Format 01:23:45:AB:CD:EF
 (auch Kleinbuchstaben sind zulässig)
 .TP
-.B Feld 5: IP-Adresse
-.br
-Bei der Vergabe der IP-Adressen ist Folgendes zu beachten:
-.RS
-.HP 2
-\(em\ Die IP-Adresse muss eindeutig sein
-.HP 2
-\(em\ Die IP-Adresse muss in dem bei der Installation
-festgelegten Bereich liegen, etwa 10.16.x.x bis 10.31.x.x
-.HP 2
-\(em\ Keine der vier Zahlen darf 0 oder 255 sein
-.HP 2
-\(em\ Bei allen Rechnern in einem Raum müssen
-die ersten drei Zahlen übereinstimmen.
-Beispielsweise gehören alle Rechner mit einer IP-Adresse
-der Form 10.17.113.x zum selben Raum.
-.RE
+.B Feld 5: IP-Adresse des Rechners
 .TP
 .B Feld 6: MSOffice-Key für Reaktivierung nach Synchronisation
-.br
-Feld derzeit ungenutzt.
 .TP
 .B Feld 7: Windows-MAK- oder OEM-Key für Reaktivierung nach Synchronisation
-.br
-Feld derzeit ungenutzt.
 .TP
 .B Feld 8: DHCP-Optionen
 .br
@@ -120,19 +100,41 @@ Hostspezifische DHCP-Optionen: Mehrere Optionen werden mit Komma getrennt.
 .br
 Zulässige Zeichen: [0-9a-zA-Z_-.,;"]
 .TP
-.B Feld 9: Dauerhaft unbenutzt von linuxmuster.net
+.B Feld 9: Gerätetyp, erlaubte Werte:
 .br
-Kann vom Netzwerkbetreuer genutzt werden.
+computer *
 .br
-Zulässige Zeichen: [0-9a-zA-Z_-.,]
+classroom-teachercomputer *
+.br
+faculty-teachercomputer *
+.br
+iponly
+.br
+thinclient
+.br
+voip
+.br
+printer *
+.br
+server *
+.br
+staff *
+.br
+byod
+.br
+mobile *
+.br
+router
+.br
+wlan
+.br
+switch
+.br
+addc *
+.br
+*) Geräte mit Domainaccount
 .TP
-.B Feld 10: Account flag (number)
-.br
-0: Device ohne Account, mit Firewall
-.br
-1: Device ohne Account, ohne Firewall
-.br
-2-6: ???
+.B Feld 10: reserviert für linuxmuster.net
 .TP
 .B Feld 11: PXE Flag (number)
 .br

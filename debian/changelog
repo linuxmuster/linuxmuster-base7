@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.0.0-44ubuntu0) lmn7-testing; urgency=low
+
+  * added server role to appliance entries in devices.csv.
+  * updated devices.csv man page.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 2 May 2018 09:29:00 +0200
+
 linuxmuster-base7 (7.0.0-43ubuntu0) lmn7-testing; urgency=low
 
   * added command line parameters for all setup values.
