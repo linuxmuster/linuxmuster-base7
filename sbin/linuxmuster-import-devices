@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# linuxmuster-import-devices.py
+# linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20180215
+# 20180503
 #
 
 import configparser

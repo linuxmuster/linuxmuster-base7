@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# linuxmuster-setup.py
+# linuxmuster-setup
 # thomas@linuxmuster.net
-# 20180502
+# 20180503
 #
 
 import constants
@@ -16,7 +16,7 @@ from functions import subProc
 from functions import tee
 
 def usage():
-    print('Usage: linuxmuster-setup.py [options]')
+    print('Usage: linuxmuster-setup [options]')
     print(' [options] may be:')
     print(' -n <hostname>,   --servername=<hostname>   : Set server hostname.')
     print(' -d <domainname>, --domainname=<domainname> : Set domainname.')

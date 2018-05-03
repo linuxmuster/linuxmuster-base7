@@ -5,7 +5,8 @@ linuxmuster-base7 (7.0.0-44ubuntu0) lmn7-testing; urgency=low
   * fixed #12 -s Attribute error.
   * updated firewall config template for OPNsense 18.1.6 with web-proxy-sso plugin.
   * fixed OPNsense wan interface configuration (keeps existing one).
-  * fixed  #13 NameError: name 'adminpw_repeated' is not defined.
+  * fixed #13 NameError: name 'adminpw_repeated' is not defined.
+  * fixed #6 remove *.py from command line tools.
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 03 May 2018 20:10:47 +0200
 

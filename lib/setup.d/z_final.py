@@ -2,7 +2,7 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20180418
+# 20180503
 #
 
 import constants
@@ -34,7 +34,7 @@ for item in unwanted:
 msg = 'Starting device import '
 printScript(msg, '', False, False, True)
 try:
-    subProc('linuxmuster-import-devices.py', logfile)
+    subProc('linuxmuster-import-devices', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
