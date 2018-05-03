@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20180428
+# 20180503
 #
 
 import constants
@@ -243,8 +243,10 @@ if mailip != '':
 
 # global admin password
 ititle = title + ': Administrator password'
+adminpw = ''
+adminpw_repeated = ''
 while True:
-    rc, adminpw = dialog.passwordbox('Enter the Administrator password (Note: Input will be unvisible!):', title=ititle, insecure=True)
+    rc, adminpw = dialog.passwordbox('Enter the Administrator password (Note: Input will be unvisible!). Minimal length is 7 characters. Use upper and lower and special characters or numbers (e.g. mUster!):', title=ititle, insecure=True)
     if rc == 'cancel':
         sys.exit(1)
     if isValidPassword(adminpw):
