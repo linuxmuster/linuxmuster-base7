@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20180502
+# 20180503
 #
 
 import bcrypt
@@ -141,6 +141,7 @@ try:
     content = content.replace('@@opt1if@@', opt1if)
     content = content.replace('@@serverip@@', serverip)
     content = content.replace('@@firewallip@@', firewallip)
+    content = content.replace('@@network@@', network)
     content = content.replace('@@bitmask@@', bitmask)
     content = content.replace('@@opsiip@@', opsiip)
     content = content.replace('@@dockerip@@', dockerip)
