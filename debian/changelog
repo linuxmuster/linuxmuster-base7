@@ -2,8 +2,10 @@ linuxmuster-base7 (7.0.0-44ubuntu0) lmn7-testing; urgency=low
 
   * added server role to appliance entries in devices.csv.
   * updated devices.csv man page.
+  * fixed #12 -s Attribute error.
+  * updated firewall config template for OPNsense 18.1.6 with web-proxy-sso plugin.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 2 May 2018 09:29:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 03 May 2018 09:01:51 +0200
 
 linuxmuster-base7 (7.0.0-43ubuntu0) lmn7-testing; urgency=low
 

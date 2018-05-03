@@ -2,7 +2,7 @@
 #
 # mailserver setup
 # thomas@linuxmuster.net
-# 20180214
+# 20180502
 #
 
 import configparser
@@ -41,6 +41,7 @@ try:
     # get setup various values
     mailip = setup.get('setup', 'mailip')
     serverip = setup.get('setup', 'serverip')
+    domainname = setup.get('setup', 'domainname')
     adminpw = setup.get('setup', 'adminpw')
     # get binduser password
     rc, binduserpw = readTextfile(constants.BINDUSERSECRET)
@@ -124,8 +125,8 @@ def main():
     msg = '* Creating dns entry '
     printScript(msg, '', False, False, True)
     try:
-        sambaTool('dns add localhost linuxmuster.lan mail A ' + mailip)
-        sambaTool('dns add localhost linuxmuster.lan mail MX "' + mailip + ' 10"')
+        sambaTool('dns add localhost ' + domainname + ' mail A ' + mailip)
+        sambaTool('dns add localhost ' + domainname + ' mail MX "' + mailip + ' 10"')
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))

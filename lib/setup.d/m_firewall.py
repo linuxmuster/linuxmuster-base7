@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20180129
+# 20180502
 #
 
 import bcrypt
@@ -13,6 +13,7 @@ import paramiko
 import re
 import sys
 import xml.etree.ElementTree as ET
+from bs4 import BeautifulSoup, NavigableString
 from functions import isValidHostIpv4
 from functions import printScript
 from functions import readTextfile
@@ -91,12 +92,11 @@ msg = '* Reading current firewall config '
 printScript(msg, '', False, False, True)
 try:
     rc, content = readTextfile(fwconftmp)
+    # save wan interface configuration
+    soup = BeautifulSoup(content, 'lxml')
+    wanconfig = str(soup.findAll('wan')[0])
+    # get already configured lan and op1 interfaces
     config = ET.fromstring(content)
-    # get already configured wan, lan and op1 interfaces
-    wanif = ''
-    for wan in config.iter('wan'):
-        if wan.find('if'):
-            wanif = wan.find('if').text
     lanif = ''
     for lan in config.iter('lan'):
         if lan.find('if'):
@@ -136,7 +136,7 @@ try:
     content = content.replace('@@servername@@', servername)
     content = content.replace('@@domainname@@', domainname)
     content = content.replace('@@basedn@@', basedn)
-    content = content.replace('@@wanif@@', wanif)
+    content = content.replace('@@wanconfig@@', wanconfig)
     content = content.replace('@@lanif@@', lanif)
     content = content.replace('@@opt1if@@', opt1if)
     content = content.replace('@@serverip@@', serverip)

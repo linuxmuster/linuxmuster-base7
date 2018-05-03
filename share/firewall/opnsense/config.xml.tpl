@@ -188,7 +188,7 @@
     <optimization>normal</optimization>
     <hostname>firewall</hostname>
     <domain>@@domainname@@</domain>
-    <dnsallowoverride>on</dnsallowoverride>
+    <dnsallowoverride>1</dnsallowoverride>
     <group>
       <name>admins</name>
       <description>System Administrators</description>
@@ -264,21 +264,18 @@
       <passwordauth>1</passwordauth>
       <permitrootlogin>1</permitrootlogin>
     </ssh>
+    <dnsserver>@@serverip@@</dnsserver>
+    <dns1gw>none</dns1gw>
+    <dns2gw>none</dns2gw>
+    <dns3gw>none</dns3gw>
+    <dns4gw>none</dns4gw>
+    <dns5gw>none</dns5gw>
+    <dns6gw>none</dns6gw>
+    <dns7gw>none</dns7gw>
+    <dns8gw>none</dns8gw>
   </system>
   <interfaces>
-    <wan>
-      <enable>1</enable>
-      <if>@@wanif@@</if>
-      <ipaddr>dhcp</ipaddr>
-      <ipaddrv6>dhcp6</ipaddrv6>
-      <subnet>32</subnet>
-      <gateway/>
-      <blockpriv>on</blockpriv>
-      <blockbogons>on</blockbogons>
-      <media/>
-      <mediaopt/>
-      <dhcp6-ia-pd-len>0</dhcp6-ia-pd-len>
-    </wan>
+    @@wanconfig@@
     <lan>
       <enable>1</enable>
       <if>@@lanif@@</if>
@@ -299,8 +296,8 @@
   <dhcpd>
     <lan>
       <range>
-        <from></from>
-        <to></to>
+        <from/>
+        <to/>
       </range>
     </lan>
   </dhcpd>
@@ -313,6 +310,15 @@
       <ip>@@serverip@@</ip>
       <descr>linuxmuster</descr>
     </domainoverrides>
+    <hosts>
+      <host>@@servername@@</host>
+      <domain>@@domainname@@</domain>
+      <rr>A</rr>
+      <ip>@@serverip@@</ip>
+      <mxprio/>
+      <mx/>
+      <descr>Server</descr>
+    </hosts>
   </unbound>
   <snmpd>
     <syslocation/>
@@ -394,6 +400,30 @@
       <created>
         <username>root@@@serverip@@</username>
         <time>1502136288,6916</time>
+        <description>/firewall_rules_edit.php made changes</description>
+      </created>
+    </rule>
+    <rule>
+      <type>pass</type>
+      <interface>lan</interface>
+      <ipprotocol>inet</ipprotocol>
+      <statetype>keep state</statetype>
+      <descr>LAN: ACCEPT</descr>
+      <disabled>1</disabled>
+      <source>
+        <address>@@network@@/@@bitmask@@</address>
+      </source>
+      <destination>
+        <any>1</any>
+      </destination>
+      <updated>
+        <username>root@@@serverip@@</username>
+        <time>1525283871.4548</time>
+        <description>/firewall_rules_edit.php made changes</description>
+      </updated>
+      <created>
+        <username>root@@@serverip@@</username>
+        <time>1525283871.4548</time>
         <description>/firewall_rules_edit.php made changes</description>
       </created>
     </rule>
@@ -524,8 +554,8 @@
   </widgets>
   <revision>
     <username>root@@@serverip@@</username>
-    <time>1502538205,2334</time>
-    <description>/system_certmanager.php made changes</description>
+    <time>1525283871.4696</time>
+    <description>/firewall_rules_edit.php made changes</description>
   </revision>
   <OPNsense>
     <captiveportal version="1.0.0">
@@ -546,7 +576,12 @@
         <enable>0</enable>
       </collect>
     </Netflow>
-    <IDS version="1.0.0">
+    <TrafficShaper version="1.0.1">
+      <pipes/>
+      <queues/>
+      <rules/>
+    </TrafficShaper>
+    <IDS version="1.0.1">
       <rules/>
       <userDefinedRules/>
       <files/>
@@ -556,19 +591,16 @@
         <ips>0</ips>
         <promisc>0</promisc>
         <interfaces>wan</interfaces>
+        <homenet>192.168.0.0/16,10.0.0.0/8,172.16.0.0/12</homenet>
         <defaultPacketSize/>
         <UpdateCron/>
         <AlertLogrotate>W0D23</AlertLogrotate>
         <AlertSaveLogs>4</AlertSaveLogs>
         <MPMAlgo>ac</MPMAlgo>
         <syslog>0</syslog>
+        <LogPayload>0</LogPayload>
       </general>
     </IDS>
-    <TrafficShaper version="1.0.1">
-      <pipes/>
-      <queues/>
-      <rules/>
-    </TrafficShaper>
     <proxy version="1.0.0">
       <general>
         <enabled>1</enabled>
@@ -598,6 +630,8 @@
             <size>100</size>
             <l1>16</l1>
             <l2>256</l2>
+            <cache_linux_packages>0</cache_linux_packages>
+            <cache_windows_updates>0</cache_windows_updates>
           </local>
         </cache>
         <traffic>
@@ -614,7 +648,7 @@
         <sslbumpport>3129</sslbumpport>
         <sslbump>0</sslbump>
         <sslurlonly>0</sslurlonly>
-        <sslcertificate/>
+        <sslcertificate>598c5487e6d54</sslcertificate>
         <sslnobumpsites/>
         <ssl_crtd_storage_max_size>4</ssl_crtd_storage_max_size>
         <sslcrtd_children>5</sslcrtd_children>
@@ -649,6 +683,7 @@
           <EnablePreview>1</EnablePreview>
           <PreviewSize>1024</PreviewSize>
           <OptionsTTL>60</OptionsTTL>
+          <exclude/>
         </icap>
         <authentication>
           <method>linuxmuster</method>
@@ -658,6 +693,16 @@
         </authentication>
       </forward>
     </proxy>
+    <ProxyUserACL version="1.0.0">
+      <general>
+        <ACLs/>
+      </general>
+    </ProxyUserACL>
+    <ProxySSO version="0.0.0">
+      <EnableSSO>1</EnableSSO>
+      <ADKerberosImplementation>W2008</ADKerberosImplementation>
+      <KerberosHostName>FIREWALL-K</KerberosHostName>
+    </ProxySSO>
   </OPNsense>
   <ppps/>
   <ca>
@@ -675,4 +720,5 @@
   <ntpd>
     <interface>lan</interface>
   </ntpd>
+  <staticroutes/>
 </opnsense>

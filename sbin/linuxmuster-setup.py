@@ -2,7 +2,7 @@
 #
 # linuxmuster-setup.py
 # thomas@linuxmuster.net
-# 20180428
+# 20180502
 #
 
 import constants
@@ -111,7 +111,6 @@ for o, a in opts:
     elif o in ("-m", "--mailip"):
         mailip = a
     elif o in ("-s", "--skipfw"):
-        subProc('touch ' + constants.SKIPFWFLAG)
         skipfw = True
     elif o in ("-c", "--config"):
         if os.path.isfile(a):
