@@ -2,14 +2,16 @@
 #
 # create a bunch of testusers
 # thomas@linuxmuster.net
-# 20180225
+# 20180504
 #
 
+import configparser
 import constants
 import os
 import sys
 
 from functions import printScript
+from functions import sambaTool
 from functions import subProc
 from functions import replaceInFile
 from shutil import copyfile
@@ -40,8 +42,22 @@ printScript(title)
 msg = 'Logging to ' + logfile
 printScript(msg)
 
+# get password from setup.ini
+msg = 'Reading password '
+printScript(msg, '', False, False, True)
+setupini = constants.SETUPINI
+try:
+    # setup.ini
+    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+    setup.read(setupini)
+    pw = setup.get('setup', 'adminpw')
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
 # set password policy
-msg = 'password policy setup '
+msg = 'Password policy setup '
 printScript(msg, '', False, False, True)
 try:
     replaceInFile(constants.SCHOOLCONF, 'RANDOM_PWD=yes', 'RANDOM_PWD=no')
@@ -51,7 +67,7 @@ except:
     sys.exit(1)
 
 # check
-msg = 'sophomorix-check '
+msg = 'Running sophomorix-check '
 printScript(msg, '', False, False, True)
 try:
     subProc('sophomorix-check', logfile)
@@ -61,7 +77,7 @@ except:
     sys.exit(1)
 
 # add
-msg = 'sophomorix-add '
+msg = 'Running sophomorix-add '
 printScript(msg, '', False, False, True)
 try:
     subProc('sophomorix-add', logfile)
@@ -71,7 +87,7 @@ except:
     sys.exit(1)
 
 # quota
-msg = 'sophomorix-quota '
+msg = 'Running sophomorix-quota '
 printScript(msg, '', False, False, True)
 try:
     subProc('sophomorix-quota', logfile)
@@ -80,6 +96,31 @@ except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
-msg = 'All user passwords are set to: "LinuxMuster!" '
+# get usernames
+msg = 'Get usernames '
+printScript(msg, '', False, False, True)
+try:
+    students = os.popen("sophomorix-query --schoolbase default-school --student --user-minimal | grep ^' ' | awk '{ print $2 }'").read().split('\n')
+    teachers = os.popen("sophomorix-query --schoolbase default-school --teacher --user-minimal | grep ^' ' | awk '{ print $2 }'").read().split('\n')
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# change password to Muster!
+msg = 'Setting user passwords to "' + pw + '" '
+printScript(msg)
+for user in students + teachers:
+    if user == '':
+        continue
+    msg = ' * ' + user + ' '
+    printScript(msg, '', False, False, True)
+    try:
+        sambaTool('user setpassword ' + user + ' --newpassword="' + pw + '"')
+        printScript(' Success!', '', True, True, False, len(msg))
+    except:
+        printScript(' Failed!', '', True, True, False, len(msg))
+
+msg = 'done! '
 printScript(msg)
 printScript('', 'end')

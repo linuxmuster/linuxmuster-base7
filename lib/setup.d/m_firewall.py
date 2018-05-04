@@ -2,15 +2,17 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20180503
+# 20180504
 #
 
 import bcrypt
 import configparser
 import constants
+import datetime
 import os
 import paramiko
 import re
+import shutil
 import sys
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup, NavigableString
@@ -18,6 +20,7 @@ from functions import isValidHostIpv4
 from functions import printScript
 from functions import readTextfile
 from functions import writeTextfile
+from shutil import copyfile
 
 title = os.path.basename(__file__).replace('.py', '').split('_')[1]
 logfile = constants.LOGDIR + '/setup.' + title + '.log'
@@ -54,8 +57,10 @@ except:
     sys.exit(1)
 
 # firewall config files
+now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 fwconf = '/conf/config.xml'
 fwconftmp = constants.CACHEDIR + '/opnsense.xml'
+fwconfbak = constants.CACHEDIR + '/opnsense-' + now + '.xml'
 fwconftpl = constants.FWOSCONFTPL
 
 # dummy ip addresses
@@ -77,7 +82,7 @@ except:
     sys.exit(1)
 
 # get current config
-msg = '* Downloading current configuration '
+msg = '* Downloading current firewall configuration '
 printScript(msg, '', False, False, True)
 try:
     ftp = ssh.open_sftp()
@@ -87,24 +92,35 @@ except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
+# get current config
+msg = '* Backing up '
+printScript(msg, '', False, False, True)
+try:
+    shutil.copy(fwconftmp, fwconfbak)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
 # get root password hash
-msg = '* Reading current firewall config '
+msg = '* Reading config '
 printScript(msg, '', False, False, True)
 try:
     rc, content = readTextfile(fwconftmp)
     # save wan interface configuration
     soup = BeautifulSoup(content, 'lxml')
     wanconfig = str(soup.findAll('wan')[0])
-    # get already configured lan and op1 interfaces
+    # save opt1 configuration if present
+    try:
+        opt1config = str(soup.findAll('opt1')[0])
+    except:
+        opt1config = ''
+    # get already configured lan interfaces
     config = ET.fromstring(content)
     lanif = ''
     for lan in config.iter('lan'):
         if lan.find('if'):
             lanif = lan.find('if').text
-    opt1if = ''
-    for opt1 in config.iter('opt1'):
-        if opt1.find('if'):
-            opt1if = opt1.find('if').text
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -138,7 +154,7 @@ try:
     content = content.replace('@@basedn@@', basedn)
     content = content.replace('@@wanconfig@@', wanconfig)
     content = content.replace('@@lanif@@', lanif)
-    content = content.replace('@@opt1if@@', opt1if)
+    content = content.replace('@@opt1config@@', opt1config)
     content = content.replace('@@serverip@@', serverip)
     content = content.replace('@@firewallip@@', firewallip)
     content = content.replace('@@network@@', network)

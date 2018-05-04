@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20180215
+# 20180504
 #
 
 import codecs
@@ -205,7 +205,7 @@ def doSshLink(ip, port, secret):
         printScript(msg, '', False, False, True)
         try:
             sshcmd = 'ssh -oNumberOfPasswordPrompts=0 -oStrictHostKeyChecking=no -p ' + str(port) + ' ' + ip + ' '
-            preparecmd = sshcmd + '/usr/sbin/linuxmuster-prepare.py -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw + '"' + profile + ' -n ' + ip + '/' + bitmask + ' -d ' + domainname + ' -f ' + firewallip
+            preparecmd = sshcmd + '/usr/sbin/linuxmuster-prepare -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw + '"' + profile + ' -n ' + ip + '/' + bitmask + ' -d ' + domainname + ' -f ' + firewallip
             rebootcmd = sshcmd + '/sbin/reboot'
             logfile = constants.LOGDIR + '/setup.ssh.' + hostname + '.log'
             subProc(preparecmd, logfile)

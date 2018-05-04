@@ -288,10 +288,7 @@
       <gateway/>
       <gatewayv6/>
     </lan>
-    <opt1>
-      <if>@@opt1if@@</if>
-      <descr>OPT1</descr>
-    </opt1>
+    @@opt1config@@
   </interfaces>
   <dhcpd>
     <lan>

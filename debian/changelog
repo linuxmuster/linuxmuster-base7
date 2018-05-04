@@ -1,3 +1,13 @@
+linuxmuster-base7 (7.0.0-46ubuntu0) lmn7-testing; urgency=low
+
+  * added python3-bs4 to package dependencies.
+  * backing up opnsense config.xml with timestamp to cachedir.
+  * saving ifrewall's original opt1 configuration if present.
+  * renamed linuxmuster-prepare.py to linuxmuster-prepare.
+  * updated create-testusers script to set setup password for testusers.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 04 May 2018 11:24:43 +0200
+
 linuxmuster-base7 (7.0.0-45ubuntu0) lmn7-testing; urgency=low
 
   * fixed missing network in firewall config.

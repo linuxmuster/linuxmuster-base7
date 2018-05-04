@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20180418
+# 20180504
 #
 
 import configparser
@@ -102,7 +102,7 @@ for f in os.listdir(constants.TPLDIR):
 msg = 'Network setup '
 printScript(msg, '', False, False, True)
 try:
-    subProc('/usr/sbin/linuxmuster-prepare.py -x -s -u -p server -f ' + firewallip + ' -n ' + serverip + '/' + bitmask + ' -d ' + domainname + ' -t ' + servername + ' -r ' + serverip + ' -a "' + adminpw + '"', logfile)
+    subProc('/usr/sbin/linuxmuster-prepare -x -s -u -p server -f ' + firewallip + ' -n ' + serverip + '/' + bitmask + ' -d ' + domainname + ' -t ' + servername + ' -r ' + serverip + ' -a "' + adminpw + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
