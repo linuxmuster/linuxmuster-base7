@@ -1,3 +1,12 @@
+linuxmuster-base7 (7.0.0-47ubuntu0) lmn7-testing; urgency=low
+
+  * Fix: Skip-Firewall not working in unattended mode (#20).
+  * added linuxmuster-webui7 to package dependencies.
+  * updated devices.csv man page (#16).
+  * allowing 255 in second and third octett of an ip address.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 09 May 2018 19:10:46 +0200
+
 linuxmuster-base7 (7.0.0-46ubuntu0) lmn7-testing; urgency=low
 
   * added python3-bs4 to package dependencies.

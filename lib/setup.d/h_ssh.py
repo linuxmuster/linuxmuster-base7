@@ -2,7 +2,7 @@
 #
 # setup ssh keys and ssh links to additional servers
 # thomas@linuxmuster.net
-# 20180130
+# 20180509
 #
 
 import configparser
@@ -34,12 +34,10 @@ setupini = constants.SETUPINI
 try:
     setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
-    # get firewall ip
+    # get ip addresses
     serverip = setup.get('setup', 'serverip')
     opsiip = setup.get('setup', 'opsiip')
     dockerip = setup.get('setup', 'dockerip')
-    # check if firewall shall be skipped
-    skipfw = setup.getboolean('setup', 'skipfw')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

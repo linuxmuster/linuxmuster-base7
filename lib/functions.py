@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20180504
+# 20180509
 #
 
 import codecs
@@ -499,8 +499,12 @@ def isValidHostIpv4(ip):
         ipv4str = IP(ipv4).strNormal(0)
         if (int(ipv4str.split('.')[0]) == 0 or int(ipv4str.split('.')[3]) == 0):
             return False
+        c = 0
         for i in ipv4str.split('.'):
-            if int(i) > 254:
+            c = c + 1
+            if c == 1 and int(i) > 254:
+                return False
+            if c == 4 and int(i) > 254:
                 return False
         return True
     except:

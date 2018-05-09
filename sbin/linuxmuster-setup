@@ -2,7 +2,7 @@
 #
 # linuxmuster-setup
 # thomas@linuxmuster.net
-# 20180503
+# 20180509
 #
 
 import constants
@@ -48,7 +48,7 @@ except getopt.GetoptError as err:
 
 # default values
 unattended = False
-skipfw = False
+skipfw = None
 servername = ''
 domainname = ''
 dhcprange = ''
@@ -157,9 +157,8 @@ if country != '':
     rc = modIni(constants.CUSTOMINI, 'setup', 'country', country)
 if state != '':
     rc = modIni(constants.CUSTOMINI, 'setup', 'state', state)
-
-# save setups flags to custom.ini
-rc = modIni(constants.CUSTOMINI, 'setup', 'skipfw', str(skipfw))
+if skipfw != None:
+    rc = modIni(constants.CUSTOMINI, 'setup', 'skipfw', str(skipfw))
 
 # work off setup modules
 setup_modules = os.listdir(constants.SETUPDIR)
