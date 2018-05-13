@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.0-48ubuntu0) lmn7-testing; urgency=low
+
+  * Fix variable assignment in firewall setup script.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 09 May 2018 19:10:46 +0200
+
 linuxmuster-base7 (7.0.0-47ubuntu0) lmn7-testing; urgency=low
 
   * Fix: Skip-Firewall not working in unattended mode (#20).

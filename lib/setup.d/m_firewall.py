@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20180509
+# 20180513
 #
 
 import bcrypt
@@ -35,6 +35,15 @@ setupini = constants.SETUPINI
 try:
     setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
+    # check if firewall shall be skipped
+    skipfw = setup.getboolean('setup', 'skipfw')
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# main routine
+def main():
     # get setup various values
     serverip = setup.get('setup', 'serverip')
     bitmask = setup.get('setup', 'bitmask')
@@ -46,20 +55,11 @@ try:
     dockerip = setup.get('setup', 'dockerip')
     network = setup.get('setup', 'network')
     adminpw = setup.get('setup', 'adminpw')
-    # check if firewall shall be skipped
-    skipfw = setup.getboolean('setup', 'skipfw')
     # get timezone
     rc, timezone = readTextfile('/etc/timezone')
     timezone = timezone.replace('\n', '')
     # get binduser password
     rc, binduserpw = readTextfile(constants.BINDUSERSECRET)
-    printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
-    sys.exit(1)
-
-# main routine
-def main():
 
     # firewall config files
     now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
