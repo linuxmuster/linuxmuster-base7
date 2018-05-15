@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20180513
+# 20180515
 #
 
 import bcrypt
@@ -17,7 +17,9 @@ import sys
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup, NavigableString
 from functions import isValidHostIpv4
+from functions import modIni
 from functions import printScript
+from functions import randomPassword
 from functions import readTextfile
 from functions import writeTextfile
 from shutil import copyfile
@@ -150,7 +152,11 @@ def main():
     try:
         # create password hash for new firewall password
         hashedpw = bcrypt.hashpw(str.encode(adminpw), bcrypt.gensalt(10))
-        fwrootpw = hashedpw.decode()
+        fwrootpw_hashed = hashedpw.decode()
+        apikey = randomPassword(80)
+        apisecret = randomPassword(80)
+        hashedpw = bcrypt.hashpw(str.encode(apisecret), bcrypt.gensalt(10))
+        apisecret_hashed = hashedpw.decode()
         # read template
         rc, content = readTextfile(fwconftpl)
         # replace placeholders with values
@@ -166,8 +172,10 @@ def main():
         content = content.replace('@@bitmask@@', bitmask)
         content = content.replace('@@opsiip@@', opsiip)
         content = content.replace('@@dockerip@@', dockerip)
-        content = content.replace('@@fwrootpw@@', fwrootpw)
+        content = content.replace('@@fwrootpw_hashed@@', fwrootpw_hashed)
         content = content.replace('@@authorizedkey@@', authorizedkey)
+        content = content.replace('@@apikey@@', apikey)
+        content = content.replace('@@apisecret_hashed@@', apisecret_hashed)
         content = content.replace('@@binduserpw@@', binduserpw)
         content = content.replace('@@timezone@@', timezone)
         content = content.replace('@@cacertb64@@', cacertb64)
@@ -206,6 +214,19 @@ def main():
 
     # remove temporary files
     os.unlink(fwconftmp)
+
+    # create api credentials ini file
+    msg = '* Saving api credentials '
+    printScript(msg, '', False, False, True)
+    try:
+        rc = modIni(constants.FWAPIKEYS, 'api', 'key', apikey)
+        rc = modIni(constants.FWAPIKEYS, 'api', 'secret', apisecret)
+        os.system('chmod 400 ' + constants.FWAPIKEYS)
+        stdin, stdout, stderr = ssh.exec_command('/sbin/reboot')
+        printScript(' Success!', '', True, True, False, len(msg))
+    except:
+        printScript(' Failed!', '', True, True, False, len(msg))
+        sys.exit(1)
 
 # quit if firewall setup shall be skipped
 if skipfw:

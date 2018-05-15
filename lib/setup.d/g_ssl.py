@@ -2,7 +2,7 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20171121
+# 20180515
 #
 
 from __future__ import print_function
@@ -105,6 +105,9 @@ for item in certlist:
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
+
+# concenate firewall fullchain cert
+subProc('cat ' + constants.FWFULLCHAIN.replace('.fullchain.', '.cert.') + ' ' + constants.CACERT + ' > ' + constants.FWFULLCHAIN, logfile)
 
 # permissions
 msg = 'Ensure key and certificate permissions '

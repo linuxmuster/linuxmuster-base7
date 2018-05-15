@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20180504
+# 20180514
 #
 
 import configparser
@@ -38,6 +38,8 @@ try:
     bitmask = setup.get('setup', 'bitmask')
     broadcast = setup.get('setup', 'broadcast')
     dhcprange = setup.get('setup', 'dhcprange')
+    dhcprange1 = dhcprange.split(' ')[0]
+    dhcprange2 = dhcprange.split(' ')[1]
     domainname = setup.get('setup', 'domainname')
     firewallip = setup.get('setup', 'firewallip')
     linbodir = constants.LINBODIR
@@ -77,6 +79,8 @@ for f in os.listdir(constants.TPLDIR):
         filedata = filedata.replace('@@bitmask@@', bitmask)
         filedata = filedata.replace('@@broadcast@@', broadcast)
         filedata = filedata.replace('@@dhcprange@@', dhcprange)
+        filedata = filedata.replace('@@dhcprange1@@', dhcprange1)
+        filedata = filedata.replace('@@dhcprange2@@', dhcprange2)
         filedata = filedata.replace('@@domainname@@', domainname)
         filedata = filedata.replace('@@firewallip@@', firewallip)
         filedata = filedata.replace('@@linbodir@@', linbodir)

@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20180509
+# 20180515
 #
 
 import codecs
@@ -12,11 +12,13 @@ import constants
 import csv
 import datetime
 import getpass
+import json
 import netifaces
 import os
 import paramiko
-import re
 import random
+import re
+import requests
 import shutil
 import socket
 import string
@@ -312,6 +314,28 @@ def modIni(inifile, section, option, value):
         return True
     except:
         return False
+
+# firewall api get request
+def getFwApi(request, path):
+    domainname, bitmask, serverip, firewallip, opsiip, dockerip, adminpw = getFromSetup()
+    fwapi = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+    fwapi.read(constants.FWAPIKEYS)
+    apikey = fwapi.get('api', 'key')
+    apisecret = fwapi.get('api', 'secret')
+    url = 'https://firewall.' + domainname + '/api' + path
+    if request == 'get':
+        req = requests.get(url, verify=constants.FWFULLCHAIN, auth=(apikey, apisecret))
+    else:
+        return None
+    # get response
+    if req.status_code == 200:
+        res = json.loads(req.text)
+        return res
+    else:
+        printScript('Connection / Authentication issue, response received:')
+        print(req.text)
+        return None
+
 
 # return linbo start.conf as string and modified to be used as ini file
 def readStartconf(startconf):

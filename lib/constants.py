@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20180420
+# 20180515
 #
 
 # don't change this file
@@ -11,6 +11,7 @@
 # global variables
 ROOTMNTOPTS = 'user_xattr,acl,usrquota,usrjquota=aquota.user,grpquota,grpjquota=aquota.group,jqfmt=vfsv0,errors=remount-ro,barrier=1'
 SYSDIR = '/etc/linuxmuster'
+SUBNETSCSV = SYSDIR + '/subnets.csv'
 SOPHOSYSDIR = SYSDIR + '/sophomorix'
 DEFAULTSCHOOL = SOPHOSYSDIR + '/default-school'
 SCHOOLCONF = DEFAULTSCHOOL + '/school.conf'
@@ -28,6 +29,8 @@ SECRETDIR = SYSDIR + '/.secret'
 BINDUSERSECRET = SECRETDIR + '/global-binduser'
 ADADMINSECRET = SECRETDIR + '/administrator'
 CAKEYSECRET = SECRETDIR + '/cakey'
+FWAPIKEYS = SECRETDIR + '/firewall.api.ini'
+FWFULLCHAIN = SSLDIR + '/firewall.fullchain.pem'
 LIBDIR = '/usr/lib/linuxmuster'
 SHAREDIR = '/usr/share/linuxmuster'
 EXAMPLEDIR = SHAREDIR + '/examples'
@@ -50,6 +53,8 @@ LINBOTPLDIR = LINBOSHAREDIR + '/templates'
 LINBOCACHEDIR = CACHEDIR + '/linbo'
 LINBOOPSIKEYS = LINBODIR + '/opsikeys'
 DHCPDEVCONF = '/etc/dhcp/devices.conf'
+DHCPSUBCONF = '/etc/dhcp/subnets.conf'
+NETCFG = '/etc/netplan/01-netcfg.yaml'
 MANAGEDSTR = '### managed by linuxmuster.net ###'
 ROOTPW = 'Muster!'
 

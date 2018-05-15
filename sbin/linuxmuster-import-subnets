@@ -1,0 +1,180 @@
+#!/usr/bin/python3
+#
+# linuxmuster-import-subnets
+# thomas@linuxmuster.net
+# 20180515
+#
+
+import configparser
+import constants
+import csv
+import os
+import paramiko
+import re
+import sys
+import yaml
+
+from bs4 import BeautifulSoup, NavigableString
+from functions import getDefaultIface
+from functions import isValidHostIpv4
+from functions import modIni
+from functions import printScript
+from functions import readTextfile
+from functions import writeTextfile
+from IPy import IP
+
+# read necessary values from setup.ini and other sources
+setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+setup.read(constants.SETUPINI)
+serverip = setup.get('setup', 'serverip')
+domainname = setup.get('setup', 'domainname')
+opsiip = setup.get('setup', 'opsiip')
+dockerip = setup.get('setup', 'dockerip')
+firewallip = setup.get('setup', 'firewallip')
+skipfw = setup.getboolean('setup', 'skipfw')
+bitmask_setup = setup.get('setup', 'bitmask')
+network_setup = setup.get('setup', 'network')
+ipnet_setup = network_setup + '/' + bitmask_setup
+iface_list, iface_default = getDefaultIface()
+
+# iterate over subnets
+printScript('linuxmuster-import-subnets')
+printScript('', 'begin')
+printScript('Reading setup data:')
+printScript('* Server address: ' + serverip)
+printScript('* Server network: ' + ipnet_setup)
+printScript('Processing dhcp subnets:')
+f = open(constants.SUBNETSCSV, newline='')
+reader = csv.reader(f, delimiter=';', quoting=csv.QUOTE_NONE)
+d = open(constants.DHCPSUBCONF, 'w')
+subnets = []
+for row in reader:
+  try:
+    ipnet, router, range1, range2 = row
+  except:
+    continue
+  if ipnet[:1] == '#' or ipnet[:1] == ';' or not isValidHostIpv4(router):
+    continue
+  if not isValidHostIpv4(range1) or not isValidHostIpv4(range2):
+    range1 = ''
+    range2 = ''
+  # compute network data
+  try:
+    n = IP(ipnet, make_net=True)
+    network = IP(n).strNormal(0)
+    netmask = IP(n).strNormal(2).split('/')[1]
+    broadcast = IP(n).strNormal(3).split('-')[1]
+  except:
+    continue
+  if ipnet == ipnet_setup:
+    supp_info = ' server network'
+    # save servernet router address for later use
+    servernet_router = router
+  else:
+    supp_info = ''
+    # collect subnets in array
+    subnets.append(ipnet + ':' + router)
+  # write subnets.conf
+  printScript('* ' + ipnet + supp_info)
+  d.write('# Subnet ' + ipnet+ supp_info + '\n')
+  d.write('subnet ' + network + ' netmask ' + netmask + ' {\n')
+  d.write('  option routers ' + router + ';\n')
+  d.write('  option subnet-mask ' + netmask + ';\n')
+  d.write('  option broadcast-address ' + broadcast + ';\n')
+  d.write('  option netbios-name-servers ' + serverip + ';\n')
+  if range1 != '':
+    d.write('  range ' + range1 + ' ' + range2 + ';\n')
+  d.write('  option host-name pxeclient;\n')
+  d.write('}\n')
+d.close()
+f.close()
+
+# restart dhcp service
+printScript('Restarting dhcp service.')
+os.system('systemctl restart isc-dhcp-server.service')
+
+# add static routes to netplan configuration
+printScript('Processing netplan configuration:')
+with open(constants.NETCFG) as config:
+    netcfg = yaml.safe_load(config)
+ifcfg = netcfg['network']['ethernets'][iface_default]
+# first delete all static routes
+try:
+    del ifcfg['routes']
+    changed = True
+    printScript('* Successfully removed static routes.')
+except:
+    changed = False
+# only if there are subnets beside server network
+if len(subnets) > 0:
+    changed = True
+    ifcfg['routes'] = []
+    for item in subnets:
+        subnet = item.split(':')[0]
+        # tricky: concenate dict object for yaml using eval
+        subroute = eval('{"to": ' + '\'' + subnet + '\'' + ', "via": ' + '\'' + servernet_router + '\'' + '}')
+        ifcfg['routes'].append(subroute)
+    printScript('* Added static routes for all subnets.')
+
+# save netcfg if changed and apply changes
+with open(constants.NETCFG, 'w') as config:
+    config.write( yaml.dump(netcfg, default_flow_style=False))
+printScript('Applying netplan changes.')
+os.system('netplan apply')
+
+# create static routes for opsi
+if isValidHostIpv4(opsiip):
+    printScript('Processing opsi network configuration:')
+    # first delete routes on opsi
+    tgtfile = '/etc/network/if-up.d/999staticroutes'
+    sshcmd = '[ -e ' + tgtfile + ' ] && sed -i \'s|route add|route del|g\' ' + tgtfile + ' && ' + tgtfile + ' && rm -f ' + tgtfile
+    os.system('ssh ' + opsiip + ' "' + sshcmd + '"')
+    printScript('* Deleted old routes.')
+    # create new route script if subnets were defined
+    if changed:
+        srcfile = '/tmp/opsi_staticroutes'
+        content = '#!/bin/sh\n#\n# linuxmuster.net\n# static routes for vlans\n\n'
+        for item in subnets:
+            content = content + 'route add -net ' + item.split(':')[0] + ' gw ' + servernet_router + '\n'
+        rc = writeTextfile(srcfile, content, 'w')
+        os.system('chmod +x ' + srcfile)
+        printScript('* Created new routes script.')
+        # transfer and invoke it
+        stdout = os.system('scp ' + srcfile + ' ' + opsiip + ':' + tgtfile )
+        os.system('ssh ' + opsiip + ' ' + tgtfile)
+        os.unlink(srcfile)
+        printScript('* Script transfered and applied.')
+
+# create static routes for opsi
+if isValidHostIpv4(dockerip):
+    printScript('Processing docker network configuration:')
+    # get netplan config
+    tmpcfg = '/tmp/' + os.path.basename(constants.NETCFG)
+    os.system('scp ' + dockerip + ':' + constants.NETCFG + ' ' + tmpcfg)
+    #
+    with open(tmpcfg) as config:
+        netcfg = yaml.safe_load(config)
+    iface = str(netcfg['network']['ethernets']).split('\'')[1]
+    ifcfg = netcfg['network']['ethernets'][iface]
+    # first delete all static routes
+    try:
+        del ifcfg['routes']
+        printScript('* Removed old routes.')
+    except:
+        None
+    # only if there are subnets beside server network
+    if changed:
+        ifcfg['routes'] = []
+        for item in subnets:
+            subnet = item.split(':')[0]
+            # tricky: concenate dict object for yaml using eval
+            subroute = eval('{"to": ' + '\'' + subnet + '\'' + ', "via": ' + '\'' + servernet_router + '\'' + '}')
+            ifcfg['routes'].append(subroute)
+        printScript('* Added new static routes for all subnets.')
+    # save netcfg if changed and apply changes
+    with open(tmpcfg, 'w') as config:
+        config.write( yaml.dump(netcfg, default_flow_style=False))
+    # transfer netcfg to docker
+    os.system('scp ' + tmpcfg + ' ' + dockerip + ':' + constants.NETCFG)
+    os.system('ssh ' + dockerip + ' netplan apply')
+    printScript('* Configuration transfered and applied.')

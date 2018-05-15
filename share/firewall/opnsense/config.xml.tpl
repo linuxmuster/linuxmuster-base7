@@ -203,9 +203,15 @@
       <descr>System Administrator</descr>
       <scope>system</scope>
       <groupname>admins</groupname>
-      <password>@@fwrootpw@@</password>
+      <password>@@fwrootpw_hashed@@</password>
       <uid>0</uid>
       <authorizedkeys>@@authorizedkey@@</authorizedkeys>
+      <apikeys>
+        <item>
+          <key>@@apikey@@</key>
+          <secret>@@apisecret_hashed@@</secret>
+        </item>
+      </apikeys>
     </user>
     <nextuid>2000</nextuid>
     <nextgid>2000</nextgid>

@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20160915
+# 20180515
 # GPL v3
 #
 
@@ -22,12 +22,8 @@ set -e
 # the debian-policy package
 #
 
-SHAREDIR="/usr/share/linuxmuster"
-LIBDIR="/usr/lib/linuxmuster"
-SETUPDIR="$LIBDIR/setup.d"
-SYSDIR="/etc/linuxmuster"
-SSLDIR="$SYSDIR/ssl"
-SECRETDIR="$SYSDIR/.secret"
+# get constants
+source /usr/share/linuxmuster/defaults.sh
 
 case "$1" in
 
@@ -52,6 +48,28 @@ case "$1" in
   chgrp ssl-cert "$SSLDIR" -R
   chmod 750 "$SSLDIR"
   chmod 700 "$SECRETDIR"
+
+  # create firewall fullchain pem file
+  if [ ! -s "$FWFULLCHAIN" ]; then
+    echo "Creating $(basename "$FWFULLCHAIN")."
+    cat "$(echo "$FWFULLCHAIN" | sed -e 's|.fullchain.|.cert.|')" "$CACERT" > "$FWFULLCHAIN"
+    chmod 640 "$FWFULLCHAIN"
+  fi
+
+  # dhcp update
+  conf='/etc/dhcp/dhcpd.conf'
+  search='include "/etc/dhcp/servernet.conf";'
+  if grep -q ^"$search" "$conf"; then
+    echo "Updating dhcp configuration."
+    cp "$conf" "$conf".dpkg-bak
+    sed -i "s|$search|#$search|" "$conf"
+    line="${network}/${bitmask};${firewallip};${range1};${range2}"
+    if ! grep -q ^"$line" "$SUBNETSCSV"; then
+      echo "# server network" >> "$SUBNETSCSV"
+      echo "$line" >> "$SUBNETSCSV"
+    fi
+    linuxmuster-import-subnets
+  fi
 
  ;;
 
