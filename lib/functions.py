@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20180515
+# 20180519
 #
 
 import codecs
@@ -316,7 +316,7 @@ def modIni(inifile, section, option, value):
         return False
 
 # firewall api get request
-def getFwApi(request, path):
+def firewallApi(request, path, data=''):
     domainname, bitmask, serverip, firewallip, opsiip, dockerip, adminpw = getFromSetup()
     fwapi = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     fwapi.read(constants.FWAPIKEYS)
@@ -325,6 +325,10 @@ def getFwApi(request, path):
     url = 'https://firewall.' + domainname + '/api' + path
     if request == 'get':
         req = requests.get(url, verify=constants.FWFULLCHAIN, auth=(apikey, apisecret))
+    elif request == 'post' and data == '':
+        req = requests.post(url, verify=constants.FWFULLCHAIN, auth=(apikey, apisecret))
+    elif request == 'post' and data != '':
+        req = requests.post(url, data=data, verify=constants.FWFULLCHAIN, auth=(apikey, apisecret))
     else:
         return None
     # get response
@@ -336,6 +340,91 @@ def getFwApi(request, path):
         print(req.text)
         return None
 
+# download per sftp
+def getSftp(ip, remotefile, localfile, secret=''):
+    # establish connection
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        if secret !='':
+            ssh.connect(ip, port=22, username='root', password=secret)
+        else:
+            ssh.connect(ip, port=22, username='root')
+    except:
+        return False
+    # get file
+    try:
+        ftp = ssh.open_sftp()
+        ftp.get(remotefile, localfile)
+    except:
+        return False
+    ftp.close()
+    ssh.close()
+    return True
+
+# download firewall config.xml
+def getFwConfig(firewallip, secret=''):
+    printScript('Downloading firewall configuration:')
+    rc = getSftp(firewallip, constants.FWCONFREMOTE, constants.FWCONFLOCAL, secret)
+    if rc:
+        printScript('* Download finished successfully.')
+    else:
+        printScript('* Download failed!')
+    return rc
+
+# upload per sftp
+def putSftp(ip, localfile, remotefile, secret=''):
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        if secret !='':
+            ssh.connect(ip, port=22, username='root', password=secret)
+        else:
+            ssh.connect(ip, port=22, username='root')
+    except:
+        return False
+    try:
+        ftp = ssh.open_sftp()
+        ftp.put(localfile, remotefile)
+    except:
+        return False
+    ftp.close()
+    ssh.close()
+    return True
+
+# upload firewall config
+def putFwConfig(firewallip, secret=''):
+    printScript('Uploading firewall configuration:')
+    rc = putSftp(firewallip, constants.FWCONFLOCAL, constants.FWCONFREMOTE, secret)
+    if rc:
+        printScript('* Upload finished successfully.')
+    else:
+        printScript('* Upload failed!')
+    return rc
+
+# execute ssh command
+def sshExec(ip, cmd, secret=''):
+    printScript('Executing ssh command on ' + ip + ':')
+    printScript('* -> "' + cmd + '"')
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        if secret !='':
+            ssh.connect(ip, port=22, username='root', password=secret)
+        else:
+            ssh.connect(ip, port=22, username='root')
+        printScript('* SSH connection successfully established.')
+    except:
+        printScript('* Unable to establish a SSH connection!')
+        return False
+    try:
+        stdin, stdout, stderr = ssh.exec_command(cmd)
+        printScript('* Execution finished successfully.')
+    except:
+        printScript('* Unable to execute command!')
+        return False
+    ssh.close()
+    return True
 
 # return linbo start.conf as string and modified to be used as ini file
 def readStartconf(startconf):

@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20180515
+# 20180519
 #
 
 import configparser
@@ -12,14 +12,20 @@ import os
 import paramiko
 import re
 import sys
+import uuid
 import yaml
 
 from bs4 import BeautifulSoup, NavigableString
-from functions import getDefaultIface
+from functions import firewallApi
+from functions import getFwConfig
+from functions import getSftp
 from functions import isValidHostIpv4
 from functions import modIni
 from functions import printScript
+from functions import putFwConfig
+from functions import putSftp
 from functions import readTextfile
+from functions import sshExec
 from functions import writeTextfile
 from IPy import IP
 
@@ -35,7 +41,343 @@ skipfw = setup.getboolean('setup', 'skipfw')
 bitmask_setup = setup.get('setup', 'bitmask')
 network_setup = setup.get('setup', 'network')
 ipnet_setup = network_setup + '/' + bitmask_setup
-iface_list, iface_default = getDefaultIface()
+
+# templates
+# gateway
+gateways_begin_tag = '<gateways>'
+gateways_end_tag = '</gateways>'
+gateway_xml = """
+        <gateway_item>
+            <interface>lan</interface>
+            <gateway>@@gateway@@</gateway>
+            <name>@@vlangw@@</name>
+            <weight>1</weight>
+            <ipprotocol>inet</ipprotocol>
+            <interval></interval>
+            <descr>VLAN Gateway</descr>
+            <avg_delay_samples></avg_delay_samples>
+            <avg_loss_samples></avg_loss_samples>
+            <avg_loss_delay_samples></avg_loss_delay_samples>
+            <monitor_disable>1</monitor_disable>
+        </gateway_item>
+"""
+gateway_xml = gateway_xml.replace('@@vlangw@@', constants.VLAN_GW)
+# routes
+routes_begin_tag = '<staticroutes version="1.0.0">'
+routes_end_tag = '</staticroutes>'
+route_xml = """
+    <route uuid="@@uuid@@">
+      <network>@@subnet@@</network>
+      <gateway>@@vlangw@@</gateway>
+      <descr>@@descr@@</descr>
+      <disabled>0</disabled>
+    </route>
+"""
+route_xml = route_xml.replace('@@vlangw@@', constants.VLAN_GW)
+
+## functions begin ##
+
+# update static routes in netplan configuration
+def updateNetplan(subnets, remoteip=''):
+    if remoteip == '':
+        machine = 'server'
+    elif remoteip == opsiip:
+        machine = 'opsi'
+    elif remoteip == dockerip:
+        machine = 'docker'
+    else:
+        printScript('Unknown ip address, skipping netplan configuration.')
+        return False
+    printScript('Processing netplan configuration on ' + machine + ':')
+    if machine == 'server':
+        cfgfile = constants.NETCFG
+    else:
+        # get file per sftp
+        cfgfile = '/tmp/' + os.path.basename(constants.NETCFG)
+        rc = getSftp(remoteip, constants.NETCFG, cfgfile)
+        if rc:
+            printScript('* Fetched configuration file from remote machine.')
+        else:
+            printScript('* Unable to fetch configuration file from remote machine!')
+            return False
+    # read netplan config file
+    with open(cfgfile) as config:
+        netcfg = yaml.safe_load(config)
+    iface = str(netcfg['network']['ethernets']).split('\'')[1]
+    ifcfg = netcfg['network']['ethernets'][iface]
+    # first delete the old routes if there are any
+    try:
+        del ifcfg['routes']
+        changed = True
+        printScript('* Removed old routes.')
+    except:
+        changed = False
+    # only if there are subnets beside server network
+    if len(subnets) > 0:
+        changed = True
+        ifcfg['routes'] = []
+        for item in subnets:
+            subnet = item.split(':')[0]
+            # tricky: concenate dict object for yaml using eval
+            subroute = eval('{"to": ' + '\'' + subnet + '\'' + ', "via": ' + '\'' + servernet_router + '\'' + '}')
+            ifcfg['routes'].append(subroute)
+        printScript('* Added new routes for all subnets.')
+    # save netcfg
+    if changed:
+        with open(cfgfile, 'w') as config:
+            config.write( yaml.dump(netcfg, default_flow_style=False))
+        if machine == 'server':
+            os.system('netplan apply')
+            printScript('* Applied new configuration.')
+        else:
+            # upload modified netcfg
+            rc = putSftp(remoteip, cfgfile, constants.NETCFG)
+            if rc:
+                printScript('* Configuration transfered.')
+            else:
+                printScript('* Unable to transfer configuration!')
+                return False
+            rc = sshExec(remoteip, 'netplan apply')
+            if rc:
+                printScript('* Configuration applied.')
+            else:
+                printScript('* Unable to apply configuration!')
+                return False
+            os.unlink(cfgfile)
+    # send changed configuration back and apply it
+    return changed
+
+# update opsi network configuration with routes
+def updateOpsi(subnets, opsiip, ipnet_setup):
+    printScript('Processing opsi network configuration:')
+    # first delete routes on opsi, create script and invoke it on opsi server
+    remotefile = '/etc/network/if-up.d/999staticroutes'
+    content = """
+#!/bin/sh
+[ -e @@remotefile@@ ] || exit 0
+sed -i 's|route add|route del|g' @@remotefile@@
+chmod +x @@remotefile@@
+@@remotefile@@
+rm -f @@remotefile@@
+"""
+    content = content.replace('@@remotefile@@', remotefile)
+    localfile = constants.CACHEDIR + '/opsi_staticroutes'
+    remotescript = '/tmp/delroutes'
+    try:
+        writeTextfile(localfile, content, 'w')
+        putSftp(opsiip, localfile, remotescript)
+        sshExec(opsiip, 'chmod +x ' + remotescript)
+        sshExec(opsiip, remotescript)
+        sshExec(opsiip, 'rm -f ' + remotescript)
+        printScript('* Removed old routes.')
+    except:
+        printScript('* Unable to remove old routes!')
+        return False
+    # return if no subnets were defined
+    if len(subnets) == 0:
+        return True
+    # create new route script if subnets were defined
+    content = '#!/bin/sh\n#\n# linuxmuster.net\n# static routes for vlans\n\n'
+    try:
+        for item in subnets:
+            s = item.split(':')[0]
+            # skip server network
+            if s == ipnet_setup:
+                continue
+            content = content + 'route add -net ' + s + ' gw ' + servernet_router + '\n'
+            writeTextfile(localfile, content, 'w')
+        printScript('* Created new routes script.')
+    except:
+        printScript('* Unable to create routes script!')
+        return False
+    # transfer and invoke it
+    try:
+        putSftp(opsiip, localfile, remotefile)
+        sshExec(opsiip, 'chmod +x ' + remotefile)
+        sshExec(opsiip, remotefile)
+        printScript('* Script transfered and applied.')
+    except:
+        printScript('* Unable to transfer and apply script!.')
+        return False
+    os.unlink(localfile)
+    return True
+
+# update vlan gateway on firewall
+def updateFwGw(firewallip, servernet_router, gateway_xml):
+    # first get config.xml
+    rc = getFwConfig(firewallip)
+    if not rc:
+        return rc
+    if servernet_router == firewallip:
+        # in this case no vlan gateway is necessary
+        gwflag = False
+        msg = 'Removing vlan gateway from firewall:'
+    else:
+        gwflag = True
+        msg = 'Creating vlan gateway on firewall:'
+    printScript(msg)
+    # load configfile
+    rc, content = readTextfile(constants.FWCONFLOCAL)
+    soup = BeautifulSoup(content, 'lxml')
+    # find vlan gateway
+    gateways = BeautifulSoup(str(soup.find('gateways')), 'lxml')
+    found = ''
+    gateway = ''
+    changed = False
+    for item in gateways.findAll('gateway_item'):
+        if item('name')[0].string == constants.VLAN_GW:
+            found = str(item)
+            gateway = item('gateway')[0].string
+    # found obsolete gw, remove it
+    if found != '' and not gwflag:
+        printScript('* Found obsolete vlan gateway ' + gateway + ', removing it.')
+        content = content.replace(found, '')
+        changed = True
+    # found gateway different from servernet router, need to be changed
+    elif found != '' and gwflag and gateway != servernet_router:
+        printScript('* Found different vlan gateway ' + gateway + ', changing it to ' + servernet_router + '.')
+        gateway_new = found.replace('<gateway>' + gateway + '</gateway>', '<gateway>' + servernet_router + '</gateway>')
+        content = content.replace(found, gateway_new)
+        changed = True
+    # add vlan gw if not defined
+    elif found == '' and gwflag:
+        printScript('* No vlan gateway found, adding ' + servernet_router + '.')
+        gateway_xml = gateway_xml.replace('@@gateway@@', servernet_router)
+        if gateways_begin_tag in content:
+            content = content.replace(gateways_begin_tag, gateways_begin_tag + gateway_xml)
+        else:
+            gateway_xml = gateways_begin_tag + gateway_xml + gateways_end_tag + '\n'
+            content = content.replace('</ntpd>', '</ntpd>' + gateway_xml)
+        changed = True
+    else:
+        printScript('* Nothing to do.')
+        return False
+    # write changed config
+    if changed:
+        try:
+            rc = writeTextfile(constants.FWCONFLOCAL, content, 'w')
+            printScript('* Saved changed config.')
+        except:
+            printScript('* Unable to save configfile!')
+            return False
+        # upload config
+        rc = putFwConfig(firewallip)
+        if not rc:
+            return rc
+    return changed
+
+# add single route
+def addFwRoute(route_new, subnet):
+    try:
+        rc, content = readTextfile(constants.FWCONFLOCAL)
+    except:
+        printScript('* Unable to read ' + constants.FWCONFLOCAL + '!')
+        return False
+    try:
+        if routes_begin_tag in content:
+            content = content.replace(routes_begin_tag, routes_begin_tag + route_new)
+        else:
+            content = content.replace(gateways_end_tag, gateways_end_tag + '\n' + routes_begin_tag + route_new + routes_end_tag)
+        rc = writeTextfile(constants.FWCONFLOCAL, content, 'w')
+        printScript('* Added route for subnet ' + subnet + '.')
+        return True
+    except:
+        printScript('* Unable to add route for subnet ' + subnet + '.')
+        return False
+
+# add routes on firewall
+def addFwRoutes(routes_add):
+    for subnet in routes_add:
+        uuidstr = str(uuid.uuid4())
+        descr = 'route for subnet ' + subnet
+        route_new = route_xml.replace('@@uuid@@', uuidstr)
+        route_new = route_new.replace('@@descr@@', descr)
+        route_new = route_new.replace('@@subnet@@', subnet)
+        rc = addFwRoute(route_new, subnet)
+        if not rc:
+            return rc
+    return True
+
+# update route gateway on firewall by uuid
+def updFwRouteGw(uuid, subnet):
+    try:
+        payload = firewallApi('get', '/routes/routes/getroute/' + uuid)
+        for gateway in payload['route']['gateway']:
+            if gateway == constants.VLAN_GW:
+                selected = 1
+            else:
+                selected = 0
+            payload['route']['gateway'][gateway]['selected'] = selected
+        res = firewallApi('post', '/routes/routes/setroute/' + uuid, payload)
+        printScript('* Changed gateway for subnet ' + subnet + '.')
+        return True
+    except:
+        printScript('* Unable to change gateway for subnet ' + subnet + '!')
+        return False
+
+# delete route on firewall by uuid
+def delFwRoute(uuid, subnet):
+    try:
+        rc = firewallApi('post', '/routes/routes/delroute/' + uuid)
+        printScript('* Route ' + uuid + ' - ' + subnet + ' deleted.')
+        return True
+    except:
+        printScript('* Unable to delete route ' + uuid + ' - ' + subnet + '!')
+        return False
+
+# update firewall routes
+def updateFwRoutes(subnets, firewallip, ipnet_setup, servernet_router):
+    printScript('Updating subnet routing on firewall:')
+    try:
+        routes = firewallApi('get', '/routes/routes/searchroute')
+        routes_nr = len(routes['rows'])
+        printScript('* Got ' + str(routes_nr) + ' routes.')
+    except:
+        printScript('* Unable to get routes.')
+        return False
+    # iterate through firewall routes and delete them if necessary
+    changed = False
+    if routes_nr > 0:
+        count = 0
+        while (count < routes_nr):
+            uuid = routes['rows'][count]['uuid']
+            subnet = routes['rows'][count]['network']
+            gateway = routes['rows'][count]['gateway']
+            # delete not compliant routes
+            if (not subnet in str(subnets) and gateway == constants.VLAN_GW) or (subnet in str(subnets) and gateway != constants.VLAN_GW):
+                delFwRoute(uuid, subnet)
+                printScript('* Route ' + subnet + ' deleted.')
+                changed = True
+            count += 1
+    # get changed routes
+    if changed:
+        routes = firewallApi('get', '/routes/routes/searchroute')
+    # find and collect routes to be added
+    routes_add = []
+    for subnet in subnets:
+        # extract subnet from string
+        s = subnet.split(':')[0]
+        # skip server network
+        if s == ipnet_setup:
+            continue
+        if not s in str(routes):
+            routes_add.append(s)
+    # add routes
+    changed = False
+    if len(routes_add) > 0:
+        rc = addFwRoutes(routes_add)
+        if rc:
+            changed = rc
+    # upload config.xml and reload routing table
+    if changed:
+        try:
+            putFwConfig(firewallip)
+        except:
+            return False
+    return changed
+
+## functions end ##
+
 
 # iterate over subnets
 printScript('linuxmuster-import-subnets')
@@ -49,43 +391,42 @@ reader = csv.reader(f, delimiter=';', quoting=csv.QUOTE_NONE)
 d = open(constants.DHCPSUBCONF, 'w')
 subnets = []
 for row in reader:
-  try:
-    ipnet, router, range1, range2 = row
-  except:
-    continue
-  if ipnet[:1] == '#' or ipnet[:1] == ';' or not isValidHostIpv4(router):
-    continue
-  if not isValidHostIpv4(range1) or not isValidHostIpv4(range2):
-    range1 = ''
-    range2 = ''
-  # compute network data
-  try:
-    n = IP(ipnet, make_net=True)
-    network = IP(n).strNormal(0)
-    netmask = IP(n).strNormal(2).split('/')[1]
-    broadcast = IP(n).strNormal(3).split('-')[1]
-  except:
-    continue
-  if ipnet == ipnet_setup:
-    supp_info = ' server network'
+    try:
+        ipnet, router, range1, range2 = row
+    except:
+        continue
+    if ipnet[:1] == '#' or ipnet[:1] == ';' or not isValidHostIpv4(router):
+        continue
+    if not isValidHostIpv4(range1) or not isValidHostIpv4(range2):
+        range1 = ''
+        range2 = ''
+    # compute network data
+    try:
+        n = IP(ipnet, make_net=True)
+        network = IP(n).strNormal(0)
+        netmask = IP(n).strNormal(2).split('/')[1]
+        broadcast = IP(n).strNormal(3).split('-')[1]
+    except:
+        continue
     # save servernet router address for later use
-    servernet_router = router
-  else:
-    supp_info = ''
-    # collect subnets in array
+    if ipnet == ipnet_setup:
+        servernet_router = router
+        supp_info = 'server network'
+    else:
+        supp_info = ''
     subnets.append(ipnet + ':' + router)
-  # write subnets.conf
-  printScript('* ' + ipnet + supp_info)
-  d.write('# Subnet ' + ipnet+ supp_info + '\n')
-  d.write('subnet ' + network + ' netmask ' + netmask + ' {\n')
-  d.write('  option routers ' + router + ';\n')
-  d.write('  option subnet-mask ' + netmask + ';\n')
-  d.write('  option broadcast-address ' + broadcast + ';\n')
-  d.write('  option netbios-name-servers ' + serverip + ';\n')
-  if range1 != '':
-    d.write('  range ' + range1 + ' ' + range2 + ';\n')
-  d.write('  option host-name pxeclient;\n')
-  d.write('}\n')
+    # write subnets.conf
+    printScript('* ' + ipnet)
+    d.write('# Subnet ' + ipnet + ' ' + supp_info + '\n')
+    d.write('subnet ' + network + ' netmask ' + netmask + ' {\n')
+    d.write('  option routers ' + router + ';\n')
+    d.write('  option subnet-mask ' + netmask + ';\n')
+    d.write('  option broadcast-address ' + broadcast + ';\n')
+    d.write('  option netbios-name-servers ' + serverip + ';\n')
+    if range1 != '':
+        d.write('  range ' + range1 + ' ' + range2 + ';\n')
+    d.write('  option host-name pxeclient;\n')
+    d.write('}\n')
 d.close()
 f.close()
 
@@ -93,88 +434,32 @@ f.close()
 printScript('Restarting dhcp service.')
 os.system('systemctl restart isc-dhcp-server.service')
 
-# add static routes to netplan configuration
-printScript('Processing netplan configuration:')
-with open(constants.NETCFG) as config:
-    netcfg = yaml.safe_load(config)
-ifcfg = netcfg['network']['ethernets'][iface_default]
-# first delete all static routes
-try:
-    del ifcfg['routes']
-    changed = True
-    printScript('* Successfully removed static routes.')
-except:
-    changed = False
-# only if there are subnets beside server network
-if len(subnets) > 0:
-    changed = True
-    ifcfg['routes'] = []
-    for item in subnets:
-        subnet = item.split(':')[0]
-        # tricky: concenate dict object for yaml using eval
-        subroute = eval('{"to": ' + '\'' + subnet + '\'' + ', "via": ' + '\'' + servernet_router + '\'' + '}')
-        ifcfg['routes'].append(subroute)
-    printScript('* Added static routes for all subnets.')
+# update netplan config with new routes for server (localhost)
+changed = updateNetplan(subnets)
 
-# save netcfg if changed and apply changes
-with open(constants.NETCFG, 'w') as config:
-    config.write( yaml.dump(netcfg, default_flow_style=False))
-printScript('Applying netplan changes.')
-os.system('netplan apply')
+# update netplan config with new routes for dockerhost
+if isValidHostIpv4(dockerip):
+    changed = updateNetplan(subnets, dockerip)
 
 # create static routes for opsi
 if isValidHostIpv4(opsiip):
-    printScript('Processing opsi network configuration:')
-    # first delete routes on opsi
-    tgtfile = '/etc/network/if-up.d/999staticroutes'
-    sshcmd = '[ -e ' + tgtfile + ' ] && sed -i \'s|route add|route del|g\' ' + tgtfile + ' && ' + tgtfile + ' && rm -f ' + tgtfile
-    os.system('ssh ' + opsiip + ' "' + sshcmd + '"')
-    printScript('* Deleted old routes.')
-    # create new route script if subnets were defined
-    if changed:
-        srcfile = '/tmp/opsi_staticroutes'
-        content = '#!/bin/sh\n#\n# linuxmuster.net\n# static routes for vlans\n\n'
-        for item in subnets:
-            content = content + 'route add -net ' + item.split(':')[0] + ' gw ' + servernet_router + '\n'
-        rc = writeTextfile(srcfile, content, 'w')
-        os.system('chmod +x ' + srcfile)
-        printScript('* Created new routes script.')
-        # transfer and invoke it
-        stdout = os.system('scp ' + srcfile + ' ' + opsiip + ':' + tgtfile )
-        os.system('ssh ' + opsiip + ' ' + tgtfile)
-        os.unlink(srcfile)
-        printScript('* Script transfered and applied.')
+    changed = updateOpsi(subnets, opsiip, ipnet_setup)
 
-# create static routes for opsi
-if isValidHostIpv4(dockerip):
-    printScript('Processing docker network configuration:')
-    # get netplan config
-    tmpcfg = '/tmp/' + os.path.basename(constants.NETCFG)
-    os.system('scp ' + dockerip + ':' + constants.NETCFG + ' ' + tmpcfg)
-    #
-    with open(tmpcfg) as config:
-        netcfg = yaml.safe_load(config)
-    iface = str(netcfg['network']['ethernets']).split('\'')[1]
-    ifcfg = netcfg['network']['ethernets'][iface]
-    # first delete all static routes
-    try:
-        del ifcfg['routes']
-        printScript('* Removed old routes.')
-    except:
-        None
-    # only if there are subnets beside server network
+# update firewall
+if not skipfw:
+    rc = updateFwGw(firewallip, servernet_router, gateway_xml)
+    if rc:
+        changed = rc
+    rc = updateFwRoutes(subnets, firewallip, ipnet_setup, servernet_router)
+    if rc:
+        changed = rc
     if changed:
-        ifcfg['routes'] = []
-        for item in subnets:
-            subnet = item.split(':')[0]
-            # tricky: concenate dict object for yaml using eval
-            subroute = eval('{"to": ' + '\'' + subnet + '\'' + ', "via": ' + '\'' + servernet_router + '\'' + '}')
-            ifcfg['routes'].append(subroute)
-        printScript('* Added new static routes for all subnets.')
-    # save netcfg if changed and apply changes
-    with open(tmpcfg, 'w') as config:
-        config.write( yaml.dump(netcfg, default_flow_style=False))
-    # transfer netcfg to docker
-    os.system('scp ' + tmpcfg + ' ' + dockerip + ':' + constants.NETCFG)
-    os.system('ssh ' + dockerip + ' netplan apply')
-    printScript('* Configuration transfered and applied.')
+        # this is not yet good
+        #firewallApi('post', '/routes/routes/reconfigure')
+        # reboot to apply changes
+        printScript('Finished all firewall changes.')
+        rc = sshExec(firewallip, 'configctl firmware reboot')
+        if not rc:
+            sys.exit(1)
+    else:
+        printScript('No firewall changes were necessary.')

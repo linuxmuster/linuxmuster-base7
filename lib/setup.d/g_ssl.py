@@ -2,7 +2,7 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20180515
+# 20180516
 #
 
 from __future__ import print_function
@@ -55,7 +55,7 @@ passin = ' -passin pass:' + cakeypw
 
 # create ca stuff
 msg = 'Creating private CA key & certificate '
-subj = subjbase + realm + '/'
+subj = subjbase + realm + '/subjectAltName=' + realm + '/'
 printScript(msg, '', False, False, True)
 try:
     with open(constants.CAKEYSECRET, 'w') as secret:
@@ -83,7 +83,7 @@ for item in certlist:
     certfile = constants.SSLDIR + '/' + item + '.cert.pem'
     b64keyfile = keyfile + '.b64'
     b64certfile = certfile + '.b64'
-    subj = subjbase + fqdn + '/'
+    subj = subjbase + fqdn + '/subjectAltName=' + fqdn + '/'
     msg = 'Creating private ' + item + ' key & certificate '
     printScript(msg, '', False, False, True)
     try:

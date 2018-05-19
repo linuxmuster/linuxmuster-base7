@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20180515
+# 20180519
 #
 
 import bcrypt
@@ -10,17 +10,19 @@ import configparser
 import constants
 import datetime
 import os
-import paramiko
 import re
 import shutil
 import sys
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup, NavigableString
+from functions import getFwConfig
 from functions import isValidHostIpv4
 from functions import modIni
 from functions import printScript
+from functions import putFwConfig
 from functions import randomPassword
 from functions import readTextfile
+from functions import sshExec
 from functions import writeTextfile
 from shutil import copyfile
 
@@ -65,9 +67,8 @@ def main():
 
     # firewall config files
     now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    fwconf = '/conf/config.xml'
-    fwconftmp = constants.CACHEDIR + '/opnsense.xml'
-    fwconfbak = constants.CACHEDIR + '/opnsense-' + now + '.xml'
+    fwconftmp = constants.FWCONFLOCAL
+    fwconfbak = fwconftmp.replace('.xml', '-' + now + '.xml')
     fwconftpl = constants.FWOSCONFTPL
 
     # dummy ip addresses
@@ -76,30 +77,12 @@ def main():
     if not isValidHostIpv4(dockerip):
         dockerip = network.split('.')[0] + '.' + network.split('.')[1] + '.' + network.split('.')[2] + '.3'
 
-    # establish ssh connection to firewall
-    msg = '* Establishing ssh connection '
-    printScript(msg, '', False, False, True)
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    try:
-        ssh.connect(firewallip, port=22, username='root', password=constants.ROOTPW)
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
+    # get current config
+    rc = getFwConfig(firewallip, adminpw)
+    if not rc:
         sys.exit(1)
 
-    # get current config
-    msg = '* Downloading current firewall configuration '
-    printScript(msg, '', False, False, True)
-    try:
-        ftp = ssh.open_sftp()
-        ftp.get(fwconf, fwconftmp)
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
-        sys.exit(1)
-
-    # get current config
+    # backup config
     msg = '* Backing up '
     printScript(msg, '', False, False, True)
     try:
@@ -188,33 +171,6 @@ def main():
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
 
-    # upload new configfile
-    msg = '* Uploading configuration file '
-    printScript(msg, '', False, False, True)
-    try:
-        ftp.put(fwconftmp, fwconf)
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
-        sys.exit(1)
-
-    # reboot firewall
-    msg = '* Rebooting firewall '
-    printScript(msg, '', False, False, True)
-    try:
-        stdin, stdout, stderr = ssh.exec_command('/sbin/reboot')
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
-        sys.exit(1)
-
-    # close connections
-    ftp.close()
-    ssh.close()
-
-    # remove temporary files
-    os.unlink(fwconftmp)
-
     # create api credentials ini file
     msg = '* Saving api credentials '
     printScript(msg, '', False, False, True)
@@ -222,10 +178,22 @@ def main():
         rc = modIni(constants.FWAPIKEYS, 'api', 'key', apikey)
         rc = modIni(constants.FWAPIKEYS, 'api', 'secret', apisecret)
         os.system('chmod 400 ' + constants.FWAPIKEYS)
-        stdin, stdout, stderr = ssh.exec_command('/sbin/reboot')
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
+        sys.exit(1)
+
+    # upload new configfile
+    rc = putFwConfig(firewallip, adminpw)
+    if not rc:
+        sys.exit(1)
+
+    # remove temporary files
+    #os.unlink(fwconftmp)
+
+    # reboot firewall
+    rc = sshExec(firewallip, 'configctl firmware reboot', adminpw)
+    if not rc:
         sys.exit(1)
 
 # quit if firewall setup shall be skipped

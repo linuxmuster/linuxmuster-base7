@@ -2,7 +2,7 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20180503
+# 20180519
 #
 
 import constants
@@ -35,6 +35,16 @@ msg = 'Starting device import '
 printScript(msg, '', False, False, True)
 try:
     subProc('linuxmuster-import-devices', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# import subnets
+msg = 'Starting subnets import '
+printScript(msg, '', False, False, True)
+try:
+    subProc('linuxmuster-import-subnets', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

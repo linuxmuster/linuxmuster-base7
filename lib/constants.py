@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20180515
+# 20180518
 #
 
 # don't change this file
@@ -42,6 +42,9 @@ SETUPDIR = LIBDIR + '/setup.d'
 TPLDIR = SHAREDIR + '/templates'
 CUSTOMINI = CACHEDIR + '/custom.ini'
 FWOSCONFTPL = SHAREDIR + '/firewall/opnsense/config.xml.tpl'
+FWCONFLOCAL = CACHEDIR + '/opnsense.xml'
+FWCONFREMOTE = '/conf/config.xml'
+VLAN_GW = 'VLAN_GW'
 SETUPINI = VARDIR + '/setup.ini'
 DEFAULTSINI = SHAREDIR + '/setupdefaults.ini'
 PREPINI = VARDIR + '/prepare.ini'

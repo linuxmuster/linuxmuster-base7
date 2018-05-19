@@ -1,3 +1,25 @@
+linuxmuster-base7 (7.0.1-3ubuntu0) lmn7-testing; urgency=low
+
+  * exclude server network from subnet routing.
+  * optimized firewall ssh connections.
+  * added linuxmuster-webui7 to dependencies again.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 19 May 2018 17:02:03 +0200
+
+linuxmuster-base7 (7.0.1-2ubuntu0) lmn7-testing; urgency=low
+
+  * More subnetting improvements.
+  * Added SubjectAltName to certificates.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 18 May 2018 19:56:13 +0200
+
+linuxmuster-base7 (7.0.1-1ubuntu0) lmn7-testing; urgency=low
+
+  * Improved subnetting.
+  * Removed linuxmuster-webui7 from dependencies.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 16 May 2018 18:26:23 +0200
+
 linuxmuster-base7 (7.0.1-0ubuntu0) lmn7-testing; urgency=low
 
   * Added subnetting feature.
