@@ -267,52 +267,14 @@ def updateFwGw(firewallip, servernet_router, gateway_xml):
     return changed
 
 # add single route
-def addFwRoute(route_new, subnet):
+def addFwRoute(subnet):
     try:
-        rc, content = readTextfile(constants.FWCONFLOCAL)
-    except:
-        printScript('* Unable to read ' + constants.FWCONFLOCAL + '!')
-        return False
-    try:
-        if routes_begin_tag in content:
-            content = content.replace(routes_begin_tag, routes_begin_tag + route_new)
-        else:
-            content = content.replace(gateways_end_tag, gateways_end_tag + '\n' + routes_begin_tag + route_new + routes_end_tag)
-        rc = writeTextfile(constants.FWCONFLOCAL, content, 'w')
+        payload = '{"route": {"network": "' + subnet + '", "gateway": "' + constants.VLAN_GW + '", "descr": "Route for subnet ' + subnet + '", "disabled": "0"}}'
+        res = firewallApi('post', '/routes/routes/addroute', payload)
         printScript('* Added route for subnet ' + subnet + '.')
         return True
     except:
-        printScript('* Unable to add route for subnet ' + subnet + '.')
-        return False
-
-# add routes on firewall
-def addFwRoutes(routes_add):
-    for subnet in routes_add:
-        uuidstr = str(uuid.uuid4())
-        descr = 'route for subnet ' + subnet
-        route_new = route_xml.replace('@@uuid@@', uuidstr)
-        route_new = route_new.replace('@@descr@@', descr)
-        route_new = route_new.replace('@@subnet@@', subnet)
-        rc = addFwRoute(route_new, subnet)
-        if not rc:
-            return rc
-    return True
-
-# update route gateway on firewall by uuid
-def updFwRouteGw(uuid, subnet):
-    try:
-        payload = firewallApi('get', '/routes/routes/getroute/' + uuid)
-        for gateway in payload['route']['gateway']:
-            if gateway == constants.VLAN_GW:
-                selected = 1
-            else:
-                selected = 0
-            payload['route']['gateway'][gateway]['selected'] = selected
-        res = firewallApi('post', '/routes/routes/setroute/' + uuid, payload)
-        printScript('* Changed gateway for subnet ' + subnet + '.')
-        return True
-    except:
-        printScript('* Unable to change gateway for subnet ' + subnet + '!')
+        printScript('* Unable to add route for subnet ' + subnet + '!')
         return False
 
 # delete route on firewall by uuid
@@ -337,6 +299,7 @@ def updateFwRoutes(subnets, firewallip, ipnet_setup, servernet_router):
         return False
     # iterate through firewall routes and delete them if necessary
     changed = False
+    gateway_orig = constants.VLAN_GW + ' - ' + servernet_router
     if routes_nr > 0:
         count = 0
         while (count < routes_nr):
@@ -344,7 +307,7 @@ def updateFwRoutes(subnets, firewallip, ipnet_setup, servernet_router):
             subnet = routes['rows'][count]['network']
             gateway = routes['rows'][count]['gateway']
             # delete not compliant routes
-            if (not subnet in str(subnets) and gateway == constants.VLAN_GW) or (subnet in str(subnets) and gateway != constants.VLAN_GW):
+            if (not subnet in str(subnets) and gateway == gateway_orig) or (subnet in str(subnets) and gateway != gateway_orig):
                 delFwRoute(uuid, subnet)
                 printScript('* Route ' + subnet + ' deleted.')
                 changed = True
@@ -353,7 +316,6 @@ def updateFwRoutes(subnets, firewallip, ipnet_setup, servernet_router):
     if changed:
         routes = firewallApi('get', '/routes/routes/searchroute')
     # find and collect routes to be added
-    routes_add = []
     for subnet in subnets:
         # extract subnet from string
         s = subnet.split(':')[0]
@@ -361,19 +323,9 @@ def updateFwRoutes(subnets, firewallip, ipnet_setup, servernet_router):
         if s == ipnet_setup:
             continue
         if not s in str(routes):
-            routes_add.append(s)
-    # add routes
-    changed = False
-    if len(routes_add) > 0:
-        rc = addFwRoutes(routes_add)
-        if rc:
-            changed = rc
-    # upload config.xml and reload routing table
-    if changed:
-        try:
-            putFwConfig(firewallip)
-        except:
-            return False
+            rc = addFwRoute(s)
+            if rc:
+                changed = rc
     return changed
 
 ## functions end ##
@@ -447,19 +399,13 @@ if isValidHostIpv4(opsiip):
 
 # update firewall
 if not skipfw:
-    rc = updateFwGw(firewallip, servernet_router, gateway_xml)
-    if rc:
-        changed = rc
-    rc = updateFwRoutes(subnets, firewallip, ipnet_setup, servernet_router)
-    if rc:
-        changed = rc
+    changed = updateFwGw(firewallip, servernet_router, gateway_xml)
     if changed:
-        # this is not yet good
-        #firewallApi('post', '/routes/routes/reconfigure')
-        # reboot to apply changes
-        printScript('Finished all firewall changes.')
-        rc = sshExec(firewallip, 'configctl firmware reboot')
-        if not rc:
-            sys.exit(1)
-    else:
-        printScript('No firewall changes were necessary.')
+        changed = firewallApi('post', '/routes/routes/reconfigure')
+        if changed:
+            printScript('Applied new gateway.')
+    changed = updateFwRoutes(subnets, firewallip, ipnet_setup, servernet_router)
+    if changed:
+        changed = firewallApi('post', '/routes/routes/reconfigure')
+        if changed:
+            printScript('Applied new routes.')

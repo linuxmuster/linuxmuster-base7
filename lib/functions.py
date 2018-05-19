@@ -322,13 +322,14 @@ def firewallApi(request, path, data=''):
     fwapi.read(constants.FWAPIKEYS)
     apikey = fwapi.get('api', 'key')
     apisecret = fwapi.get('api', 'secret')
+    headers = {'content-type': 'application/json'}
     url = 'https://firewall.' + domainname + '/api' + path
     if request == 'get':
         req = requests.get(url, verify=constants.FWFULLCHAIN, auth=(apikey, apisecret))
     elif request == 'post' and data == '':
         req = requests.post(url, verify=constants.FWFULLCHAIN, auth=(apikey, apisecret))
     elif request == 'post' and data != '':
-        req = requests.post(url, data=data, verify=constants.FWFULLCHAIN, auth=(apikey, apisecret))
+        req = requests.post(url, data=data, verify=constants.FWFULLCHAIN, auth=(apikey, apisecret), headers=headers)
     else:
         return None
     # get response
