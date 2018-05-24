@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20180515
+# 20180524
 # GPL v3
 #
 
@@ -50,9 +50,10 @@ case "$1" in
   chmod 700 "$SECRETDIR"
 
   # create firewall fullchain pem file
-  if [ ! -s "$FWFULLCHAIN" ]; then
+  fwcert="$(echo "$FWFULLCHAIN" | sed -e 's|.fullchain.|.cert.|')"
+  if [ ! -s "$FWFULLCHAIN" -a -s "$fwcert" ]; then
     echo "Creating $(basename "$FWFULLCHAIN")."
-    cat "$(echo "$FWFULLCHAIN" | sed -e 's|.fullchain.|.cert.|')" "$CACERT" > "$FWFULLCHAIN"
+    cat "$fwcert" "$CACERT" > "$FWFULLCHAIN"
     chmod 640 "$FWFULLCHAIN"
   fi
 
