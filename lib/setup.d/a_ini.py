@@ -2,7 +2,7 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20180418
+# 20180604
 #
 
 import configparser
@@ -130,8 +130,12 @@ except:
     dhcprange = ''
 if dhcprange == '':
     try:
-        dhcprange1 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '100'
-        dhcprange2 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '200'
+        if int(bitmask) <= 16:
+            dhcprange1 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.255.1'
+            dhcprange2 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.255.254'
+        else:
+            dhcprange1 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '201'
+            dhcprange2 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '250'
         dhcprange = dhcprange1 + ' ' + dhcprange2
         setup.set('setup', 'dhcprange', dhcprange)
     except:
