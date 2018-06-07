@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20180503
+# 20180607
 #
 
 import configparser
@@ -176,11 +176,20 @@ reader = csv.reader(f, delimiter=';', quoting=csv.QUOTE_NONE)
 d = open(constants.DHCPDEVCONF, 'w')
 pxe_groups = []
 for row in reader:
-    try:
-        room, host, group, mac, ip, field6, field7, dhcpopts, field9, field10, pxe = row
-    except:
+    if row == []:
         continue
-    if room[:1] == '#' or room[:1] == ';':
+    try:
+        room = row[0]
+        if room[:1] == '#' or room[:1] == ';':
+            continue
+        host = row[1]
+        group = row[2]
+        mac = row[3]
+        ip = row[4]
+        dhcpopts = row[7]
+        pxe = row[10]
+    except:
+        printScript('Skipping line: ' + str(row).replace("', '", ';').replace("['", '').replace("']", ''))
         continue
     if (pxe == '3' or pxe == '2') and isValidHostIpv4(opsiip) == False:
         pxe = '1'

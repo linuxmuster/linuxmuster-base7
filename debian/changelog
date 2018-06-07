@@ -1,8 +1,22 @@
+linuxmuster-base7 (7.0.2-0ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-import-devices: fixed handling of lines with more than 11 fields.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 04 Jun 2018 20:52:47 +0200
+
+linuxmuster-base7 (7.0.1-6ubuntu0) lmn7-testing; urgency=low
+
+  * modified setup defaults for dhcp range:
+    - bitmask <=16: x.x.255.1 - x.x.255.254,
+    - bitmask >16 : x.x.x.201 - x.x.x.250.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 04 Jun 2018 20:52:47 +0200
+
 linuxmuster-base7 (7.0.1-5ubuntu0) lmn7-testing; urgency=low
 
   * postinst firewall fullchain cert creation fix (#24).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 24 May 2018 19:09:52 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 19 May 2018 23:32:00 +0200
 
 linuxmuster-base7 (7.0.1-4ubuntu0) lmn7-testing; urgency=low
 
