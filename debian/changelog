@@ -1,3 +1,15 @@
+linuxmuster-base7 (7.0.3-1ubuntu0) lmn7-testing; urgency=low
+
+  * added servernet to opsi subnet routes.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 13 Jun 2018 13:11:35 +0200
+
+linuxmuster-base7 (7.0.3-0ubuntu0) lmn7-testing; urgency=low
+
+  * added handling of servernet gateway in case of subnetting.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 04 Jun 2018 20:52:47 +0200
+
 linuxmuster-base7 (7.0.2-0ubuntu0) lmn7-testing; urgency=low
 
   * linuxmuster-import-devices: fixed handling of lines with more than 11 fields.
