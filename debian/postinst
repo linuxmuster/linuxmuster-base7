@@ -58,7 +58,7 @@ case "$1" in
   fi
 
   # add gateway address to setup.ini
-  if [ -z "$gateway" ]; then
+  if [ -z "$gateway" -a -n "firewallip" ]; then
     echo "Adding gateway ip $firewallip to setup.ini."
     gateway="$firewallip"
     echo "gateway = $gateway" >> "$SETUPINI"
