@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.3-2ubuntu0) lmn7-testing; urgency=low
+
+  * postinst gateway fix.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 13 Jun 2018 22:33:49 +0200
+
 linuxmuster-base7 (7.0.3-1ubuntu0) lmn7-testing; urgency=low
 
   * added servernet to opsi subnet routes.

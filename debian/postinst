@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20180612
+# 20180613
 # GPL v3
 #
 
@@ -60,7 +60,7 @@ case "$1" in
   # add gateway address to setup.ini
   if [ -z "$gateway" ]; then
     echo "Adding gateway ip $firewallip to setup.ini."
-    gateway = "$firewallip"
+    gateway="$firewallip"
     echo "gateway = $gateway" >> "$SETUPINI"
   fi
 
