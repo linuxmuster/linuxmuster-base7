@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20180613
+# 20180519
 #
 
 import configparser
@@ -182,8 +182,8 @@ rm -f @@remotefile@@
         for item in subnets:
             s = item.split(':')[0]
             # skip server network
-            #if s == ipnet_setup:
-            #    continue
+            if s == ipnet_setup:
+                continue
             content = content + 'route add -net ' + s + ' gw ' + servernet_router + '\n'
             writeTextfile(localfile, content, 'w')
         printScript('* Created new routes script.')

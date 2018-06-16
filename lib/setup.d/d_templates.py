@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20180612
+# 20180514
 #
 
 import configparser
@@ -42,7 +42,6 @@ try:
     dhcprange2 = dhcprange.split(' ')[1]
     domainname = setup.get('setup', 'domainname')
     firewallip = setup.get('setup', 'firewallip')
-    gateway = setup.get('setup', 'gateway')
     linbodir = constants.LINBODIR
     netbiosname = setup.get('setup', 'netbiosname')
     netmask = setup.get('setup', 'netmask')
@@ -84,7 +83,6 @@ for f in os.listdir(constants.TPLDIR):
         filedata = filedata.replace('@@dhcprange2@@', dhcprange2)
         filedata = filedata.replace('@@domainname@@', domainname)
         filedata = filedata.replace('@@firewallip@@', firewallip)
-        filedata = filedata.replace('@@gateway@@', gateway)
         filedata = filedata.replace('@@linbodir@@', linbodir)
         filedata = filedata.replace('@@netbiosname@@', netbiosname)
         filedata = filedata.replace('@@netmask@@', netmask)
@@ -108,7 +106,7 @@ for f in os.listdir(constants.TPLDIR):
 msg = 'Network setup '
 printScript(msg, '', False, False, True)
 try:
-    subProc('/usr/sbin/linuxmuster-prepare -x -s -u -p server -f ' + firewallip + ' -g ' + gateway + ' -n ' + serverip + '/' + bitmask + ' -d ' + domainname + ' -t ' + servername + ' -r ' + serverip + ' -a "' + adminpw + '"', logfile)
+    subProc('/usr/sbin/linuxmuster-prepare -x -s -u -p server -f ' + firewallip + ' -n ' + serverip + '/' + bitmask + ' -d ' + domainname + ' -t ' + servername + ' -r ' + serverip + ' -a "' + adminpw + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

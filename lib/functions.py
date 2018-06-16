@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20180612
+# 20180519
 #
 
 import codecs
@@ -119,7 +119,6 @@ def getFromSetup():
     bitmask = ''
     serverip = ''
     firewallip = ''
-    gateway = ''
     opsiip = ''
     dockerip = ''
     adminpw = ''
@@ -130,19 +129,16 @@ def getFromSetup():
         bitmask = setup.get('setup', 'bitmask')
         serverip = setup.get('setup', 'serverip')
         firewallip = setup.get('setup', 'firewallip')
-        gateway = setup.get('setup', 'gateway')
         opsiip = setup.get('setup', 'opsiip')
         dockerip = setup.get('setup', 'dockerip')
         adminpw = setup.get('setup', 'adminpw')
     except:
         pass
-    if gateway == '':
-        gateway = firewallip
-    return domainname, bitmask, serverip, firewallip, gateway, opsiip, dockerip, adminpw
+    return domainname, bitmask, serverip, firewallip, opsiip, dockerip, adminpw
 
 # establish pw less ssh connection to ip & port
 def doSshLink(ip, port, secret):
-    domainname, bitmask, serverip, firewallip, gateway, opsiip, dockerip, adminpw = getFromSetup()
+    domainname, bitmask, serverip, firewallip, opsiip, dockerip, adminpw = getFromSetup()
     msg = '* Processing ssh link to host ' + ip + ' on port ' + str(port) + ':'
     printScript(msg)
     # test connection on ip and port
@@ -211,7 +207,7 @@ def doSshLink(ip, port, secret):
         printScript(msg, '', False, False, True)
         try:
             sshcmd = 'ssh -oNumberOfPasswordPrompts=0 -oStrictHostKeyChecking=no -p ' + str(port) + ' ' + ip + ' '
-            preparecmd = sshcmd + '/usr/sbin/linuxmuster-prepare -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw + '"' + profile + ' -n ' + ip + '/' + bitmask + ' -d ' + domainname + ' -f ' + firewallip + ' -g ' + gateway
+            preparecmd = sshcmd + '/usr/sbin/linuxmuster-prepare -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw + '"' + profile + ' -n ' + ip + '/' + bitmask + ' -d ' + domainname + ' -f ' + firewallip
             rebootcmd = sshcmd + '/sbin/reboot'
             logfile = constants.LOGDIR + '/setup.ssh.' + hostname + '.log'
             subProc(preparecmd, logfile)
@@ -321,7 +317,7 @@ def modIni(inifile, section, option, value):
 
 # firewall api get request
 def firewallApi(request, path, data=''):
-    domainname, bitmask, serverip, firewallip, gateway, opsiip, dockerip, adminpw = getFromSetup()
+    domainname, bitmask, serverip, firewallip, opsiip, dockerip, adminpw = getFromSetup()
     fwapi = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     fwapi.read(constants.FWAPIKEYS)
     apikey = fwapi.get('api', 'key')
