@@ -2,12 +2,13 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20180519
+# 20180618
 #
 
 import configparser
 import constants
 import csv
+import datetime
 import os
 import paramiko
 import re
@@ -74,6 +75,47 @@ route_xml = """
     </route>
 """
 route_xml = route_xml.replace('@@vlangw@@', constants.VLAN_GW)
+# firewall_nat_out
+nat_automatic_xml = """
+  <nat>
+    <outbound>
+      <mode>automatic</mode>
+    </outbound>
+  </nat>
+"""
+nat_hybrid_begin = """
+  <nat>
+    <outbound>
+      <mode>hybrid</mode>
+"""
+nat_hybrid_end = """
+    </outbound>
+  </nat>
+"""
+nat_rule_xml = """
+      <rule>
+        <source>
+          <network>@@subnet@@</network>
+        </source>
+        <destination>
+          <any>1</any>
+        </destination>
+        <descr>@@descr@@</descr>
+        <interface>wan</interface>
+        <tag/>
+        <tagged/>
+        <poolopts/>
+        <ipprotocol>inet</ipprotocol>
+        <created>
+          <username>root@@@serverip@@</username>
+          <time>@@timestamp@@</time>
+          <description>linuxmuster-import-subnet made changes</description>
+        </created>
+        <target/>
+        <targetip_subnet>0</targetip_subnet>
+        <sourceport/>
+      </rule>
+"""
 
 ## functions begin ##
 
@@ -203,11 +245,7 @@ rm -f @@remotefile@@
     return True
 
 # update vlan gateway on firewall
-def updateFwGw(firewallip, servernet_router, gateway_xml):
-    # first get config.xml
-    rc = getFwConfig(firewallip)
-    if not rc:
-        return rc
+def updateFwGw(firewallip, servernet_router, gateway_xml, content):
     if servernet_router == firewallip:
         # in this case no vlan gateway is necessary
         gwflag = False
@@ -216,8 +254,6 @@ def updateFwGw(firewallip, servernet_router, gateway_xml):
         gwflag = True
         msg = 'Creating vlan gateway on firewall:'
     printScript(msg)
-    # load configfile
-    rc, content = readTextfile(constants.FWCONFLOCAL)
     soup = BeautifulSoup(content, 'lxml')
     # find vlan gateway
     gateways = BeautifulSoup(str(soup.find('gateways')), 'lxml')
@@ -251,20 +287,68 @@ def updateFwGw(firewallip, servernet_router, gateway_xml):
         changed = True
     else:
         printScript('* Nothing to do.')
-        return False
+        changed =  False
+    return changed, content
+
+# update subnet nat rules on firewall
+def updateFwNat(subnets, ipnet_setup, serverip, content):
+  nat_rules = []
+  for item in subnets:
+    subnet = item.split(':')[0]
+    # skip servernet
+    if subnet == ipnet_setup:
+      continue
+    timestamp = str(datetime.datetime.now(datetime.timezone.utc).timestamp())
+    descr = 'NAT rule for subnet ' + subnet
+    nat_rule = nat_rule_xml.replace('@@subnet@@', subnet)
+    nat_rule = nat_rule.replace('@@serverip@@', serverip)
+    nat_rule = nat_rule.replace('@@descr@@', descr)
+    nat_rule = nat_rule.replace('@@timestamp@@', timestamp)
+    nat_rules.append(nat_rule)
+  if len(nat_rules) == 0:
+    if nat_automatic_xml in content:
+      # nothing to do if standard nat automatic rule is set and no subnets are defined
+      return False, content
+    else:
+      nat_xml = nat_automatic_xml
+  else:
+    # create nat rules xml code
+    nat_xml = nat_hybrid_begin
+    for nat_rule in nat_rules:
+      nat_xml = nat_xml + nat_rule
+    nat_xml = nat_xml + nat_hybrid_end
+  # replace code in config content
+  content = re.sub(r'<nat>.*?</nat>', nat_xml, content, flags=re.S)
+  return True, content
+
+# download, modify and upload firewall config
+def updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gateway_xml):
+  # first get config.xml
+  if not getFwConfig(firewallip):
+    return False
+  # load configfile
+  rc, content = readTextfile(constants.FWCONFLOCAL)
+  if not rc:
+    return rc
+  changed = False
+  # add vlan gateway to firewall
+  rc, content = updateFwGw(firewallip, servernet_router, gateway_xml, content)
+  if rc:
+    changed = rc
+  # add subnet nat rules to firewall
+  rc, content = updateFwNat(subnets, ipnet_setup, serverip, content)
+  if rc:
+    changed = rc
+  if changed:
     # write changed config
-    if changed:
-        try:
-            rc = writeTextfile(constants.FWCONFLOCAL, content, 'w')
-            printScript('* Saved changed config.')
-        except:
-            printScript('* Unable to save configfile!')
-            return False
-        # upload config
-        rc = putFwConfig(firewallip)
-        if not rc:
-            return rc
-    return changed
+    if writeTextfile(constants.FWCONFLOCAL, content, 'w'):
+      printScript('* Saved changed config.')
+    else:
+      printScript('* Unable to save configfile!')
+      return False
+    if not putFwConfig(firewallip):
+      return False
+  return changed
 
 # add single route
 def addFwRoute(subnet):
@@ -399,7 +483,7 @@ if isValidHostIpv4(opsiip):
 
 # update firewall
 if not skipfw:
-    changed = updateFwGw(firewallip, servernet_router, gateway_xml)
+    changed = updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gateway_xml)
     if changed:
         changed = firewallApi('post', '/routes/routes/reconfigure')
         if changed:

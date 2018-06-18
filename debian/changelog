@@ -1,3 +1,27 @@
+linuxmuster-base7 (7.0.3-3ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-import-subnets: fix local variable 'gateway_xml' referenced before assignment.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 18 Jun 2018 12:32:08 +0200
+
+linuxmuster-base7 (7.0.3-2ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-import-subnets: do not create servernet route on opsi.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 04 Jun 2018 20:52:47 +0200
+
+linuxmuster-base7 (7.0.3-1ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-import-subnets: fixed timestamp has to be string.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 04 Jun 2018 20:52:47 +0200
+
+linuxmuster-base7 (7.0.3-0ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-import-subnets: added creation of subnet nat rules on firewall.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 04 Jun 2018 20:52:47 +0200
+
 linuxmuster-base7 (7.0.2-0ubuntu0) lmn7-testing; urgency=low
 
   * linuxmuster-import-devices: fixed handling of lines with more than 11 fields.
