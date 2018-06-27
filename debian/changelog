@@ -1,8 +1,55 @@
+linuxmuster-base7 (7.0.5-4ubuntu0) lmn7-testing; urgency=low
+
+  * improved smb share definitions.
+  * added acls for share folders.
+  * added domain logon script for default-school.
+  * minor setup script output improvements.
+  * fix samba sysvol permissions.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 27 Jun 2018 14:28:22 +0200
+
+linuxmuster-base7 (7.0.5-3ubuntu0) lmn7-testing; urgency=low
+
+  * added school.conf template for default school.
+  * improved test users creation script.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 27 Jun 2018 08:19:10 +0200
+
+linuxmuster-base7 (7.0.5-2ubuntu0) lmn7-testing; urgency=low
+
+  * setup: fixed smb shares definitions.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 27 Jun 2018 07:50:13 +0200
+
+linuxmuster-base7 (7.0.5-1ubuntu0) lmn7-testing; urgency=low
+
+  * setup: fixed ini read sequence.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 26 Jun 2018 16:54:52 +0200
+
+linuxmuster-base7 (7.0.5-0ubuntu0) lmn7-testing; urgency=low
+
+  * setup: added smb shares.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 26 Jun 2018 10:58:04 +0200
+
+linuxmuster-base7 (7.0.4-1ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-import-devices: fix bootimage not defined.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 20 Jun 2018 14:29:53 +0200
+
+linuxmuster-base7 (7.0.4-0ubuntu0) lmn7-testing; urgency=low
+
+  * linuxmuster-import-devices: additionally write pxe bootimage to device's dhcp options.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 18 Jun 2018 21:30:20 +0200
+
 linuxmuster-base7 (7.0.3-3ubuntu0) lmn7-testing; urgency=low
 
   * linuxmuster-import-subnets: fix local variable 'gateway_xml' referenced before assignment.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 18 Jun 2018 12:32:08 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 04 Jun 2018 20:52:47 +0200
 
 linuxmuster-base7 (7.0.3-2ubuntu0) lmn7-testing; urgency=low
 

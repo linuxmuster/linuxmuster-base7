@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20180514
+# 20180627
 #
 
 import configparser
@@ -14,6 +14,7 @@ import sys
 from functions import setupComment
 from functions import backupCfg
 from functions import printScript
+from functions import readTextfile
 from functions import replaceInFile
 from functions import subProc
 
@@ -63,19 +64,12 @@ do_not_backup = [ 'interfaces.linuxmuster', 'dovecot.linuxmuster.conf', 'smb.con
 printScript('Processing config templates:')
 for f in os.listdir(constants.TPLDIR):
     source = constants.TPLDIR + '/' + f
-    msg = ' * ' + f + ' '
+    msg = '* ' + f + ' '
     printScript(msg, '', False, False, True)
     try:
-        with open(source, 'r') as infile:
-            firstline = infile.readline().rstrip('\n')
-            infile.seek(0)
-            filedata = infile.read()
-            # get target path
-            target = firstline.partition(' ')[2]
-        # do not overwrite specified configfiles if they exist
-        if (f in do_not_overwrite and os.path.isfile(target)):
-            printScript(' Success!', '', True, True, False, len(msg))
-            continue
+        # read template file
+        rc, filedata = readTextfile(source)
+        # replace placeholders with values
         filedata = filedata.replace('@@bitmask@@', bitmask)
         filedata = filedata.replace('@@broadcast@@', broadcast)
         filedata = filedata.replace('@@dhcprange@@', dhcprange)
@@ -91,6 +85,15 @@ for f in os.listdir(constants.TPLDIR):
         filedata = filedata.replace('@@sambadomain@@', sambadomain)
         filedata = filedata.replace('@@servername@@', servername)
         filedata = filedata.replace('@@serverip@@', serverip)
+        # get target path
+        firstline = filedata.split('\n')[0]
+        target = firstline.partition(' ')[2]
+        # do not overwrite specified configfiles if they exist
+        if (f in do_not_overwrite and os.path.isfile(target)):
+            printScript(' Success!', '', True, True, False, len(msg))
+            continue
+        # create target directory
+        subProc('mkdir -p ' + os.path.dirname(target), logfile)
         # backup file
         if f not in do_not_backup:
             backupCfg(target)

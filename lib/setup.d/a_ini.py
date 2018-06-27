@@ -2,7 +2,7 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20180604
+# 20180626
 #
 
 import configparser
@@ -28,7 +28,7 @@ printScript(title)
 
 # read ini files
 setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
-for item in [constants.DEFAULTSINI, constants.SETUPINI, constants.CUSTOMINI, constants.PREPINI]:
+for item in [constants.DEFAULTSINI, constants.PREPINI, constants.SETUPINI, constants.CUSTOMINI]:
     # skip non existant file
     if not os.path.isfile(item):
         continue

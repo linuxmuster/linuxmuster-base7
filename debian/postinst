@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20180524
+# 20180625
 # GPL v3
 #
 
@@ -48,6 +48,8 @@ case "$1" in
   chgrp ssl-cert "$SSLDIR" -R
   chmod 750 "$SSLDIR"
   chmod 700 "$SECRETDIR"
+  sysvol="/var/lib/samba/sysvol"
+  [ -d "$sysvol" ] && find "$sysvol" -type d -exec chmod 775 '{}' \;
 
   # create firewall fullchain pem file
   fwcert="$(echo "$FWFULLCHAIN" | sed -e 's|.fullchain.|.cert.|')"

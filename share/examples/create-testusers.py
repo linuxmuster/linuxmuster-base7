@@ -2,11 +2,12 @@
 #
 # create a bunch of testusers
 # thomas@linuxmuster.net
-# 20180504
+# 20180627
 #
 
 import configparser
 import constants
+import getopt
 import os
 import sys
 
@@ -20,10 +21,36 @@ from subprocess import Popen, PIPE, STDOUT
 starget = constants.DEFAULTSCHOOL + '/students.csv'
 ttarget = constants.DEFAULTSCHOOL + '/teachers.csv'
 
+def usage():
+    print('Usage: create-testusers.py [options]')
+    print(' [options] may be:')
+    print(' -f, --force   : Ignore existing users.')
+    print(' -h, --help    : Print this help.')
+
+# get cli args
+force = False
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "fh", ["force", "help"])
+except getopt.GetoptError as err:
+    # print help information and exit:
+    print(err) # will print something like "option -a not recognized"
+    usage()
+    sys.exit(2)
+for o, a in opts:
+    if o in ("-f", "--force"):
+        force = True
+    elif o in ("-h", "--help"):
+        usage()
+        sys.exit()
+    else:
+        assert False, "unhandled option"
+
 # do not overwrite existing user files
-if os.path.isfile(starget) or os.path.isfile(ttarget):
-    print('There are already users on the system!')
-    sys.exit(1)
+if not force:
+    if os.path.isfile(starget) or os.path.isfile(ttarget):
+        print('There are already users on the system!')
+        usage()
+        sys.exit(1)
 
 # copy example user files
 ssource = constants.EXAMPLEDIR + '/students.csv'
@@ -117,6 +144,21 @@ for user in students + teachers:
     printScript(msg, '', False, False, True)
     try:
         sambaTool('user setpassword ' + user + ' --newpassword="' + pw + '"')
+        printScript(' Success!', '', True, True, False, len(msg))
+    except:
+        printScript(' Failed!', '', True, True, False, len(msg))
+
+# change password to Muster!
+msg = 'Adding scriptPath attribute '
+printScript(msg)
+for user in students + teachers + ['global-admin']:
+    if user == '':
+        continue
+    msg = ' * ' + user + ' '
+    printScript(msg, '', False, False, True)
+    try:
+        dn = os.popen('ldbsearch -H /var/lib/samba/private/sam.ldb name=' + user + ' dn | grep ^dn').read()
+        subProc('echo "' + dn + 'changetype: modify\nreplace: scriptPath\nscriptPath: default-school.cmd\n" | ldbmodify -H /var/lib/samba/private/sam.ldb -i', logfile)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))

@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20180607
+# 20180620
 #
 
 import configparser
@@ -25,8 +25,11 @@ from functions import readTextfile
 from functions import setGlobalStartconfOption
 from functions import writeTextfile
 
-# default devices.csv
+# defaults
 devices = constants.WIMPORTDATA
+core32_efi = 'boot/grub/i386-efi/core.efi'
+core64_efi = 'boot/grub/x86_64-efi/core.efi'
+core_bios = 'boot/grub/i386-pc/core.0'
 
 # read INIFILE
 setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
@@ -191,8 +194,23 @@ for row in reader:
     except:
         printScript('Skipping line: ' + str(row).replace("', '", ';').replace("['", '').replace("']", ''))
         continue
+    # get system type from start.conf
+    startconf = constants.LINBODIR + '/start.conf.' + group
+    systemtype = None
+    bootimage = None
+    if os.path.isfile(startconf):
+        systemtype = getStartconfOption(startconf, 'LINBO', 'SystemType')
+    if systemtype != None:
+        if 'bios' in systemtype:
+            bootimage = core_bios
+        elif 'efi32' in systemtype:
+            bootimage = core32_efi
+        elif 'efi64' in systemtype:
+            bootimage = core64_efi
+    # correct pxe type if opsi ip is not valid
     if (pxe == '3' or pxe == '2') and isValidHostIpv4(opsiip) == False:
         pxe = '1'
+    # determine hosttype
     if pxe == '0':
         htype = 'IP-Host : '
     else:
@@ -207,9 +225,15 @@ for row in reader:
     if len(dhcpopts) > 4:
         for opt in dhcpopts.split(','):
             d.write('  ' + opt + ';\n')
-    #
+            # do not write default bootimage if a different one is defined here
+            if 'filename' in opt:
+                bootimage = None
+    # write pxe boot options
     if pxe == '1' or pxe == '2' or pxe == '22':
         d.write('  option extensions-path "' + group + '";\n')
+        if bootimage != None:
+            d.write('  filename "' + bootimage + '";\n')
+    # boot opsi pxe bootimage
     elif pxe == '3':
         d.write('  next-server ' + opsiip + ';\n')
         d.write('  filename "' + constants.OPSIPXEFILE + '";\n')
