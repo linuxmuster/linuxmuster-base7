@@ -6,7 +6,7 @@ linuxmuster-base7 (7.0.5-4ubuntu0) lmn7-testing; urgency=low
   * minor setup script output improvements.
   * fix samba sysvol permissions.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 27 Jun 2018 14:28:22 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 27 Jun 2018 14:45:50 +0200
 
 linuxmuster-base7 (7.0.5-3ubuntu0) lmn7-testing; urgency=low
 
