@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.0.5-5ubuntu0) lmn7-testing; urgency=low
+
+  * fix sysvol path in smb.conf template.
+  * fix logon script permissions.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 29 Jun 2018 18:24:19 +0200
+
 linuxmuster-base7 (7.0.5-4ubuntu0) lmn7-testing; urgency=low
 
   * improved smb share definitions.

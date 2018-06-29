@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20180627
+# 20180629
 #
 
 import configparser
@@ -100,6 +100,7 @@ for f in os.listdir(constants.TPLDIR):
         with open(target, 'w') as outfile:
             outfile.write(setupComment())
             outfile.write(filedata)
+        os.system('chmod 664 ' + target)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
