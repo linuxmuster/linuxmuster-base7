@@ -1,3 +1,22 @@
+linuxmuster-base7 (7.0.7-2ubuntu0) lmn7-testing; urgency=low
+
+  * fix netbiosname in setup dialog.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 13 Jul 2018 12:29:50 +0200
+
+linuxmuster-base7 (7.0.7-1ubuntu0) lmn7-testing; urgency=low
+
+  * fix sambadomain in setup dialog.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 13 Jul 2018 09:53:29 +0200
+
+linuxmuster-base7 (7.0.7-0ubuntu0) lmn7-testing; urgency=low
+
+  * remove share implementation (#29).
+  * include smb.conf.admin for custom admin stuff.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 13 Jul 2018 09:53:29 +0200
+
 linuxmuster-base7 (7.0.6-0ubuntu0) lmn7-testing; urgency=low
 
   * smb.conf certname fix (#28).

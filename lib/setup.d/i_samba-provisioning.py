@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20180627
+# 20180713
 #
 
 import configparser
@@ -167,18 +167,8 @@ except:
 msg = 'Exchanging smb.conf '
 printScript(msg, '', False, False, True)
 try:
-    os.system('cp ' + smbconf + '.setup ' + smbconf)
-    printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
-    sys.exit(1)
-
-# fix sysvol permissions
-msg = 'Fixing samba sysvol permissions '
-printScript(msg, '', False, False, True)
-try:
-    sysvol = '/var/lib/samba/sysvol'
-    subProc('find ' + sysvol + ' -type d -exec chmod 775 "{}" \;', logfile)
+    os.system('mv ' + smbconf + ' ' + smbconf + '.orig')
+    os.system('mv ' + smbconf + '.setup ' + smbconf)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

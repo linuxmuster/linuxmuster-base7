@@ -1,0 +1,7 @@
+# /etc/samba/smb.conf.admin
+#
+# thomas@linuxmuster.net
+# 20180713
+#
+# add here your custom admin stuff
+#

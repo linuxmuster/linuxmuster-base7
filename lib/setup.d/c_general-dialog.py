@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20180503
+# 20180713
 #
 
 import constants
@@ -102,6 +102,9 @@ while True:
 print('Server hostname: ' + servername)
 setup.set('setup', 'servername', servername)
 setup.set('setup', 'hostname', servername)
+netbiosname = servername.upper()
+print('Netbios name: ' + netbiosname)
+setup.set('setup', 'netbiosname', netbiosname)
 
 # domainname
 ititle = title + ': Domainname'
@@ -120,6 +123,10 @@ setup.set('setup', 'basedn', basedn)
 realm = domainname.upper()
 print('REALM: ' + realm)
 setup.set('setup', 'realm', realm)
+sambadomain = realm.split('.')[0]
+print('Sambadomain: ' + sambadomain)
+setup.set('setup', 'sambadomain', sambadomain)
+
 
 # dhcprange
 ititle = title + ': DHCP Range'

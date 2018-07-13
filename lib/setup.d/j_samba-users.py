@@ -2,7 +2,7 @@
 #
 # create samba users
 # thomas@linuxmuster.net
-# 20180627
+# 20180713
 #
 
 import configparser
@@ -109,52 +109,3 @@ try:
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
-
-# create user shares
-printScript('Creating user shares:')
-chown_admin = "global-admin:Domain Admins"
-acl_admin = "u::rwx,u:global-admin:rwx,g::rwx,g:Domain Admins:rwx,g:users:rx,o::-"
-acl_linbo = "u::rwx,u:global-admin:rwx,g::rwx,g:Domain Admins:rwx,o::rx"
-chown_users = "global-admin:users"
-acl_users = "u::rwx,u:global-admin:rwx,g::rwx,g:Domain Admins:rwx,g:users:rwx,o::-"
-chown_teachers = "global-admin:teachers"
-acl_teachers = "u::rwx,u:global-admin:rwx,g::rwx,g:Domain Admins:rwx,g:teachers:rwx,o::-"
-for share in ['printers', 'print$', 'linbo', 'pgm', 'cdrom', 'share', 'classes', 'projects', 'school', 'teachers']:
-    try:
-        msg = '* ' + share + ' '
-        printScript(msg, '', False, False, True)
-        # define paths
-        if share == 'print$':
-            sharepath = '/var/lib/samba/printers'
-        elif share == 'printers':
-            sharepath = '/var/tmp'
-        elif share == 'linbo':
-            sharepath = constants.LINBODIR
-        elif share == 'classes' or share == 'projects' or share == 'school' or share == 'teachers':
-            sharepath = defaultpath + '/share/' + share
-        else:
-            sharepath = defaultpath + '/' + share
-        # create share folders
-        subProc('mkdir -p ' + sharepath, logfile)
-        # add shares
-        if not share in ['classes', 'projects', 'school', 'teachers']:
-            subProc('net conf addshare ' + share + ' ' + sharepath + ' ' + shareopts, logfile)
-        # define acls
-        if share == 'school':
-            chown_cur = chown_users
-            acl_cur = acl_users
-        elif share == 'linbo':
-            chown_cur = chown_admin
-            acl_cur = acl_linbo
-        elif share == 'teachers':
-            chown_cur = chown_teachers
-            acl_cur = acl_teachers
-        else:
-            chown_cur = chown_admin
-            acl_cur = acl_admin
-        # set permissions
-        subProc(constants.SHAREDIR + '/setfacl.sh "' + chown_cur + '" "' + acl_cur + '" ' + sharepath, logfile)
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
-        sys.exit(1)
