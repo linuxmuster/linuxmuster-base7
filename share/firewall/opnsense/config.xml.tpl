@@ -188,7 +188,7 @@
     <optimization>normal</optimization>
     <hostname>firewall</hostname>
     <domain>@@domainname@@</domain>
-    <dnsallowoverride>1</dnsallowoverride>
+    <dnsallowoverride/>
     <group>
       <name>admins</name>
       <description>System Administrators</description>
@@ -270,30 +270,11 @@
       <passwordauth>1</passwordauth>
       <permitrootlogin>1</permitrootlogin>
     </ssh>
-    <dnsserver>@@serverip@@</dnsserver>
-    <dns1gw>none</dns1gw>
-    <dns2gw>none</dns2gw>
-    <dns3gw>none</dns3gw>
-    <dns4gw>none</dns4gw>
-    <dns5gw>none</dns5gw>
-    <dns6gw>none</dns6gw>
-    <dns7gw>none</dns7gw>
-    <dns8gw>none</dns8gw>
+    @@dnsconfig@@
   </system>
   <interfaces>
     @@wanconfig@@
-    <lan>
-      <enable>1</enable>
-      <if>@@lanif@@</if>
-      <ipaddr>@@firewallip@@</ipaddr>
-      <subnet>@@bitmask@@</subnet>
-      <ipaddrv6/>
-      <subnetv6/>
-      <media/>
-      <mediaopt/>
-      <gateway/>
-      <gatewayv6/>
-    </lan>
+    @@lanconfig@@
     @@opt1config@@
   </interfaces>
   <dhcpd>
@@ -724,4 +705,5 @@
     <interface>lan</interface>
   </ntpd>
   <staticroutes/>
+  @@gwconfig@@
 </opnsense>

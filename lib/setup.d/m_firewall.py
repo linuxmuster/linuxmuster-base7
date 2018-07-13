@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20180519
+# 20180713
 #
 
 import bcrypt
@@ -13,7 +13,6 @@ import os
 import re
 import shutil
 import sys
-import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup, NavigableString
 from functions import getFwConfig
 from functions import isValidHostIpv4
@@ -78,7 +77,7 @@ def main():
         dockerip = network.split('.')[0] + '.' + network.split('.')[1] + '.' + network.split('.')[2] + '.3'
 
     # get current config
-    rc = getFwConfig(firewallip, adminpw)
+    rc = getFwConfig(firewallip, constants.ROOTPW)
     if not rc:
         sys.exit(1)
 
@@ -93,24 +92,29 @@ def main():
         sys.exit(1)
 
     # get root password hash
-    msg = '* Reading config '
+    msg = '* Reading current config '
     printScript(msg, '', False, False, True)
     try:
         rc, content = readTextfile(fwconftmp)
-        # save wan interface configuration
         soup = BeautifulSoup(content, 'lxml')
+        # save interface configuration
         wanconfig = str(soup.findAll('wan')[0])
+        lanconfig = str(soup.findAll('lan')[0])
+        # save gateway configuration
+        try:
+            gwconfig = str(soup.findAll('gateways')[0])
+        except:
+            gwconfig = ''
+        # save dnsserver configuration
+        try:
+            dnsconfig = str(soup.findAll('dnsserver')[0])
+        except:
+            dnsconfig = ''
         # save opt1 configuration if present
         try:
             opt1config = str(soup.findAll('opt1')[0])
         except:
             opt1config = ''
-        # get already configured lan interfaces
-        config = ET.fromstring(content)
-        lanif = ''
-        for lan in config.iter('lan'):
-            if lan.find('if'):
-                lanif = lan.find('if').text
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
@@ -147,7 +151,9 @@ def main():
         content = content.replace('@@domainname@@', domainname)
         content = content.replace('@@basedn@@', basedn)
         content = content.replace('@@wanconfig@@', wanconfig)
-        content = content.replace('@@lanif@@', lanif)
+        content = content.replace('@@dnsconfig@@', dnsconfig)
+        content = content.replace('@@gwconfig@@', gwconfig)
+        content = content.replace('@@lanconfig@@', lanconfig)
         content = content.replace('@@opt1config@@', opt1config)
         content = content.replace('@@serverip@@', serverip)
         content = content.replace('@@firewallip@@', firewallip)
@@ -184,7 +190,7 @@ def main():
         sys.exit(1)
 
     # upload new configfile
-    rc = putFwConfig(firewallip, adminpw)
+    rc = putFwConfig(firewallip, constants.ROOTPW)
     if not rc:
         sys.exit(1)
 

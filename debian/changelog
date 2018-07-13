@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.0.8-0ubuntu0) lmn7-testing; urgency=low
+
+  * fix opnsense's static wan configuration (#23).
+  * root password fix for opnsense setup.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 13 Jul 2018 17:21:03 +0200
+
 linuxmuster-base7 (7.0.7-2ubuntu0) lmn7-testing; urgency=low
 
   * fix netbiosname in setup dialog.
