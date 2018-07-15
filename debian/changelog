@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.0.9-0ubuntu0) lmn7-testing; urgency=low
+
+  * fix, create devices.csv on setup with 15 fields (#26).
+  * fix, call: sophomorix-device --sync (#27).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 15 Jul 2018 09:54:30 +0200
+
 linuxmuster-base7 (7.0.8-0ubuntu0) lmn7-testing; urgency=low
 
   * fix opnsense's static wan configuration (#23).

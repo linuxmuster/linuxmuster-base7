@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20180620
+# 20180715
 #
 
 import configparser
@@ -42,15 +42,16 @@ domainname = setup.get('setup', 'domainname')
 printScript(os.path.basename(__file__), 'begin')
 
 # do sophomorix-devices first
-msg = 'Processing sophomorix-device:'
+msg = 'Starting sophomorix-device syntax check:'
 printScript(msg)
-result = os.system('sophomorix-device')
+result = os.system('sophomorix-device --dry-run')
 msg = 'sophomorix-device finished '
 if result != 0:
-    printScript(msg + 'with errors!')
+    printScript(msg + ' errors detected!')
     sys.exit(result)
-else:
-    printScript(msg + 'successfully!')
+
+printScript(msg + ' OK!')
+os.system('sophomorix-device --sync')
 
 # write grub cfgs
 def doGrubCfg(startconf, group, kopts):
