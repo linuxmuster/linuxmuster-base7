@@ -2,7 +2,7 @@
 #
 # create a bunch of testusers
 # thomas@linuxmuster.net
-# 20180627
+# 20180716
 #
 
 import configparser
@@ -69,20 +69,6 @@ printScript(title)
 msg = 'Logging to ' + logfile
 printScript(msg)
 
-# get password from setup.ini
-msg = 'Reading password '
-printScript(msg, '', False, False, True)
-setupini = constants.SETUPINI
-try:
-    # setup.ini
-    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
-    setup.read(setupini)
-    pw = setup.get('setup', 'adminpw')
-    printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
-    sys.exit(1)
-
 # set password policy
 msg = 'Password policy setup '
 printScript(msg, '', False, False, True)
@@ -135,6 +121,7 @@ except:
     sys.exit(1)
 
 # change password to Muster!
+pw = constants.ROOTPW
 msg = 'Setting user passwords to "' + pw + '" '
 printScript(msg)
 for user in students + teachers:
