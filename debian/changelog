@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.11-0ubuntu0) lmn7-testing; urgency=low
+
+  * fix default-school school.conf during setup.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 02 Oct 2018 15:26:24 +0200
+
 linuxmuster-base7 (7.0.10-0ubuntu0) lmn7-testing; urgency=low
 
   * fix example user password.
