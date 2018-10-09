@@ -1,3 +1,15 @@
+linuxmuster-base7 (7.0.13-0ubuntu0) lmn7-testing; urgency=low
+
+  * renew sophomorix.conf during setup.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 09 Oct 2018 13:23:33 +0200
+
+linuxmuster-base7 (7.0.12-0ubuntu0) lmn7-testing; urgency=low
+
+  * remove script path attribute in example users script.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 08 Oct 2018 19:54:51 +0200
+
 linuxmuster-base7 (7.0.11-0ubuntu0) lmn7-testing; urgency=low
 
   * fix default-school school.conf during setup.

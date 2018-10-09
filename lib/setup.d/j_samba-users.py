@@ -2,7 +2,7 @@
 #
 # create samba users
 # thomas@linuxmuster.net
-# 20181002
+# 20181009
 #
 
 import configparser
@@ -56,8 +56,9 @@ except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# update sophomorix default-school config
+# renew sophomorix configs
 os.system('rm -f ' + constants.SCHOOLCONF)
+os.system('rm -f ' + constants.SOPHOSYSDIR + '/sophomorix.conf')
 subProc('sophomorix-postinst', logfile)
 
 # create default-school share

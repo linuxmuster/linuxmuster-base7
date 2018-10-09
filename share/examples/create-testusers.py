@@ -2,7 +2,7 @@
 #
 # create a bunch of testusers
 # thomas@linuxmuster.net
-# 20180716
+# 20181005
 #
 
 import configparser
@@ -113,8 +113,8 @@ except:
 msg = 'Get usernames '
 printScript(msg, '', False, False, True)
 try:
-    students = os.popen("sophomorix-query --schoolbase default-school --student --user-minimal | grep ^' ' | awk '{ print $2 }'").read().split('\n')
-    teachers = os.popen("sophomorix-query --schoolbase default-school --teacher --user-minimal | grep ^' ' | awk '{ print $2 }'").read().split('\n')
+    students = os.popen("sophomorix-query --schoolbase default-school --student --user-minimal | grep [1-9]: | awk '{ print $2 }'").read().split('\n')
+    teachers = os.popen("sophomorix-query --schoolbase default-school --teacher --user-minimal | grep [1-9]: | awk '{ print $2 }'").read().split('\n')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -131,21 +131,6 @@ for user in students + teachers:
     printScript(msg, '', False, False, True)
     try:
         sambaTool('user setpassword ' + user + ' --newpassword="' + pw + '"')
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
-
-# change password to Muster!
-msg = 'Adding scriptPath attribute '
-printScript(msg)
-for user in students + teachers + ['global-admin']:
-    if user == '':
-        continue
-    msg = ' * ' + user + ' '
-    printScript(msg, '', False, False, True)
-    try:
-        dn = os.popen('ldbsearch -H /var/lib/samba/private/sam.ldb name=' + user + ' dn | grep ^dn').read()
-        subProc('echo "' + dn + 'changetype: modify\nreplace: scriptPath\nscriptPath: default-school.cmd\n" | ldbmodify -H /var/lib/samba/private/sam.ldb -i', logfile)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
