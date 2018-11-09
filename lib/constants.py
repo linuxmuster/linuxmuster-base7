@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20180518
+# 20181031
 #
 
 # don't change this file
@@ -18,6 +18,8 @@ SCHOOLCONF = DEFAULTSCHOOL + '/school.conf'
 SCHOOLSSHARE = '/srv/samba/schools'
 SCHOOLSSHAREOPTS = 'writeable=y guest_ok=n'
 WIMPORTDATA = DEFAULTSCHOOL + '/devices.csv'
+SYSVOLDIR = '/var/lib/samba/sysvol'
+SYSVOLTLSDIR = SYSVOLDIR + '/@@domainname@@/tls'
 SSLDIR = SYSDIR + '/ssl'
 CAKEY = SSLDIR + '/cakey.pem'
 CACERT = SSLDIR + '/cacert.pem'

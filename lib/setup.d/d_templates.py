@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20180629
+# 20181031
 #
 
 import configparser
@@ -88,6 +88,12 @@ for f in os.listdir(constants.TPLDIR):
         # get target path
         firstline = filedata.split('\n')[0]
         target = firstline.partition(' ')[2]
+        # remove target path from shebang line
+        if '#!/bin/sh' in firstline or '#!/bin/bash' in firstline:
+            filedata = filedata.replace(' ' + target, '\n# ' + target)
+            operms = '755'
+        else:
+            operms = '664'
         # do not overwrite specified configfiles if they exist
         if (f in do_not_overwrite and os.path.isfile(target)):
             printScript(' Success!', '', True, True, False, len(msg))
@@ -100,7 +106,7 @@ for f in os.listdir(constants.TPLDIR):
         with open(target, 'w') as outfile:
             outfile.write(setupComment())
             outfile.write(filedata)
-        os.system('chmod 664 ' + target)
+        os.system('chmod ' + operms + ' ' + target)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))

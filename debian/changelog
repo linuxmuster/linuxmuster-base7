@@ -1,3 +1,17 @@
+linuxmuster-base7 (7.0.15-0ubuntu0) lmn7-testing; urgency=low
+
+  * postinst: cacert.pem copy fix.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 09 Nov 2018 20:40:22 +0100
+
+linuxmuster-base7 (7.0.14-0ubuntu0) lmn7-testing; urgency=low
+
+  * updated copyright file.
+  * providing copy of cacert.pem in /var/lib/samba/@@domainname@@/tls for clients.
+  * added sample logon scripts for windows and linux clients.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 31 Oct 2018 17:26:45 +0100
+
 linuxmuster-base7 (7.0.13-0ubuntu0) lmn7-testing; urgency=low
 
   * renew sophomorix.conf during setup.

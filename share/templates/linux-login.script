@@ -1,0 +1,11 @@
+# /var/lib/samba/sysvol/@@domainname@@/scripts/linux/login.script
+#
+# thomas@linuxmuster.net
+# 20181031
+#
+# This example will be sourced as a bash script on the linux client when the
+# user logs in. All environment variables from previous sourced login scripts
+# on the client are present.
+#
+# Simply put in your own login stuff here. :-)
+#

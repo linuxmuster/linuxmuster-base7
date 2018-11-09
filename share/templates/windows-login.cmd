@@ -1,9 +1,9 @@
-REM /var/lib/samba/sysvol/@@domainname@@/scripts/default-school.cmd
+REM /var/lib/samba/sysvol/@@domainname@@/scripts/windows/login.cmd
 REM
-REM netlogon script for windows
+REM example netlogon script for windows
 REM
 REM thomas@linuxmuster.net
-REM 20180625
+REM 20181031
 REM
 
 C:

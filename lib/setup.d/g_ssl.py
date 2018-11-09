@@ -109,6 +109,12 @@ for item in certlist:
 # concenate firewall fullchain cert
 subProc('cat ' + constants.FWFULLCHAIN.replace('.fullchain.', '.cert.') + ' ' + constants.CACERT + ' > ' + constants.FWFULLCHAIN, logfile)
 
+# copy cacert.pem to sysvol for clients
+sysvoltlsdir = constants.SYSVOLTLSDIR.replace('@@domainname@@', domainname)
+sysvolpemfile = sysvoltlsdir + '/' + os.path.basename(constants.CACERT)
+subProc('mkdir -p ' + sysvoltlsdir, logfile)
+subProc('cp ' + constants.CACERT + ' ' + sysvolpemfile, logfile)
+
 # permissions
 msg = 'Ensure key and certificate permissions '
 printScript(msg, '', False, False, True)
