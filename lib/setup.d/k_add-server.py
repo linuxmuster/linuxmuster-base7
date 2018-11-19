@@ -2,7 +2,7 @@
 #
 # add additional servers to devices.csv
 # thomas@linuxmuster.net
-# 20180715
+# 20181119
 #
 
 import configparser
@@ -37,6 +37,7 @@ try:
     opsiip = setup.get('setup', 'opsiip')
     mailip = setup.get('setup', 'mailip')
     dockerip = setup.get('setup', 'dockerip')
+    servername = setup.get('setup', 'servername')
     serverip = setup.get('setup', 'serverip')
     rc, devices = readTextfile(constants.WIMPORTDATA)
     printScript(' Success!', '', True, True, False, len(msg))
@@ -85,6 +86,8 @@ def addServerDevice(hostname, mac, ip, devices):
 # collect array
 device_array = []
 
+# server
+device_array.append((servername, serverip))
 # firewall
 device_array.append(('firewall', firewallip))
 # opsi
