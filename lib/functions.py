@@ -363,16 +363,6 @@ def getSftp(ip, remotefile, localfile, secret=''):
     ssh.close()
     return True
 
-# download firewall config.xml
-def getFwConfig(firewallip, secret=''):
-    printScript('Downloading firewall configuration:')
-    rc = getSftp(firewallip, constants.FWCONFREMOTE, constants.FWCONFLOCAL, secret)
-    if rc:
-        printScript('* Download finished successfully.')
-    else:
-        printScript('* Download failed!')
-    return rc
-
 # upload per sftp
 def putSftp(ip, localfile, remotefile, secret=''):
     try:
@@ -392,6 +382,53 @@ def putSftp(ip, localfile, remotefile, secret=''):
     ftp.close()
     ssh.close()
     return True
+
+# check firewall (OPNSense, pfSense) and version
+def getFwInfo(firewallip, secret=''):
+    # establish connection
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        if secret !='':
+            ssh.connect(firewallip, port=22, username='root', password=secret)
+        else:
+            ssh.connect(firewallip, port=22, username='root')
+    except:
+        return False
+
+    # check if firewall is pfSense
+    command = "cat /etc/platform"
+    (stdin, stdout, stderr) = ssh.exec_command(command)
+    stdout = stdout.readlines()
+    if len(stdout) == 0:
+        platform = "opnsense"
+    else:
+        platform = stdout[0].strip().lower()
+
+    commandPf = "cat /etc/version"
+    commandOPN = "opnsense-version"
+    if platform == "opnsense":
+        (stdin, stdout, stderr) = ssh.exec_command(commandOPN)
+        version = stdout.readlines()[0].strip()
+    elif platform == "pfsense":
+        (stdin, stdout, stderr) = ssh.exec_command(commandPf)
+        version = stdout.readlines()[0].strip()
+    else:
+        version = "UNKOWN"
+
+    ssh.close()
+    # return platform and version
+    return [platform, version]
+
+# download firewall config.xml
+def getFwConfig(firewallip, secret=''):
+    printScript('Downloading firewall configuration:')
+    rc = getSftp(firewallip, constants.FWCONFREMOTE, constants.FWCONFLOCAL, secret)
+    if rc:
+        printScript('* Download finished successfully.')
+    else:
+        printScript('* Download failed!')
+    return rc
 
 # upload firewall config
 def putFwConfig(firewallip, secret=''):
