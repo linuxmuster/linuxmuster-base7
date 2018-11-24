@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.0.18-0ubuntu0) lmn7-testing; urgency=low
+
+  * setup, samba-provisioning: samba services fix (see #31 & #32).
+  * setup, add_server: fix wait for ping.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 24 Nov 2018 21:47:39 +0100
+
 linuxmuster-base7 (7.0.17-0ubuntu0) lmn7-testing; urgency=low
 
   * setup: fix default opsi and docker ips in lan firewall rules.

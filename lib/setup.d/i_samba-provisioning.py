@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20180713
+# 20181124
 #
 
 import configparser
@@ -28,7 +28,7 @@ msg = 'Stopping samba services '
 printScript(msg, '', False, False, True)
 
 #services = ['winbind', 'samba-ad-dc', 'smbd', 'nmbd']
-services = ['winbind', 'samba-ad-dc', 'smbd', 'systemd-resolved', 'samba-ad-dc']
+services = ['winbind', 'samba-ad-dc', 'smbd', 'nmbd', 'systemd-resolved', 'samba-ad-dc']
 try:
     for service in services:
         subProc('systemctl stop ' + service + '.service', logfile)
@@ -110,12 +110,14 @@ except:
     sys.exit(1)
 
 # restart services
-msg = 'Restarting samba services '
+msg = 'Enabling samba services '
 printScript(msg, '', False, False, True)
 try:
     subProc('systemctl daemon-reload', logfile)
     for service in services:
         subProc('systemctl stop ' + service, logfile)
+    subProc('systemctl mask smbd.service', logfile)
+    subProc('systemctl mask nmbd.service', logfile)
     # start only samba-ad-dc service
     subProc('systemctl unmask samba-ad-dc.service', logfile)
     subProc('systemctl enable samba-ad-dc.service', logfile)
@@ -179,6 +181,7 @@ msg = 'Starting samba ad dc service '
 printScript(msg, '', False, False, True)
 try:
     subProc('systemctl start samba-ad-dc.service', logfile)
+    subProc('sleep 5', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

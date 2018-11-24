@@ -2,7 +2,7 @@
 #
 # add additional servers to devices.csv
 # thomas@linuxmuster.net
-# 20181119
+# 20181124
 #
 
 import configparser
@@ -60,11 +60,25 @@ def getRandomMac(devices):
 # get mac address from arp cache
 def getMacFromArp(ip):
     mac = ''
-    subProc('ping -c2 ' + ip, logfile)
-    pid = Popen(["arp", "-n", ip], stdout=PIPE)
-    arpout = pid.communicate()[0]
-    mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})", str(arpout)).groups()[0]
-    return mac.upper()
+    c = 0
+    max = 10
+    while mac == '':
+        if c > 0:
+            os.system('sleep 15')
+        subProc('ping -c2 ' + ip, logfile)
+        pid = Popen(["arp", "-n", ip], stdout=PIPE)
+        arpout = ''
+        arpout = pid.communicate()[0]
+        if arpout != '':
+            mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})", str(arpout)).groups()[0]
+            break
+        c = c + 1
+        if c > max:
+            break
+    if mac == '':
+        return mac
+    else:
+        return mac.upper()
 
 # add devices entry
 def addServerDevice(hostname, mac, ip, devices):
