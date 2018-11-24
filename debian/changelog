@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.17-0ubuntu0) lmn7-testing; urgency=low
+
+  * setup: fix default opsi and docker ips in lan firewall rules.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 24 Nov 2018 20:20:28 +0100
+
 linuxmuster-base7 (7.0.16-0ubuntu0) lmn7-testing; urgency=low
 
   * setup: add server entry in devices.csv (#43).

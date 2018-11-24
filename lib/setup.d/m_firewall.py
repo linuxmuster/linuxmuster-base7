@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20180713
+# 20181124
 #
 
 import bcrypt
@@ -72,9 +72,9 @@ def main():
 
     # dummy ip addresses
     if not isValidHostIpv4(opsiip):
-        opsiip = network.split('.')[0] + '.' + network.split('.')[1] + '.' + network.split('.')[2] + '.2'
+        opsiip = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.2'
     if not isValidHostIpv4(dockerip):
-        dockerip = network.split('.')[0] + '.' + network.split('.')[1] + '.' + network.split('.')[2] + '.3'
+        dockerip = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.3'
 
     # get current config
     rc = getFwConfig(firewallip, constants.ROOTPW)
