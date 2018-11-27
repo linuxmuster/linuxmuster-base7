@@ -16,6 +16,7 @@ from functions import printScript
 from functions import readTextfile
 from functions import writeTextfile
 from functions import isValidHostIpv4
+from functions import isValidMac
 from functions import subProc
 from subprocess import Popen, PIPE
 from uuid import getnode
@@ -62,23 +63,22 @@ def getMacFromArp(ip):
     mac = ''
     c = 0
     max = 10
-    while mac == '':
+    while not isValidMac(mac):
         if c > 0:
             os.system('sleep 15')
         subProc('ping -c2 ' + ip, logfile)
         pid = Popen(["arp", "-n", ip], stdout=PIPE)
-        arpout = ''
         arpout = pid.communicate()[0]
-        if arpout != '':
+        try:
             mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})", str(arpout)).groups()[0]
-            break
+            if isValidMac(mac):
+                return mac.upper()
+        except:
+            mac = ''
         c = c + 1
         if c > max:
             break
-    if mac == '':
-        return mac
-    else:
-        return mac.upper()
+    return mac
 
 # add devices entry
 def addServerDevice(hostname, mac, ip, devices):

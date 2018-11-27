@@ -240,7 +240,7 @@
     <kill_states>1</kill_states>
     <backupcount>60</backupcount>
     <crypto_hardware>aesni</crypto_hardware>
-    <language>de_DE</language>
+    @@language@@
     <rulesetoptimization>basic</rulesetoptimization>
     <maximumstates/>
     <maximumfrags/>
@@ -323,16 +323,41 @@
       <interface>lan</interface>
       <ipprotocol>inet</ipprotocol>
       <statetype>keep state</statetype>
-      <descr>Server: ACCEPT</descr>
+      <descr>Allow Web-Proxy-Access</descr>
+      <protocol>tcp</protocol>
       <source>
-        <address>@@serverip@@</address>
+        <any>1</any>
+      </source>
+      <destination>
+        <network>lanip</network>
+        <port>3128</port>
+      </destination>
+      <updated>
+        <username>root@@@serverip@@</username>
+        <time>1543334054.0884</time>
+        <description>/firewall_rules_edit.php made changes</description>
+      </updated>
+      <created>
+        <username>root@@@serverip@@</username>
+        <time>1502370804,8546</time>
+        <description>/firewall_rules_edit.php made changes</description>
+      </created>
+    </rule>
+    <rule>
+      <type>pass</type>
+      <interface>lan</interface>
+      <ipprotocol>inet</ipprotocol>
+      <statetype>keep state</statetype>
+      <descr>Allow NoProxy-Group</descr>
+      <source>
+        <address>NoProxy</address>
       </source>
       <destination>
         <any>1</any>
       </destination>
       <updated>
         <username>root@@@serverip@@</username>
-        <time>1502136414,2508</time>
+        <time>1543334093.1302</time>
         <description>/firewall_rules_edit.php made changes</description>
       </updated>
       <created>
@@ -346,53 +371,7 @@
       <interface>lan</interface>
       <ipprotocol>inet</ipprotocol>
       <statetype>keep state</statetype>
-      <descr>OPSI: ACCEPT</descr>
-      <source>
-        <address>@@opsiip@@</address>
-      </source>
-      <destination>
-        <any>1</any>
-      </destination>
-      <updated>
-        <username>root@@@serverip@@</username>
-        <time>1502136476,0749</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </updated>
-      <created>
-        <username>root@@@serverip@@</username>
-        <time>1502136288,6916</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </created>
-    </rule>
-    <rule>
-      <type>pass</type>
-      <interface>lan</interface>
-      <ipprotocol>inet</ipprotocol>
-      <statetype>keep state</statetype>
-      <descr>Docker: ACCEPT</descr>
-      <source>
-        <address>@@dockerip@@</address>
-      </source>
-      <destination>
-        <any>1</any>
-      </destination>
-      <updated>
-        <username>root@@@serverip@@</username>
-        <time>1502136476,0749</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </updated>
-      <created>
-        <username>root@@@serverip@@</username>
-        <time>1502136288,6916</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </created>
-    </rule>
-    <rule>
-      <type>pass</type>
-      <interface>lan</interface>
-      <ipprotocol>inet</ipprotocol>
-      <statetype>keep state</statetype>
-      <descr>LAN: ACCEPT</descr>
+      <descr>Allow entire LAN</descr>
       <disabled>1</disabled>
       <source>
         <address>@@network@@/@@bitmask@@</address>
@@ -402,37 +381,12 @@
       </destination>
       <updated>
         <username>root@@@serverip@@</username>
-        <time>1525283871.4548</time>
+        <time>1543334283.4894</time>
         <description>/firewall_rules_edit.php made changes</description>
       </updated>
       <created>
         <username>root@@@serverip@@</username>
-        <time>1525283871.4548</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </created>
-    </rule>
-    <rule>
-      <type>pass</type>
-      <interface>lan</interface>
-      <ipprotocol>inet</ipprotocol>
-      <statetype>keep state</statetype>
-      <descr>Zugriff auf Firewall-Proxy</descr>
-      <protocol>tcp</protocol>
-      <source>
-        <any>1</any>
-      </source>
-      <destination>
-        <network>lanip</network>
-        <port>3128</port>
-      </destination>
-      <updated>
-        <username>root@@@serverip@@</username>
-        <time>1502370994,1051</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </updated>
-      <created>
-        <username>root@@@serverip@@</username>
-        <time>1502370804,8546</time>
+        <time>1543255595.3165</time>
         <description>/firewall_rules_edit.php made changes</description>
       </created>
     </rule>
@@ -441,7 +395,7 @@
       <interface>lan</interface>
       <ipprotocol>inet</ipprotocol>
       <statetype>keep state</statetype>
-      <descr>GR&#xDC;N -&gt; ROT: DROP</descr>
+      <descr>Default deny LAN</descr>
       <source>
         <network>lan</network>
       </source>
@@ -450,7 +404,7 @@
       </destination>
       <updated>
         <username>root@@@serverip@@</username>
-        <time>1502135890,4737</time>
+        <time>1543334378.8434</time>
         <description>/firewall_rules_edit.php made changes</description>
       </updated>
       <created>
@@ -687,6 +641,21 @@
       <ADKerberosImplementation>W2008</ADKerberosImplementation>
       <KerberosHostName>FIREWALL-K</KerberosHostName>
     </ProxySSO>
+    <Firewall>
+      <Alias version="1.0.0">
+        <aliases>
+          <alias uuid="096aad99-513a-496e-b773-e84d1d160f96">
+            <enabled>1</enabled>
+            <name>NoProxy</name>
+            <type>host</type>
+            <proto/>
+            <updatefreq/>
+            <content>@@aliascontent@@</content>
+            <description>NoProxy-Group</description>
+          </alias>
+        </aliases>
+      </Alias>
+    </Firewall>
   </OPNsense>
   <ppps/>
   <ca>

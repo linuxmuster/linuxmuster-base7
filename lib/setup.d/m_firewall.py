@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20181124
+# 20181127
 #
 
 import bcrypt
@@ -100,6 +100,11 @@ def main():
         # save interface configuration
         wanconfig = str(soup.findAll('wan')[0])
         lanconfig = str(soup.findAll('lan')[0])
+        # save language information
+        try:
+            language = str(soup.findAll('language')[0])
+        except:
+            language = ''
         # save gateway configuration
         try:
             gwconfig = str(soup.findAll('gateways')[0])
@@ -133,6 +138,23 @@ def main():
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
 
+    # create list of first ten network ips for aliascontent (NoProxy group in firewall)
+    aliascontent = ''
+    netpre = network.split('.')[0] + '.' + network.split('.')[1] + '.' + network.split('.')[2] + '.'
+    c = 0
+    max = 10
+    while c < max:
+        c = c + 1
+        aliasip = netpre + str(c)
+        if aliascontent == '':
+            aliascontent = aliasip
+        else:
+            aliascontent = aliascontent + '\n' + aliasip
+    # add server ips if not already collected
+    for aliasip in [serverip, opsiip, dockerip]:
+        if not aliasip in aliascontent:
+            aliascontent = aliascontent + '\n' + aliasip
+
     # create new firewall configuration
     msg = '* Creating xml configuration file '
     printScript(msg, '', False, False, True)
@@ -159,13 +181,13 @@ def main():
         content = content.replace('@@firewallip@@', firewallip)
         content = content.replace('@@network@@', network)
         content = content.replace('@@bitmask@@', bitmask)
-        content = content.replace('@@opsiip@@', opsiip)
-        content = content.replace('@@dockerip@@', dockerip)
+        content = content.replace('@@aliascontent@@', aliascontent)
         content = content.replace('@@fwrootpw_hashed@@', fwrootpw_hashed)
         content = content.replace('@@authorizedkey@@', authorizedkey)
         content = content.replace('@@apikey@@', apikey)
         content = content.replace('@@apisecret_hashed@@', apisecret_hashed)
         content = content.replace('@@binduserpw@@', binduserpw)
+        content = content.replace('@@language@@', language)
         content = content.replace('@@timezone@@', timezone)
         content = content.replace('@@cacertb64@@', cacertb64)
         content = content.replace('@@fwcertb64@@', fwcertb64)

@@ -1,3 +1,17 @@
+linuxmuster-base7 (7.0.20-0ubuntu0) lmn7-testing; urgency=low
+
+  * reconfiguring webui package at the end of setup (#49).
+  * added a NoProxy group with first ten ip addresses of network to firewall (#47).
+  * restore original language setting of firewall during setup (#40).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 27 Nov 2018 19:25:02 +0100
+
+linuxmuster-base7 (7.0.19-0ubuntu0) lmn7-testing; urgency=low
+
+  * setup, add_server: better fix wait for ping.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 24 Nov 2018 23:27:00 +0100
+
 linuxmuster-base7 (7.0.18-0ubuntu0) lmn7-testing; urgency=low
 
   * setup, samba-provisioning: samba services fix (see #31 & #32).
