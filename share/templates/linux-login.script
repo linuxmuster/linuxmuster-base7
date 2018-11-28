@@ -1,7 +1,7 @@
-# /var/lib/samba/sysvol/@@domainname@@/scripts/linux/login.script
+# /var/lib/samba/sysvol/@@domainname@@/scripts/default-school/linux/login.script
 #
 # thomas@linuxmuster.net
-# 20181031
+# 20181128
 #
 # This example will be sourced as a bash script on the linux client when the
 # user logs in. All environment variables from previous sourced login scripts

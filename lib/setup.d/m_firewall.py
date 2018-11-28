@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20181127
+# 20181128
 #
 
 import bcrypt
@@ -91,7 +91,7 @@ def main():
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
 
-    # get root password hash
+    # get values from current firewall config
     msg = '* Reading current config '
     printScript(msg, '', False, False, True)
     try:
@@ -105,6 +105,13 @@ def main():
             language = str(soup.findAll('language')[0])
         except:
             language = ''
+        # second try get language from locale settings
+        if language == '':
+            try:
+                lang = os.environ['LANG'].split('.')[0]
+            except:
+                lang = 'en_US'
+            language = '<language>' + lang + '</language>'
         # save gateway configuration
         try:
             gwconfig = str(soup.findAll('gateways')[0])
@@ -115,6 +122,12 @@ def main():
             dnsconfig = str(soup.findAll('dnsserver')[0])
         except:
             dnsconfig = ''
+        # add server as dnsserver
+        dnsserver = '<dnsserver>' + serverip + '<dnsserver>'
+        if dnsconfig == '':
+            dnsconfig = dnsserver
+        else:
+            dnsconfig = dnsserver + '/n    ' + dnsconfig
         # save opt1 configuration if present
         try:
             opt1config = str(soup.findAll('opt1')[0])
@@ -220,7 +233,7 @@ def main():
     #os.unlink(fwconftmp)
 
     # reboot firewall
-    rc = sshExec(firewallip, 'configctl firmware reboot', adminpw)
+    rc = sshExec(firewallip, 'configctl firmware reboot', constants.ROOTPW)
     if not rc:
         sys.exit(1)
 

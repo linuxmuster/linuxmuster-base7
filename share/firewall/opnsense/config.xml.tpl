@@ -316,6 +316,126 @@
     <outbound>
       <mode>automatic</mode>
     </outbound>
+    <rule>
+      <protocol>tcp</protocol>
+      <interface>wan</interface>
+      <ipprotocol>inet</ipprotocol>
+      <descr>SSH -&gt; Server</descr>
+      <tag/>
+      <tagged/>
+      <poolopts/>
+      <associated-rule-id>nat_5bfd900a9cd1a3.75884588</associated-rule-id>
+      <target>@@serverip@@</target>
+      <local-port>22</local-port>
+      <source>
+        <any>1</any>
+      </source>
+      <destination>
+        <any>1</any>
+        <port>22</port>
+      </destination>
+      <updated>
+        <username>root@@@serverip@@</username>
+        <time>1543413828.6859</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </updated>
+      <created>
+        <username>root@@@serverip@@</username>
+        <time>1543344138.6426</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </created>
+      <disabled>1</disabled>
+    </rule>
+    <rule>
+      <protocol>tcp</protocol>
+      <interface>wan</interface>
+      <ipprotocol>inet</ipprotocol>
+      <descr>LDAPS -&gt; Server</descr>
+      <tag/>
+      <tagged/>
+      <poolopts/>
+      <associated-rule-id>nat_5bfea0d0888b59.67132679</associated-rule-id>
+      <target>@@serverip@@</target>
+      <local-port>636</local-port>
+      <source>
+        <any>1</any>
+      </source>
+      <destination>
+        <any>1</any>
+        <port>636</port>
+      </destination>
+      <updated>
+        <username>root@@@serverip@@</username>
+        <time>1543413968.5594</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </updated>
+      <created>
+        <username>root@@@serverip@@</username>
+        <time>1543413968.5594</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </created>
+      <disabled>1</disabled>
+    </rule>
+    <rule>
+      <protocol>tcp</protocol>
+      <interface>wan</interface>
+      <ipprotocol>inet</ipprotocol>
+      <descr>SMTP -&gt; Docker</descr>
+      <tag/>
+      <tagged/>
+      <poolopts/>
+      <associated-rule-id>nat_5bfea0322f9502.91166245</associated-rule-id>
+      <target>@@dockerip@@</target>
+      <local-port>25</local-port>
+      <source>
+        <any>1</any>
+      </source>
+      <destination>
+        <any>1</any>
+        <port>25</port>
+      </destination>
+      <updated>
+        <username>root@@@serverip@@</username>
+        <time>1543413810.1951</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </updated>
+      <created>
+        <username>root@@@serverip@@</username>
+        <time>1543413810.1952</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </created>
+      <disabled>1</disabled>
+    </rule>
+    <rule>
+      <protocol>tcp</protocol>
+      <interface>wan</interface>
+      <ipprotocol>inet</ipprotocol>
+      <descr>HTTPS -&gt; Docker</descr>
+      <tag/>
+      <tagged/>
+      <poolopts/>
+      <associated-rule-id>nat_5bfea103848d41.41230441</associated-rule-id>
+      <target>@@dockerip@@</target>
+      <local-port>443</local-port>
+      <source>
+        <any>1</any>
+      </source>
+      <destination>
+        <any>1</any>
+        <port>443</port>
+      </destination>
+      <updated>
+        <username>root@@@serverip@@</username>
+        <time>1543414019.5431</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </updated>
+      <created>
+        <username>root@@@serverip@@</username>
+        <time>1543414019.5431</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </created>
+      <disabled>1</disabled>
+    </rule>
   </nat>
   <filter>
     <rule>
@@ -438,6 +558,82 @@
         <any/>
       </destination>
       <disabled>1</disabled>
+    </rule>
+    <rule>
+      <source>
+        <any>1</any>
+      </source>
+      <interface>wan</interface>
+      <protocol>tcp</protocol>
+      <ipprotocol>inet</ipprotocol>
+      <destination>
+        <address>@@serverip@@</address>
+        <port>22</port>
+      </destination>
+      <descr>NAT SSH -&gt; Server</descr>
+      <associated-rule-id>nat_5bfd900a9cd1a3.75884588</associated-rule-id>
+      <created>
+        <username>root@@@serverip@@</username>
+        <time>1543344138.6424</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </created>
+    </rule>
+    <rule>
+      <source>
+        <any>1</any>
+      </source>
+      <interface>wan</interface>
+      <protocol>tcp</protocol>
+      <ipprotocol>inet</ipprotocol>
+      <destination>
+        <address>@@dockerip@@</address>
+        <port>25</port>
+      </destination>
+      <descr>NAT SMTP -&gt; Docker</descr>
+      <associated-rule-id>nat_5bfea0322f9502.91166245</associated-rule-id>
+      <created>
+        <username>root@@@serverip@@</username>
+        <time>1543413810.1949</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </created>
+    </rule>
+    <rule>
+      <source>
+        <any>1</any>
+      </source>
+      <interface>wan</interface>
+      <protocol>tcp</protocol>
+      <ipprotocol>inet</ipprotocol>
+      <destination>
+        <address>@@serverip@@</address>
+        <port>636</port>
+      </destination>
+      <descr>NAT LDAPS -&gt; Server</descr>
+      <associated-rule-id>nat_5bfea0d0888b59.67132679</associated-rule-id>
+      <created>
+        <username>root@@@serverip@@</username>
+        <time>1543413968.5593</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </created>
+    </rule>
+    <rule>
+      <source>
+        <any>1</any>
+      </source>
+      <interface>wan</interface>
+      <protocol>tcp</protocol>
+      <ipprotocol>inet</ipprotocol>
+      <destination>
+        <address>@@dockerip@@</address>
+        <port>443</port>
+      </destination>
+      <descr>NAT HTTPS -&gt; Docker</descr>
+      <associated-rule-id>nat_5bfea103848d41.41230441</associated-rule-id>
+      <created>
+        <username>root@@@serverip@@</username>
+        <time>1543414019.543</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </created>
     </rule>
   </filter>
   <rrd>

@@ -1,3 +1,12 @@
+linuxmuster-base7 (7.0.21-0ubuntu0) lmn7-testing; urgency=low
+
+  * firewall language settings optimations (#40).
+  * fixed ssh connection in firewall setup.
+  * added firewall nat rules examples.
+  * expanded script path with default-school in windows and linux login script examples.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 28 Nov 2018 17:22:57 +0100
+
 linuxmuster-base7 (7.0.20-0ubuntu0) lmn7-testing; urgency=low
 
   * reconfiguring webui package at the end of setup (#49).
