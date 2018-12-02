@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20181128
+# 20181130
 #
 
 import bcrypt
@@ -91,15 +91,15 @@ def main():
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
 
-    # get values from current firewall config
+    # get root password hash
     msg = '* Reading current config '
     printScript(msg, '', False, False, True)
     try:
         rc, content = readTextfile(fwconftmp)
         soup = BeautifulSoup(content, 'lxml')
-        # save interface configuration
-        wanconfig = str(soup.findAll('wan')[0])
-        lanconfig = str(soup.findAll('lan')[0])
+        # save certain configuration values for later use
+        sysctl = str(soup.findAll('sysctl')[0])
+        interfaces = str(soup.findAll('interfaces')[0])
         # save language information
         try:
             language = str(soup.findAll('language')[0])
@@ -123,11 +123,11 @@ def main():
         except:
             dnsconfig = ''
         # add server as dnsserver
-        dnsserver = '<dnsserver>' + serverip + '<dnsserver>'
+        dnsserver = '<dnsserver>' + serverip + '</dnsserver>'
         if dnsconfig == '':
             dnsconfig = dnsserver
         else:
-            dnsconfig = dnsserver + '/n    ' + dnsconfig
+            dnsconfig = dnsserver + '\n    ' + dnsconfig
         # save opt1 configuration if present
         try:
             opt1config = str(soup.findAll('opt1')[0])
@@ -182,15 +182,15 @@ def main():
         # read template
         rc, content = readTextfile(fwconftpl)
         # replace placeholders with values
+        content = content.replace('@@sysctl@@', sysctl)
         content = content.replace('@@servername@@', servername)
         content = content.replace('@@domainname@@', domainname)
         content = content.replace('@@basedn@@', basedn)
-        content = content.replace('@@wanconfig@@', wanconfig)
+        content = content.replace('@@interfaces@@', interfaces)
         content = content.replace('@@dnsconfig@@', dnsconfig)
         content = content.replace('@@gwconfig@@', gwconfig)
-        content = content.replace('@@lanconfig@@', lanconfig)
-        content = content.replace('@@opt1config@@', opt1config)
         content = content.replace('@@serverip@@', serverip)
+        content = content.replace('@@dockerip@@', dockerip)
         content = content.replace('@@firewallip@@', firewallip)
         content = content.replace('@@network@@', network)
         content = content.replace('@@bitmask@@', bitmask)
@@ -233,7 +233,7 @@ def main():
     #os.unlink(fwconftmp)
 
     # reboot firewall
-    rc = sshExec(firewallip, 'configctl firmware reboot', constants.ROOTPW)
+    rc = sshExec(firewallip, 'configctl firmware reboot', adminpw)
     if not rc:
         sys.exit(1)
 

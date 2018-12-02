@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.0.22-0ubuntu0) lmn7-testing; urgency=low
+
+  * removed windows and linux login script examples (#51).
+  * firewall config fixes and improvements.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 02 Dec 2018 15:22:52 +0100
+
 linuxmuster-base7 (7.0.21-0ubuntu0) lmn7-testing; urgency=low
 
   * firewall language settings optimations (#40).

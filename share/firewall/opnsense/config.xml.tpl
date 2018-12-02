@@ -2,188 +2,7 @@
 <opnsense>
   <version>11.2</version>
   <theme>opnsense</theme>
-  <sysctl>
-    <item>
-      <descr>Disable the pf ftp proxy handler.</descr>
-      <tunable>debug.pfftpproxy</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Increase UFS read-ahead speeds to match current state of hard drives and NCQ. More information here: http://ivoras.sharanet.org/blog/tree/2010-11-19.ufs-read-ahead.html</descr>
-      <tunable>vfs.read_max</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Set the ephemeral port range to be lower.</descr>
-      <tunable>net.inet.ip.portrange.first</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Drop packets to closed TCP ports without returning a RST</descr>
-      <tunable>net.inet.tcp.blackhole</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Do not send ICMP port unreachable messages for closed UDP ports</descr>
-      <tunable>net.inet.udp.blackhole</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Randomize the ID field in IP packets (default is 0: sequential IP IDs)</descr>
-      <tunable>net.inet.ip.random_id</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>
-        Source routing is another way for an attacker to try to reach non-routable addresses behind your box.
-        It can also be used to probe for information about your internal networks. These functions come enabled
-        as part of the standard FreeBSD core system.
-      </descr>
-      <tunable>net.inet.ip.sourceroute</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>
-        Source routing is another way for an attacker to try to reach non-routable addresses behind your box.
-        It can also be used to probe for information about your internal networks. These functions come enabled
-        as part of the standard FreeBSD core system.
-      </descr>
-      <tunable>net.inet.ip.accept_sourceroute</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>
-        Redirect attacks are the purposeful mass-issuing of ICMP type 5 packets. In a normal network, redirects
-        to the end stations should not be required. This option enables the NIC to drop all inbound ICMP redirect
-        packets without returning a response.
-      </descr>
-      <tunable>net.inet.icmp.drop_redirect</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>
-        This option turns off the logging of redirect packets because there is no limit and this could fill
-        up your logs consuming your whole hard drive.
-      </descr>
-      <tunable>net.inet.icmp.log_redirect</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Drop SYN-FIN packets (breaks RFC1379, but nobody uses it anyway)</descr>
-      <tunable>net.inet.tcp.drop_synfin</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Enable sending IPv4 redirects</descr>
-      <tunable>net.inet.ip.redirect</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Enable sending IPv6 redirects</descr>
-      <tunable>net.inet6.ip6.redirect</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Enable privacy settings for IPv6 (RFC 4941)</descr>
-      <tunable>net.inet6.ip6.use_tempaddr</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Prefer privacy addresses and use them over the normal addresses</descr>
-      <tunable>net.inet6.ip6.prefer_tempaddr</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Generate SYN cookies for outbound SYN-ACK packets</descr>
-      <tunable>net.inet.tcp.syncookies</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Maximum incoming/outgoing TCP datagram size (receive)</descr>
-      <tunable>net.inet.tcp.recvspace</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Maximum incoming/outgoing TCP datagram size (send)</descr>
-      <tunable>net.inet.tcp.sendspace</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>IP Fastforwarding</descr>
-      <tunable>net.inet.ip.fastforwarding</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Do not delay ACK to try and piggyback it onto a data packet</descr>
-      <tunable>net.inet.tcp.delayed_ack</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Maximum outgoing UDP datagram size</descr>
-      <tunable>net.inet.udp.maxdgram</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Handling of non-IP packets which are not passed to pfil (see if_bridge(4))</descr>
-      <tunable>net.link.bridge.pfil_onlyip</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Set to 0 to disable filtering on the incoming and outgoing member interfaces.</descr>
-      <tunable>net.link.bridge.pfil_member</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Set to 1 to enable filtering on the bridge interface</descr>
-      <tunable>net.link.bridge.pfil_bridge</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Allow unprivileged access to tap(4) device nodes</descr>
-      <tunable>net.link.tap.user_open</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Randomize PID's (see src/sys/kern/kern_fork.c: sysctl_kern_randompid())</descr>
-      <tunable>kern.randompid</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Maximum size of the IP input queue</descr>
-      <tunable>net.inet.ip.intr_queue_maxlen</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Disable CTRL+ALT+Delete reboot from keyboard.</descr>
-      <tunable>hw.syscons.kbd_reboot</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Enable TCP extended debugging</descr>
-      <tunable>net.inet.tcp.log_debug</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Set ICMP Limits</descr>
-      <tunable>net.inet.icmp.icmplim</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>TCP Offload Engine</descr>
-      <tunable>net.inet.tcp.tso</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>UDP Checksums</descr>
-      <tunable>net.inet.udp.checksum</tunable>
-      <value>default</value>
-    </item>
-    <item>
-      <descr>Maximum socket buffer size</descr>
-      <tunable>kern.ipc.maxsockbuf</tunable>
-      <value>default</value>
-    </item>
-  </sysctl>
+  @@sysctl@@
   <system>
     <optimization>normal</optimization>
     <hostname>firewall</hostname>
@@ -272,11 +91,7 @@
     </ssh>
     @@dnsconfig@@
   </system>
-  <interfaces>
-    @@wanconfig@@
-    @@lanconfig@@
-    @@opt1config@@
-  </interfaces>
+  @@interfaces@@
   <dhcpd>
     <lan>
       <range>
@@ -324,7 +139,7 @@
       <tag/>
       <tagged/>
       <poolopts/>
-      <associated-rule-id>nat_5bfd900a9cd1a3.75884588</associated-rule-id>
+      <associated-rule-id>pass</associated-rule-id>
       <target>@@serverip@@</target>
       <local-port>22</local-port>
       <source>
@@ -335,13 +150,13 @@
         <port>22</port>
       </destination>
       <updated>
-        <username>root@@@serverip@@</username>
-        <time>1543413828.6859</time>
+        <username>@@serverip@@</username>
+        <time>1543615437.6122</time>
         <description>/firewall_nat_edit.php made changes</description>
       </updated>
       <created>
-        <username>root@@@serverip@@</username>
-        <time>1543344138.6426</time>
+        <username>linuxmuster</username>
+        <time>1543615418.5415</time>
         <description>/firewall_nat_edit.php made changes</description>
       </created>
       <disabled>1</disabled>
@@ -354,7 +169,8 @@
       <tag/>
       <tagged/>
       <poolopts/>
-      <associated-rule-id>nat_5bfea0d0888b59.67132679</associated-rule-id>
+      <associated-rule-id>pass</associated-rule-id>
+      <disabled>1</disabled>
       <target>@@serverip@@</target>
       <local-port>636</local-port>
       <source>
@@ -365,46 +181,15 @@
         <port>636</port>
       </destination>
       <updated>
-        <username>root@@@serverip@@</username>
-        <time>1543413968.5594</time>
+        <username>linuxmuster</username>
+        <time>1543615569.0833</time>
         <description>/firewall_nat_edit.php made changes</description>
       </updated>
       <created>
-        <username>root@@@serverip@@</username>
-        <time>1543413968.5594</time>
+        <username>linuxmuster</username>
+        <time>1543615569.0833</time>
         <description>/firewall_nat_edit.php made changes</description>
       </created>
-      <disabled>1</disabled>
-    </rule>
-    <rule>
-      <protocol>tcp</protocol>
-      <interface>wan</interface>
-      <ipprotocol>inet</ipprotocol>
-      <descr>SMTP -&gt; Docker</descr>
-      <tag/>
-      <tagged/>
-      <poolopts/>
-      <associated-rule-id>nat_5bfea0322f9502.91166245</associated-rule-id>
-      <target>@@dockerip@@</target>
-      <local-port>25</local-port>
-      <source>
-        <any>1</any>
-      </source>
-      <destination>
-        <any>1</any>
-        <port>25</port>
-      </destination>
-      <updated>
-        <username>root@@@serverip@@</username>
-        <time>1543413810.1951</time>
-        <description>/firewall_nat_edit.php made changes</description>
-      </updated>
-      <created>
-        <username>root@@@serverip@@</username>
-        <time>1543413810.1952</time>
-        <description>/firewall_nat_edit.php made changes</description>
-      </created>
-      <disabled>1</disabled>
     </rule>
     <rule>
       <protocol>tcp</protocol>
@@ -414,7 +199,8 @@
       <tag/>
       <tagged/>
       <poolopts/>
-      <associated-rule-id>nat_5bfea103848d41.41230441</associated-rule-id>
+      <associated-rule-id>pass</associated-rule-id>
+      <disabled>1</disabled>
       <target>@@dockerip@@</target>
       <local-port>443</local-port>
       <source>
@@ -425,16 +211,45 @@
         <port>443</port>
       </destination>
       <updated>
-        <username>root@@@serverip@@</username>
-        <time>1543414019.5431</time>
+        <username>linuxmuster</username>
+        <time>1543615614.6487</time>
         <description>/firewall_nat_edit.php made changes</description>
       </updated>
       <created>
-        <username>root@@@serverip@@</username>
-        <time>1543414019.5431</time>
+        <username>linuxmuster</username>
+        <time>1543615614.6487</time>
         <description>/firewall_nat_edit.php made changes</description>
       </created>
+    </rule>
+    <rule>
+      <protocol>tcp</protocol>
+      <interface>wan</interface>
+      <ipprotocol>inet</ipprotocol>
+      <descr>SMTP -&gt; Docker</descr>
+      <tag/>
+      <tagged/>
+      <poolopts/>
+      <associated-rule-id>pass</associated-rule-id>
       <disabled>1</disabled>
+      <target>@@dockerip@@</target>
+      <local-port>25</local-port>
+      <source>
+        <any>1</any>
+      </source>
+      <destination>
+        <any>1</any>
+        <port>25</port>
+      </destination>
+      <updated>
+        <username>linuxmuster</username>
+        <time>1543615644.9298</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </updated>
+      <created>
+        <username>linuxmuster</username>
+        <time>1543615644.9298</time>
+        <description>/firewall_nat_edit.php made changes</description>
+      </created>
     </rule>
   </nat>
   <filter>
@@ -453,12 +268,12 @@
         <port>3128</port>
       </destination>
       <updated>
-        <username>root@@@serverip@@</username>
+        <username>linuxmuster</username>
         <time>1543334054.0884</time>
         <description>/firewall_rules_edit.php made changes</description>
       </updated>
       <created>
-        <username>root@@@serverip@@</username>
+        <username>linuxmuster</username>
         <time>1502370804,8546</time>
         <description>/firewall_rules_edit.php made changes</description>
       </created>
@@ -476,12 +291,12 @@
         <any>1</any>
       </destination>
       <updated>
-        <username>root@@@serverip@@</username>
+        <username>linuxmuster</username>
         <time>1543334093.1302</time>
         <description>/firewall_rules_edit.php made changes</description>
       </updated>
       <created>
-        <username>root@@@serverip@@</username>
+        <username>linuxmuster</username>
         <time>1502136054,2013</time>
         <description>/firewall_rules_edit.php made changes</description>
       </created>
@@ -500,12 +315,12 @@
         <any>1</any>
       </destination>
       <updated>
-        <username>root@@@serverip@@</username>
+        <username>linuxmuster</username>
         <time>1543334283.4894</time>
         <description>/firewall_rules_edit.php made changes</description>
       </updated>
       <created>
-        <username>root@@@serverip@@</username>
+        <username>linuxmuster</username>
         <time>1543255595.3165</time>
         <description>/firewall_rules_edit.php made changes</description>
       </created>
@@ -523,12 +338,12 @@
         <network>wan</network>
       </destination>
       <updated>
-        <username>root@@@serverip@@</username>
+        <username>linuxmuster</username>
         <time>1543334378.8434</time>
         <description>/firewall_rules_edit.php made changes</description>
       </updated>
       <created>
-        <username>root@@@serverip@@</username>
+        <username>linuxmuster</username>
         <time>1502135862,7289</time>
         <description>/firewall_rules_edit.php made changes</description>
       </created>
@@ -558,82 +373,6 @@
         <any/>
       </destination>
       <disabled>1</disabled>
-    </rule>
-    <rule>
-      <source>
-        <any>1</any>
-      </source>
-      <interface>wan</interface>
-      <protocol>tcp</protocol>
-      <ipprotocol>inet</ipprotocol>
-      <destination>
-        <address>@@serverip@@</address>
-        <port>22</port>
-      </destination>
-      <descr>NAT SSH -&gt; Server</descr>
-      <associated-rule-id>nat_5bfd900a9cd1a3.75884588</associated-rule-id>
-      <created>
-        <username>root@@@serverip@@</username>
-        <time>1543344138.6424</time>
-        <description>/firewall_nat_edit.php made changes</description>
-      </created>
-    </rule>
-    <rule>
-      <source>
-        <any>1</any>
-      </source>
-      <interface>wan</interface>
-      <protocol>tcp</protocol>
-      <ipprotocol>inet</ipprotocol>
-      <destination>
-        <address>@@dockerip@@</address>
-        <port>25</port>
-      </destination>
-      <descr>NAT SMTP -&gt; Docker</descr>
-      <associated-rule-id>nat_5bfea0322f9502.91166245</associated-rule-id>
-      <created>
-        <username>root@@@serverip@@</username>
-        <time>1543413810.1949</time>
-        <description>/firewall_nat_edit.php made changes</description>
-      </created>
-    </rule>
-    <rule>
-      <source>
-        <any>1</any>
-      </source>
-      <interface>wan</interface>
-      <protocol>tcp</protocol>
-      <ipprotocol>inet</ipprotocol>
-      <destination>
-        <address>@@serverip@@</address>
-        <port>636</port>
-      </destination>
-      <descr>NAT LDAPS -&gt; Server</descr>
-      <associated-rule-id>nat_5bfea0d0888b59.67132679</associated-rule-id>
-      <created>
-        <username>root@@@serverip@@</username>
-        <time>1543413968.5593</time>
-        <description>/firewall_nat_edit.php made changes</description>
-      </created>
-    </rule>
-    <rule>
-      <source>
-        <any>1</any>
-      </source>
-      <interface>wan</interface>
-      <protocol>tcp</protocol>
-      <ipprotocol>inet</ipprotocol>
-      <destination>
-        <address>@@dockerip@@</address>
-        <port>443</port>
-      </destination>
-      <descr>NAT HTTPS -&gt; Docker</descr>
-      <associated-rule-id>nat_5bfea103848d41.41230441</associated-rule-id>
-      <created>
-        <username>root@@@serverip@@</username>
-        <time>1543414019.543</time>
-        <description>/firewall_nat_edit.php made changes</description>
-      </created>
     </rule>
   </filter>
   <rrd>
@@ -687,7 +426,7 @@
     <column_count>2</column_count>
   </widgets>
   <revision>
-    <username>root@@@serverip@@</username>
+    <username>linuxmuster</username>
     <time>1525283871.4696</time>
     <description>/firewall_rules_edit.php made changes</description>
   </revision>
