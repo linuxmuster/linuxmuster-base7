@@ -1,6 +1,7 @@
 linuxmuster-base7 (7.0.23-0ubuntu0) lmn7-testing; urgency=low
 
   * linuxmuster-import-subnets: fix vanished custom nat rules.
+  * fix "No connection to SAMBA4 AD because of missing cert" (#52).
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 04 Dec 2018 18:59:00 +0100
 

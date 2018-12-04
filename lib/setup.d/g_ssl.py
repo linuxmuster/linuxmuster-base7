@@ -2,7 +2,7 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20180516
+# 20181204
 #
 
 from __future__ import print_function
@@ -35,6 +35,7 @@ try:
     domainname = setup.get('setup', 'domainname')
     sambadomain = setup.get('setup', 'sambadomain')
     realm = setup.get('setup', 'realm')
+    skipfw = setup.getboolean('setup', 'skipfw')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -77,6 +78,9 @@ except:
 
 # iterate through certlist
 for item in certlist:
+    # skip firewall cert
+    if item == 'firewall' and skipfw:
+        continue
     fqdn = item + '.' + domainname
     csrfile = constants.SSLDIR + '/' + item + '.csr'
     keyfile = constants.SSLDIR + '/' + item + '.key.pem'
@@ -107,7 +111,8 @@ for item in certlist:
         sys.exit(1)
 
 # concenate firewall fullchain cert
-subProc('cat ' + constants.FWFULLCHAIN.replace('.fullchain.', '.cert.') + ' ' + constants.CACERT + ' > ' + constants.FWFULLCHAIN, logfile)
+if not skipfw:
+    subProc('cat ' + constants.FWFULLCHAIN.replace('.fullchain.', '.cert.') + ' ' + constants.CACERT + ' > ' + constants.FWFULLCHAIN, logfile)
 
 # copy cacert.pem to sysvol for clients
 sysvoltlsdir = constants.SYSVOLTLSDIR.replace('@@domainname@@', domainname)
