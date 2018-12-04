@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20180618
+# 20181204
 #
 
 import configparser
@@ -292,14 +292,24 @@ def updateFwGw(firewallip, servernet_router, gateway_xml, content):
 
 # update subnet nat rules on firewall
 def updateFwNat(subnets, ipnet_setup, serverip, content):
+  # create array with all nat rules
+  soup = BeautifulSoup(content, 'lxml')
+  fw_nat = soup.findAll('nat')[0]
+  soup = BeautifulSoup(str(fw_nat), 'lxml')
+  # remove old subnet rules from array
   nat_rules = []
+  descr_prefix = 'NAT rule for subnet'
+  for item in soup.findAll('rule'):
+    if not descr_prefix in item:
+      nat_rules.append(item)
+  # add new subnet rules to array
   for item in subnets:
     subnet = item.split(':')[0]
     # skip servernet
     if subnet == ipnet_setup:
       continue
     timestamp = str(datetime.datetime.now(datetime.timezone.utc).timestamp())
-    descr = 'NAT rule for subnet ' + subnet
+    descr = descr_prefix + ' ' + subnet
     nat_rule = nat_rule_xml.replace('@@subnet@@', subnet)
     nat_rule = nat_rule.replace('@@serverip@@', serverip)
     nat_rule = nat_rule.replace('@@descr@@', descr)
