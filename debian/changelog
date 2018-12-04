@@ -4,7 +4,7 @@ linuxmuster-base7 (7.0.23-0ubuntu0) lmn7-testing; urgency=low
   * fix "No connection to SAMBA4 AD because of missing cert" (#52).
   * fix skip-fw setup option.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 04 Dec 2018 20:19:00 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 04 Dec 2018 20:37:57 +0100
 
 linuxmuster-base7 (7.0.22-0ubuntu0) lmn7-testing; urgency=low
 
