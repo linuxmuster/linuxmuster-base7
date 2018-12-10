@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20181204
+# 20181210
 #
 
 import configparser
@@ -10,18 +10,14 @@ import constants
 import csv
 import datetime
 import os
-import paramiko
 import re
-import sys
-import uuid
 import yaml
 
-from bs4 import BeautifulSoup, NavigableString
+from bs4 import BeautifulSoup
 from functions import firewallApi
 from functions import getFwConfig
 from functions import getSftp
 from functions import isValidHostIpv4
-from functions import modIni
 from functions import printScript
 from functions import putFwConfig
 from functions import putSftp
@@ -43,55 +39,31 @@ bitmask_setup = setup.get('setup', 'bitmask')
 network_setup = setup.get('setup', 'network')
 ipnet_setup = network_setup + '/' + bitmask_setup
 
-# templates
-# gateway
-gateways_begin_tag = '<gateways>'
-gateways_end_tag = '</gateways>'
-gateway_xml = """
+
+# template variables
+
+# lan gateway
+gw_lan_descr = 'Interface LAN Gateway'
+gw_lan_xml = """
         <gateway_item>
             <interface>lan</interface>
-            <gateway>@@gateway@@</gateway>
-            <name>@@vlangw@@</name>
+            <gateway>@@gw_ip@@</gateway>
+            <name>@@gw_lan@@</name>
             <weight>1</weight>
             <ipprotocol>inet</ipprotocol>
             <interval></interval>
-            <descr>VLAN Gateway</descr>
+            <descr>@@gw_lan_descr@@</descr>
             <avg_delay_samples></avg_delay_samples>
             <avg_loss_samples></avg_loss_samples>
             <avg_loss_delay_samples></avg_loss_delay_samples>
             <monitor_disable>1</monitor_disable>
         </gateway_item>
 """
-gateway_xml = gateway_xml.replace('@@vlangw@@', constants.VLAN_GW)
-# routes
-routes_begin_tag = '<staticroutes version="1.0.0">'
-routes_end_tag = '</staticroutes>'
-route_xml = """
-    <route uuid="@@uuid@@">
-      <network>@@subnet@@</network>
-      <gateway>@@vlangw@@</gateway>
-      <descr>@@descr@@</descr>
-      <disabled>0</disabled>
-    </route>
-"""
-route_xml = route_xml.replace('@@vlangw@@', constants.VLAN_GW)
-# firewall_nat_out
-nat_automatic_xml = """
-  <nat>
-    <outbound>
-      <mode>automatic</mode>
-    </outbound>
-  </nat>
-"""
-nat_hybrid_begin = """
-  <nat>
-    <outbound>
-      <mode>hybrid</mode>
-"""
-nat_hybrid_end = """
-    </outbound>
-  </nat>
-"""
+gw_lan_xml = gw_lan_xml.replace('@@gw_lan@@', constants.GW_LAN).replace(
+    '@@gw_lan_descr@@', gw_lan_descr)
+
+# outbound nat rules
+nat_rule_descr = 'Outbound NAT rule for subnet'
 nat_rule_xml = """
       <rule>
         <source>
@@ -100,7 +72,7 @@ nat_rule_xml = """
         <destination>
           <any>1</any>
         </destination>
-        <descr>@@descr@@</descr>
+        <descr>@@nat_rule_descr@@ @@subnet@@</descr>
         <interface>wan</interface>
         <tag/>
         <tagged/>
@@ -116,8 +88,12 @@ nat_rule_xml = """
         <sourceport/>
       </rule>
 """
+nat_rule_xml = nat_rule_xml.replace(
+    '@@nat_rule_descr@@', nat_rule_descr).replace('@@serverip@@', serverip)
 
-## functions begin ##
+
+# functions begin ##
+
 
 # update static routes in netplan configuration
 def updateNetplan(subnets, remoteip=''):
@@ -140,7 +116,8 @@ def updateNetplan(subnets, remoteip=''):
         if rc:
             printScript('* Fetched configuration file from remote machine.')
         else:
-            printScript('* Unable to fetch configuration file from remote machine!')
+            printScript(
+                '* Unable to fetch configuration file from remote machine!')
             return False
     # read netplan config file
     with open(cfgfile) as config:
@@ -167,7 +144,7 @@ def updateNetplan(subnets, remoteip=''):
     # save netcfg
     if changed:
         with open(cfgfile, 'w') as config:
-            config.write( yaml.dump(netcfg, default_flow_style=False))
+            config.write(yaml.dump(netcfg, default_flow_style=False))
         if machine == 'server':
             os.system('netplan apply')
             printScript('* Applied new configuration.')
@@ -188,6 +165,7 @@ def updateNetplan(subnets, remoteip=''):
             os.unlink(cfgfile)
     # send changed configuration back and apply it
     return changed
+
 
 # update opsi network configuration with routes
 def updateOpsi(subnets, opsiip, ipnet_setup):
@@ -245,125 +223,99 @@ rm -f @@remotefile@@
     return True
 
 # update vlan gateway on firewall
-def updateFwGw(firewallip, servernet_router, gateway_xml, content):
-    if servernet_router == firewallip:
-        # in this case no vlan gateway is necessary
-        gwflag = False
-        msg = 'Removing vlan gateway from firewall:'
-    else:
-        gwflag = True
-        msg = 'Creating vlan gateway on firewall:'
-    printScript(msg)
+
+
+def updateFwGw(servernet_router, content):
     soup = BeautifulSoup(content, 'lxml')
-    # find vlan gateway
-    gateways = BeautifulSoup(str(soup.find('gateways')), 'lxml')
-    found = ''
-    gateway = ''
-    changed = False
-    for item in gateways.findAll('gateway_item'):
-        if item('name')[0].string == constants.VLAN_GW:
-            found = str(item)
-            gateway = item('gateway')[0].string
-    # found obsolete gw, remove it
-    if found != '' and not gwflag:
-        printScript('* Found obsolete vlan gateway ' + gateway + ', removing it.')
-        content = content.replace(found, '')
-        changed = True
-    # found gateway different from servernet router, need to be changed
-    elif found != '' and gwflag and gateway != servernet_router:
-        printScript('* Found different vlan gateway ' + gateway + ', changing it to ' + servernet_router + '.')
-        gateway_new = found.replace('<gateway>' + gateway + '</gateway>', '<gateway>' + servernet_router + '</gateway>')
-        content = content.replace(found, gateway_new)
-        changed = True
-    # add vlan gw if not defined
-    elif found == '' and gwflag:
-        printScript('* No vlan gateway found, adding ' + servernet_router + '.')
-        gateway_xml = gateway_xml.replace('@@gateway@@', servernet_router)
-        if gateways_begin_tag in content:
-            content = content.replace(gateways_begin_tag, gateways_begin_tag + gateway_xml)
-        else:
-            gateway_xml = gateways_begin_tag + gateway_xml + gateways_end_tag + '\n'
-            content = content.replace('</ntpd>', '</ntpd>' + gateway_xml)
-        changed = True
-    else:
-        printScript('* Nothing to do.')
-        changed =  False
-    return changed, content
+    # get all gateways
+    gateways = soup.findAll('gateways')[0]
+    soup = BeautifulSoup(str(gateways), 'lxml')
+    # remove old lan gateway from gateways
+    gw_array = []
+    for gw_item in soup.findAll('gateway_item'):
+        if gw_lan_descr not in str(gw_item):
+            gw_array.append(gw_item)
+    # append new lan gateway
+    gw_array.append(gw_lan_xml.replace('@@gw_ip@@', servernet_router))
+    # create gateways xml code
+    gateways_xml = '<gateways>'
+    for gw_item in gw_array:
+        gateways_xml = gateways_xml + str(gw_item)
+    gateways_xml = gateways_xml + '\n' + '</gateways>'
+    content = re.sub(r'<gateways>.*?</gateways>',
+                     gateways_xml, content, flags=re.S)
+    return True, content
+
 
 # update subnet nat rules on firewall
 def updateFwNat(subnets, ipnet_setup, serverip, content):
-  # create array with all nat rules
-  soup = BeautifulSoup(content, 'lxml')
-  fw_nat = soup.findAll('nat')[0]
-  soup = BeautifulSoup(str(fw_nat), 'lxml')
-  # remove old subnet rules from array
-  nat_rules = []
-  descr_prefix = 'NAT rule for subnet'
-  for item in soup.findAll('rule'):
-    if not descr_prefix in item:
-      nat_rules.append(item)
-  # add new subnet rules to array
-  for item in subnets:
-    subnet = item.split(':')[0]
-    # skip servernet
-    if subnet == ipnet_setup:
-      continue
-    timestamp = str(datetime.datetime.now(datetime.timezone.utc).timestamp())
-    descr = descr_prefix + ' ' + subnet
-    nat_rule = nat_rule_xml.replace('@@subnet@@', subnet)
-    nat_rule = nat_rule.replace('@@serverip@@', serverip)
-    nat_rule = nat_rule.replace('@@descr@@', descr)
-    nat_rule = nat_rule.replace('@@timestamp@@', timestamp)
-    nat_rules.append(nat_rule)
-  if len(nat_rules) == 0:
-    if nat_automatic_xml in content:
-      # nothing to do if standard nat automatic rule is set and no subnets are defined
-      return False, content
-    else:
-      nat_xml = nat_automatic_xml
-  else:
+    # create array with all nat rules
+    soup = BeautifulSoup(content, 'lxml')
+    out_nat = soup.findAll('outbound')[0]
+    soup = BeautifulSoup(str(out_nat), 'lxml')
+    # remove old subnet rules from array
+    nat_rules = []
+    for item in soup.findAll('rule'):
+        if nat_rule_descr not in str(item):
+            nat_rules.append(item)
+    # add new subnet rules to array
+    for item in subnets:
+        subnet = item.split(':')[0]
+        # skip servernet
+        if subnet == ipnet_setup:
+            continue
+        timestamp = str(datetime.datetime.now(
+            datetime.timezone.utc).timestamp())
+        nat_rule = nat_rule_xml.replace('@@subnet@@', subnet)
+        nat_rule = nat_rule.replace('@@timestamp@@', timestamp)
+        nat_rules.append(nat_rule)
     # create nat rules xml code
-    nat_xml = nat_hybrid_begin
+    nat_xml = '\n<outbound>\n<mode>hybrid</mode>\n'
     for nat_rule in nat_rules:
-      nat_xml = nat_xml + nat_rule
-    nat_xml = nat_xml + nat_hybrid_end
-  # replace code in config content
-  content = re.sub(r'<nat>.*?</nat>', nat_xml, content, flags=re.S)
-  return True, content
+        nat_xml = nat_xml + str(nat_rule)
+    nat_xml = nat_xml + '\n</outbound>'
+    # replace code in config content
+    content = re.sub(r'<outbound>.*?</outbound>', nat_xml, content, flags=re.S)
+    return True, content
+
 
 # download, modify and upload firewall config
-def updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gateway_xml):
-  # first get config.xml
-  if not getFwConfig(firewallip):
-    return False
-  # load configfile
-  rc, content = readTextfile(constants.FWCONFLOCAL)
-  if not rc:
-    return rc
-  changed = False
-  # add vlan gateway to firewall
-  rc, content = updateFwGw(firewallip, servernet_router, gateway_xml, content)
-  if rc:
-    changed = rc
-  # add subnet nat rules to firewall
-  rc, content = updateFwNat(subnets, ipnet_setup, serverip, content)
-  if rc:
-    changed = rc
-  if changed:
-    # write changed config
-    if writeTextfile(constants.FWCONFLOCAL, content, 'w'):
-      printScript('* Saved changed config.')
-    else:
-      printScript('* Unable to save configfile!')
-      return False
-    if not putFwConfig(firewallip):
-      return False
-  return changed
+def updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gw_lan_xml):
+    # first get config.xml
+    if not getFwConfig(firewallip):
+        return False
+    # load configfile
+    rc, content = readTextfile(constants.FWCONFLOCAL)
+    if not rc:
+        return rc
+    changed = False
+    # add vlan gateway to firewall
+    rc, content = updateFwGw(servernet_router, content)
+    if rc:
+        changed = rc
+    # add subnet nat rules to firewall
+    rc, content = updateFwNat(subnets, ipnet_setup, serverip, content)
+    if rc:
+        changed = rc
+    if changed:
+        # write changed config
+        if writeTextfile(constants.FWCONFLOCAL, content, 'w'):
+            printScript('* Saved changed config.')
+        else:
+            printScript('* Unable to save configfile!')
+            return False
+        if not putFwConfig(firewallip):
+            return False
+    return changed
 
 # add single route
+
+
 def addFwRoute(subnet):
     try:
-        payload = '{"route": {"network": "' + subnet + '", "gateway": "' + constants.VLAN_GW + '", "descr": "Route for subnet ' + subnet + '", "disabled": "0"}}'
+        payload = '{"route": {"network": "' + subnet + '", "gateway": "' + \
+            constants.GW_LAN + '", "descr": "Route for subnet ' + \
+            subnet + '", "disabled": "0"}}'
         res = firewallApi('post', '/routes/routes/addroute', payload)
         printScript('* Added route for subnet ' + subnet + '.')
         return True
@@ -372,6 +324,8 @@ def addFwRoute(subnet):
         return False
 
 # delete route on firewall by uuid
+
+
 def delFwRoute(uuid, subnet):
     try:
         rc = firewallApi('post', '/routes/routes/delroute/' + uuid)
@@ -382,26 +336,28 @@ def delFwRoute(uuid, subnet):
         return False
 
 # update firewall routes
-def updateFwRoutes(subnets, firewallip, ipnet_setup, servernet_router):
+
+
+def updateFwRoutes(subnets, ipnet_setup, servernet_router):
     printScript('Updating subnet routing on firewall:')
     try:
         routes = firewallApi('get', '/routes/routes/searchroute')
-        routes_nr = len(routes['rows'])
-        printScript('* Got ' + str(routes_nr) + ' routes.')
+        staticroutes_nr = len(routes['rows'])
+        printScript('* Got ' + str(staticroutes_nr) + ' routes.')
     except:
         printScript('* Unable to get routes.')
         return False
     # iterate through firewall routes and delete them if necessary
     changed = False
-    gateway_orig = constants.VLAN_GW + ' - ' + servernet_router
-    if routes_nr > 0:
+    gateway_orig = constants.GW_LAN + ' - ' + servernet_router
+    if staticroutes_nr > 0:
         count = 0
-        while (count < routes_nr):
+        while (count < staticroutes_nr):
             uuid = routes['rows'][count]['uuid']
             subnet = routes['rows'][count]['network']
             gateway = routes['rows'][count]['gateway']
             # delete not compliant routes
-            if (not subnet in str(subnets) and gateway == gateway_orig) or (subnet in str(subnets) and gateway != gateway_orig):
+            if (subnet not in str(subnets) and gateway == gateway_orig) or (subnet in str(subnets) and gateway != gateway_orig):
                 delFwRoute(uuid, subnet)
                 printScript('* Route ' + subnet + ' deleted.')
                 changed = True
@@ -416,7 +372,7 @@ def updateFwRoutes(subnets, firewallip, ipnet_setup, servernet_router):
         # skip server network
         if s == ipnet_setup:
             continue
-        if not s in str(routes):
+        if s not in str(routes):
             rc = addFwRoute(s)
             if rc:
                 changed = rc
@@ -436,9 +392,13 @@ f = open(constants.SUBNETSCSV, newline='')
 reader = csv.reader(f, delimiter=';', quoting=csv.QUOTE_NONE)
 d = open(constants.DHCPSUBCONF, 'w')
 subnets = []
+servernet_router = firewallip
 for row in reader:
     try:
-        ipnet, router, range1, range2 = row
+        ipnet = row[0]
+        router = row[1]
+        range1 = row[2]
+        range2 = row[3]
     except:
         continue
     if ipnet[:1] == '#' or ipnet[:1] == ';' or not isValidHostIpv4(router):
@@ -493,12 +453,12 @@ if isValidHostIpv4(opsiip):
 
 # update firewall
 if not skipfw:
-    changed = updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gateway_xml)
+    changed = updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gw_lan_xml)
     if changed:
         changed = firewallApi('post', '/routes/routes/reconfigure')
         if changed:
             printScript('Applied new gateway.')
-    changed = updateFwRoutes(subnets, firewallip, ipnet_setup, servernet_router)
+    changed = updateFwRoutes(subnets, ipnet_setup, servernet_router)
     if changed:
         changed = firewallApi('post', '/routes/routes/reconfigure')
         if changed:

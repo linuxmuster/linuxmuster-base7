@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20181130
+# 20181210
 #
 
 import bcrypt
@@ -115,6 +115,7 @@ def main():
         # save gateway configuration
         try:
             gwconfig = str(soup.findAll('gateways')[0])
+            gwconfig = gwconfig.replace('<gateways>', '').replace('</gateways>', '')
         except:
             gwconfig = ''
         # save dnsserver configuration
@@ -195,6 +196,7 @@ def main():
         content = content.replace('@@network@@', network)
         content = content.replace('@@bitmask@@', bitmask)
         content = content.replace('@@aliascontent@@', aliascontent)
+        content = content.replace('@@gw_lan@@', constants.GW_LAN)
         content = content.replace('@@fwrootpw_hashed@@', fwrootpw_hashed)
         content = content.replace('@@authorizedkey@@', authorizedkey)
         content = content.replace('@@apikey@@', apikey)

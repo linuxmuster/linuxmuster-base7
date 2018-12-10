@@ -1,12 +1,12 @@
 # /etc/linuxmuster/subnets.csv
 #
 # thomas@linuxmuster.net
-# 20180514
+# 20181205
 #
-# Network/Prefix ; Router-IP (last available IP in network) ; 1. Range-IP ; Last-Range-IP
+# Network/Prefix ; Router-IP (last available IP in network) ; 1. Range-IP ; Last-Range-IP ; SETUP-Flag
 #
 # server subnet definition
-@@network@@/@@bitmask@@;@@firewallip@@;@@dhcprange1@@;@@dhcprange2@@
+@@network@@/@@bitmask@@;@@firewallip@@;@@dhcprange1@@;@@dhcprange2@@;SETUP
 
 # add your subnets below
 #

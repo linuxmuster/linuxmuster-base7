@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20181031
+# 20181210
 #
 
 # don't change this file
@@ -46,7 +46,7 @@ CUSTOMINI = CACHEDIR + '/custom.ini'
 FWOSCONFTPL = SHAREDIR + '/firewall/opnsense/config.xml.tpl'
 FWCONFLOCAL = CACHEDIR + '/opnsense.xml'
 FWCONFREMOTE = '/conf/config.xml'
-VLAN_GW = 'VLAN_GW'
+GW_LAN = 'GW_LAN'
 SETUPINI = VARDIR + '/setup.ini'
 DEFAULTSINI = SHAREDIR + '/setupdefaults.ini'
 PREPINI = VARDIR + '/prepare.ini'

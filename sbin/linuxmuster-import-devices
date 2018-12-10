@@ -2,13 +2,12 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20180715
+# 20181205
 #
 
 import configparser
 import constants
 import csv
-import getopt
 import os
 import re
 import sys
@@ -53,11 +52,12 @@ if result != 0:
 printScript(msg + ' OK!')
 os.system('sophomorix-device --sync')
 
+
 # write grub cfgs
 def doGrubCfg(startconf, group, kopts):
     grubcfg = constants.LINBOGRUBDIR + '/' + group + '.cfg'
     rc, content = readTextfile(grubcfg)
-    if rc == True and not constants.MANAGEDSTR in content:
+    if rc and constants.MANAGEDSTR not in content:
         printScript('  > Keeping pxe configuration.')
         return True
     # get grub partition name of cache
@@ -67,7 +67,7 @@ def doGrubCfg(startconf, group, kopts):
     cacheroot = getGrubPart(cache, systemtype)
     cachelabel = getStartconfPartlabel(startconf, partnr)
     # if cache is not defined provide a forced netboot cfg
-    if cacheroot == None:
+    if cacheroot is None:
         netboottpl = constants.LINBOTPLDIR + '/grub.cfg.forced_netboot'
         printScript('  > Creating minimal pxe configuration. start.conf is incomplete!')
         rc = os.system('cp ' + netboottpl + ' ' + grubcfg)
@@ -77,7 +77,7 @@ def doGrubCfg(startconf, group, kopts):
     # create gobal part for group cfg
     globaltpl = constants.LINBOTPLDIR + '/grub.cfg.global'
     rc, content = readTextfile(globaltpl)
-    if rc == False:
+    if not rc:
         return rc
     replace_list = [('@@group@@', group), ('@@cachelabel@@', cachelabel), ('@@cacheroot@@', cacheroot), ('@@kopts@@', kopts)]
     for item in replace_list:
@@ -85,7 +85,7 @@ def doGrubCfg(startconf, group, kopts):
     rc = writeTextfile(grubcfg, content, 'w')
     # get os infos from group's start.conf
     oslists = getStartconfOsValues(startconf)
-    if oslists == None:
+    if oslists is None:
         return False
     # write os parts to grub cfg
     ostpl = constants.LINBOTPLDIR + '/grub.cfg.os'
@@ -96,7 +96,7 @@ def doGrubCfg(startconf, group, kopts):
         partnr = getStartconfPartnr(startconf, partition)
         oslabel = getStartconfPartlabel(startconf, partnr)
         rc, content = readTextfile(ostpl)
-        if rc == False:
+        if not rc:
             return rc
         replace_list = [('@@group@@', group), ('@@cachelabel@@', cachelabel),
             ('@@cacheroot@@', cacheroot), ('@@osname@@', osname),
@@ -104,10 +104,11 @@ def doGrubCfg(startconf, group, kopts):
             ('@@osroot@@', osroot), ('@@partnr@@', partnr), ('@@kernel@@', kernel),
             ('@@initrd@@', initrd), ('@@kopts@@', kopts), ('@@append@@', kappend)]
         for item in replace_list:
-            content = content.replace(item[0], item[1])
+            content = content.replace(item[0], str(item[1]))
         rc = writeTextfile(grubcfg, content, 'a')
-        if rc == False:
+        if not rc:
             return rc
+
 
 # write linbo start configuration file
 def doLinboStartconf(group):
@@ -126,11 +127,11 @@ def doLinboStartconf(group):
     except:
         serverip_k = None
     # determine whether global values from start conf have to changed
-    if serverip_k != None and isValidHostIpv4(serverip_k) == True:
+    if serverip_k is not None and isValidHostIpv4(serverip_k):
         serverip_r = serverip_k
     else:
         serverip_r = serverip
-    if kopts_s == None:
+    if kopts_s is None:
         kopts_r = 'splash quiet'
     else:
         kopts_r = kopts_s
@@ -141,18 +142,19 @@ def doLinboStartconf(group):
     # change global startconf options if necessary
     if serverip_s != serverip_r:
         rc = setGlobalStartconfOption(startconf, 'Server', serverip_r)
-        if rc == False:
+        if not rc:
             return rc
     if kopts_s != kopts_r:
         rc = setGlobalStartconfOption(startconf, 'KernelOptions', kopts_r)
-        if rc == False:
+        if not rc:
             return rc
     if group_s != group_r:
         rc = setGlobalStartconfOption(startconf, 'Group', group_r)
-        if rc == False:
+        if not rc:
             return rc
     # process grub cfgs
     doGrubCfg(startconf, group, kopts_r)
+
 
 # opsi
 def doOpsi():
@@ -180,7 +182,7 @@ reader = csv.reader(f, delimiter=';', quoting=csv.QUOTE_NONE)
 d = open(constants.DHCPDEVCONF, 'w')
 pxe_groups = []
 for row in reader:
-    if row == []:
+    if len(row) == 0:
         continue
     try:
         room = row[0]
@@ -201,7 +203,7 @@ for row in reader:
     bootimage = None
     if os.path.isfile(startconf):
         systemtype = getStartconfOption(startconf, 'LINBO', 'SystemType')
-    if systemtype != None:
+    if systemtype is not None:
         if 'bios' in systemtype:
             bootimage = core_bios
         elif 'efi32' in systemtype:
@@ -209,7 +211,7 @@ for row in reader:
         elif 'efi64' in systemtype:
             bootimage = core64_efi
     # correct pxe type if opsi ip is not valid
-    if (pxe == '3' or pxe == '2') and isValidHostIpv4(opsiip) == False:
+    if (pxe == '3' or pxe == '2') and not isValidHostIpv4(opsiip):
         pxe = '1'
     # determine hosttype
     if pxe == '0':
@@ -232,7 +234,7 @@ for row in reader:
     # write pxe boot options
     if pxe == '1' or pxe == '2' or pxe == '22':
         d.write('  option extensions-path "' + group + '";\n')
-        if bootimage != None:
+        if bootimage is not None:
             d.write('  filename "' + bootimage + '";\n')
     # boot opsi pxe bootimage
     elif pxe == '3':
@@ -252,7 +254,7 @@ for row in reader:
         if not os.path.isfile(hostlink):
             os.system('ln -sf ' + groupconf + ' ' + hostlink)
     # collect groups with pxe for later use
-    if not group in pxe_groups and pxe != '0':
+    if group not in pxe_groups and pxe != '0':
         pxe_groups.append(group)
 d.close()
 f.close()

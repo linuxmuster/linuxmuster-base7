@@ -129,7 +129,7 @@
   </syslog>
   <nat>
     <outbound>
-      <mode>automatic</mode>
+      <mode>hybrid</mode>
     </outbound>
     <rule>
       <protocol>tcp</protocol>
@@ -608,6 +608,21 @@
   <ntpd>
     <interface>lan</interface>
   </ntpd>
+  <gateways>
+    @@gwconfig@@
+    <gateway_item>
+      <interface>lan</interface>
+      <gateway>@@firewallip@@</gateway>
+      <name>@@gw_lan@@</name>
+      <weight>1</weight>
+      <ipprotocol>inet</ipprotocol>
+      <interval/>
+      <descr>Interface LAN Gateway</descr>
+      <avg_delay_samples/>
+      <avg_loss_samples/>
+      <avg_loss_delay_samples/>
+      <monitor_disable>1</monitor_disable>
+    </gateway_item>
+  </gateways>
   <staticroutes/>
-  @@gwconfig@@
 </opnsense>

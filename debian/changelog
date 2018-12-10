@@ -1,10 +1,17 @@
+linuxmuster-base7 (7.0.24-0ubuntu0) lmn7-testing; urgency=low
+
+  * device import: fix grub.cfg creation.
+  * fixes and improvements on subnets handling.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 10 Dec 2018 23:05:27 +0100
+
 linuxmuster-base7 (7.0.23-0ubuntu0) lmn7-testing; urgency=low
 
   * linuxmuster-import-subnets: fix vanished custom nat rules.
   * fix "No connection to SAMBA4 AD because of missing cert" (#52).
   * fix skip-fw setup option.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 04 Dec 2018 20:37:57 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 04 Dec 2018 21:53:01 +0100
 
 linuxmuster-base7 (7.0.22-0ubuntu0) lmn7-testing; urgency=low
 
