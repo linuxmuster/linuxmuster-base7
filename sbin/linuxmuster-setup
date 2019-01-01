@@ -5,6 +5,7 @@
 # 20181204
 #
 
+import configparser
 import constants
 import getopt
 import importlib
@@ -157,7 +158,14 @@ if country != '':
     rc = modIni(constants.CUSTOMINI, 'setup', 'country', country)
 if state != '':
     rc = modIni(constants.CUSTOMINI, 'setup', 'state', state)
+
+# check if firewall shall be skipped
+cp = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+cp.read(constants.CUSTOMINI)
+if "skipfw" in cp["setup"]:
+    skipfw = cp.getboolean('setup', 'skipfw')
 rc = modIni(constants.CUSTOMINI, 'setup', 'skipfw', str(skipfw))
+
 
 # work off setup modules
 setup_modules = os.listdir(constants.SETUPDIR)
