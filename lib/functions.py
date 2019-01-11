@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20180519
+# 20190111
 #
 
 import codecs
@@ -142,7 +142,7 @@ def doSshLink(ip, port, secret):
     msg = '* Processing ssh link to host ' + ip + ' on port ' + str(port) + ':'
     printScript(msg)
     # test connection on ip and port
-    msg = '  > Testing connection '
+    msg = '  > Testing ssh connection '
     printScript(msg, '', False, False, True)
     if checkSocket(ip, port):
         printScript(' Open!', '', True, True, False, len(msg))
@@ -150,7 +150,7 @@ def doSshLink(ip, port, secret):
         printScript(' Closed!', '', True, True, False, len(msg))
         return False
     # establish ssh connection to ip on port
-    msg = '  > Establishing connection '
+    msg = '  > Establishing ssh connection '
     printScript(msg, '', False, False, True)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

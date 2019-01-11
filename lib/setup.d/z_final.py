@@ -2,7 +2,7 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20181127
+# 20190111
 #
 
 import constants
@@ -45,16 +45,6 @@ msg = 'Starting subnets import '
 printScript(msg, '', False, False, True)
 try:
     subProc('linuxmuster-import-subnets', logfile)
-    printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
-    sys.exit(1)
-
-# reconfigure webui package
-msg = 'Reconfiguring webui package'
-printScript(msg, '', False, False, True)
-try:
-    subProc('dpkg-reconfigure linuxmuster-webui7', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

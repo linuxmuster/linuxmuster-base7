@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.0.25-0ubuntu0) lmn7-testing; urgency=low
+
+  * removed linuxmuster-webui7 reconfigure from setup's z_final.py.
+  * improved setup's output of ssh connection test.
+  * fixed password quoting in j_samba-users.py.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 11 Jan 2019 17:37:19 +0100
+
 linuxmuster-base7 (7.0.24-0ubuntu0) lmn7-testing; urgency=low
 
   * device import: fix grub.cfg creation.
