@@ -2,7 +2,7 @@
 #
 # linuxmuster-setup
 # thomas@linuxmuster.net
-# 20181204
+# 20190112
 #
 
 import constants
@@ -63,6 +63,7 @@ schoolname = ''
 location = ''
 country = ''
 state = ''
+cli_customini = ''
 
 # open logfile
 global logfile
@@ -75,7 +76,7 @@ try:
     sys.stdout = tee(sys.stdout, l)
     sys.stderr = tee(sys.stderr, l)
 except:
-    fail('Cannot open logfile ' + logfile + ' !')
+    print('Cannot open logfile ' + logfile + ' !')
     sys.exit()
 
 # evaluate options
@@ -114,8 +115,7 @@ for o, a in opts:
         skipfw = True
     elif o in ("-c", "--config"):
         if os.path.isfile(a):
-            subProc('cp ' + a + ' ' + constants.CUSTOMINI)
-            subProc('chmod 600 ' + constants.CUSTOMINI)
+            cli_customini = a
         else:
             usage()
             sys.exit()
@@ -128,36 +128,43 @@ for o, a in opts:
 # start message
 printScript(os.path.basename(__file__), 'begin')
 
-# check params
-if servername != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'servername', servername)
-if domainname != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'domainname', domainname)
-if dhcprange != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'dhcprange', dhcprange)
-if opsiip != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'opsiip', opsiip)
-if dockerip != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'dockerip', dockerip)
-if mailip != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'mailip', mailip)
-if adminpw != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'adminpw', adminpw)
-if smtprelay != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'smtprelay', smtprelay)
-if smtpuser != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'smtpuser', smtpuser)
-if smtppw != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'smtppw', smtppw)
-if schoolname != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'schoolname', schoolname)
-if location != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'location', location)
-if country != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'country', country)
-if state != '':
-    rc = modIni(constants.CUSTOMINI, 'setup', 'state', state)
-rc = modIni(constants.CUSTOMINI, 'setup', 'skipfw', str(skipfw))
+# custom ini file given on cli
+if cli_customini != '':
+    print('Custom inifile ' + cli_customini + ' given on cli, ignoring other arguments!')
+    subProc('cp ' + cli_customini + ' ' + constants.CUSTOMINI)
+    subProc('chmod 600 ' + constants.CUSTOMINI)
+else:
+    # check params
+    print('Processing commandline arguments.')
+    if servername != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'servername', servername)
+    if domainname != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'domainname', domainname)
+    if dhcprange != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'dhcprange', dhcprange)
+    if opsiip != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'opsiip', opsiip)
+    if dockerip != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'dockerip', dockerip)
+    if mailip != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'mailip', mailip)
+    if adminpw != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'adminpw', adminpw)
+    if smtprelay != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'smtprelay', smtprelay)
+    if smtpuser != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'smtpuser', smtpuser)
+    if smtppw != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'smtppw', smtppw)
+    if schoolname != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'schoolname', schoolname)
+    if location != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'location', location)
+    if country != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'country', country)
+    if state != '':
+        rc = modIni(constants.CUSTOMINI, 'setup', 'state', state)
+    rc = modIni(constants.CUSTOMINI, 'setup', 'skipfw', str(skipfw))
 
 # work off setup modules
 setup_modules = os.listdir(constants.SETUPDIR)
@@ -165,10 +172,7 @@ setup_modules.remove('__pycache__')
 setup_modules.sort()
 for f in setup_modules:
     # skip dialog in unattended mode
-    if (unattended == True and 'dialog.py' in f):
-        continue
-    # skip firewall setup
-    if (skipfw == True and 'firewall.py' in f):
+    if (unattended and 'dialog.py' in f):
         continue
     # execute module
     m = os.path.splitext(f)[0]

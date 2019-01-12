@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20181210
+# 20190112
 #
 
 import bcrypt
@@ -10,10 +10,8 @@ import configparser
 import constants
 import datetime
 import os
-import re
 import shutil
 import sys
-from bs4 import BeautifulSoup, NavigableString
 from functions import getFwConfig
 from functions import isValidHostIpv4
 from functions import modIni
@@ -23,7 +21,6 @@ from functions import randomPassword
 from functions import readTextfile
 from functions import sshExec
 from functions import writeTextfile
-from shutil import copyfile
 
 title = os.path.basename(__file__).replace('.py', '').split('_')[1]
 logfile = constants.LOGDIR + '/setup.' + title + '.log'
@@ -238,6 +235,7 @@ def main():
     rc = sshExec(firewallip, 'configctl firmware reboot', adminpw)
     if not rc:
         sys.exit(1)
+
 
 # quit if firewall setup shall be skipped
 if skipfw:
