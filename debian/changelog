@@ -2,7 +2,7 @@ linuxmuster-base7 (7.0.27-0ubuntu0) lmn7-testing; urgency=low
 
   * fixed m_firewall.py, readd missing beautifulsoup.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 12 Jan 2019 12:31:45 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 12 Jan 2019 13:58:32 +0100
 
 linuxmuster-base7 (7.0.26-0ubuntu0) lmn7-testing; urgency=low
 
