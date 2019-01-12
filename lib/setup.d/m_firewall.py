@@ -12,6 +12,7 @@ import datetime
 import os
 import shutil
 import sys
+from bs4 import BeautifulSoup
 from functions import getFwConfig
 from functions import isValidHostIpv4
 from functions import modIni
