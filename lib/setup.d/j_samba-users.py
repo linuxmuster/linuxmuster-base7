@@ -2,7 +2,7 @@
 #
 # create samba users
 # thomas@linuxmuster.net
-# 20100111
+# 20100113
 #
 
 import configparser
@@ -75,10 +75,11 @@ except:
     sys.exit(1)
 
 # create global-admin
+sophomorix_comment = "created by linuxmuster-setup"
 msg = 'Creating samba account for global-admin '
 printScript(msg, '', False, False, True)
 try:
-    subProc('sophomorix-admin --create-global-admin global-admin --password "' + adminpw + '"', logfile)
+    subProc('sophomorix-admin --create-global-admin global-admin --password "' + adminpw + '" --comment "' + sophomorix_comment + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -88,7 +89,7 @@ except:
 msg = 'Creating samba account for global-binduser '
 printScript(msg, '', False, False, True)
 try:
-    subProc('sophomorix-admin --create-global-binduser global-binduser --password "' + binduserpw + '"', logfile)
+    subProc('sophomorix-admin --create-global-binduser global-binduser --password "' + binduserpw + '" --comment "' + sophomorix_comment + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
