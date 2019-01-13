@@ -2,7 +2,7 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20181204
+# 20190113
 #
 
 from __future__ import print_function
@@ -45,7 +45,7 @@ except:
 certlist = [servername, 'firewall', 'mail', 'docker', 'opsi']
 
 # basic subject string
-subjbase = '-subj /O=' + schoolname + '/OU=' + sambadomain + '/CN='
+subjbase = '-subj /O="' + schoolname + '"/OU=' + sambadomain + '/CN='
 
 # substring with sha and validation duration
 shadays = ' -sha256 -days 3650'
@@ -71,6 +71,9 @@ try:
     # create base64 encoded version for opnsense's config.xml
     subProc('base64 ' + constants.CACERT + ' > ' + constants.CACERTB64, logfile)
     rc = replaceInFile(constants.CACERTB64, '\n', '')
+    if not os.path.isfile(constants.CACERTB64):
+        printScript(' Failed!', '', True, True, False, len(msg))
+        sys.exit(1)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
