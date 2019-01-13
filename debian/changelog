@@ -2,7 +2,7 @@ linuxmuster-base7 (7.0.29-0ubuntu0) lmn7-testing; urgency=low
 
   * added comment to admins added by setup (#50).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 13 Jan 2019 14:05:20 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 13 Jan 2019 14:59:59 +0100
 
 linuxmuster-base7 (7.0.28-0ubuntu0) lmn7-testing; urgency=low
 
