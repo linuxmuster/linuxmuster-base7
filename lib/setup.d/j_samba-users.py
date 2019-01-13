@@ -79,7 +79,8 @@ sophomorix_comment = "created by linuxmuster-setup"
 msg = 'Creating samba account for global-admin '
 printScript(msg, '', False, False, True)
 try:
-    subProc('sophomorix-admin --create-global-admin global-admin --password "' + adminpw + '" --comment "' + sophomorix_comment + '"', logfile)
+    subProc('sophomorix-admin --create-global-admin global-admin --password "' + adminpw + '"', logfile)
+    subProc('sophomorix-user --user global-admin --comment "' + sophomorix_comment + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -89,7 +90,8 @@ except:
 msg = 'Creating samba account for global-binduser '
 printScript(msg, '', False, False, True)
 try:
-    subProc('sophomorix-admin --create-global-binduser global-binduser --password "' + binduserpw + '" --comment "' + sophomorix_comment + '"', logfile)
+    subProc('sophomorix-admin --create-global-binduser global-binduser --password "' + binduserpw + '"', logfile)
+    subProc('sophomorix-user --user global-binduser --comment "' + sophomorix_comment + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
