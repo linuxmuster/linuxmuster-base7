@@ -576,21 +576,6 @@
       <ADKerberosImplementation>W2008</ADKerberosImplementation>
       <KerberosHostName>FIREWALL-K</KerberosHostName>
     </ProxySSO>
-    <Firewall>
-      <Alias version="1.0.0">
-        <aliases>
-          <alias uuid="096aad99-513a-496e-b773-e84d1d160f96">
-            <enabled>1</enabled>
-            <name>NoProxy</name>
-            <type>host</type>
-            <proto/>
-            <updatefreq/>
-            <content>@@aliascontent@@</content>
-            <description>NoProxy-Group</description>
-          </alias>
-        </aliases>
-      </Alias>
-    </Firewall>
   </OPNsense>
   <ppps/>
   <ca>
@@ -625,4 +610,13 @@
     </gateway_item>
   </gateways>
   <staticroutes/>
+  <aliases>
+    <alias>
+      <name>NoProxy</name>
+      <type>host</type>
+      <descr>NoProxy group</descr>
+      <address>@@aliascontent@@</address>
+      <detail/>
+    </alias>
+  </aliases>
 </opnsense>

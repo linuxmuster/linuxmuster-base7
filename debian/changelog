@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.30-0ubuntu0) lmn7-testing; urgency=low
+
+  * fixed firewall template for noproxy group (#58).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 18 Jan 2019 20:39:46 +0100
+
 linuxmuster-base7 (7.0.29-0ubuntu0) lmn7-testing; urgency=low
 
   * added comment to admins added by setup (#50).

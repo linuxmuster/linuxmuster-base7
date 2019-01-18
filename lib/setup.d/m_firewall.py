@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20190112
+# 20190118
 #
 
 import bcrypt
@@ -161,7 +161,7 @@ def main():
         if aliascontent == '':
             aliascontent = aliasip
         else:
-            aliascontent = aliascontent + '\n' + aliasip
+            aliascontent = aliascontent + ' ' + aliasip
     # add server ips if not already collected
     for aliasip in [serverip, opsiip, dockerip]:
         if not aliasip in aliascontent:
