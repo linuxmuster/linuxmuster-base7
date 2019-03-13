@@ -2,7 +2,7 @@
 #
 # mailserver setup
 # thomas@linuxmuster.net
-# 20180502
+# 20190312
 #
 
 import configparser
@@ -67,6 +67,7 @@ def main():
         content = content + '\nln -sf ' + constants.SSLDIR + '/cacert.pem /etc/ssl/certs/cacert.pem'
         content = content + '\napt-get update\napt-get -y install linuxmuster-mail'
         content = content + '\nlinuxmuster-mail.py -c ' + setuptmp
+        content = content + '\nsystemctl enable linuxmuster-mail.service'
         content = content + '\nsystemctl start linuxmuster-mail.service'
         rc = writeTextfile(setuphelper, content, 'w')
         printScript(' Success!', '', True, True, False, len(msg))
@@ -115,6 +116,7 @@ def main():
         try:
             subProc('apt update && apt -y install linuxmuster-mail', logfile)
             subProc('linuxmuster-mail.py -s -c ' + setuptmp, logfile)
+            subProc('systemctl enable linuxmuster-mail.service', logfile)
             subProc('systemctl start linuxmuster-mail.service', logfile)
             printScript(' Success!', '', True, True, False, len(msg))
         except:
