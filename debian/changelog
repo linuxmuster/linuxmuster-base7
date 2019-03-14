@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.33-0ubuntu0) lmn7-testing; urgency=low
+
+  * set ldap server require strong auth = yes in smb.conf template.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 12 Mar 2019 18:36:04 +0100
+
 linuxmuster-base7 (7.0.32-0ubuntu0) lmn7-testing; urgency=low
 
   * enabling mail service during setup.
