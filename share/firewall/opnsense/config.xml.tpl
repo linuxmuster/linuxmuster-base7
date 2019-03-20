@@ -90,6 +90,7 @@
       <permitrootlogin>1</permitrootlogin>
     </ssh>
     @@dnsconfig@@
+    <secondaryconsole>serial</secondaryconsole>
   </system>
   @@interfaces@@
   <dhcpd>
@@ -188,36 +189,6 @@
       <created>
         <username>linuxmuster</username>
         <time>1543615569.0833</time>
-        <description>/firewall_nat_edit.php made changes</description>
-      </created>
-    </rule>
-    <rule>
-      <protocol>tcp</protocol>
-      <interface>wan</interface>
-      <ipprotocol>inet</ipprotocol>
-      <descr>HTTPS -&gt; Docker</descr>
-      <tag/>
-      <tagged/>
-      <poolopts/>
-      <associated-rule-id>pass</associated-rule-id>
-      <disabled>1</disabled>
-      <target>@@dockerip@@</target>
-      <local-port>443</local-port>
-      <source>
-        <any>1</any>
-      </source>
-      <destination>
-        <any>1</any>
-        <port>443</port>
-      </destination>
-      <updated>
-        <username>linuxmuster</username>
-        <time>1543615614.6487</time>
-        <description>/firewall_nat_edit.php made changes</description>
-      </updated>
-      <created>
-        <username>linuxmuster</username>
-        <time>1543615614.6487</time>
         <description>/firewall_nat_edit.php made changes</description>
       </created>
     </rule>

@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20190118
+# 20190320
 #
 
 import bcrypt
@@ -97,7 +97,10 @@ def main():
         soup = BeautifulSoup(content, 'lxml')
         # save certain configuration values for later use
         sysctl = str(soup.findAll('sysctl')[0])
-        interfaces = str(soup.findAll('interfaces')[0])
+        # get already configured interfaces
+        for item in soup.findAll('interfaces'):
+            if '<lan>' in str(item):
+                interfaces = str(item)
         # save language information
         try:
             language = str(soup.findAll('language')[0])
