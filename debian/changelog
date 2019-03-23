@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.35-0ubuntu0) lmn7-testing; urgency=low
+
+  * set ldap server require strong auth = no in smb.conf template.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 23 Mar 2019 13:35:49 +0100
+
 linuxmuster-base7 (7.0.34-0ubuntu0) lmn7-testing; urgency=low
 
   * fixed interfaces in firewall setup.
