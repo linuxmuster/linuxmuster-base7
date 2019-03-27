@@ -1,3 +1,18 @@
+linuxmuster-base7 (7.0.37-0ubuntu0) lmn7; urgency=low
+
+  * Fix #64: Computer is not a valid role in sophomorix anymore.
+  * Fix #67: Hostname or servername?.
+  * Fix #68: default-school share param.
+  * updated cupsd.conf template to allow remote administration.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 26 Mar 2019 23:03:35 +0100
+
+linuxmuster-base7 (7.0.36-0ubuntu0) lmn7-testing; urgency=low
+
+  * Fix #66: Adapt server ip value in all start.conf examples through setup.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 25 Mar 2019 14:07:33 +0100
+
 linuxmuster-base7 (7.0.35-0ubuntu0) lmn7-testing; urgency=low
 
   * set ldap server require strong auth = no in smb.conf template.

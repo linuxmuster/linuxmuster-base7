@@ -2,7 +2,7 @@
 #
 # linbo setup
 # thomas@linuxmuster.net
-# 20171124
+# 20190326
 #
 
 import configparser
@@ -82,15 +82,19 @@ except:
     sys.exit(1)
 
 # set serverip in default start.conf
-startconf = constants.LINBODIR + '/start.conf'
-msg = 'Writing server ip to default start.conf '
+msg = 'Providing server ip to linbo start.conf files '
+# default start.conf
+conffiles = [constants.LINBODIR + '/start.conf']
+# collect example start.conf files
+for item in os.listdir(constants.LINBODIR + '/examples'):
+    if not item.startswith('start.conf.'):
+        continue
+    conffiles.append(constants.LINBODIR + '/examples/' + item)
 printScript(msg, '', False, False, True)
 try:
-    s = configparser.ConfigParser(strict=False)
-    s.read(startconf)
-    s.set('LINBO', 'Server', serverip)
-    with open(startconf, 'w') as config:
-        s.write(config)
+    for startconf in conffiles:
+        rc, content = readTextfile(startconf)
+        rc = writeTextfile(startconf, content.replace('10.16.1.1', serverip), 'w')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# create samba users
+# create samba users & shares
 # thomas@linuxmuster.net
-# 20100113
+# 20190326
 #
 
 import configparser
@@ -28,6 +28,7 @@ try:
     setup.read(setupini)
     adminpw = setup.get('setup', 'adminpw')
     domainname = setup.get('setup', 'domainname')
+    sambadomain = setup.get('setup', 'sambadomain')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -64,11 +65,14 @@ subProc('sophomorix-postinst', logfile)
 # create default-school share
 schoolname = os.path.basename(constants.DEFAULTSCHOOL)
 defaultpath = constants.SCHOOLSSHARE + '/' + schoolname
-shareopts = constants.SCHOOLSSHAREOPTS
+shareopts = 'writeable=y guest_ok=n'
+shareoptsex = ['comment "Share for default-school"', '"hide unreadable" yes', '"msdfs root" no', '"strict allocate" yes', '"valid users" "' + sambadomain + '\\administrator, @' + sambadomain + '\\SCHOOLS"']
 msg = 'Creating share for ' + schoolname
 printScript(msg, '', False, False, True)
 try:
     subProc('net conf addshare ' + schoolname + ' ' + defaultpath + ' ' + shareopts, logfile)
+    for item in shareoptsex:
+        subProc('net conf setparm ' + schoolname + ' ' + item)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

@@ -2,7 +2,7 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20180626
+# 20190326
 #
 
 import configparser
@@ -70,15 +70,15 @@ setup.set('setup', 'basedn', basedn[:-1])
 # servername
 msg = '* Servername '
 printScript(msg, '', False, False, True)
-try:
+servername = '_'
+if 'servername' in setup['setup']:
+    servername = setup.get('setup', 'servername')
+elif 'hostname' in setup['setup']:
     servername = setup.get('setup', 'hostname')
-    if not isValidHostname(servername):
-        printScript(' ' + servername + ' is not valid!', '', True, True, False, len(msg))
-        sys.exit(1)
-    printScript(' ' + servername, '', True, True, False, len(msg))
-except:
-    printScript(' not set!', '', True, True, False, len(msg))
+if not isValidHostname(servername):
+    printScript(' servername ' + servername + ' is not valid!', '', True, True, False, len(msg))
     sys.exit(1)
+printScript(' ' + servername, '', True, True, False, len(msg))
 setup.set('setup', 'servername', servername)
 
 # derive values from servername
