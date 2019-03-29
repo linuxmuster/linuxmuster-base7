@@ -109,7 +109,7 @@ setup.set('setup', 'netbiosname', netbiosname)
 # domainname
 ititle = title + ': Domainname'
 while True:
-    rc, domainname = dialog.inputbox('Note that the first part of the domain name is used automatically as samba domain. Enter the internet domain name:', title=ititle, height=16, width=64, init=domainname)
+    rc, domainname = dialog.inputbox('Note that the first part of the domain name is used automatically as samba domain (maximal 15 characters using a-z and "-"). Use a prepending "linuxmuster" if your domain has more characters. Enter the internet domain name:', title=ititle, height=16, width=64, init=domainname)
     if rc == 'cancel':
         sys.exit(1)
     if isValidDomainname(domainname):
