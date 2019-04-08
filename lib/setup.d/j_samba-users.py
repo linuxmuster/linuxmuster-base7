@@ -2,13 +2,14 @@
 #
 # create samba users & shares
 # thomas@linuxmuster.net
-# 20190326
+# 20190408
 #
 
 import configparser
 import constants
 import os
 import sys
+from functions import modIni
 from functions import randomPassword
 from functions import printScript
 from functions import subProc
@@ -29,6 +30,7 @@ try:
     adminpw = setup.get('setup', 'adminpw')
     domainname = setup.get('setup', 'domainname')
     sambadomain = setup.get('setup', 'sambadomain')
+    firewallip = setup.get('setup', 'firewallip')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -117,6 +119,19 @@ msg = 'Creating ou for ' + schoolname
 printScript(msg, '', False, False, True)
 try:
     subProc('sophomorix-school --create --school ' + schoolname, logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# add firewall as dns forwarder
+# smb.conf
+msg = 'Add firewall as dns forwarder '
+printScript(msg, '', False, False, True)
+try:
+    modIni('/etc/samba/smb.conf','global', 'dns forwarder', firewallip)
+    subProc('echo "nameserver ' + firewallip + '" >> /etc/resolv.conf', logfile)
+    subProc('systemctl restart samba-ad-dc.service', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

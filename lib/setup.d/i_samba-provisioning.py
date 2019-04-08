@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20181124
+# 20190408
 #
 
 import configparser
@@ -52,7 +52,6 @@ try:
     sambadomain = setup.get('setup', 'sambadomain')
     serverip = setup.get('setup', 'serverip')
     servername = setup.get('setup', 'servername')
-    firewallip = setup.get('setup', 'firewallip')
     domainname = setup.get('setup', 'domainname')
     basedn = setup.get('setup', 'basedn')
     printScript(' Success!', '', True, True, False, len(msg))
@@ -155,9 +154,8 @@ try:
     now = str(datetime.datetime.now()).split('.')[0]
     header = '# created by linuxmuster-setup ' + now + '\n'
     search = 'search ' + domainname + '\n'
-    ns1 = 'nameserver ' + serverip + '\n'
-    ns2 = 'nameserver ' + firewallip
-    filedata = header + search + ns1 + ns2
+    ns = 'nameserver ' + serverip + '\n'
+    filedata = header + search + ns
     os.unlink(resconf)
     rc = writeTextfile(resconf, filedata, 'w')
     printScript(' Success!', '', True, True, False, len(msg))
