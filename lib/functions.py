@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20190111
+# 20190709
 #
 
 import codecs
@@ -635,7 +635,9 @@ def getHostname(devices, search):
             # skip lines
             if not re.match(r'[a-zA-Z0-9]', row[0]):
                 continue
-            room, host, group, mac, ip, field6, field7, dhcpopts, field9, field10, pxe = row
+            host = row[1]
+            mac = row[3]
+            ip = row[4]
             if search == ip or search.upper() == mac.upper() or search.lower() == host.lower():
                 hostname = host.lower()
                 hostrow = row

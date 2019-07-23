@@ -254,6 +254,26 @@
       <interface>lan</interface>
       <ipprotocol>inet</ipprotocol>
       <statetype>keep state</statetype>
+      <descr>Allow Radius Authentication</descr>
+      <protocol>tcp</protocol>
+      <source>
+        <any>1</any>
+      </source>
+      <destination>
+        <network>lanip</network>
+        <port>1812</port>
+      </destination>
+      <created>
+        <username>linuxmuster</username>
+        <time>1502370804,8546</time>
+        <description>/firewall_rules_edit.php made changes</description>
+      </created>
+    </rule>
+    <rule>
+      <type>pass</type>
+      <interface>lan</interface>
+      <ipprotocol>inet</ipprotocol>
+      <statetype>keep state</statetype>
       <descr>Allow NoProxy-Group</descr>
       <source>
         <address>NoProxy</address>
@@ -547,6 +567,65 @@
       <ADKerberosImplementation>W2008</ADKerberosImplementation>
       <KerberosHostName>FIREWALL-K</KerberosHostName>
     </ProxySSO>
+    <freeradius>
+      <user version="1.0.2">
+        <users/>
+      </user>
+      <dhcp version="1.0.0">
+        <dhcps/>
+      </dhcp>
+      <lease version="1.0.0">
+        <leases/>
+      </lease>
+      <general version="1.0.0">
+        <enabled>1</enabled>
+        <vlanassign>0</vlanassign>
+        <ldap_enabled>1</ldap_enabled>
+        <wispr>0</wispr>
+        <chillispot>0</chillispot>
+        <mikrotik>0</mikrotik>
+        <sqlite>0</sqlite>
+        <sessionlimit>0</sessionlimit>
+        <log_destination>files</log_destination>
+        <log_authentication_request>0</log_authentication_request>
+        <log_authbadpass>0</log_authbadpass>
+        <log_authgoodpass>0</log_authgoodpass>
+        <dhcpenabled>0</dhcpenabled>
+        <dhcplistenip/>
+        <mysql>0</mysql>
+        <mysqlserver>127.0.0.1</mysqlserver>
+        <mysqlport>3306</mysqlport>
+        <mysqluser>radius</mysqluser>
+        <mysqlpassword>radpass</mysqlpassword>
+        <mysqldb>radius</mysqldb>
+      </general>
+      <eap version="1.0.0">
+        <default_eap_type>mschapv2</default_eap_type>
+        <enable_client_cert>1</enable_client_cert>
+        <ca>598c5487e6d54</ca>
+        <certificate>598edde7a20b2</certificate>
+        <crl/>
+      </eap>
+      <client version="1.0.0">
+        <clients>
+          <client uuid="5db2f1d3-4097-4d0f-afe4-1b513d22548b">
+            <enabled>1</enabled>
+            <name>servernet</name>
+            <secret>@@radiussecret@@</secret>
+            <ip>@@network@@/@@bitmask@@</ip>
+          </client>
+        </clients>
+      </client>
+      <ldap version="1.0.0">
+        <protocol>LDAPS</protocol>
+        <server>@@servername@@.@@domainname@@</server>
+        <identity>CN=global-binduser,OU=Management,OU=GLOBAL,@@basedn@@</identity>
+        <password>@@binduserpw@@</password>
+        <base_dn>OU=SCHOOLS,@@basedn@@</base_dn>
+        <user_filter>(&amp;(objectClass=person)(sAMAccountName=%{%{Stripped-User-Name}:-%{User-Name}})(memberOf=CN=wifi*))</user_filter>
+        <group_filter>(objectClass=group)</group_filter>
+      </ldap>
+    </freeradius>
   </OPNsense>
   <ppps/>
   <ca>

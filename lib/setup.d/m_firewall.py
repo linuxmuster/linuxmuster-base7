@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20190320
+# 20190722
 #
 
 import bcrypt
@@ -18,9 +18,11 @@ from functions import isValidHostIpv4
 from functions import modIni
 from functions import printScript
 from functions import putFwConfig
+from functions import putSftp
 from functions import randomPassword
 from functions import readTextfile
 from functions import sshExec
+from functions import subProc
 from functions import writeTextfile
 
 title = os.path.basename(__file__).replace('.py', '').split('_')[1]
@@ -61,6 +63,19 @@ def main():
     timezone = timezone.replace('\n', '')
     # get binduser password
     rc, binduserpw = readTextfile(constants.BINDUSERSECRET)
+
+    # create and save radius secret
+    msg = 'Calculating radius secret '
+    printScript(msg, '', False, False, True)
+    try:
+        radiussecret = randomPassword(16)
+        with open(constants.RADIUSSECRET, 'w') as secret:
+            secret.write(radiussecret)
+        subProc('chmod 400 ' + constants.RADIUSSECRET, logfile)
+        printScript(' Success!', '', True, True, False, len(msg))
+    except:
+        printScript(' Failed!', '', True, True, False, len(msg))
+        sys.exit(1)
 
     # firewall config files
     now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
@@ -203,6 +218,7 @@ def main():
         content = content.replace('@@apikey@@', apikey)
         content = content.replace('@@apisecret_hashed@@', apisecret_hashed)
         content = content.replace('@@binduserpw@@', binduserpw)
+        content = content.replace('@@radiussecret@@', radiussecret)
         content = content.replace('@@language@@', language)
         content = content.replace('@@timezone@@', timezone)
         content = content.replace('@@cacertb64@@', cacertb64)
@@ -235,8 +251,16 @@ def main():
     # remove temporary files
     #os.unlink(fwconftmp)
 
-    # reboot firewall
-    rc = sshExec(firewallip, 'configctl firmware reboot', adminpw)
+    # install extensions and reboot firewall
+    fwsetup_local = constants.CACHEDIR + '/fwsetup.sh'
+    content = '#!/bin/sh\necho "y" | pkg install os-web-proxy-sso'
+    content = content + '\necho "y" | pkg install os-freeradius'
+    content = content + '\nconfigctl firmware reboot'
+    with open(fwsetup_local, 'w') as fwsetup:
+        fwsetup.write(content)
+    fwsetup_remote = '/tmp/fwsetup.sh'
+    rc = putSftp(firewallip, fwsetup_local, fwsetup_remote, adminpw)
+    rc = sshExec(firewallip, '/bin/sh ' + fwsetup_remote, adminpw)
     if not rc:
         sys.exit(1)
 

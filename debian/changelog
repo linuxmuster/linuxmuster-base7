@@ -1,3 +1,15 @@
+linuxmuster-base7 (7.0.41-0ubuntu0) lmn7; urgency=low
+
+  * added opnsense freeradius configuration setup.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 22 Jul 2019 22:21:35 +0200
+
+linuxmuster-base7 (7.0.40-0ubuntu0) lmn7; urgency=low
+
+  * fixed getHostname() in functions.py.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 09 Jul 2019 21:11:49 +0200
+
 linuxmuster-base7 (7.0.39-0ubuntu0) lmn7; urgency=low
 
   * added cups entries in smb.conf template.

@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20190326
+# 20190722
 #
 
 # don't change this file
@@ -28,6 +28,7 @@ SSHPUBKEY = '/root/.ssh/id_rsa.pub'
 SSHPUBKEYB64 = SSHPUBKEY + '.b64'
 SECRETDIR = SYSDIR + '/.secret'
 BINDUSERSECRET = SECRETDIR + '/global-binduser'
+RADIUSSECRET = SECRETDIR + '/radiussecret'
 ADADMINSECRET = SECRETDIR + '/administrator'
 CAKEYSECRET = SECRETDIR + '/cakey'
 FWAPIKEYS = SECRETDIR + '/firewall.api.ini'
