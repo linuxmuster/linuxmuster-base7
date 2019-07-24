@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.42-0ubuntu0) lmn7; urgency=low
+
+  * Fix  #74: Typo in setup.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 22 Jul 2019 22:21:35 +0200
+
 linuxmuster-base7 (7.0.41-0ubuntu0) lmn7; urgency=low
 
   * added opnsense freeradius configuration setup.

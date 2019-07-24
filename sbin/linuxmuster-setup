@@ -2,7 +2,7 @@
 #
 # linuxmuster-setup
 # thomas@linuxmuster.net
-# 20190112
+# 20190724
 #
 
 import constants
@@ -31,7 +31,7 @@ def usage():
     print(' -e <schoolname>, --schoolname=<schoolname> : Set school name.')
     print(' -l <location>,   --location=<location>     : Set school location.')
     print(' -z <country>,    --country=<country>       : Set school country.')
-    print(' -v <state>,      --country=<state>         : Set school state.')
+    print(' -v <state>,      --state=<state>           : Set school state.')
     print(' -c <file>,       --config=<file>           : path to ini file with setup values')
     print(' -u,              --unattended              : unattended mode, do not ask questions')
     print(' -s,              --skip-fw                 : skip firewall setup per ssh')
