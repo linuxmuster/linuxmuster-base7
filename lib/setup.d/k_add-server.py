@@ -2,7 +2,7 @@
 #
 # add additional servers to devices.csv
 # thomas@linuxmuster.net
-# 20181124
+# 20190916
 #
 
 import configparser
@@ -32,7 +32,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     firewallip = setup.get('setup', 'firewallip')
     opsiip = setup.get('setup', 'opsiip')

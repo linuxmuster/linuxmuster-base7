@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20190408
+# 20190916
 #
 
 import configparser
@@ -46,7 +46,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     realm = setup.get('setup', 'domainname').upper()
     sambadomain = setup.get('setup', 'sambadomain')

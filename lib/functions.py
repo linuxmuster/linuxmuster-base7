@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20190709
+# 20190916
 #
 
 import codecs
@@ -26,7 +26,7 @@ import string
 from contextlib import closing
 from IPy import IP
 from shutil import copyfile
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE
 
 # append stdout to logfile
 class tee(object):
@@ -123,7 +123,7 @@ def getFromSetup():
     dockerip = ''
     adminpw = ''
     try:
-        setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+        setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
         setup.read(setupini)
         domainname = setup.get('setup', 'domainname')
         bitmask = setup.get('setup', 'bitmask')
@@ -303,7 +303,7 @@ def replaceInFile(tfile, search, replace):
 # modify and write ini file
 def modIni(inifile, section, option, value):
     try:
-        i = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+        i = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
         if not os.path.isfile(inifile):
             # create inifile
             writeTextfile(inifile, '[' + section + ']\n', 'w')
@@ -318,7 +318,7 @@ def modIni(inifile, section, option, value):
 # firewall api get request
 def firewallApi(request, path, data=''):
     domainname, bitmask, serverip, firewallip, opsiip, dockerip, adminpw = getFromSetup()
-    fwapi = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+    fwapi = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
     fwapi.read(constants.FWAPIKEYS)
     apikey = fwapi.get('api', 'key')
     apisecret = fwapi.get('api', 'secret')
@@ -453,7 +453,7 @@ def getStartconfOption(startconf, section, option):
         return None
     try:
         # read in to configparser
-        s = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+        s = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
         s.read_string(content)
         return s.get(section, option)
     except:
@@ -513,7 +513,7 @@ def getStartconfOsValues(startconf):
         return None
     try:
         # read in to configparser
-        s = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+        s = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
         s.read_string(content)
         count = 1
         oslists = {}

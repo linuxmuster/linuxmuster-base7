@@ -2,7 +2,7 @@
 #
 # opsiserver setup
 # thomas@linuxmuster.net
-# 20180215
+# 20190916
 #
 
 import configparser
@@ -35,7 +35,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     # get setup various values
     serverip = setup.get('setup', 'serverip')

@@ -2,21 +2,17 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20190326
+# 20190916
 #
 
 import configparser
 import constants
 import os
 import sys
-from functions import detectedInterfaces
 from functions import printScript
 from functions import isValidHostname
 from functions import isValidDomainname
 from functions import isValidHostIpv4
-from functions import getDefaultIface
-from functions import readTextfile
-from functions import writeTextfile
 from functions import subProc
 from IPy import IP
 
@@ -27,7 +23,7 @@ printScript('', 'begin')
 printScript(title)
 
 # read ini files
-setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
 for item in [constants.DEFAULTSINI, constants.PREPINI, constants.SETUPINI, constants.CUSTOMINI]:
     # skip non existant file
     if not os.path.isfile(item):

@@ -2,12 +2,13 @@
 #
 # patch fstab with mount options
 # thomas@linuxmuster.net
-# 20170428
+# 20190916
 #
 
 import constants
 import os
 import reconfigure
+import sys
 
 from reconfigure.configs import FSTabConfig
 from reconfigure.items.fstab import FilesystemData

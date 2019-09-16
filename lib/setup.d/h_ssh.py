@@ -2,7 +2,7 @@
 #
 # setup ssh keys and ssh links to additional servers
 # thomas@linuxmuster.net
-# 20180509
+# 20190916
 #
 
 import configparser
@@ -32,7 +32,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     # get ip addresses
     serverip = setup.get('setup', 'serverip')

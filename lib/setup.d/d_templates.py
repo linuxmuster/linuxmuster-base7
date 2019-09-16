@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20181031
+# 20190916
 #
 
 import configparser
@@ -33,7 +33,7 @@ try:
     defaults = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
     defaults.read(constants.DEFAULTSINI)
     # setup.ini
-    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     adminpw = setup.get('setup', 'adminpw')
     bitmask = setup.get('setup', 'bitmask')

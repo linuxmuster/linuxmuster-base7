@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20190722
+# 20190916
 #
 
 import bcrypt
@@ -36,7 +36,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     # check if firewall shall be skipped
     skipfw = setup.getboolean('setup', 'skipfw')

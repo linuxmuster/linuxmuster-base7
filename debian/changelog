@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.0.43-0ubuntu0) lmn7; urgency=low
+
+  * Fix #75, linuxmuster-setup: Handle special chars ($, %) in passwords.
+  * Minor fix in e_fstab.py concerning to missing import sys.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 16 Sep 2019 15:55:06 +0200
+
 linuxmuster-base7 (7.0.42-0ubuntu0) lmn7; urgency=low
 
   * Fix  #74: Typo in setup.
