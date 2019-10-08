@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.44-0ubuntu0) lmn7; urgency=low
+
+  * functions.py, getGrubPart(): nvme grub disk numbering fix (#76).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 08 Oct 2019 21:19:20 +0200
+
 linuxmuster-base7 (7.0.43-0ubuntu0) lmn7; urgency=low
 
   * Fix #75, linuxmuster-setup: Handle special chars ($, %) in passwords.

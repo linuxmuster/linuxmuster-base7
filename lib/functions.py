@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20190916
+# 20191008
 #
 
 import codecs
@@ -240,16 +240,14 @@ def getGrubPart(partition, systemtype):
         elif re.findall(r'nvme0n[0-9]p', partition):
             partnr = re.sub(r'nvme0n[0-9]p', '', partition)
             hdnr = re.search(r'nvme0n(.+?)p[0-9]', partition).group(1)
-            hdnr = hdnr - 1
+            hdnr = str(int(hdnr) - 1)
         else:
             return None
     except:
         return None
-    # increase disk number in case of efi system
-    if 'efi' in systemtype.lower():
-        hdnr = int(hdnr) + 1
-        hdnr = str(hdnr)
-    return '(hd' + hdnr + ',' + partnr + ')'
+    # return grub partition designation
+    grubpart = '(hd' + hdnr + ',' + partnr + ')'
+    return grubpart
 
 # return grub ostype
 def getGrubOstype(osname):
