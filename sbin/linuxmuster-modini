@@ -1,0 +1,93 @@
+#!/usr/bin/python3
+#
+# linuxmuster-modini
+# thomas@linuxmuster.net
+# 20191204
+#
+
+import getopt
+import os
+import sys
+from functions import modIni
+from functions import printLf
+
+
+def usage():
+    print('Modify ini files on command line. Usage: linuxmuster-modini [options]')
+    print(' [options] may be:')
+    print(' -i <path/to/inifile>, --inifile=<path/to/inifile> : Path to inifile (mandatory).')
+    print(' -s <sectionname>,     --section=<sectionname>     : Name of section to work on (mandatory).')
+    print(' -o <optionname>,      --option=<optionname>       : Name of option (mandatory).')
+    print(' -v <value>,           --value=<value>             : value of option (mandatory).')
+    print(' -r <servicename>,     --service=<servicename>     : Name of service to restart (optional).')
+    print(' -h,                   --help                      : print this help')
+    print("Example: linuxmuster-modini -i /etc/samba/smb.conf -s global -o 'time server' -v Yes -r samba-ad-dc")
+
+# get cli args
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "hi:o:r:s:v:", ["help", "inifile=", "section=", "option=", "value=", "service="])
+except getopt.GetoptError as err:
+    # print help information and exit:
+    print(err)  # will print something like "option -a not recognized"
+    usage()
+    sys.exit(2)
+
+
+# evaluate options
+inifile = None
+section = None
+option = None
+value = None
+service = None
+for o, a in opts:
+    if o in ("-i", "--inifile"):
+        inifile = a
+    elif o in ("-s", "--section"):
+        section = a
+    elif o in ("-o", "--option"):
+        option = a
+    elif o in ("-v", "--value"):
+        value = a
+    elif o in ("-r", "--service"):
+        service = a
+    elif o in ("-h", "--help"):
+        usage()
+        sys.exit()
+    else:
+        assert False, "unhandled option"
+
+
+# is inifile there?
+if inifile is not None and not os.path.isfile(inifile):
+    print('File not found!')
+    usage()
+    sys.exit()
+
+# check parameter values
+if section is None or option is None or value is None:
+    print('Parameter error!')
+    usage()
+    sys.exit()
+
+
+# modify inifile
+printLf('Modifying ' + inifile + ' ... ', False)
+rc = modIni(inifile, section, option, value)
+if rc is True:
+    rc = 0
+    print('OK!')
+else:
+    rc = 1
+    print('Failed!')
+
+
+# restart service
+if service is not None and rc == 0:
+    printLf('Restarting ' + service + ' ... ', False)
+    rc = os.system('service ' + service + ' restart')
+    if rc == 0:
+        print('OK!')
+    else:
+        print('Failed!')
+
+sys.exit(rc)

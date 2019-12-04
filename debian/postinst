@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20181109
+# 20191204
 # GPL v3
 #
 
@@ -70,19 +70,44 @@ case "$1" in
     fi
   fi
 
-  # dhcp update
-  conf='/etc/dhcp/dhcpd.conf'
-  search='include "/etc/dhcp/servernet.conf";'
-  if grep -q ^"$search" "$conf"; then
-    echo "Updating dhcp configuration."
+  # timesyncd update, add firewall ip as parent ntp server
+  conf='/etc/systemd/timesyncd.conf'
+  search="NTP=${firewallip}"
+  if ! grep -q ^"$search" "$conf"; then
+    echo "Updating time server related timesyncd configuration."
     cp "$conf" "$conf".dpkg-bak
-    sed -i "s|$search|#$search|" "$conf"
-    line="${network}/${bitmask};${firewallip};${range1};${range2}"
-    if ! grep -q ^"$line" "$SUBNETSCSV"; then
-      echo "# server network" >> "$SUBNETSCSV"
-      echo "$line" >> "$SUBNETSCSV"
-    fi
-    linuxmuster-import-subnets
+    echo "$search" >> "$conf"
+    systemctl daemon-reload
+  fi
+
+  # smb.conf update, enable time server
+  tserver="$(testparm -l -s --parameter-name="time server" 2>/dev/null | tr A-Z a-z)"
+  if [ "$tserver" != "yes" ];then
+    echo "Updating time server related samba configuration."
+    conf="/etc/samba/smb.conf"
+    cp "$conf" "$conf".dpkg-bak
+    linuxmuster-modini -i "$conf" -s global -o 'time server' -v Yes -r samba-ad-dc
+  fi
+
+  # dhcp update, server ip as ntp server
+  conf='/etc/dhcp/dhcpd.conf'
+  search="option ntp-servers ${firewallip}"
+  if grep -q ^"$search" "$conf"; then
+    echo "Updating time server related dhcp configuration."
+    replace="${search/$firewallip/$serverip}"
+    cp "$conf" "$conf".dpkg-bak
+    sed -i "s|^$search|$replace|" "$conf"
+    systemctl restart isc-dhcp-server.service
+  fi
+
+  # enable ntp service, change firewall name to ip
+  if ! systemctl status ntp.service &> /dev/null; then
+    conf="/etc/ntp.conf"
+    echo "Enabling ntp service."
+    cp "$conf" "$conf".dpkg-bak
+    sed -i "s|^pool firewall|pool $firewallip|" "$conf"
+    systemctl enable ntp.service
+    systemctl start ntp.service
   fi
 
  ;;

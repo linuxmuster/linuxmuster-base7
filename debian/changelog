@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.0.45-0ubuntu0) lmn7; urgency=low
+
+  * Fix #78: enable time server services.
+  * add linuxmuster-modini python script for easy ini file manipulation.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 04 Dec 2019 17:07:52 +0100
+
 linuxmuster-base7 (7.0.44-0ubuntu0) lmn7; urgency=low
 
   * functions.py, getGrubPart(): nvme grub disk numbering fix (#76).
