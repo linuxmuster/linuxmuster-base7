@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20190916
+# 20200226
 #
 
 import configparser
@@ -50,6 +50,7 @@ try:
     setup.read(setupini)
     realm = setup.get('setup', 'domainname').upper()
     sambadomain = setup.get('setup', 'sambadomain')
+    schoolname = setup.get('setup', 'schoolname')
     serverip = setup.get('setup', 'serverip')
     servername = setup.get('setup', 'servername')
     domainname = setup.get('setup', 'domainname')
@@ -132,6 +133,22 @@ try:
     #subProc('sophomorix-samba --schema-load', logfile)
     subProc('sophomorix-samba --backup-samba without-sophomorix-schema', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# write schoolname to sophomorix school.conf
+msg = 'Write schoolname to sophomorix school.conf '
+printScript(msg, '', False, False, True)
+schoolconf = constants.SCHOOLCONF
+bakfile = schoolconf + '.dist'
+try:
+    sophomorix = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
+    sophomorix.read(schoolconf)
+    sophomorix.set('school', 'SCHOOL_LONGNAME', schoolname)
+    os.system('cp ' + schoolconf + ' ' + bakfile)
+    with open(schoolconf, 'w') as outfile:
+        sophomorix.write(outfile)
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
