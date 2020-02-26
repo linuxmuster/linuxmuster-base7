@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20190722
+# 20200226
 #
 
 # don't change this file
@@ -38,6 +38,8 @@ SHAREDIR = '/usr/share/linuxmuster'
 EXAMPLEDIR = SHAREDIR + '/examples'
 CACHEDIR = '/var/cache/linuxmuster'
 VARDIR = '/var/lib/linuxmuster'
+HOOKSDIR = VARDIR + '/hooks'
+POSTDEVIMPORT = HOOKSDIR + '/device-import.post.d'
 LOGDIR = '/var/log/linuxmuster'
 SETUPLOG = LOGDIR + '/setup.log'
 SETUPDIR = LIBDIR + '/setup.d'

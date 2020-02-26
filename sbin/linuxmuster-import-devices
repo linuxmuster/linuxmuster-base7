@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20181205
+# 20200226
 #
 
 import configparser
@@ -10,7 +10,11 @@ import constants
 import csv
 import os
 import re
+import subprocess
 import sys
+
+from os import listdir
+from os.path import isfile, join
 
 from functions import getGrubOstype
 from functions import getGrubPart
@@ -270,6 +274,20 @@ for group in pxe_groups:
     msg = '* ' + group
     printScript(msg)
     doLinboStartconf(group)
+
+# execute post hooks
+hookpath = constants.POSTDEVIMPORT
+hookscripts = [f for f in listdir(hookpath) if isfile(join(hookpath, f)) and os.access(join(hookpath, f), os.X_OK)]
+if len(hookscripts) > 0:
+    printScript('', 'begin')
+    printScript('Executing post hooks:')
+    for h in hookscripts:
+        hookscript = hookpath + '/' + h
+        msg = '* ' + h + ' '
+        printScript(msg, '', False, False, True)
+        output = subprocess.getoutput(hookscript)
+        if output != '':
+            print(output)
 
 # restart services
 printScript('', 'begin')

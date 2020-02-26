@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.0.46-0ubuntu0) lmn7; urgency=low
+
+  * Fix #62: implemented linuxmuster-import-devices post hook scripts. Scripts
+    can be placed in /var/lib/linuxmuster/hooks/device-import.post.d. Command's
+    output will be printed, return code is ignored.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 26 Feb 2020 14:41:34 +0100
+
 linuxmuster-base7 (7.0.45-0ubuntu0) lmn7; urgency=low
 
   * Fix #78: enable time server services.

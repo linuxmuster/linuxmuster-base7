@@ -2,5 +2,5 @@ etc/linuxmuster/ssl
 etc/linuxmuster/.secret
 usr/share/linuxmuster/templates
 var/cache/linuxmuster
-var/lib/linuxmuster
+var/lib/linuxmuster/hooks/device-import.post.d
 var/log/linuxmuster
