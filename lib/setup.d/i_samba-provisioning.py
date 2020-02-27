@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20200226
+# 20200227
 #
 
 import configparser
@@ -11,6 +11,7 @@ import datetime
 import glob
 import os
 import sys
+from functions import modIni
 from functions import randomPassword
 from functions import replaceInFile
 from functions import printScript
@@ -137,21 +138,19 @@ except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# write schoolname to sophomorix school.conf
-msg = 'Write schoolname to sophomorix school.conf '
-printScript(msg, '', False, False, True)
-schoolconf = constants.SCHOOLCONF
-bakfile = schoolconf + '.dist'
-try:
-    sophomorix = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
-    sophomorix.read(schoolconf)
-    sophomorix.set('school', 'SCHOOL_LONGNAME', schoolname)
-    os.system('cp ' + schoolconf + ' ' + bakfile)
-    with open(schoolconf, 'w') as outfile:
-        sophomorix.write(outfile)
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
-    sys.exit(1)
+# write schoolname to sophomorix school.conf (not yet usable)
+#msg = 'Write schoolname to sophomorix school.conf '
+#printScript(msg, '', False, False, True)
+#schoolconf = constants.SCHOOLCONF
+#bakfile = schoolconf + '.dist'
+#try:
+    # backup up config
+#    if not os.path.isfile(bakfile):
+#        os.system('cp ' + schoolconf + ' ' + bakfile)
+#    modIni(schoolconf, 'school', 'school_longname', schoolname)
+#except:
+#    printScript(' Failed!', '', True, True, False, len(msg))
+#    sys.exit(1)
 
 # loading sophomorix samba schema
 msg = 'Provisioning sophomorix samba schema '

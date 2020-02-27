@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.48-0ubuntu0) lmn7; urgency=low
+
+  * Remove schoolname handling from i_samba-provisioning.py (reopens #82).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 27 Feb 2020 13:05:37 +0100
+
 linuxmuster-base7 (7.0.47-0ubuntu0) lmn7; urgency=low
 
   * Fix #82: During setup schoolname is written by i_samba-provisioning.py to
