@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20190916
+# 20200302
 #
 
 import bcrypt
@@ -245,6 +245,13 @@ def main():
 
     # upload new configfile
     rc = putFwConfig(firewallip, constants.ROOTPW)
+    if not rc:
+        sys.exit(1)
+
+    # upload modified credentialsttl config file for web-proxy sso (#84)
+    rc, content = readTextfile(constants.FWCREDTTLCFG)
+    fwpath = content.split('\n')[0].partition(' ')[2]
+    rc = putSftp(firewallip, constants.FWCREDTTLCFG, fwpath, adminpw)
     if not rc:
         sys.exit(1)
 

@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20191204
+# 20200302
 # GPL v3
 #
 
@@ -108,6 +108,16 @@ case "$1" in
     sed -i "s|^pool firewall|pool $firewallip|" "$conf"
     systemctl enable ntp.service
     systemctl start ntp.service
+  fi
+
+  # fix #84
+  if [ -n "$skipfw" -a "$skipfw" = "False" ]; then
+    fwpath="$(head -1 "$FWCREDTTLCFG" | awk '{ print $2 }')"
+    if ! ssh -oStrictHostKeyChecking=accept-new "$firewallip" ls "$fwpath" &> /dev/null; then
+      echo "Decreasing credentialsttl value in opnsense's web-proxy sso configuration."
+      scp "$FWCREDTTLCFG" "$firewallip":"$fwpath"
+      ssh "$firewallip" /usr/local/etc/rc.d/squid restart
+    fi
   fi
 
  ;;
