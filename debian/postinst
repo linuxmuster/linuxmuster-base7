@@ -110,10 +110,16 @@ case "$1" in
     systemctl start ntp.service
   fi
 
-  # fix #84
+  # fix #83
   if [ -n "$skipfw" -a "$skipfw" = "False" ]; then
+    if ssh -q -oStrictHostKeyChecking=accept-new "$firewallip" exit; then
+      echo "SSH connection to firewall $firewallip successfully established."
+    else
+      echo "SSH connection to firewall $firewallip failed!"
+      exit 0
+    fi
     fwpath="$(head -1 "$FWCREDTTLCFG" | awk '{ print $2 }')"
-    if ! ssh -oStrictHostKeyChecking=accept-new "$firewallip" ls "$fwpath" &> /dev/null; then
+    if ! ssh -q -oStrictHostKeyChecking=accept-new "$firewallip" ls "$fwpath"; then
       echo "Decreasing credentialsttl value in opnsense's web-proxy sso configuration."
       scp "$FWCREDTTLCFG" "$firewallip":"$fwpath"
       ssh "$firewallip" /usr/local/etc/rc.d/squid restart

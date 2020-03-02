@@ -248,7 +248,7 @@ def main():
     if not rc:
         sys.exit(1)
 
-    # upload modified credentialsttl config file for web-proxy sso (#84)
+    # upload modified credentialsttl config file for web-proxy sso (#83)
     rc, content = readTextfile(constants.FWCREDTTLCFG)
     fwpath = content.split('\n')[0].partition(' ')[2]
     rc = putSftp(firewallip, constants.FWCREDTTLCFG, fwpath, adminpw)
