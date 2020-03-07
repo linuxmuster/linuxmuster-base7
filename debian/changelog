@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.0.52-0ubuntu0) lmn7; urgency=low
+
+  * Fix #85, creating pgmadmin during setup with default admin password.
+  * Fix #87, creating gpo for default school.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 07 Mar 2020 22:26:55 +0100
+
 linuxmuster-base7 (7.0.51-0ubuntu0) lmn7; urgency=low
 
   * Fix #86: added sudo users student & teacher.

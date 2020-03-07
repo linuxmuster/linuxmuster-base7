@@ -2,7 +2,7 @@
 #
 # create samba users & shares
 # thomas@linuxmuster.net
-# 20200304
+# 20200307
 #
 
 import configparser
@@ -108,6 +108,18 @@ msg = 'Creating ou for ' + schoolname
 printScript(msg, '', False, False, True)
 try:
     subProc('sophomorix-school --create --school ' + schoolname, logfile)
+    subProc('sophomorix-school --gpo-create ' + schoolname, logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# create pgmadmin for default-school
+msg = 'Creating samba account for pgmadmin '
+printScript(msg, '', False, False, True)
+try:
+    subProc('sophomorix-admin --create-school-admin pgmadmin --school ' + schoolname + ' --password "' + adminpw + '"', logfile)
+    subProc('sophomorix-user --user pgmadmin --comment "' + sophomorix_comment + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
