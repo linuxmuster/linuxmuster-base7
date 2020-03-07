@@ -2,7 +2,7 @@
 #
 # create samba users & shares
 # thomas@linuxmuster.net
-# 20190916
+# 20200304
 #
 
 import configparser
@@ -10,7 +10,7 @@ import constants
 import os
 import sys
 from functions import modIni
-from functions import randomPassword
+from functions import readTextfile
 from functions import printScript
 from functions import subProc
 
@@ -31,19 +31,8 @@ try:
     domainname = setup.get('setup', 'domainname')
     sambadomain = setup.get('setup', 'sambadomain')
     firewallip = setup.get('setup', 'firewallip')
-    printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
-    sys.exit(1)
-
-# create sophomorix admin user
-msg = 'Calculating random passwords '
-printScript(msg, '', False, False, True)
-try:
-    binduserpw = randomPassword(16)
-    with open(constants.BINDUSERSECRET, 'w') as secret:
-        secret.write(binduserpw)
-    subProc('chmod 400 ' + constants.SECRETDIR + '/*', logfile)
+    # get binduser password
+    rc, binduserpw = readTextfile(constants.BINDUSERSECRET)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

@@ -2,7 +2,7 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20190916
+# 20200304
 #
 
 import configparser
@@ -13,6 +13,7 @@ from functions import printScript
 from functions import isValidHostname
 from functions import isValidDomainname
 from functions import isValidHostIpv4
+from functions import randomPassword
 from functions import subProc
 from IPy import IP
 
@@ -204,19 +205,38 @@ except:
 #     sys.exit(1)
 # printScript(' ' + iface, '', True, True, False, len(msg))
 
-# write inifile finally
+# create global binduser password
+msg = 'Creating global binduser secret '
+printScript(msg, '', False, False, True)
+try:
+    binduserpw = randomPassword(16)
+    with open(constants.BINDUSERSECRET, 'w') as secret:
+        secret.write(binduserpw)
+    subProc('chmod 400 ' + constants.SECRETDIR + '/*', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# write setup.ini finally
 msg = 'Writing setup ini file '
 printScript(msg, '', False, False, True)
 try:
     with open(constants.SETUPINI, 'w') as outfile:
         setup.write(outfile)
     subProc('chmod 600 ' + constants.SETUPINI, logfile)
+    # temporary setup.ini for transfering it later to additional vms
+    setup.set('setup', 'binduserpw', binduserpw)
+    setup.set('setup', 'adminpw', '')
+    with open('/tmp/setup.ini', 'w') as outfile:
+        setup.write(outfile)
+    subProc('chmod 600 /tmp/setup.ini', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# delete temporary ini files
+# delete obsolete ini files
 for item in [constants.CUSTOMINI, constants.PREPINI]:
     if os.path.isfile(item):
         os.unlink(item)

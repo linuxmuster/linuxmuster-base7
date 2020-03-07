@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20190916
+# 20200306
 #
 
 import constants
@@ -204,21 +204,38 @@ setup.set('setup', 'mailip', mailip)
 # smtp access data
 if mailip != '':
     # smtp relay ip of fully qualified domain name
-    ititle = title + ': SMTP Relay IP'
+    ititle = title + ': SMTP Relay'
     try:
-        smtprelay=setup.get('setup', 'smtprelay')
+        smtprelay_full = setup.get('setup', 'smtprelay')
     except:
-        smtprelay = ''
+        smtprelay_full = ''
     while True:
-        rc, smtprelay = dialog.inputbox('Enter the ip address or fqdn of the smtp relay (optional):', title=ititle, height=16, width=64, init=smtprelay)
+        rc, smtprelay_full = dialog.inputbox('Enter the ip address or fqdn and port of the smtp relay, eg. mail.example.com:587 (optional). If port is omitted default port 25 is used. :', title=ititle, height=16, width=64, init=smtprelay_full)
         if rc == 'cancel':
             sys.exit(1)
+        # split relay address and port
+        smtprelay = smtprelay_full.split(':')[0]
+        try:
+            smtpport = smtprelay_full.split(':')[1]
+        except:
+            smtpport = '25'
+        # test valid relay address
         if (isValidHostIpv4(smtprelay) or isValidDomainname(smtprelay) or smtprelay == ''):
+            smtprelay_ok = True
+        else:
+            smtprelay_ok = False
+        # test valid port nr
+        try:
+            smtpport_nr = int(smtpport)
+            smtpport_ok = True
+        except:
+            smtpport_ok = False
+        if smtprelay_ok is True and smtpport_ok is True:
             break
-    print('SMTP relay ip: ' + smtprelay)
-    setup.set('setup', 'smtprelay', smtprelay)
+    print('SMTP relay: ' + smtprelay + ':' + smtpport)
+    setup.set('setup', 'smtprelay', smtprelay_full)
     # ask only if smtprelay is set
-    if smtprelay != '':
+    if smtprelay_full != '':
         # smtp user
         ititle = title + ': SMTP Username'
         try:
@@ -240,7 +257,7 @@ if mailip != '':
         except:
             smtppw = ''
         while True:
-            rc, smtppw = dialog.inputbox('Enter the name of the smtp user:', title=ititle, height=16, width=64, init=smtppw)
+            rc, smtppw = dialog.inputbox('Enter the password of the smtp user:', title=ititle, height=16, width=64, init=smtppw)
             if rc == 'cancel':
                 sys.exit(1)
             if smtppw != '':

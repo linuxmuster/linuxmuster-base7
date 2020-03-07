@@ -1,3 +1,17 @@
+linuxmuster-base7 (7.0.50-0ubuntu0) lmn7; urgency=low
+
+  * postinst: improved recognition of already configured opnsense firewall.
+  * setup:
+    - improved setup.ini handling for additional vms, setup.ini remains
+      permanently under /var/lib/linuxmuster/setup.ini and contains binduser
+      secret.
+    - improved mail container setup.
+    - smtp port number can be appended with colon separated (eg.
+      mail.example.com:587). If the port number is omitted the default port 25
+      is used.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 07 Mar 2020 14:14:31 +0100
+
 linuxmuster-base7 (7.0.49-1ubuntu0) lmn7; urgency=low
 
   * postinst: added firewall ssh connection check.

@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20200302
+# 20200306
 # GPL v3
 #
 
@@ -110,8 +110,8 @@ case "$1" in
     systemctl start ntp.service
   fi
 
-  # fix #83
-  if [ -n "$skipfw" -a "$skipfw" = "False" ]; then
+  # fix #83, patch opnsense's web-proxy sso configuration (only if system is configured)
+  if [ -e "$FWAPIKEYS" ]; then
     if ssh -q -oStrictHostKeyChecking=accept-new "$firewallip" exit; then
       echo "SSH connection to firewall $firewallip successfully established."
     else
