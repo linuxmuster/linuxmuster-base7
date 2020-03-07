@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.0.51-0ubuntu0) lmn7; urgency=low
+
+  * Fix #86: added sudo users student & teacher.
+  * Fix #77: Removed remnant files in /etc/linuxmuster.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 07 Mar 2020 21:08:58 +0100
+
 linuxmuster-base7 (7.0.50-0ubuntu0) lmn7; urgency=low
 
   * postinst: improved recognition of already configured opnsense firewall.

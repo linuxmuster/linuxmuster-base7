@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20200306
+# 20200307
 # GPL v3
 #
 
@@ -109,6 +109,12 @@ case "$1" in
     systemctl enable ntp.service
     systemctl start ntp.service
   fi
+
+  # add sudo users for webui
+  id teacher &> /dev/null || useradd -u 901 -g nogroup -G sudo -c 'teacher sudo user' -s /bin/sh -M teacher
+  id student &> /dev/null || useradd -u 902 -g nogroup -G sudo -c 'student sudo user' -s /bin/sh -M student
+  chmod 400 /etc/sudoers.d/teacher
+  chmod 400 /etc/sudoers.d/student
 
   # fix #83, patch opnsense's web-proxy sso configuration (only if system is configured)
   if [ -e "$FWAPIKEYS" ]; then

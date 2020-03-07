@@ -1,0 +1,1 @@
+teacher ALL=(ALL) NOPASSWD: /usr/sbin/sophomorix-passwd,/usr/sbin/sophomorix-query
