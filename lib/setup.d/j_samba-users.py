@@ -2,7 +2,7 @@
 #
 # create samba users & shares
 # thomas@linuxmuster.net
-# 20200307
+# 20200309
 #
 
 import configparser
@@ -58,7 +58,7 @@ schoolname = os.path.basename(constants.DEFAULTSCHOOL)
 defaultpath = constants.SCHOOLSSHARE + '/' + schoolname
 shareopts = 'writeable=y guest_ok=n'
 shareoptsex = ['comment "Share for default-school"', '"hide unreadable" yes', '"msdfs root" no', '"strict allocate" yes', '"valid users" "' + sambadomain + '\\administrator, @' + sambadomain + '\\SCHOOLS"']
-msg = 'Creating share for ' + schoolname
+msg = 'Creating share for ' + schoolname + ' '
 printScript(msg, '', False, False, True)
 try:
     subProc('net conf addshare ' + schoolname + ' ' + defaultpath + ' ' + shareopts, logfile)
@@ -104,7 +104,7 @@ except:
     sys.exit(1)
 
 # create default-school, no connection to ad
-msg = 'Creating ou for ' + schoolname
+msg = 'Creating ou for ' + schoolname + ' '
 printScript(msg, '', False, False, True)
 try:
     subProc('sophomorix-school --create --school ' + schoolname, logfile)

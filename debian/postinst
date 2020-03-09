@@ -135,10 +135,10 @@ case "$1" in
       exit 0
     fi
     fwpath="$(head -1 "$FWCREDTTLCFG" | awk '{ print $2 }')"
-    if ! ssh -q -oStrictHostKeyChecking=accept-new "$firewallip" ls "$fwpath"; then
+    if ! ssh -q -oStrictHostKeyChecking=accept-new "$firewallip" ls "$fwpath" &> /dev/null; then
       echo "Decreasing credentialsttl value in opnsense's web-proxy sso configuration."
       scp "$FWCREDTTLCFG" "$firewallip":"$fwpath"
-      ssh "$firewallip" /usr/local/etc/rc.d/squid restart
+      ssh "$firewallip" pluginctl -s squid restart
     fi
   fi
 

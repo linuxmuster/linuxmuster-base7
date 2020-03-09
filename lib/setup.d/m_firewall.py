@@ -243,11 +243,19 @@ def main():
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
 
-    # upload new configfile
+    # install extensions
+    printScript('Installing extensions:')
+    extensions = ['os-web-proxy-sso', 'os-freeradius', 'os-api-backup']
+    for item in extensions:
+        rc = sshExec(firewallip, 'pkg install -y ' + item, adminpw)
+        if not rc:
+            sys.exit(1)
+
+    # upload config files
+    # upload modified main config.xml
     rc = putFwConfig(firewallip, constants.ROOTPW)
     if not rc:
         sys.exit(1)
-
     # upload modified credentialsttl config file for web-proxy sso (#83)
     rc, content = readTextfile(constants.FWCREDTTLCFG)
     fwpath = content.split('\n')[0].partition(' ')[2]
@@ -258,16 +266,9 @@ def main():
     # remove temporary files
     #os.unlink(fwconftmp)
 
-    # install extensions and reboot firewall
-    fwsetup_local = constants.CACHEDIR + '/fwsetup.sh'
-    content = '#!/bin/sh\necho "y" | pkg install os-web-proxy-sso'
-    content = content + '\necho "y" | pkg install os-freeradius'
-    content = content + '\nconfigctl firmware reboot'
-    with open(fwsetup_local, 'w') as fwsetup:
-        fwsetup.write(content)
-    fwsetup_remote = '/tmp/fwsetup.sh'
-    rc = putSftp(firewallip, fwsetup_local, fwsetup_remote, adminpw)
-    rc = sshExec(firewallip, '/bin/sh ' + fwsetup_remote, adminpw)
+    # reboot firewall
+    printScript('Rebooting firewall:')
+    rc = sshExec(firewallip, 'configctl firmware reboot', adminpw)
     if not rc:
         sys.exit(1)
 

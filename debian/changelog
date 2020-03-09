@@ -1,8 +1,14 @@
 linuxmuster-base7 (7.0.53-0ubuntu0) lmn7; urgency=low
 
   * Fix #88, ntp service on server is dead after reboot.
+  * removed timesyncd.conf template.
+  * postinst: suppress warning about missing test file.
+  * improved setup.ini handling.
+  * firewall setup improvements, ia:
+    - creation of web proxy sso key table is now automated per api.
+    - installing os-api-backup extension additionally.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 09 Mar 2020 09:45:54 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 09 Mar 2020 17:01:38 +0100
 
 linuxmuster-base7 (7.0.52-0ubuntu0) lmn7; urgency=low
 

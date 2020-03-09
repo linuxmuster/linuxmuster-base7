@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20200302
+# 20200309
 #
 
 # don't change this file
@@ -45,8 +45,9 @@ SETUPLOG = LOGDIR + '/setup.log'
 SETUPDIR = LIBDIR + '/setup.d'
 TPLDIR = SHAREDIR + '/templates'
 CUSTOMINI = CACHEDIR + '/custom.ini'
-FWCREDTTLCFG = SHAREDIR + '/firewall/opnsense/credentialsttl.conf'
-FWOSCONFTPL = SHAREDIR + '/firewall/opnsense/config.xml.tpl'
+FWSHAREDIR = SHAREDIR + '/firewall/opnsense'
+FWCREDTTLCFG = FWSHAREDIR + '/credentialsttl.conf'
+FWOSCONFTPL = FWSHAREDIR + '/config.xml.tpl'
 FWCONFLOCAL = CACHEDIR + '/opnsense.xml'
 FWCONFREMOTE = '/conf/config.xml'
 GW_LAN = 'GW_LAN'

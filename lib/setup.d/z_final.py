@@ -2,13 +2,14 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20190916
+# 20200309
 #
 
 import constants
 import os
 import sys
 
+from functions import getSetupValue
 from functions import printScript
 from functions import subProc
 
@@ -17,6 +18,9 @@ logfile = constants.LOGDIR + '/setup.' + title + '.log'
 
 printScript('', 'begin')
 printScript(title)
+
+# get admin password from setup.ini
+adminpw = getSetupValue('adminpw')
 
 # disable unwanted services
 unwanted = ['iscsid', 'dropbear', 'lxcfs']
@@ -45,6 +49,16 @@ msg = 'Starting subnets import '
 printScript(msg, '', False, False, True)
 try:
     subProc('linuxmuster-import-subnets', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# create web proxy sso keytab
+msg = 'Creating web proxy sso keytab '
+printScript(msg, '', False, False, True)
+try:
+    subProc(constants.FWSHAREDIR + '/create-keytab.py -v -a "' + adminpw + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

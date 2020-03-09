@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20191008
+# 20200309
 #
 
 import codecs
@@ -112,33 +112,28 @@ def printScript(msg='', header='', lf=True, noleft=False, noright=False, offset=
     if header == 'begin' or header == 'end':
         printLf(sep, lf)
 
-# get ip addresses from setup.init
-def getFromSetup():
+
+# get key value from setup.ini
+def getSetupValue(keyname):
     setupini = constants.SETUPINI
-    domainname = ''
-    bitmask = ''
-    serverip = ''
-    firewallip = ''
-    opsiip = ''
-    dockerip = ''
-    adminpw = ''
     try:
         setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
         setup.read(setupini)
-        domainname = setup.get('setup', 'domainname')
-        bitmask = setup.get('setup', 'bitmask')
-        serverip = setup.get('setup', 'serverip')
-        firewallip = setup.get('setup', 'firewallip')
-        opsiip = setup.get('setup', 'opsiip')
-        dockerip = setup.get('setup', 'dockerip')
-        adminpw = setup.get('setup', 'adminpw')
+        rc = setup.get('setup', keyname)
     except:
-        pass
-    return domainname, bitmask, serverip, firewallip, opsiip, dockerip, adminpw
+        rc = ''
+    return rc
+
 
 # establish pw less ssh connection to ip & port
 def doSshLink(ip, port, secret):
-    domainname, bitmask, serverip, firewallip, opsiip, dockerip, adminpw = getFromSetup()
+    domainname = getSetupValue('domainname')
+    bitmask = getSetupValue('bitmask')
+    serverip = getSetupValue('serverip')
+    firewallip = getSetupValue('firewallip')
+    opsiip = getSetupValue('opsiip')
+    dockerip = getSetupValue('dockerip')
+    adminpw = getSetupValue('adminpw')
     msg = '* Processing ssh link to host ' + ip + ' on port ' + str(port) + ':'
     printScript(msg)
     # test connection on ip and port
@@ -315,7 +310,7 @@ def modIni(inifile, section, option, value):
 
 # firewall api get request
 def firewallApi(request, path, data=''):
-    domainname, bitmask, serverip, firewallip, opsiip, dockerip, adminpw = getFromSetup()
+    domainname = getSetupValue('domainname')
     fwapi = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
     fwapi.read(constants.FWAPIKEYS)
     apikey = fwapi.get('api', 'key')
