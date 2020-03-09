@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20200307
+# 20200309
 # GPL v3
 #
 
@@ -100,14 +100,24 @@ case "$1" in
     systemctl restart isc-dhcp-server.service
   fi
 
-  # enable ntp service, change firewall name to ip
-  if ! systemctl status ntp.service &> /dev/null; then
-    conf="/etc/ntp.conf"
-    echo "Enabling ntp service."
-    cp "$conf" "$conf".dpkg-bak
-    sed -i "s|^pool firewall|pool $firewallip|" "$conf"
+  # enable ntp service, change firewall name to ip (#88)
+  if timedatectl status | grep -qi 'active: yes'; then
+    echo "Disabling timesyncd service."
+    timedatectl set-ntp false
+  fi
+  if systemctl status ntp | grep -qi 'inactive (dead)'; then
+    echo "Enabling & starting ntp service."
     systemctl enable ntp.service
     systemctl start ntp.service
+  fi
+  conf="/etc/ntp.conf"
+  if ! grep -qi ^"pool $firewallip" "$conf"; then
+    echo "Adding firewall ip to $conf."
+    cp "$conf" "$conf".dpkg-bak
+    sed -i "s|^pool|#pool|g" "$conf"
+    sed -i "s|# use firewall as primary ntp server|# use firewall as primary ntp server\npool $firewallip|" "$conf"
+    grep -qi ^"pool $firewallip" "$conf" || echo "pool $firewallip" >> "$conf"
+    systemctl restart ntp.service
   fi
 
   # add sudo users for webui

@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.53-0ubuntu0) lmn7; urgency=low
+
+  * Fix #88, ntp service on server is dead after reboot.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 09 Mar 2020 09:45:54 +0100
+
 linuxmuster-base7 (7.0.52-0ubuntu0) lmn7; urgency=low
 
   * Fix #85, creating pgmadmin during setup with default admin password.

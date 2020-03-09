@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20190916
+# 20200309
 #
 
 import configparser
@@ -135,8 +135,10 @@ except:
 # set server time
 msg = 'Adjusting server time '
 printScript(msg, '', False, False, True)
-subProc('service ntp stop', logfile)
+subProc('timedatectl set-ntp false', logfile)
+subProc('systemctl stop ntp', logfile)
 subProc('ntpdate pool.ntp.org', logfile)
-subProc('service ntp start', logfile)
+subProc('systemctl enable ntp', logfile)
+subProc('systemctl start ntp', logfile)
 now = str(datetime.datetime.now()).split('.')[0]
 printScript(' ' + now, '', True, True, False, len(msg))
