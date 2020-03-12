@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.0.54-0ubuntu0) lmn7; urgency=low
+
+  * Fix #83: second attempt, adding kerberos ldap internet group query to squid configuration.
+  * New script linuxmuster-opnsense-reset resets the fw to the state after setup.
+  * Various setup improvements.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 12 Mar 2020 09:12:42 +0100
+
 linuxmuster-base7 (7.0.53-0ubuntu0) lmn7; urgency=low
 
   * Fix #88, ntp service on server is dead after reboot.

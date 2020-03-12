@@ -2,31 +2,42 @@
 #
 #  create web proxy sso keytab
 # thomas@linuxmuster.net
-# 20200309
+# 20200311
 #
 
+import constants
 import getopt
+import os
 import sys
 
-from functions import dtStr
-from functions import getSetupValue
+from functions import datetime
 from functions import firewallApi
-from functions import sshExec
+from functions import getSetupValue
+from functions import printScript
+from functions import readTextfile
+
+
+# check first if firewall is skipped by setup
+skipfw = getSetupValue('skipfw')
+if skipfw == 'True':
+    printScript('Firewall is skipped by setup!')
+    sys.exit(0)
 
 
 def usage():
     print('Usage: create-keytab.py [options]')
     print('Creates opnsense web proxy sso keytable.')
-    print('If adminpw is omitted it tests only the existance of the key table.')
+    print('If adminpw is omitted saved administrator credentials are used.')
     print(' [options] may be:')
-    print(' -a <adminpw>, --adminpw=<adminpw>: global-admin password')
-    print(' -v,           --verbose          : verbose output')
+    print(' -a <adminpw>, --adminpw=<adminpw>: global-admin password (optional)')
+    print(' -c,           --check            : check only the presence of keytable file')
+    print(' -v,           --verbose          : be more verbose')
     print(' -h,           --help             : print this help')
 
 
 # get cli args
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "a:hv", ["adminpw=", "help", "verbose"])
+    opts, args = getopt.getopt(sys.argv[1:], "a:chv", ["adminpw=", "check", "help", "verbose"])
 except getopt.GetoptError as err:
     # print help information and exit:
     print(err)  # will print something like "option -a not recognized"
@@ -34,7 +45,9 @@ except getopt.GetoptError as err:
     sys.exit(2)
 
 verbose = False
-adminpw = ''
+adminpw = None
+adminlogin = 'global-admin'
+check = False
 
 # evaluate options
 for o, a in opts:
@@ -42,6 +55,8 @@ for o, a in opts:
         verbose = True
     elif o in ("-a", "--adminpw"):
         adminpw = a
+    elif o in ("-c", "--check"):
+        check = True
     elif o in ("-h", "--help"):
         usage()
         sys.exit()
@@ -49,28 +64,37 @@ for o, a in opts:
         assert False, "unhandled option"
 
 
-print('### create-keytab.py ' + dtStr())
-
-# get firewall ip from setupini
-firewallip = getSetupValue('firewallip')
+now = str(datetime.datetime.now()).split('.')[0]
+printScript('create-keytab.py ' + now)
 
 
-# create keytable
-if adminpw != '':
+if not check:
+    # get firewall ip from setupini
+    firewallip = getSetupValue('firewallip')
+
+    # get administrator credentials if global-admin password was not provided
+    if adminpw is None:
+        rc, adminpw = readTextfile(constants.ADADMINSECRET)
+        adminlogin = 'administrator'
+
     # reload relevant services
+    sshconnect = 'ssh -q -oBatchmode=yes -oStrictHostKeyChecking=accept-new ' + firewallip
     for item in ['unbound', 'squid']:
-        rc = sshExec(firewallip, 'pluginctl -s ' + item + ' restart')
-        if not rc:
+        printScript('Restarting ' + item)
+        sshcmd = sshconnect + ' pluginctl -s ' + item + ' restart'
+        rc = os.system(sshcmd)
+        if rc != 0:
             sys.exit(1)
+
     # create keytab
-    payload = '{"admin_login": "global-admin", "admin_password": "' + adminpw + '"}'
+    payload = '{"admin_login": "' + adminlogin + '", "admin_password": "' + adminpw + '"}'
     apipath = '/proxysso/service/createkeytab'
     res = firewallApi('post', apipath, payload)
     if verbose:
         print(res)
 
 
-# test success
+# check success
 keytabtest = 'No keytab'
 apipath = '/proxysso/service/showkeytab'
 res = firewallApi('get', apipath)
@@ -78,10 +102,10 @@ if verbose:
     print(res)
 if keytabtest in str(res):
     rc = 1
-    print('No keytab present :-(')
+    printScript('Keytab is not present :-(')
 else:
     rc = 0
-    print('Keytab exists :-)')
+    printScript('Keytab is present :-)')
 
 
 sys.exit(rc)

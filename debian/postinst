@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20200309
+# 20200311
 # GPL v3
 #
 
@@ -128,18 +128,32 @@ case "$1" in
 
   # fix #83, patch opnsense's web-proxy sso configuration (only if system is configured)
   if [ -e "$FWAPIKEYS" ]; then
-    if ssh -q -oStrictHostKeyChecking=accept-new "$firewallip" exit; then
+    # test ssh link to firewall
+    if ssh -q -oBatchMode=yes -oStrictHostKeyChecking=accept-new "$firewallip" exit; then
       echo "SSH connection to firewall $firewallip successfully established."
     else
       echo "SSH connection to firewall $firewallip failed!"
       exit 0
     fi
-    fwpath="$(head -1 "$FWCREDTTLCFG" | awk '{ print $2 }')"
-    if ! ssh -q -oStrictHostKeyChecking=accept-new "$firewallip" ls "$fwpath" &> /dev/null; then
-      echo "Decreasing credentialsttl value in opnsense's web-proxy sso configuration."
-      scp "$FWCREDTTLCFG" "$firewallip":"$fwpath"
-      ssh "$firewallip" pluginctl -s squid restart
+    conf='/usr/local/etc/squid/auth/credentialsttl.conf'
+    if ssh -q -oBatchMode=yes -oStrictHostKeyChecking=accept-new "$firewallip" ls "$conf" &> /dev/null; then
+      echo "Removing obsolete credentialsttl.conf."
+      ssh "$firewallip" rm -f "$conf"
+      restart="yes"
     fi
+    # create new config file
+    conf="$(head -1 $FWAUTHCFG | awk '{ print $2 }')"
+    if ! ssh -q -oBatchMode=yes -oStrictHostKeyChecking=accept-new "$firewallip" ls "$conf" &> /dev/null; then
+      echo "Creating new opnsense config file $(basename $conf)."
+      # create config file
+      "$FWSHAREDIR/create-auth-config.py"
+      conftmp="/tmp/$(basename $FWAUTHCFG)"
+      [ -s "$conftmp" ] || exit 0
+      scp "$conftmp" "$firewallip":"$conf"
+      rm -f "$conftmp"
+      restart="yes"
+    fi
+    [ -n "$restart" ] && ssh "$firewallip" pluginctl -s squid restart
   fi
 
  ;;

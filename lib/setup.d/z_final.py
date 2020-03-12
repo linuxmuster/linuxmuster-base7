@@ -2,7 +2,7 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20200309
+# 20200311
 #
 
 import constants
@@ -12,6 +12,7 @@ import sys
 from functions import getSetupValue
 from functions import printScript
 from functions import subProc
+from functions import waitForFw
 
 title = os.path.basename(__file__).replace('.py', '').split('_')[1]
 logfile = constants.LOGDIR + '/setup.' + title + '.log'
@@ -19,8 +20,9 @@ logfile = constants.LOGDIR + '/setup.' + title + '.log'
 printScript('', 'begin')
 printScript(title)
 
-# get admin password from setup.ini
-adminpw = getSetupValue('adminpw')
+# remove temporary files
+if os.path.isfile('/tmp/setup.ini'):
+    os.unlink('/tmp/setup.ini')
 
 # disable unwanted services
 unwanted = ['iscsid', 'dropbear', 'lxcfs']
@@ -44,6 +46,14 @@ except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
+# wait for fw
+skipfw = getSetupValue('skipfw')
+if skipfw == 'False':
+    try:
+        waitForFw(wait=30)
+    except:
+        sys.exit(1)
+
 # import subnets
 msg = 'Starting subnets import '
 printScript(msg, '', False, False, True)
@@ -58,7 +68,7 @@ except:
 msg = 'Creating web proxy sso keytab '
 printScript(msg, '', False, False, True)
 try:
-    subProc(constants.FWSHAREDIR + '/create-keytab.py -v -a "' + adminpw + '"', logfile)
+    subProc(constants.FWSHAREDIR + '/create-keytab.py -v', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

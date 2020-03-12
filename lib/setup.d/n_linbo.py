@@ -2,13 +2,14 @@
 #
 # linbo setup
 # thomas@linuxmuster.net
-# 20190916
+# 20300311
 #
 
 import configparser
 import constants
 import os
 import re
+import subprocess
 import sys
 
 from functions import setupComment
@@ -130,11 +131,11 @@ except:
     sys.exit(1)
 
 # linbofs update
-msg = 'Reconfiguring linbo (may take a while) '
+msg = 'Reconfiguring linbo (forking to background) '
 printScript(msg, '', False, False, True)
 try:
     subProc('rm -f ' + constants.SYSDIR + '/linbo/*key*', logfile)
-    subProc('dpkg-reconfigure linuxmuster-linbo7', logfile)
+    subprocess.call('dpkg-reconfigure linuxmuster-linbo7 >> ' + logfile + ' 2>&1 &', shell=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

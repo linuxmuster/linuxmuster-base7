@@ -1,0 +1,116 @@
+#!/usr/bin/python3
+#
+# reset opnsense configuration to setup state
+# thomas@linuxmuster.net
+# 20200312
+#
+
+import constants
+import getopt
+import os
+import sys
+
+from functions import datetime
+from functions import enterPassword
+from functions import firewallApi
+from functions import getSetupValue
+from functions import printScript
+from functions import sshExec
+from functions import writeTextfile
+from functions import waitForFw
+
+
+# check first if firewall is skipped by setup
+skipfw = getSetupValue('skipfw')
+if skipfw == 'True':
+    printScript('Firewall is skipped by setup!')
+    sys.exit(0)
+
+
+infotxt = 'Sets the firewall to the state after setup.\n\
+Custom adjustments made since then are lost.\n\
+Note: The firewall will be restartet during the process.'
+def usage():
+    print('Usage: linuxmuster-opnsense-reset [options]')
+    print(infotxt)
+    print(' [options] may be:')
+    print(' -f, --force       : Force execution without asking for consent.')
+    print(' -p, --pw=<secret> : Current firewall root password,')
+    print('                     if it is omitted script will ask for it.')
+    print(' -h, --help        : Print this help.')
+
+
+# get cli args
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "fhp:", ["force", "help", "pw="])
+except getopt.GetoptError as err:
+    # print help information and exit:
+    print(err)  # will print something like "option -a not recognized"
+    usage()
+    sys.exit(2)
+
+
+# evaluate options
+force = False
+adminpw = None
+for o, a in opts:
+    if o in ("-f", "--force"):
+        force = True
+    elif o in ("-p", "--pw"):
+        adminpw = a
+    elif o in ("-h", "--help"):
+        usage()
+        sys.exit()
+    else:
+        assert False, "unhandled option"
+
+
+now = str(datetime.datetime.now()).split('.')[0]
+printScript('linuxmuster-opnsense-reset ' + now)
+
+
+# security prompt
+if not force:
+    print(infotxt)
+    answer = input('Do you want to continue (YES)? ')
+    if answer != 'YES':
+        sys.exit(0)
+
+
+#  ask for password
+if adminpw is None:
+    adminpw = enterPassword('the current firewall root', validate=False)
+
+
+# test ssh connection with provided password
+firewallip = getSetupValue('firewallip')
+if not sshExec(firewallip, 'exit', adminpw):
+    sys.exit(1)
+
+
+# write password to temporary file
+if not writeTextfile('/tmp/linuxmuster-opnsense-reset', adminpw, 'w'):
+    sys.exit(1)
+
+
+# invoke setup script
+rc = os.system('python3 ' + constants.SETUPDIR + '/m_firewall.py')
+
+
+# wait for firewall
+if not waitForFw(wait=60):
+    sys.exit(1)
+
+
+# delete old keytable
+printScript('Deleting old keytab.')
+apipath = '/proxysso/service/deletekeytab'
+res = firewallApi('get', apipath)
+print(res)
+
+
+# create new keytab
+rc = os.system(constants.FWSHAREDIR + '/create-keytab.py')
+
+
+sys.exit(rc)

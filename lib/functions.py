@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20200309
+# 20200311
 #
 
 import codecs
@@ -22,6 +22,7 @@ import requests
 import shutil
 import socket
 import string
+import time
 
 from contextlib import closing
 from IPy import IP
@@ -307,6 +308,25 @@ def modIni(inifile, section, option, value):
         return True
     except:
         return False
+
+
+# wait for firewall to come up, after timeout seconds loop will be canceled
+def waitForFw(timeout=300, wait=0):
+    printScript('Waiting for opnsense to come up')
+    firewallip = getSetupValue('firewallip')
+    time.sleep(wait)
+    count = 0
+    while True:
+        if count > timeout:
+            # cancel if it lasts longer than timeout
+            printScript('Timeout!')
+            return False
+        if sshExec(firewallip, 'exit'):
+            return True
+        else:
+            count = count + 2
+            time.sleep(2)
+
 
 # firewall api get request
 def firewallApi(request, path, data=''):

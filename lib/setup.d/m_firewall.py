@@ -2,11 +2,10 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20200302
+# 20200311
 #
 
 import bcrypt
-import configparser
 import constants
 import datetime
 import os
@@ -14,6 +13,7 @@ import shutil
 import sys
 from bs4 import BeautifulSoup
 from functions import getFwConfig
+from functions import getSetupValue
 from functions import isValidHostIpv4
 from functions import modIni
 from functions import printScript
@@ -31,38 +31,47 @@ logfile = constants.LOGDIR + '/setup.' + title + '.log'
 printScript('', 'begin')
 printScript(title)
 
-# read setup ini
-msg = 'Reading setup data '
-printScript(msg, '', False, False, True)
-setupini = constants.SETUPINI
-try:
-    setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
-    setup.read(setupini)
-    # check if firewall shall be skipped
-    skipfw = setup.getboolean('setup', 'skipfw')
-    printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
-    sys.exit(1)
 
 # main routine
 def main():
-    # get setup various values
-    serverip = setup.get('setup', 'serverip')
-    bitmask = setup.get('setup', 'bitmask')
-    firewallip = setup.get('setup', 'firewallip')
-    servername = setup.get('setup', 'servername')
-    domainname = setup.get('setup', 'domainname')
-    basedn = setup.get('setup', 'basedn')
-    opsiip = setup.get('setup', 'opsiip')
-    dockerip = setup.get('setup', 'dockerip')
-    network = setup.get('setup', 'network')
-    adminpw = setup.get('setup', 'adminpw')
+    # get various setup values
+    msg = 'Reading setup data '
+    printScript(msg, '', False, False, True)
+    try:
+        serverip = getSetupValue('serverip')
+        bitmask = getSetupValue('bitmask')
+        firewallip = getSetupValue('firewallip')
+        servername = getSetupValue('servername')
+        domainname = getSetupValue('domainname')
+        basedn = getSetupValue('basedn')
+        opsiip = getSetupValue('opsiip')
+        dockerip = getSetupValue('dockerip')
+        network = getSetupValue('network')
+        adminpw = getSetupValue('adminpw')
+        printScript(' Success!', '', True, True, False, len(msg))
+    except:
+        printScript(' Failed!', '', True, True, False, len(msg))
+        sys.exit(1)
+
     # get timezone
     rc, timezone = readTextfile('/etc/timezone')
     timezone = timezone.replace('\n', '')
+
     # get binduser password
     rc, binduserpw = readTextfile(constants.BINDUSERSECRET)
+
+    # get firewall root password provided by linuxmuster-opnsense-reset
+    pwfile = '/tmp/linuxmuster-opnsense-reset'
+    if os.path.isfile(pwfile):
+        # firewall reset after setup, given password is current password
+        rc, rolloutpw = readTextfile(pwfile)
+        productionpw = rolloutpw
+        os.unlink(pwfile)
+    else:
+        # initial setup, rollout root password is standardized
+        rolloutpw = constants.ROOTPW
+        # new root production password provided by setup
+        productionpw = adminpw
 
     # create and save radius secret
     msg = 'Calculating radius secret '
@@ -90,7 +99,7 @@ def main():
         dockerip = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.3'
 
     # get current config
-    rc = getFwConfig(firewallip, constants.ROOTPW)
+    rc = getFwConfig(firewallip, rolloutpw)
     if not rc:
         sys.exit(1)
 
@@ -190,7 +199,7 @@ def main():
     printScript(msg, '', False, False, True)
     try:
         # create password hash for new firewall password
-        hashedpw = bcrypt.hashpw(str.encode(adminpw), bcrypt.gensalt(10))
+        hashedpw = bcrypt.hashpw(str.encode(productionpw), bcrypt.gensalt(10))
         fwrootpw_hashed = hashedpw.decode()
         apikey = randomPassword(80)
         apisecret = randomPassword(80)
@@ -243,38 +252,41 @@ def main():
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
 
-    # install extensions
-    printScript('Installing extensions:')
-    extensions = ['os-web-proxy-sso', 'os-freeradius', 'os-api-backup']
-    for item in extensions:
-        rc = sshExec(firewallip, 'pkg install -y ' + item, adminpw)
-        if not rc:
-            sys.exit(1)
-
     # upload config files
     # upload modified main config.xml
-    rc = putFwConfig(firewallip, constants.ROOTPW)
+    rc = putFwConfig(firewallip, rolloutpw)
     if not rc:
         sys.exit(1)
-    # upload modified credentialsttl config file for web-proxy sso (#83)
-    rc, content = readTextfile(constants.FWCREDTTLCFG)
+
+    # upload modified auth config file for web-proxy sso (#83)
+    printScript('Creating web proxy sso auth config file')
+    subProc(constants.FWSHAREDIR + '/create-auth-config.py', logfile)
+    conftmp = '/tmp/' + os.path.basename(constants.FWAUTHCFG)
+    if not os.path.isfile(conftmp):
+        sys.exit(1)
+    rc, content = readTextfile(conftmp)
     fwpath = content.split('\n')[0].partition(' ')[2]
-    rc = putSftp(firewallip, constants.FWCREDTTLCFG, fwpath, adminpw)
+    rc = putSftp(firewallip, conftmp, fwpath, productionpw)
     if not rc:
         sys.exit(1)
 
     # remove temporary files
-    #os.unlink(fwconftmp)
+    os.unlink(conftmp)
 
     # reboot firewall
-    printScript('Rebooting firewall:')
-    rc = sshExec(firewallip, 'configctl firmware reboot', adminpw)
+    printScript('Installing extensions and rebooting firewall')
+    fwsetup_local = constants.FWSHAREDIR + '/fwsetup.sh'
+    fwsetup_remote = '/tmp/fwsetup.sh'
+    rc = putSftp(firewallip, fwsetup_local, fwsetup_remote, productionpw)
+    rc = sshExec(firewallip, 'chmod +x ' + fwsetup_remote, productionpw)
+    rc = sshExec(firewallip, fwsetup_remote, productionpw)
     if not rc:
         sys.exit(1)
 
 
 # quit if firewall setup shall be skipped
-if skipfw:
+skipfw = getSetupValue('skipfw')
+if skipfw == 'True':
     msg = 'Skipping firewall setup as requested'
     printScript(msg, '', True, False, False)
 else:
