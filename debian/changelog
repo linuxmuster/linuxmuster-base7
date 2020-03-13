@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.0.55-0ubuntu0) lmn7; urgency=low
+
+  * renamed template 50-linuxmuster.auth.conf to 50-linuxmuster.pre-auth.conf.
+  * 50-linuxmuster.pre-auth.conf: removed -s parameter in addition to #83 (thanx
+    to garblixa for the hint).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 13 Mar 2020 11:33:01 +0100
+
 linuxmuster-base7 (7.0.54-0ubuntu0) lmn7; urgency=low
 
   * Fix #83: second attempt, adding kerberos ldap internet group query to squid configuration.

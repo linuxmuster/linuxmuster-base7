@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20200311
+# 20200313
 # GPL v3
 #
 
@@ -135,16 +135,20 @@ case "$1" in
       echo "SSH connection to firewall $firewallip failed!"
       exit 0
     fi
-    conf='/usr/local/etc/squid/auth/credentialsttl.conf'
-    if ssh -q -oBatchMode=yes -oStrictHostKeyChecking=accept-new "$firewallip" ls "$conf" &> /dev/null; then
-      echo "Removing obsolete credentialsttl.conf."
-      ssh "$firewallip" rm -f "$conf"
-      restart="yes"
-    fi
+    # remove obsolete configs
+    squiddir="/usr/local/etc/squid"
+    confs="$squiddir/auth/credentialsttl.conf $squiddir/pre-auth/50-linuxmuster.auth.conf"
+    for conf in $confs; do
+      if ssh -q -oBatchMode=yes -oStrictHostKeyChecking=accept-new "$firewallip" ls "$conf" &> /dev/null; then
+        echo "Removing obsolete opnsense configfile $(basename $conf)."
+        ssh "$firewallip" rm -f "$conf"
+        restart="yes"
+      fi
+    done
     # create new config file
     conf="$(head -1 $FWAUTHCFG | awk '{ print $2 }')"
     if ! ssh -q -oBatchMode=yes -oStrictHostKeyChecking=accept-new "$firewallip" ls "$conf" &> /dev/null; then
-      echo "Creating new opnsense config file $(basename $conf)."
+      echo "Creating new opnsense configfile $(basename $conf)."
       # create config file
       "$FWSHAREDIR/create-auth-config.py"
       conftmp="/tmp/$(basename $FWAUTHCFG)"
@@ -153,7 +157,10 @@ case "$1" in
       rm -f "$conftmp"
       restart="yes"
     fi
-    [ -n "$restart" ] && ssh "$firewallip" pluginctl -s squid restart
+    if [ -n "$restart" ]; then
+      echo "Restarting proxy:"
+      ssh "$firewallip" pluginctl -s squid restart
+    fi
   fi
 
  ;;
