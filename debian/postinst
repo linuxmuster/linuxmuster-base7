@@ -129,7 +129,7 @@ case "$1" in
   # install necessary sudoers config for webui (#91)
   tpl="$TPLDIR/webui-sudoers"
   conf="$(head -1 $tpl | awk '{ print $2 }')"
-  if [ -e "$conf" ]; then
+  if [ ! -e "$conf" ]; then
     sed -e "s|@@sambadomain@@|$sambadomain|g" "$tpl" > "$conf"
     chmod 400 "$conf"
   fi
