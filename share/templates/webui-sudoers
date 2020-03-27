@@ -1,0 +1,11 @@
+# /etc/sudoers.d/linuxmuster
+#
+# thomas@linuxmuster.net
+# 20200327
+#
+# sudoer groups for webui
+#
+
+@@sambadomain@@\\all-teachers ALL=(ALL:ALL) NOPASSWD:ALL
+@@sambadomain@@\\all-admins ALL=(ALL:ALL) NOPASSWD:ALL
+@@sambadomain@@\\all-students ALL=(ALL:ALL) NOPASSWD: /usr/sbin/sophomorix-passwd,/usr/sbin/sophomorix-query

@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20200309
+# 20200327
 #
 
 import configparser
@@ -88,12 +88,14 @@ for f in os.listdir(constants.TPLDIR):
         # get target path
         firstline = filedata.split('\n')[0]
         target = firstline.partition(' ')[2]
-        # remove target path from shebang line
+        # remove target path from shebang line, define target file permissions
         if '#!/bin/sh' in firstline or '#!/bin/bash' in firstline:
             filedata = filedata.replace(' ' + target, '\n# ' + target)
             operms = '755'
+        elif 'sudoers.d' in target:
+            operms = '400'
         else:
-            operms = '664'
+            operms = '644'
         # do not overwrite specified configfiles if they exist
         if (f in do_not_overwrite and os.path.isfile(target)):
             printScript(' Success!', '', True, True, False, len(msg))

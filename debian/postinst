@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20200313
+# 20200327
 # GPL v3
 #
 
@@ -120,11 +120,19 @@ case "$1" in
     systemctl restart ntp.service
   fi
 
-  # add sudo users for webui
-  id teacher &> /dev/null || useradd -u 901 -g nogroup -G sudo -c 'teacher sudo user' -s /bin/sh -M teacher
-  id student &> /dev/null || useradd -u 902 -g nogroup -G sudo -c 'student sudo user' -s /bin/sh -M student
-  chmod 400 /etc/sudoers.d/teacher
-  chmod 400 /etc/sudoers.d/student
+  # remove obsolete sudo users for webui (#90)
+  for i in student teacher; do
+    id "$i" &> /dev/null && userdel "$i"
+    [ -e "/etc/sudoers.d/$i" ] && rm "/etc/sudoers.d/$i"
+  done
+
+  # install necessary sudoers config for webui (#91)
+  tpl="$TPLDIR/webui-sudoers"
+  conf="$(head -1 $tpl | awk '{ print $2 }')"
+  if [ -e "$conf" ]; then
+    sed -e "s|@@sambadomain@@|$sambadomain|g" "$tpl" > "$conf"
+    chmod 400 "$conf"
+  fi
 
   # fix #83, patch opnsense's web-proxy sso configuration (only if system is configured)
   if [ -e "$FWAPIKEYS" ]; then
