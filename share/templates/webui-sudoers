@@ -6,6 +6,6 @@
 # sudoer groups for webui
 #
 
-@@sambadomain@@\\all-teachers ALL=(ALL:ALL) NOPASSWD:ALL
-@@sambadomain@@\\all-admins ALL=(ALL:ALL) NOPASSWD:ALL
-@@sambadomain@@\\all-students ALL=(ALL:ALL) NOPASSWD: /usr/sbin/sophomorix-passwd,/usr/sbin/sophomorix-query
+%@@sambadomain@@\\all-teachers ALL=(ALL:ALL) NOPASSWD:ALL
+%@@sambadomain@@\\all-admins ALL=(ALL:ALL) NOPASSWD:ALL
+%@@sambadomain@@\\all-students ALL=(ALL:ALL) NOPASSWD: /usr/sbin/sophomorix-passwd,/usr/sbin/sophomorix-query

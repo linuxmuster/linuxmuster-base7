@@ -1,8 +1,14 @@
+linuxmuster-base7 (7.0.58-0ubuntu0) lmn7; urgency=low
+
+  * fix #91: second attempt fixing sudoers file.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 27 Mar 2020 17:59:30 +0100
+
 linuxmuster-base7 (7.0.57-0ubuntu0) lmn7; urgency=low
 
   * fix #91: Group and user isolation for Webui/Sophomorix.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 27 Mar 2020 17:36:31 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 25 Mar 2020 16:18:23 +0100
 
 linuxmuster-base7 (7.0.56-0ubuntu0) lmn7; urgency=low
 
