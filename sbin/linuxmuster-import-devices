@@ -2,12 +2,11 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20200226
+# 20200404
 #
 
 import configparser
 import constants
-import csv
 import os
 import re
 import subprocess
@@ -16,17 +15,11 @@ import sys
 from os import listdir
 from os.path import isfile, join
 
-from functions import getGrubOstype
-from functions import getGrubPart
-from functions import getStartconfOsValues
-from functions import getStartconfOption
-from functions import getStartconfPartnr
-from functions import getStartconfPartlabel
-from functions import isValidHostIpv4
-from functions import printScript
-from functions import readTextfile
-from functions import setGlobalStartconfOption
-from functions import writeTextfile
+from functions import getBootImage, getDevicesArray, getGrubOstype, getGrubPart
+from functions import getSetupValue, getStartconfOsValues, getStartconfOption
+from functions import getStartconfPartnr, getStartconfPartlabel, getSubnetArray
+from functions import isValidHostIpv4, printScript, readTextfile
+from functions import setGlobalStartconfOption, writeTextfile
 
 # defaults
 devices = constants.WIMPORTDATA
@@ -57,13 +50,13 @@ printScript(msg + ' OK!')
 os.system('sophomorix-device --sync')
 
 
+# functions begin
 # write grub cfgs
 def doGrubCfg(startconf, group, kopts):
     grubcfg = constants.LINBOGRUBDIR + '/' + group + '.cfg'
     rc, content = readTextfile(grubcfg)
     if rc and constants.MANAGEDSTR not in content:
-        printScript('  > Keeping pxe configuration.')
-        return True
+        return 'present'
     # get grub partition name of cache
     cache = getStartconfOption(startconf, 'LINBO', 'Cache')
     partnr = getStartconfPartnr(startconf, cache)
@@ -73,16 +66,18 @@ def doGrubCfg(startconf, group, kopts):
     # if cache is not defined provide a forced netboot cfg
     if cacheroot is None:
         netboottpl = constants.LINBOTPLDIR + '/grub.cfg.forced_netboot'
-        printScript('  > Creating minimal pxe configuration. start.conf is incomplete!')
-        rc = os.system('cp ' + netboottpl + ' ' + grubcfg)
-        return
+        os.system('cp ' + netboottpl + ' ' + grubcfg)
+        return 'not yet configured!'
+    # create return message
+    if os.path.isfile(grubcfg):
+        msg = 'replaced'
     else:
-        printScript('  > Creating pxe configuration.')
+        msg= 'created'
     # create gobal part for group cfg
     globaltpl = constants.LINBOTPLDIR + '/grub.cfg.global'
     rc, content = readTextfile(globaltpl)
     if not rc:
-        return rc
+        return 'error!'
     replace_list = [('@@group@@', group), ('@@cachelabel@@', cachelabel), ('@@cacheroot@@', cacheroot), ('@@kopts@@', kopts)]
     for item in replace_list:
         content = content.replace(item[0], item[1])
@@ -90,7 +85,7 @@ def doGrubCfg(startconf, group, kopts):
     # get os infos from group's start.conf
     oslists = getStartconfOsValues(startconf)
     if oslists is None:
-        return False
+        return 'error!'
     # write os parts to grub cfg
     ostpl = constants.LINBOTPLDIR + '/grub.cfg.os'
     for oslist in oslists:
@@ -101,7 +96,7 @@ def doGrubCfg(startconf, group, kopts):
         oslabel = getStartconfPartlabel(startconf, partnr)
         rc, content = readTextfile(ostpl)
         if not rc:
-            return rc
+            return 'error!'
         replace_list = [('@@group@@', group), ('@@cachelabel@@', cachelabel),
             ('@@cacheroot@@', cacheroot), ('@@osname@@', osname),
             ('@@osnr@@', osnr), ('@@ostype@@', ostype), ('@@oslabel@@', oslabel),
@@ -111,24 +106,31 @@ def doGrubCfg(startconf, group, kopts):
             content = content.replace(item[0], str(item[1]))
         rc = writeTextfile(grubcfg, content, 'a')
         if not rc:
-            return rc
+            return 'error!'
+        return msg
 
 
 # write linbo start configuration file
 def doLinboStartconf(group):
     startconf = constants.LINBODIR + '/start.conf.' + group
-    # provide simple start.conf if there is none for this group
-    if not os.path.isfile(startconf):
-        msg = '  > Creating minimal start.conf. Further configuration is necessary!'
-        printScript(msg, '', True)
+    # provide unconfigured start.conf if there is none for this group
+    if os.path.isfile(startconf):
+        if getStartconfOption(startconf, 'LINBO', 'Cache') is None:
+            msg1 = 'not yet configured!'
+        else:
+            msg1 = 'present'
+    else:
+        msg1 = 'not yet configured!'
         os.system('cp ' + constants.LINBODIR + '/start.conf ' + startconf)
     # read values from start.conf
     group_s = getStartconfOption(startconf, 'LINBO', 'Group')
     serverip_s = getStartconfOption(startconf, 'LINBO', 'Server')
     kopts_s = getStartconfOption(startconf, 'LINBO', 'KernelOptions')
+    # get alternative server ip from kernel options
     try:
         serverip_k = re.findall(r'server=[^ ]*', kopts_s, re.IGNORECASE)[0].split('=')[1]
-    except:
+    except Exception as error:
+        # print(error)
         serverip_k = None
     # determine whether global values from start conf have to changed
     if serverip_k is not None and isValidHostIpv4(serverip_k):
@@ -157,11 +159,16 @@ def doLinboStartconf(group):
         if not rc:
             return rc
     # process grub cfgs
-    doGrubCfg(startconf, group, kopts_r)
+    msg2 = doGrubCfg(startconf, group, kopts_r)
+    # format row in columns for output
+    row = [group, msg1, msg2]
+    printScript("  {: <15} | {: <20} | {: <20}".format(*row))
 
 
 # opsi
 def doOpsi():
+    printScript('', 'begin')
+    printScript('Working on opsi integration')
     sshcmd = 'ssh -oNumberOfPasswordPrompts=0 -oStrictHostKeyChecking=no'
     rsynccmd = 'rsync -e "' + sshcmd + '"'
     # upload workstations file
@@ -173,107 +180,116 @@ def doOpsi():
     os.system('chmod 600 ' + constants.LINBOOPSIKEYS)
 
 
+# write dhcp subnet devices config
+def writeDhcpDevicesConfig():
+    printScript('', 'begin')
+    printScript('Working on dhcp configuration for devices')
+    opsiip = getSetupValue('opsiip')
+    host_decl_tpl = """host @@ip@@ {
+  hardware ethernet @@mac@@;
+  fixed-address @@ip@@;
+  option host-name "@@hostname@@";
+"""
+    cfgfile = constants.DHCPDEVCONF
+    if os.path.isfile(cfgfile):
+        os.unlink(cfgfile)
+    try:
+        # open devices.conf for append
+        with open(cfgfile, 'a') as outfile:
+            # iterate over the defined subnets
+            for subnet_array in getSubnetArray('0'):
+                cidr = subnet_array[0]
+                # iterate over devices per subnet
+                headline = False
+                for device_array in getDevicesArray(fieldnrs='1,2,3,4,7,8,10',subnet=cidr,stype=True):
+                    if not headline:
+                        # write corresponding subnet as a comment
+                        outfile.write('# subnet ' + cidr + '\n')
+                        printScript('* in subnet ' + cidr + ':')
+                        headline = True
+                    hostname, group, mac, ip, dhcpopts, computertype, pxeflag, systemtype = device_array
+                    if systemtype is None:
+                        systemtype = ''
+                    if len(computertype) > 15:
+                        computertype = computertype[0:15]
+                    # format row in columns for output
+                    row = [hostname, ip, computertype, pxeflag, systemtype]
+                    printScript("  {: <15} | {: <15} | {: <15} | {: <1} | {: <6}".format(*row))
+                    # begin host declaration
+                    host_decl = host_decl_tpl.replace('@@ip@@', ip).replace('@@mac@@', mac).replace('@@hostname@@', hostname)
+                    # only for pxe clients
+                    if int(pxeflag) != 0:
+                        # opsi pxe boot
+                        if pxeflag == '3':
+                            bootimage = constants.OPSIPXEFILE
+                            host_decl = host_decl + '  filename "' + bootimage + '";\n'
+                            host_decl = host_decl + '  next-server ' + opsiip + ';\n'
+                        # linbo pxe boot
+                        else:
+                            host_decl = host_decl + '  option extensions-path "' + group + '";\n'
+                            bootimage = getBootImage(systemtype)
+                            if 'filename' not in dhcpopts and bootimage is not None:
+                                host_decl = host_decl + '  filename "boot/grub/' + bootimage + '";\n'
+                            # dhcp options have to be 5 chars minimum to get processed
+                            if len(dhcpopts) > 4:
+                                for opt in dhcpopts.split(','):
+                                    host_decl = host_decl + '  ' + opt + ';\n'
+                    # finish host declaration
+                    host_decl = host_decl + '}\n'
+                    # finallý write host declaration
+                    outfile.write(host_decl)
+    except Exception as error:
+        print(error)
+        return False
+# functions end
+
+
 # delete old config links
 # start.conf-ip
 os.system('find ' + constants.LINBODIR + ' -name start.conf-\* -type l -exec rm {} \;')
 os.system('find ' + constants.LINBOGRUBDIR + '/hostcfg -name \*.cfg -type l -exec rm {} \;')
 
-# iterate over devices
+
+# write dhcp devices.conf
+writeDhcpDevicesConfig()
+
+
+# linbo stuff
 printScript('', 'begin')
-printScript('Processing dhcp clients:')
-f = open(devices, newline='')
-reader = csv.reader(f, delimiter=';', quoting=csv.QUOTE_NONE)
-d = open(constants.DHCPDEVCONF, 'w')
+printScript('Working on linbo/grub configuration for devices:')
 pxe_groups = []
-for row in reader:
-    if len(row) == 0:
-        continue
-    try:
-        room = row[0]
-        if room[:1] == '#' or room[:1] == ';':
-            continue
-        host = row[1]
-        group = row[2]
-        mac = row[3]
-        ip = row[4]
-        dhcpopts = row[7]
-        pxe = row[10]
-    except:
-        printScript('Skipping line: ' + str(row).replace("', '", ';').replace("['", '').replace("']", ''))
-        continue
-    # get system type from start.conf
-    startconf = constants.LINBODIR + '/start.conf.' + group
-    systemtype = None
-    bootimage = None
-    if os.path.isfile(startconf):
-        systemtype = getStartconfOption(startconf, 'LINBO', 'SystemType')
-    if systemtype is not None:
-        if 'bios' in systemtype:
-            bootimage = core_bios
-        elif 'efi32' in systemtype:
-            bootimage = core32_efi
-        elif 'efi64' in systemtype:
-            bootimage = core64_efi
-    # correct pxe type if opsi ip is not valid
-    if (pxe == '3' or pxe == '2') and not isValidHostIpv4(opsiip):
-        pxe = '1'
-    # determine hosttype
-    if pxe == '0':
-        htype = 'IP-Host : '
-    else:
-        htype = 'PXE-Host: '
-    printScript('* ' + htype + host)
-    # write conf for dhcp clients
-    d.write('host ' + ip + ' {\n')
-    d.write('  hardware ethernet ' + mac + ';\n')
-    d.write('  fixed-address ' + ip + ';\n')
-    d.write('  option host-name "' + host + '";\n')
-    # dhcp options have to be 5 chars minimum to get processed
-    if len(dhcpopts) > 4:
-        for opt in dhcpopts.split(','):
-            d.write('  ' + opt + ';\n')
-            # do not write default bootimage if a different one is defined here
-            if 'filename' in opt:
-                bootimage = None
-    # write pxe boot options
-    if pxe == '1' or pxe == '2' or pxe == '22':
-        d.write('  option extensions-path "' + group + '";\n')
-        if bootimage is not None:
-            d.write('  filename "' + bootimage + '";\n')
-    # boot opsi pxe bootimage
-    elif pxe == '3':
-        d.write('  next-server ' + opsiip + ';\n')
-        d.write('  filename "' + constants.OPSIPXEFILE + '";\n')
-    d.write('}\n')
-    # create per host links to corresponding group configs
-    if pxe != '0':
-        # start.conf
-        groupconf = 'start.conf.' + group
-        hostlink = constants.LINBODIR + '/start.conf-' + ip
-        if not os.path.isfile(hostlink):
-            os.system('ln -sf ' + groupconf + ' ' + hostlink)
-        # grub config
-        groupconf = '../' + group + '.cfg'
-        hostlink = constants.LINBOGRUBDIR + '/hostcfg/' + host + '.cfg'
-        if not os.path.isfile(hostlink):
-            os.system('ln -sf ' + groupconf + ' ' + hostlink)
+for device_array in getDevicesArray(fieldnrs='1,2,4,10', subnet='all', pxeflag='1,2,3'):
+    host, group, ip, pxeflag = device_array
     # collect groups with pxe for later use
-    if group not in pxe_groups and pxe != '0':
+    if group not in pxe_groups:
         pxe_groups.append(group)
-d.close()
-f.close()
+    # format row in columns for output
+    row = [host, group]
+    printScript("  {: <15} | {: <15}".format(*row))
+    groupconf = 'start.conf.' + group
+    hostlink = constants.LINBODIR + '/start.conf-' + ip
+    if not os.path.isfile(hostlink):
+        os.system('ln -sf ' + groupconf + ' ' + hostlink)
+    # grub config
+    groupconf = '../' + group + '.cfg'
+    hostlink = constants.LINBOGRUBDIR + '/hostcfg/' + host + '.cfg'
+    if not os.path.isfile(hostlink):
+        os.system('ln -sf ' + groupconf + ' ' + hostlink)
+
+
+# write pxe configs for collected groups
+printScript('', 'begin')
+printScript('Working on linbo/grub configuration for groups:')
+printScript("  {: <15} | {: <20} | {: <20}".format(*[' ', 'linbo start.conf', 'grub cfg']))
+printScript("  {: <15}+{: <20}+{: <20}".format(*['-'*16, '-'*22, '-'*21]))
+for group in pxe_groups:
+    doLinboStartconf(group)
+
 
 # do opsi stuff if configured
 if opsiip != '':
     doOpsi()
 
-# write pxe configs for collected groups
-printScript('', 'begin')
-printScript('Processing pxe groups:')
-for group in pxe_groups:
-    msg = '* ' + group
-    printScript(msg)
-    doLinboStartconf(group)
 
 # execute post hooks
 hookpath = constants.POSTDEVIMPORT
