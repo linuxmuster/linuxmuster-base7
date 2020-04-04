@@ -1,3 +1,18 @@
+linuxmuster-base7 (7.0.60-0ubuntu0) lmn7; urgency=low
+
+  * merged branch import-reworked into master.
+    - further consolidation of import scripts.
+    - allow public ips in devices.csv.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 04 Apr 2020 14:10:25 +0200
+
+linuxmuster-base7 (7.0.59-0ubuntu0) lmn7; urgency=low
+
+  * reworked import scripts.
+  * fixed missing start.conf links regression.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 03 Apr 2020 19:56:51 +0200
+
 linuxmuster-base7 (7.0.58-0ubuntu0) lmn7; urgency=low
 
   * fix #91: second attempt fixing sudoers file.

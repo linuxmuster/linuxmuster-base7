@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20200311
+# 2020404
 #
 
 import codecs
@@ -26,20 +26,26 @@ import time
 
 from contextlib import closing
 from IPy import IP
+from netaddr import IPNetwork, IPAddress
 from shutil import copyfile
 from subprocess import Popen, PIPE
 
+
 # append stdout to logfile
 class tee(object):
+
     def __init__(self, *files):
         self.files = files
+
     def write(self, obj):
         for f in self.files:
             f.write(obj)
-            f.flush() # If you want the output to be visible immediately
-    def flush(self) :
+            f.flush()  # If you want the output to be visible immediately
+
+    def flush(self):
         for f in self.files:
             f.flush()
+
 
 # invoke system commands
 def subProc(cmd, logfile=None):
@@ -121,9 +127,111 @@ def getSetupValue(keyname):
         setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
         setup.read(setupini)
         rc = setup.get('setup', keyname)
-    except:
-        rc = ''
+    except Exception as error:
+        print(error)
+        return ''
     return rc
+
+
+# test if ip matches subnet
+def ipMatchSubnet(ip, subnet):
+    try:
+        if subnet == 'all':
+            cidr_array = getSubnetArray('0')
+        else:
+            cidr_array = [[subnet]]
+        for cidr in cidr_array:
+            if IPAddress(ip) in IPNetwork(cidr[0]):
+                return True
+    except Exception as error:
+        print(error)
+    return False
+
+
+# reads devices.csv and returns a list of devices arrays: [array1, array2, ...]
+# fieldnrs: comma separated list of field nrs ('0,1,2,3,...') to be returned, default is all fields were returned
+# subnet filter: only hosts whose ip matches the specified subnet (CIDR) were returned, if 'all' is specified all subnets defined in subnets.csv were checked
+# pxeflag filter: comma separated list of flags ('0,1,2,3'), only hosts with the specified pxeflags were returned
+# stype: True additionally returns SystemType from start.conf as last element
+def getDevicesArray(fieldnrs='',subnet='',pxeflag='',stype=False):
+    infile = open(constants.WIMPORTDATA, newline='')
+    content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
+    devices_array = []
+    for row in content:
+        try:
+            # skip rows, which begin with non alphanumeric characters
+            if not row[0][0:1].isalnum():
+                continue
+            # skip rows with not valid values
+            if not isValidHostname(row[1]) or not isValidMac(row[3]) or not isValidHostIpv4(row[4]):
+                continue
+            # filter pxeflags
+            if pxeflag != '':
+                if not row[10] in pxeflag.split(','):
+                    continue
+            # filter subnet
+            if subnet != '' and not ipMatchSubnet(row[4], subnet):
+                continue
+            # collect fields
+            if fieldnrs == '':
+                row_res = row
+            else:
+                row_res = []
+                for field in fieldnrs.split(','):
+                    row_res.append(row[int(field)])
+            # add systemtype from start.conf
+            if stype:
+                group = row[2]
+                startconf = constants.LINBODIR + '/start.conf.' + group
+                systemtype = None
+                if os.path.isfile(startconf):
+                    systemtype = getStartconfOption(startconf, 'LINBO', 'SystemType')
+                row_res.append(systemtype)
+            devices_array.append(row_res)
+        except Exception as error:
+            # print(error)
+            continue
+    return devices_array
+
+
+# read subnets.csv and return subnet array
+# fieldnrs: comma separated list of field nrs to be returned, default is all fields were returned
+def getSubnetArray(fieldnrs=''):
+    infile = open(constants.SUBNETSCSV, newline='')
+    content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
+    subnet_array = []
+    for row in content:
+        try:
+            ipnet = row[0]
+            router = row[1]
+            if IPAddress(router) in IPNetwork(ipnet):
+                # collect fields
+                if fieldnrs == '':
+                    row_res = row
+                else:
+                    row_res = []
+                    for field in fieldnrs.split(','):
+                        row_res.append(row[int(field)])
+                subnet_array.append(row_res)
+        except Exception as error:
+            # print(error)
+            continue
+    return subnet_array
+
+
+# return bootimage
+def getBootImage(systemtype):
+    if systemtype is None or systemtype == '':
+        return None
+    if 'bios' in systemtype:
+        bootimage = 'i386-pc/core.0'
+    elif 'efi32' in systemtype:
+        bootimage = 'i386-efi/core.efi'
+    elif 'efi64' in systemtype:
+        bootimage = 'x86_64-efi/core.efi'
+    else:
+        bootimage = None
+    return bootimage
 
 
 # establish pw less ssh connection to ip & port
