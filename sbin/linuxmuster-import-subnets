@@ -2,41 +2,33 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20181210
+# 20200404
 #
 
-import configparser
+import ast
 import constants
-import csv
 import datetime
 import os
 import re
 import yaml
 
 from bs4 import BeautifulSoup
-from functions import firewallApi
-from functions import getFwConfig
-from functions import getSftp
-from functions import isValidHostIpv4
-from functions import printScript
-from functions import putFwConfig
-from functions import putSftp
-from functions import readTextfile
-from functions import sshExec
-from functions import writeTextfile
+from functions import firewallApi, getFwConfig, getSetupValue, getSftp
+from functions import getSubnetArray, ipMatchSubnet, isValidHostIpv4
+from functions import printScript, putFwConfig, putSftp, readTextfile
+from functions import sshExec, writeTextfile
 from IPy import IP
 
 # read necessary values from setup.ini and other sources
-setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
-setup.read(constants.SETUPINI)
-serverip = setup.get('setup', 'serverip')
-domainname = setup.get('setup', 'domainname')
-opsiip = setup.get('setup', 'opsiip')
-dockerip = setup.get('setup', 'dockerip')
-firewallip = setup.get('setup', 'firewallip')
-skipfw = setup.getboolean('setup', 'skipfw')
-bitmask_setup = setup.get('setup', 'bitmask')
-network_setup = setup.get('setup', 'network')
+serverip = getSetupValue('serverip')
+domainname = getSetupValue('domainname')
+opsiip = getSetupValue('opsiip')
+dockerip = getSetupValue('dockerip')
+firewallip = getSetupValue('firewallip')
+# get boolean value
+skipfw = ast.literal_eval(getSetupValue('skipfw'))
+bitmask_setup = getSetupValue('bitmask')
+network_setup = getSetupValue('network')
 ipnet_setup = network_setup + '/' + bitmask_setup
 
 
@@ -92,9 +84,7 @@ nat_rule_xml = nat_rule_xml.replace(
     '@@nat_rule_descr@@', nat_rule_descr).replace('@@serverip@@', serverip)
 
 
-# functions begin ##
-
-
+# functions begin
 # update static routes in netplan configuration
 def updateNetplan(subnets, remoteip=''):
     if remoteip == '':
@@ -222,9 +212,8 @@ rm -f @@remotefile@@
     os.unlink(localfile)
     return True
 
+
 # update vlan gateway on firewall
-
-
 def updateFwGw(servernet_router, content):
     soup = BeautifulSoup(content, 'lxml')
     # get all gateways
@@ -308,9 +297,8 @@ def updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gw_la
             return False
     return changed
 
+
 # add single route
-
-
 def addFwRoute(subnet):
     try:
         payload = '{"route": {"network": "' + subnet + '", "gateway": "' + \
@@ -323,9 +311,8 @@ def addFwRoute(subnet):
         printScript('* Unable to add route for subnet ' + subnet + '!')
         return False
 
+
 # delete route on firewall by uuid
-
-
 def delFwRoute(uuid, subnet):
     try:
         rc = firewallApi('post', '/routes/routes/delroute/' + uuid)
@@ -335,9 +322,8 @@ def delFwRoute(uuid, subnet):
         printScript('* Unable to delete route ' + uuid + ' - ' + subnet + '!')
         return False
 
+
 # update firewall routes
-
-
 def updateFwRoutes(subnets, ipnet_setup, servernet_router):
     printScript('Updating subnet routing on firewall:')
     try:
@@ -377,8 +363,7 @@ def updateFwRoutes(subnets, ipnet_setup, servernet_router):
             if rc:
                 changed = rc
     return changed
-
-## functions end ##
+# functions end
 
 
 # iterate over subnets
@@ -388,12 +373,11 @@ printScript('Reading setup data:')
 printScript('* Server address: ' + serverip)
 printScript('* Server network: ' + ipnet_setup)
 printScript('Processing dhcp subnets:')
-f = open(constants.SUBNETSCSV, newline='')
-reader = csv.reader(f, delimiter=';', quoting=csv.QUOTE_NONE)
-d = open(constants.DHCPSUBCONF, 'w')
-subnets = []
 servernet_router = firewallip
-for row in reader:
+subnets = []
+# collect subnet data and write dhcpd's subnet.conf
+subnetconf = open(constants.DHCPSUBCONF, 'w')
+for row in getSubnetArray():
     try:
         ipnet = row[0]
         router = row[1]
@@ -423,18 +407,17 @@ for row in reader:
     subnets.append(ipnet + ':' + router)
     # write subnets.conf
     printScript('* ' + ipnet)
-    d.write('# Subnet ' + ipnet + ' ' + supp_info + '\n')
-    d.write('subnet ' + network + ' netmask ' + netmask + ' {\n')
-    d.write('  option routers ' + router + ';\n')
-    d.write('  option subnet-mask ' + netmask + ';\n')
-    d.write('  option broadcast-address ' + broadcast + ';\n')
-    d.write('  option netbios-name-servers ' + serverip + ';\n')
+    subnetconf.write('# Subnet ' + ipnet + ' ' + supp_info + '\n')
+    subnetconf.write('subnet ' + network + ' netmask ' + netmask + ' {\n')
+    subnetconf.write('  option routers ' + router + ';\n')
+    subnetconf.write('  option subnet-mask ' + netmask + ';\n')
+    subnetconf.write('  option broadcast-address ' + broadcast + ';\n')
+    subnetconf.write('  option netbios-name-servers ' + serverip + ';\n')
     if range1 != '':
-        d.write('  range ' + range1 + ' ' + range2 + ';\n')
-    d.write('  option host-name pxeclient;\n')
-    d.write('}\n')
-d.close()
-f.close()
+        subnetconf.write('  range ' + range1 + ' ' + range2 + ';\n')
+    subnetconf.write('  option host-name pxeclient;\n')
+    subnetconf.write('}\n')
+subnetconf.close()
 
 # restart dhcp service
 printScript('Restarting dhcp service.')
@@ -443,8 +426,8 @@ os.system('systemctl restart isc-dhcp-server.service')
 # update netplan config with new routes for server (localhost)
 changed = updateNetplan(subnets)
 
-# update netplan config with new routes for dockerhost
-if isValidHostIpv4(dockerip):
+# update netplan config with new routes for dockerhost if his ip matches lan subnets
+if isValidHostIpv4(dockerip) and ipMatchSubnet(dockerip, 'all'):
     changed = updateNetplan(subnets, dockerip)
 
 # create static routes for opsi

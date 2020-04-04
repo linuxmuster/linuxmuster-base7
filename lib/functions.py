@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 2020403
+# 2020404
 #
 
 import codecs
@@ -129,7 +129,7 @@ def getSetupValue(keyname):
         rc = setup.get('setup', keyname)
     except Exception as error:
         print(error)
-        rc = ''
+        return ''
     return rc
 
 
@@ -232,20 +232,6 @@ def getBootImage(systemtype):
     else:
         bootimage = None
     return bootimage
-
-
-# write dhcp subnet config
-def writeDhcpSubnetConfig(subnet_cfg_all):
-    subnetcfg = constants.DHCPDEVCONF
-    if os.path.isfile(subnetcfg):
-        os.unlink(subnetcfg)
-    try:
-        with open(constants.DHCPDEVCONF, 'a') as outfile:
-            for subnet_cfg in subnet_cfg_all:
-                outfile.write(subnet_cfg)
-    except Exception as error:
-        print(error)
-        return False
 
 
 # establish pw less ssh connection to ip & port
