@@ -1,9 +1,15 @@
+linuxmuster-base7 (7.0.62-1ubuntu0) lmn7; urgency=low
+
+  * renamed manpage file devices.csv.de.5 ->  devices.csv.5.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 08 Apr 2020 14:44:08 +0200
+
 linuxmuster-base7 (7.0.62-0ubuntu0) lmn7; urgency=low
 
   * devices.csv manpage update.
   * Fix #92: add missing root kernel append parameter in grub.cfg during devices import.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 08 Apr 2020 14:30:16 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 08 Apr 2020 14:09:54 +0200
 
 linuxmuster-base7 (7.0.61-0ubuntu0) lmn7; urgency=low
 
