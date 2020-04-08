@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20200404
+# 20200408
 #
 
 import configparser
@@ -72,7 +72,7 @@ def doGrubCfg(startconf, group, kopts):
     if os.path.isfile(grubcfg):
         msg = 'replaced'
     else:
-        msg= 'created'
+        msg = 'created'
     # create gobal part for group cfg
     globaltpl = constants.LINBOTPLDIR + '/grub.cfg.global'
     rc, content = readTextfile(globaltpl)
@@ -94,6 +94,9 @@ def doGrubCfg(startconf, group, kopts):
         ostype = getGrubOstype(osname)
         partnr = getStartconfPartnr(startconf, partition)
         oslabel = getStartconfPartlabel(startconf, partnr)
+        # add root to kernel append
+        if 'root=' not in kappend:
+            kappend = kappend + ' root=' + partition
         rc, content = readTextfile(ostpl)
         if not rc:
             return 'error!'
@@ -107,7 +110,7 @@ def doGrubCfg(startconf, group, kopts):
         rc = writeTextfile(grubcfg, content, 'a')
         if not rc:
             return 'error!'
-        return msg
+    return msg
 
 
 # write linbo start configuration file
