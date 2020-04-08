@@ -17,106 +17,105 @@
 .\" for manpage-specific macros, see man(7)
 .SH NAME
 
-Konfigurationsdateien für Netzwerkgeräte bei sophomorix4:
-
+Configuration files for network devices:
 
 default-school:
 .br
 /etc/linuxmuster/sophomorix/default-school/devices.csv
 
-Andere <school>:
+Other <school>:
 .br
 /etc/linuxmuster/sophomorix/<school>/<school>.devices.csv
 
 .br
 .SH DESCRIPTION
-Um eine Rechnerbezogene Konfiguration der Dienste DNS,
-DHCP, LINBO, ... vorzunehmen, werden die Rechner durch diese Datei
-konfiguriert und danach mit linuxmuster-import-devices importiert.
+This data is used to configure various services (DHCP, DNS, Linbo etc.) by
+processing them through the linuxmuster-import-devices script.
 
-Als Teil dieses Imports übernimmt sophomorix-device im Active
-Directory von samba4 de Eintragungen für DNS, computer-accounts der
-Rechner sowie Gruppen (Raum, Hardwareclasse, ...)
+As part of this processing, sophomorix-device takes care of the entries in the
+Active Directory of Samba 4 (DNS, computer accounts, groups etc.)
 
 .PP
-.SH FELDER
+.SH FIELDS
 
-Die folgenden 15 Felder bilden eine Zeile, die durch Strichpunkte getrennt sind:
+The following 15 fields have to be on one row separated by semicolons:
 .TP
-.B Feld 1: Raumname
+.B Field 1: room name
 .br
-Erstellt eine Gruppe mit dem sophomorixType 'room'
+creates a group with sophomorixType 'room'
 .TP
-.B Feld 2: Rechnername
+.B Field 2: hostname
 .br
-Erstellt einen dnsNode und (je nach sophomorixRole) einen computer
-account und evtl. eine Gruppe (wenn sophomorixRole printer ist).
+creates a dnsNode and (depending on sophomorixRole) a computer
+account and a printer group (if sophomorixRole is printer).
 .TP
-.B Feld 3: Hardwareklasse
+.B Field 3: device group (formerly known as hardwareclass)
 .br
-Erstellt eine Gruppe mit dem sophomorixType 'hardwareclass'
+created as sophomorixType 'hardwareclass'
 .TP
-.B Feld 4: MAC-Adresse des Rechners
+.B Field 4: mac address
 .TP
-.B Feld 5: IP des Rechners (IPv4)
+.B Field 5: client ip (IPv4)
 .TP
-.B Feld 6: MS-Office-Key
+.B Field 6: ms office key
 .TP
-.B Feld 7: MS-Windows-Key
+.B Field 7: ms windows key
 .TP
-.B Feld 8: Reserviert für linuxmuster.net
+.B Field 8: supplemental dhcp options, comma separated
 .TP
-.B Feld 9: sophomorixRole
+.B Field 9: sophomorixRole
 .br
-Hier sind nur ganz bestimmte Rollennamen zulässig.
+Only certain rolenames are valid.
 .TP
-.B Feld 10: Reserviert für linuxmuster.net
+.B Field 10: reserved by linuxmuster.net
 .TP
-.B Feld 11: PXE-Flag
-.TP
-.B Feld 12: Reserviert für linuxmuster.net
-.TP
-.B Feld 13: Reserviert für linuxmuster.net
-.TP
-.B Feld 14: Reserviert für linuxmuster.net
-.TP
-.B Feld 15: sophomorixComment
+.B Field 11: pxe flag
 .br
-Kommentarfeld sophomorixComment beim computer account.
+Possible values 0-3:
+.br
+0: no pxe, 1: linbo pxe, 2: linbo pxe + opsi mgmt, 3: opsi pxe
+.TP
+.B Field 12: reserved by linuxmuster.net
+.TP
+.B Field 13: reserved by linuxmuster.net
+.TP
+.B Field 14: reserved by linuxmuster.net
+.TP
+.B Field 15: sophomorixComment
+.br
+comment field sophomorixComment for computer account.
 
-.SH ANMERKUNGEN:
+.SH Notes:
 
-.B Raumname
+.B room name
 .br
-Raumnamen, werden außerhalb der 'default-school' mit prefix
-versehen: '<school>-<room>'.
+Apart from the 'default-school', room names are given a prefix: '<school>-<room>'.
 
-.B Rechnername
+.B hostname
 .br
-dnsNode-Namen sowie computer accounts werden außerhalb
-der 'default-school' mit prefix versehen: '<school>-<rechnername>'.
+Apart from the 'default-school', dnsNode names and computer accounts are given
+a prefix: '<school>-<hostname>'.
 
-Computeraccount-Namen bestehen aus Großbuchstaben, gefolgt von $
-(Rechnername 'a102pc1' führt zu dnsNode 'a102pc1' und computer
-account 'A102PC1$')
+Computer account names consist of capital letters followed by $:
+hostname 'a102pc1' will be dnsNode 'a102pc1' and computer
+account 'A102PC1$'.
 
-.B Hardwareklasse
+.B device groups (hardwareclass)
 .br
-Werden NICHT mit prefix versehen. Sie sind schulübergreifend nutzbar.
+do NOT get a prefix. They are globally valid.
 
 .B sophomorixRole
 .br
-Es sind nur vorgegebene Werte nutzbar, siehe dazu
+There are only predefined values, see
 
 sophomorix-samba --show-roletype
 
-Die sophomorixRole entscheidet, ob ein computer account angelegt wird
-oder nicht.
+sophomorixRole determines, whether a computer account will be created or not.
 
-.B Weitere Felder ...
+.B Other fields ...
 .br
-Felder ab Feld 16 stören nicht. Und können in Zukunft per Konfigurations
-ins AD synchronisiert werden
+Further fields after position 16 are allowed and can be synchronized to AD by
+configuration in the future.
 
 
 .SH SEE ALSO
@@ -124,9 +123,8 @@ ins AD synchronisiert werden
 
 .\".BR baz (1).
 .\".br
-.\"You can see the full options of the Programs by calling for example 
+.\"You can see the full options of the programs by calling for example
 .\".IR "sophomrix-useradd -h" ,
 .
 .SH AUTHOR
-Written by <jeffbeck@web.de>.
-
+Written by <jeffbeck@web.de>, translated and amended by <thomas@linuxmuster.net>.
