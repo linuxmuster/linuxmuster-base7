@@ -212,7 +212,8 @@ try:
     binduserpw = randomPassword(16)
     with open(constants.BINDUSERSECRET, 'w') as secret:
         secret.write(binduserpw)
-    subProc('chmod 400 ' + constants.SECRETDIR + '/*', logfile)
+    subProc('chmod 440 ' + constants.BINDUSERSECRET, logfile)
+    subProc('chgrp dhcpd ' + constants.BINDUSERSECRET, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

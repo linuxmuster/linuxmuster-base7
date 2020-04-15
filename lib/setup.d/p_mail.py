@@ -2,7 +2,7 @@
 #
 # mailserver setup
 # thomas@linuxmuster.net
-# 20200307
+# 20200415
 #
 
 import configparser
@@ -114,8 +114,8 @@ def main():
     msg = '* Creating dns entry '
     printScript(msg, '', False, False, True)
     try:
-        sambaTool('dns add localhost ' + domainname + ' mail A ' + mailip)
-        sambaTool('dns add localhost ' + domainname + ' mail MX "' + mailip + ' 10"')
+        sambaTool('dns add localhost ' + domainname + ' mail A ' + mailip, logfile)
+        sambaTool('dns add localhost ' + domainname + ' mail MX "' + mailip + ' 10"', logfile)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))

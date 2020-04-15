@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20200408
+# 20200414
 #
 
 import configparser
@@ -188,10 +188,9 @@ def writeDhcpDevicesConfig():
     printScript('', 'begin')
     printScript('Working on dhcp configuration for devices')
     opsiip = getSetupValue('opsiip')
-    host_decl_tpl = """host @@ip@@ {
-  hardware ethernet @@mac@@;
-  fixed-address @@ip@@;
+    host_decl_tpl = """host @@hostname@@ {
   option host-name "@@hostname@@";
+  hardware ethernet @@mac@@;
 """
     cfgfile = constants.DHCPDEVCONF
     if os.path.isfile(cfgfile):
@@ -200,15 +199,21 @@ def writeDhcpDevicesConfig():
         # open devices.conf for append
         with open(cfgfile, 'a') as outfile:
             # iterate over the defined subnets
-            for subnet_array in getSubnetArray('0'):
-                cidr = subnet_array[0]
+            subnets = getSubnetArray('0')
+            subnets.append(['DHCP'])
+            for item in subnets:
+                subnet = item[0]
                 # iterate over devices per subnet
                 headline = False
-                for device_array in getDevicesArray(fieldnrs='1,2,3,4,7,8,10',subnet=cidr,stype=True):
+                for device_array in getDevicesArray(fieldnrs='1,2,3,4,7,8,10',subnet=subnet,stype=True):
                     if not headline:
                         # write corresponding subnet as a comment
-                        outfile.write('# subnet ' + cidr + '\n')
-                        printScript('* in subnet ' + cidr + ':')
+                        if subnet == 'DHCP':
+                            outfile.write('# dynamic ip hosts\n')
+                            printScript('* dynamic ip hosts:')
+                        else:
+                            outfile.write('# subnet ' + subnet + '\n')
+                            printScript('* in subnet ' + subnet + ':')
                         headline = True
                     hostname, group, mac, ip, dhcpopts, computertype, pxeflag, systemtype = device_array
                     if systemtype is None:
@@ -219,7 +224,10 @@ def writeDhcpDevicesConfig():
                     row = [hostname, ip, computertype, pxeflag, systemtype]
                     printScript("  {: <15} | {: <15} | {: <15} | {: <1} | {: <6}".format(*row))
                     # begin host declaration
-                    host_decl = host_decl_tpl.replace('@@ip@@', ip).replace('@@mac@@', mac).replace('@@hostname@@', hostname)
+                    host_decl = host_decl_tpl.replace('@@mac@@', mac).replace('@@hostname@@', hostname)
+                    # fixed ip
+                    if ip != 'DHCP':
+                        host_decl = host_decl + '  fixed-address ' + ip + ';\n'
                     # only for pxe clients
                     if int(pxeflag) != 0:
                         # opsi pxe boot
@@ -261,8 +269,8 @@ writeDhcpDevicesConfig()
 printScript('', 'begin')
 printScript('Working on linbo/grub configuration for devices:')
 pxe_groups = []
-for device_array in getDevicesArray(fieldnrs='1,2,4,10', subnet='all', pxeflag='1,2,3'):
-    host, group, ip, pxeflag = device_array
+for device_array in getDevicesArray(fieldnrs='1,2,3,4,10', subnet='all', pxeflag='1,2,3'):
+    host, group, mac, ip, pxeflag = device_array
     # collect groups with pxe for later use
     if group not in pxe_groups:
         pxe_groups.append(group)
@@ -270,7 +278,11 @@ for device_array in getDevicesArray(fieldnrs='1,2,4,10', subnet='all', pxeflag='
     row = [host, group]
     printScript("  {: <15} | {: <15}".format(*row))
     groupconf = 'start.conf.' + group
-    hostlink = constants.LINBODIR + '/start.conf-' + ip
+    hostlink = constants.LINBODIR + '/start.conf-'
+    if ip == 'DHCP':
+        hostlink = hostlink + mac.lower()
+    else:
+        hostlink = hostlink + ip
     if not os.path.isfile(hostlink):
         os.system('ln -sf ' + groupconf + ' ' + hostlink)
     # grub config

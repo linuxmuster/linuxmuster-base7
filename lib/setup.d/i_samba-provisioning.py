@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20200227
+# 20200415
 #
 
 import configparser
@@ -68,7 +68,7 @@ try:
     adadminpw = randomPassword(16)
     with open(constants.ADADMINSECRET, 'w') as secret:
         secret.write(adadminpw)
-    subProc('chmod 600 ' + constants.ADADMINSECRET, logfile)
+    subProc('chmod 400 ' + constants.ADADMINSECRET, logfile)
     # symlink for sophomorix
     subProc('ln -sf ' + constants.ADADMINSECRET + ' ' + constants.SOPHOSYSDIR + '/sophomorix-samba.secret', logfile)
     printScript(' Success!', '', True, True, False, len(msg))

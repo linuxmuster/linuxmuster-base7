@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20200327
+# 20200415
 # GPL v3
 #
 
@@ -47,7 +47,14 @@ case "$1" in
   # permissions
   chgrp ssl-cert "$SSLDIR" -R
   chmod 750 "$SSLDIR"
-  chmod 700 "$SECRETDIR"
+  for i in "$SECRETDIR" "$BINDUSERSECRET" "$DNSADMINSECRET"; do
+    [ -e "$i" ] && chgrp dhcpd "$i"
+    if [ -d "$i" ]; then
+      chmod 750 "$i"
+    else
+      [ -e "$i" ] && chmod 440 "$i"
+    fi
+  done
   sysvol="/var/lib/samba/sysvol"
   [ -d "$sysvol" ] && find "$sysvol" -type d -exec chmod 775 '{}' \;
 
@@ -89,15 +96,43 @@ case "$1" in
     linuxmuster-modini -i "$conf" -s global -o 'time server' -v Yes -r samba-ad-dc
   fi
 
-  # dhcp update, server ip as ntp server
-  conf='/etc/dhcp/dhcpd.conf'
-  search="option ntp-servers ${firewallip}"
-  if grep -q ^"$search" "$conf"; then
-    echo "Updating time server related dhcp configuration."
-    replace="${search/$firewallip/$serverip}"
+  # create dns-admin account
+  if ! id dns-admin &> /dev/null; then
+    echo "Creating dns-admin account."
+    # create user password
+    conf="$DNSADMINSECRET"
+    dnspw="$(python3 -c 'from functions import randomPassword; print(randomPassword(16))')"
+    echo "$dnspw" > "$conf"
+    chgrp dhcpd "$conf"
+    chmod 440 "$conf"
+    # create account
+    desc="Unprivileged user for DNS updates via DHCP server"
+    auth="-U administrator --password="$(cat "$ADADMINSECRET")""
+    samba-tool user create dns-admin "$dnspw" --description="$desc" $auth
+    samba-tool user setexpiry dns-admin --noexpiry $auth
+    samba-tool group addmembers DnsAdmins dns-admin $auth
+  fi
+
+  # dhcpd updates
+  conf='/etc/dhcp/events.conf'
+  if [ ! -e "$conf" ]; then
+    echo "Updating dhcp configuration."
+    cp "$TPLDIR/dhcpd.events.conf" "$conf"
+    conf='/etc/dhcp/dhcpd.conf'
     cp "$conf" "$conf".dpkg-bak
-    sed -i "s|^$search|$replace|" "$conf"
+    tpl="$TPLDIR/dhcpd.conf"
+    sed -e "s|@@servername@@|$servername|g
+            s|@@domainname@@|$domainname|g
+            s|@@serverip@@|$serverip|g" "$tpl" > "$conf"
     systemctl restart isc-dhcp-server.service
+  fi
+  # apparmor dhcp update
+  conf="/etc/apparmor.d/local/usr.sbin.dhcpd"
+  if ! grep -q dhcpd-update-samba-dns.py "$conf"; then
+    echo "Updating apparmor configuration."
+    cp "$conf" "$conf".dpkg-bak
+    cp "$TPLDIR/dhcpd.apparmor.d" "$conf"
+    systemctl restart apparmor.service
   fi
 
   # enable ntp service, change firewall name to ip (#88)

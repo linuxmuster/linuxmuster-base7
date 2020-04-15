@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20200313
+# 20200415
 #
 
 # don't change this file
@@ -30,6 +30,7 @@ SECRETDIR = SYSDIR + '/.secret'
 BINDUSERSECRET = SECRETDIR + '/global-binduser'
 RADIUSSECRET = SECRETDIR + '/radiussecret'
 ADADMINSECRET = SECRETDIR + '/administrator'
+DNSADMINSECRET = SECRETDIR + '/dns-admin'
 CAKEYSECRET = SECRETDIR + '/cakey'
 FWAPIKEYS = SECRETDIR + '/firewall.api.ini'
 FWFULLCHAIN = SSLDIR + '/firewall.fullchain.pem'

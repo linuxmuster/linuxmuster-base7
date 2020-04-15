@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 2020404
+# 2020415
 #
 
 import codecs
@@ -26,6 +26,7 @@ import time
 
 from contextlib import closing
 from IPy import IP
+from ldap3 import Server, Connection, ALL
 from netaddr import IPNetwork, IPAddress
 from shutil import copyfile
 from subprocess import Popen, PIPE
@@ -70,13 +71,60 @@ def subProc(cmd, logfile=None):
     except:
         return False
 
+
+# get basedn from domainname
+def getBaseDN():
+    domainname = socket.getfqdn().split('.', 1)[1]
+    basedn = ''
+    for item in domainname.split('.'):
+        if basedn == '':
+            basedn = 'DC=' + item
+        else:
+            basedn = basedn + ',DC=' + item
+    return basedn
+
+
+# AD query
+def adSearch(search_filter, search_base=''):
+    # get search parameters
+    rc, bindsecret = readTextfile(constants.BINDUSERSECRET)
+    basedn = getBaseDN()
+    binduser = 'CN=global-binduser,OU=Management,OU=GLOBAL,' + basedn
+    if search_base == '':
+        search_base = basedn
+    elif basedn not in search_base:
+        search_base = search_base + ',' + basedn
+    # make connection
+    server = Server('localhost')
+    conn = Connection(server, binduser, bindsecret, auto_bind=True)
+    conn.search(search_base, search_filter)
+    return conn.entries
+
+
+# return True if dynamic ip device
+def isDynamicIpDevice(name, school='default-school'):
+    samacountname = name.upper() + '$'
+    search_filter = '(&(objectClass=computer)(sAMAccountName=' + samacountname + ')(sophomorixComputerIP=DHCP))'
+    search_base = 'OU=Devices,OU=' + school + ',OU=SCHOOLS'
+    res = adSearch(search_filter, search_base)
+    if len(res) == 0:
+        return False
+    else:
+        return True
+
+
 # samba-tool
-def sambaTool(options):
-    rc, adminpw = readTextfile(constants.ADADMINSECRET)
+def sambaTool(options, logfile=None):
+    subcmd = options.split(' ')[0]
+    if subcmd == 'dns':
+        adminuser = 'dns-admin'
+        rc, adminpw = readTextfile(constants.DNSADMINSECRET)
+    else:
+        adminuser = 'administrator'
+        rc, adminpw = readTextfile(constants.ADADMINSECRET)
     if rc == False:
         return rc
-    logfile = constants.LOGDIR + '/samba-tool.log'
-    cmd = 'samba-tool ' + options + ' --username=Administrator --password=' + adminpw
+    cmd = 'samba-tool ' + options + ' --username=' + adminuser + ' --password=' + adminpw
     # for debugging
     #printScript(cmd)
     rc = subProc(cmd, logfile)
@@ -135,6 +183,10 @@ def getSetupValue(keyname):
 
 # test if ip matches subnet
 def ipMatchSubnet(ip, subnet):
+    if ip == 'DHCP' and subnet == 'all':
+        return True
+    if ip =='DHCP':
+        return False
     try:
         if subnet == 'all':
             cidr_array = getSubnetArray('0')
@@ -150,10 +202,10 @@ def ipMatchSubnet(ip, subnet):
 
 # reads devices.csv and returns a list of devices arrays: [array1, array2, ...]
 # fieldnrs: comma separated list of field nrs ('0,1,2,3,...') to be returned, default is all fields were returned
-# subnet filter: only hosts whose ip matches the specified subnet (CIDR) were returned, if 'all' is specified all subnets defined in subnets.csv were checked
+# subnet filter: only hosts whose ip matches the specified subnet (CIDR) were returned, if 'all' is specified all subnets defined in subnets.csv were checked, if 'DHCP' is specified all dynamic ip hosts are returned
 # pxeflag filter: comma separated list of flags ('0,1,2,3'), only hosts with the specified pxeflags were returned
 # stype: True additionally returns SystemType from start.conf as last element
-def getDevicesArray(fieldnrs='',subnet='',pxeflag='',stype=False):
+def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False):
     infile = open(constants.WIMPORTDATA, newline='')
     content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
     devices_array = []
@@ -162,15 +214,27 @@ def getDevicesArray(fieldnrs='',subnet='',pxeflag='',stype=False):
             # skip rows, which begin with non alphanumeric characters
             if not row[0][0:1].isalnum():
                 continue
-            # skip rows with not valid values
-            if not isValidHostname(row[1]) or not isValidMac(row[3]) or not isValidHostIpv4(row[4]):
+            # collect values
+            hostname = row[1]
+            group = row[2]
+            mac = row[3]
+            ip = row[4]
+            pxe = row[10]
+            # skip rows with invalid values
+            # filter dynamic ip hosts
+            if subnet == 'DHCP' and ip != 'DHCP':
                 continue
-            # filter pxeflags
-            if pxeflag != '':
-                if not row[10] in pxeflag.split(','):
-                    continue
-            # filter subnet
-            if subnet != '' and not ipMatchSubnet(row[4], subnet):
+            # filter invalid hostnames and macs
+            if not isValidHostname(hostname) or not isValidMac(mac):
+                continue
+            # filter invalid ips
+            if not isValidHostIpv4(ip) and ip != 'DHCP':
+                continue
+            # filter not matching pxeflags
+            if pxeflag != '' and pxe not in pxeflag.split(','):
+                continue
+            # filter not matching subnet
+            if subnet != '' and subnet != 'DHCP' and not ipMatchSubnet(ip, subnet):
                 continue
             # collect fields
             if fieldnrs == '':
@@ -181,7 +245,6 @@ def getDevicesArray(fieldnrs='',subnet='',pxeflag='',stype=False):
                     row_res.append(row[int(field)])
             # add systemtype from start.conf
             if stype:
-                group = row[2]
                 startconf = constants.LINBODIR + '/start.conf.' + group
                 systemtype = None
                 if os.path.isfile(startconf):

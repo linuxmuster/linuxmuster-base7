@@ -2,7 +2,7 @@
 #
 # create samba users & shares
 # thomas@linuxmuster.net
-# 20200309
+# 20200415
 #
 
 import configparser
@@ -10,9 +10,12 @@ import constants
 import os
 import sys
 from functions import modIni
+from functions import randomPassword
 from functions import readTextfile
 from functions import printScript
+from functions import sambaTool
 from functions import subProc
+from functions import writeTextfile
 
 title = os.path.basename(__file__).replace('.py', '').split('_')[1]
 logfile = constants.LOGDIR + '/setup.' + title + '.log'
@@ -34,8 +37,8 @@ try:
     # get binduser password
     rc, binduserpw = readTextfile(constants.BINDUSERSECRET)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(' ' + error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # samba backup
@@ -44,8 +47,8 @@ printScript(msg, '', False, False, True)
 try:
     subProc('sophomorix-samba --backup-samba without-users', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(' ' + error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # renew sophomorix configs
@@ -65,8 +68,8 @@ try:
     for item in shareoptsex:
         subProc('net conf setparm ' + schoolname + ' ' + item)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(' ' + error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # create global-admin
@@ -77,8 +80,8 @@ try:
     subProc('sophomorix-admin --create-global-admin global-admin --password "' + adminpw + '"', logfile)
     subProc('sophomorix-user --user global-admin --comment "' + sophomorix_comment + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(' ' + error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # create global bind user
@@ -88,8 +91,8 @@ try:
     subProc('sophomorix-admin --create-global-binduser global-binduser --password "' + binduserpw + '"', logfile)
     subProc('sophomorix-user --user global-binduser --comment "' + sophomorix_comment + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(' ' + error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # no expiry for Administrator password
@@ -97,10 +100,10 @@ msg = 'No expiry for administrative passwords '
 printScript(msg, '', False, False, True)
 try:
     for i in ['Administrator', 'global-admin', 'sophomorix-admin', 'global-binduser']:
-        subProc('samba-tool user setexpiry ' + i + ' --noexpiry', logfile)
+        sambaTool('user setexpiry ' + i + ' --noexpiry', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(' ' + error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # create default-school, no connection to ad
@@ -110,8 +113,8 @@ try:
     subProc('sophomorix-school --create --school ' + schoolname, logfile)
     subProc('sophomorix-school --gpo-create ' + schoolname, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(' ' + error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # create pgmadmin for default-school
@@ -121,8 +124,24 @@ try:
     subProc('sophomorix-admin --create-school-admin pgmadmin --school ' + schoolname + ' --password "' + adminpw + '"', logfile)
     subProc('sophomorix-user --user pgmadmin --comment "' + sophomorix_comment + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(' ' + error, '', True, True, False, len(msg))
+    sys.exit(1)
+
+# create dns-admin account
+msg = 'Creating samba account for dns-admin '
+printScript(msg, '', False, False, True)
+try:
+    dnspw = randomPassword(16)
+    desc = 'Unprivileged user for DNS updates via DHCP server'
+    sambaTool('user create dns-admin ' + dnspw + ' --description="' + desc + '"', logfile)
+    sambaTool('user setexpiry dns-admin --noexpiry', logfile)
+    sambaTool('group addmembers DnsAdmins dns-admin', logfile)
+    rc, writeTextfile(constants.DNSADMINSECRET, dnspw, 'w')
+    os.system('chgrp dhcpd ' + constants.DNSADMINSECRET)
+    os.system('chmod 440 ' + constants.DNSADMINSECRET)
+except Exception as error:
+    printScript(' ' + error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # add firewall as dns forwarder
@@ -134,6 +153,6 @@ try:
     subProc('echo "nameserver ' + firewallip + '" >> /etc/resolv.conf', logfile)
     subProc('systemctl restart samba-ad-dc.service', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(' ' + error, '', True, True, False, len(msg))
     sys.exit(1)
