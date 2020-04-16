@@ -1,3 +1,15 @@
+linuxmuster-base7 (7.0.64-3ubuntu0) lmn7; urgency=low
+
+* postinst: skip fixes on unconfigured systems.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 16 Apr 2020 09:43:31 +0200
+
+linuxmuster-base7 (7.0.64-2ubuntu0) lmn7; urgency=low
+
+  * added apparmor service restart to setup's final tasks.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 15 Apr 2020 21:58:27 +0200
+
 linuxmuster-base7 (7.0.64-1ubuntu0) lmn7; urgency=low
 
   * Fix #30: manage devices without fixed ip on import.

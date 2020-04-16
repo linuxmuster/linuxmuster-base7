@@ -58,6 +58,9 @@ case "$1" in
   sysvol="/var/lib/samba/sysvol"
   [ -d "$sysvol" ] && find "$sysvol" -type d -exec chmod 775 '{}' \;
 
+  # skip subsequent actions on configured systems
+  [ -s "$SETUPINI" ] || exit 0
+
   # create firewall fullchain pem file
   fwcert="$(echo "$FWFULLCHAIN" | sed -e 's|.fullchain.|.cert.|')"
   if [ ! -s "$FWFULLCHAIN" -a -s "$fwcert" ]; then
