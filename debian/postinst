@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20200415
+# 20200416
 # GPL v3
 #
 
@@ -168,7 +168,9 @@ case "$1" in
   # install necessary sudoers config for webui (#91)
   tpl="$TPLDIR/webui-sudoers"
   conf="$(head -1 $tpl | awk '{ print $2 }')"
-  if [ ! -e "$conf" ]; then
+  search="# 20200416"
+  if [ ! -e "$conf" ] || ! grep -q ^"$search" "$conf"; then
+    echo "Updating webui sudoers."
     sed -e "s|@@sambadomain@@|$sambadomain|g" "$tpl" > "$conf"
     chmod 400 "$conf"
   fi

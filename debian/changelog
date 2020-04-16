@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.67-0ubuntu0) lmn7; urgency=low
+
+* webui-sudoers update.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 16 Apr 2020 21:05:08 +0200
+
 linuxmuster-base7 (7.0.66-0ubuntu0) lmn7; urgency=low
 
 * events.conf template path fix.
