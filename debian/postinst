@@ -90,13 +90,14 @@ case "$1" in
     systemctl daemon-reload
   fi
 
-  # smb.conf update, enable time server
-  tserver="$(testparm -l -s --parameter-name="time server" 2>/dev/null | tr A-Z a-z)"
-  if [ "$tserver" != "yes" ];then
-    echo "Updating time server related samba configuration."
-    conf="/etc/samba/smb.conf"
+  # smb.conf update (pr #94)
+  conf="/etc/samba/smb.conf"
+  search="winbind nested groups"
+  if ! grep -q "$search" "$conf"; then
+    echo "Updating samba configuration."
     cp "$conf" "$conf".dpkg-bak
-    linuxmuster-modini -i "$conf" -s global -o 'time server' -v Yes -r samba-ad-dc
+    linuxmuster-modini -i "$conf" -s global -o 'winbind nested groups' -v Yes
+    linuxmuster-modini -i "$conf" -s global -o 'winbind expand groups' -v 6 -r samba-ad-dc
   fi
 
   # create dns-admin account
