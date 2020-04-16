@@ -2,7 +2,7 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20200311
+# 20200416
 #
 
 import constants
@@ -35,6 +35,16 @@ for item in unwanted:
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' not installed!', '', True, True, False, len(msg))
+
+# restart apparmor service
+msg = 'Restarting apparmor service '
+printScript(msg, '', False, False, True)
+try:
+    subProc('systemctl restart apparmor.service', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
 
 # import devices
 msg = 'Starting device import '
