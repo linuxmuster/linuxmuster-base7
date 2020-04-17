@@ -2,7 +2,7 @@
 #
 # adds/updates/removes A DNS records
 # thomas@linuxmuster.net
-# 20200415
+# 20200417
 #
 
 import socket
@@ -11,7 +11,6 @@ import sys
 from functions import isDynamicIpDevice
 from functions import isValidHostname
 from functions import isValidHostIpv4
-from functions import printLf
 from functions import sambaTool
 
 cmd = ''
@@ -29,9 +28,8 @@ if not isValidHostIpv4(ip):
 if not isValidHostname(hostname):
     sys.exit(1)
 
-# check if it is a dynamic ip device
-if not isDynamicIpDevice(hostname):
-    print(hostname + ' is no dynamic ip device, doing nothing.')
+# no action for pxclient
+if hostname.lower() == 'pxeclient':
     sys.exit(0)
 
 # check if ip has not changed or has to be updated
@@ -42,12 +40,21 @@ if cmd == 'add':
             print('IP for ' + hostname + ' has remained unchanged, doing nothing.')
             sys.exit(0)
         else:
-            print('IP for ' + hostname + ' has changed, performing update.')
             cmd = 'update'
             ip = ip_resolved + ' ' + ip
     except Exception as error:
-        printLf(error, False)
-        print(', creating A record for ' + hostname + '.')
+        print(error)
+
+# check if it is a dynamic ip device
+if not isDynamicIpDevice(hostname):
+    print(hostname + ' is no dynamic ip device, doing nothing.')
+    sys.exit(0)
+
+# print message
+if cmd == 'add':
+    print('Creating A record for ' + hostname + '.')
+elif cmd == 'update':
+    print('IP for ' + hostname + ' has changed, performing update.')
 else:
     print("Deleting " + hostname + "'s A record.")
 
