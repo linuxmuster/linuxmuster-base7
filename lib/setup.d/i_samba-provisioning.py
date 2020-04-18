@@ -2,21 +2,15 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20200415
+# 20200418
 #
 
 import configparser
 import constants
 import datetime
-import glob
 import os
 import sys
-from functions import modIni
-from functions import randomPassword
-from functions import replaceInFile
-from functions import printScript
-from functions import subProc
-from functions import writeTextfile
+from functions import randomPassword, printScript, subProc, writeTextfile
 
 title = os.path.basename(__file__).replace('.py', '').split('_')[1]
 logfile = constants.LOGDIR + '/setup.' + title + '.log'
@@ -28,7 +22,6 @@ printScript(title)
 msg = 'Stopping samba services '
 printScript(msg, '', False, False, True)
 
-#services = ['winbind', 'samba-ad-dc', 'smbd', 'nmbd']
 services = ['winbind', 'samba-ad-dc', 'smbd', 'nmbd', 'systemd-resolved', 'samba-ad-dc']
 try:
     for service in services:
@@ -38,8 +31,8 @@ try:
         # disabling not needed samba services
         subProc('systemctl disable ' + service + '.service', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # read setup ini
@@ -51,14 +44,13 @@ try:
     setup.read(setupini)
     realm = setup.get('setup', 'domainname').upper()
     sambadomain = setup.get('setup', 'sambadomain')
-    schoolname = setup.get('setup', 'schoolname')
     serverip = setup.get('setup', 'serverip')
     servername = setup.get('setup', 'servername')
     domainname = setup.get('setup', 'domainname')
     basedn = setup.get('setup', 'basedn')
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # generate ad admin password
@@ -72,8 +64,8 @@ try:
     # symlink for sophomorix
     subProc('ln -sf ' + constants.ADADMINSECRET + ' ' + constants.SOPHOSYSDIR + '/sophomorix-samba.secret', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # alte smb.conf löschen
@@ -87,8 +79,8 @@ printScript(msg, '', False, False, True)
 try:
     subProc('samba-tool domain provision --use-rfc2307 --server-role=dc --domain=' + sambadomain + ' --realm=' + realm + ' --adminpass=' + adadminpw, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # create krb5.conf symlink
@@ -106,8 +98,8 @@ try:
         with open(krb5conf_dst, 'w') as config:
             k.write(config)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # restart services
@@ -123,34 +115,19 @@ try:
     subProc('systemctl unmask samba-ad-dc.service', logfile)
     subProc('systemctl enable samba-ad-dc.service', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # backup samba before sophomorix modifies anything
 msg = 'Backing up samba '
 printScript(msg, '', False, False, True)
 try:
-    #subProc('sophomorix-samba --schema-load', logfile)
     subProc('sophomorix-samba --backup-samba without-sophomorix-schema', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(error, '', True, True, False, len(msg))
     sys.exit(1)
-
-# write schoolname to sophomorix school.conf (not yet usable)
-#msg = 'Write schoolname to sophomorix school.conf '
-#printScript(msg, '', False, False, True)
-#schoolconf = constants.SCHOOLCONF
-#bakfile = schoolconf + '.dist'
-#try:
-    # backup up config
-#    if not os.path.isfile(bakfile):
-#        os.system('cp ' + schoolconf + ' ' + bakfile)
-#    modIni(schoolconf, 'school', 'school_longname', schoolname)
-#except:
-#    printScript(' Failed!', '', True, True, False, len(msg))
-#    sys.exit(1)
 
 # loading sophomorix samba schema
 msg = 'Provisioning sophomorix samba schema '
@@ -158,8 +135,8 @@ printScript(msg, '', False, False, True)
 try:
     subProc('cd /usr/share/sophomorix/schema ; ./sophomorix_schema_add.sh ' + basedn + ' . -H /var/lib/samba/private/sam.ldb -writechanges', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # fixing resolv.conf
@@ -175,8 +152,8 @@ try:
     os.unlink(resconf)
     rc = writeTextfile(resconf, filedata, 'w')
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # exchange smb.conf
@@ -186,8 +163,8 @@ try:
     os.system('mv ' + smbconf + ' ' + smbconf + '.orig')
     os.system('mv ' + smbconf + '.setup ' + smbconf)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(error, '', True, True, False, len(msg))
     sys.exit(1)
 
 # starting samba service again
@@ -197,6 +174,6 @@ try:
     subProc('systemctl start samba-ad-dc.service', logfile)
     subProc('sleep 5', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(error, '', True, True, False, len(msg))
     sys.exit(1)

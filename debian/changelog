@@ -1,8 +1,10 @@
 linuxmuster-base7 (7.0.69-0ubuntu0) lmn7; urgency=low
 
 * fixed getting state of services after restart in import scripts (see #93).
+* fix #82: change SCHOOL_LONGNAME in sophomorix' school.conf during setup.
+* more error verbosity in setup scripts.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 18 Apr 2020 15:22:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 18 Apr 2020 20:24:44 +0200
 
 linuxmuster-base7 (7.0.68-0ubuntu0) lmn7; urgency=low
 
