@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20200404
+# 20200418
 #
 
 import ast
@@ -10,6 +10,7 @@ import constants
 import datetime
 import os
 import re
+import time
 import yaml
 
 from bs4 import BeautifulSoup
@@ -420,7 +421,19 @@ for row in getSubnetArray():
 subnetconf.close()
 
 # restart dhcp service
-printScript('Restarting dhcp service.')
+service = 'isc-dhcp-server'
+msg = 'Restarting ' + service + ' '
+printScript(msg, '', False, False, True)
+os.system('service ' + service + ' stop')
+os.system('service ' + service + ' start')
+# wait one second before service check
+time.sleep(1)
+rc = os.system('systemctl is-active --quiet ' + service)
+if rc == 0:
+    printScript(' OK!', '', True, True, False, len(msg))
+else:
+    printScript(' Failed!', '', True, True, False, len(msg))
+
 os.system('systemctl restart isc-dhcp-server.service')
 
 # update netplan config with new routes for server (localhost)

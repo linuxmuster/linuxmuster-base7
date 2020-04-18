@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20200414
+# 20200418
 #
 
 import configparser
@@ -11,6 +11,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 from os import listdir
 from os.path import isfile, join
@@ -323,22 +324,24 @@ if len(hookscripts) > 0:
 # restart services
 printScript('', 'begin')
 printScript('Restarting services:')
-maxlen = 17
-RC = 0
-for service in ['isc-dhcp-server', 'linbo-bittorrent', 'linbo-multicast']:
-    gaplen = maxlen - len(service)
+services = ['isc-dhcp-server', 'linbo-bittorrent', 'linbo-multicast']
+for service in services:
+    os.system('service ' + service + ' stop')
+    os.system('service ' + service + ' start')
+# wait one second before service check
+time.sleep(1)
+rc = 0
+for service in services:
     msg = '* ' + service + ' '
     printScript(msg, '', False, False, True)
-    for action in ['stop', 'start']:
-        result = os.system('service ' + service + ' ' + action)
-        if result != 0:
-            RC = result
-    if RC == 0:
+    state = os.system('systemctl is-active --quiet ' + service)
+    if state == 0:
         printScript(' OK!', '', True, True, False, len(msg))
     else:
         printScript(' Failed!', '', True, True, False, len(msg))
+        rc = 1
 
 # end message
 printScript(os.path.basename(__file__), 'end')
 
-sys.exit(RC)
+sys.exit(rc)
