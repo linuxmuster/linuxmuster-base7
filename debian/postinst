@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20200416
+# 20200418
 # GPL v3
 #
 
@@ -119,7 +119,7 @@ case "$1" in
 
   # dhcpd updates
   conf='/etc/dhcp/events.conf'
-  if [ ! -e "$conf" ]; then
+  if [ ! -e "$conf" ] || ! grep -q '# 20200418' "$conf" ; then
     echo "Updating dhcp configuration."
     cp "$TPLDIR/dhcpd.events.conf" "$conf"
     conf='/etc/dhcp/dhcpd.conf'
