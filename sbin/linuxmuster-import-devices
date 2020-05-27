@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20200418
+# 20200527
 #
 
 import configparser
@@ -22,11 +22,8 @@ from functions import getStartconfPartnr, getStartconfPartlabel, getSubnetArray
 from functions import isValidHostIpv4, printScript, readTextfile
 from functions import setGlobalStartconfOption, writeTextfile
 
-# defaults
+# default school's devices.csv
 devices = constants.WIMPORTDATA
-core32_efi = 'boot/grub/i386-efi/core.efi'
-core64_efi = 'boot/grub/x86_64-efi/core.efi'
-core_bios = 'boot/grub/i386-pc/core.0'
 
 # read INIFILE
 setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
@@ -231,15 +228,19 @@ def writeDhcpDevicesConfig():
                         host_decl = host_decl + '  fixed-address ' + ip + ';\n'
                     # only for pxe clients
                     if int(pxeflag) != 0:
+                        # get grub bootimage dependend to group's systemtype in start.conf
+                        bootimage = getBootImage(systemtype)
                         # opsi pxe boot
                         if pxeflag == '3':
-                            bootimage = constants.OPSIPXEFILE
+                            if 'efi' in bootimage:
+                                bootimage = constants.OPSIEFIPXEFILE
+                            else:
+                                bootimage = constants.OPSIPXEFILE
                             host_decl = host_decl + '  filename "' + bootimage + '";\n'
                             host_decl = host_decl + '  next-server ' + opsiip + ';\n'
                         # linbo pxe boot
                         else:
                             host_decl = host_decl + '  option extensions-path "' + group + '";\n'
-                            bootimage = getBootImage(systemtype)
                             if 'filename' not in dhcpopts and bootimage is not None:
                                 host_decl = host_decl + '  filename "boot/grub/' + bootimage + '";\n'
                             # dhcp options have to be 5 chars minimum to get processed

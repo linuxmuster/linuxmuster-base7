@@ -1,39 +1,47 @@
+linuxmuster-base7 (7.0.70-0ubuntu0) lmn7; urgency=low
+
+  * fix #99: server should be type addc.
+  * fix #98: function to get broadcast address of certain ip.
+  * fix #97: opsi uefi dhcp configuration.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 27 May 2020 20:20:46 +0200
+
 linuxmuster-base7 (7.0.69-0ubuntu0) lmn7; urgency=low
 
-* fixed getting state of services after restart in import scripts (see #93).
-* fix #82: change SCHOOL_LONGNAME in sophomorix' school.conf during setup.
-* more error verbosity in setup scripts.
-* performance improvements for dhcp events hooks.
+  * fixed getting state of services after restart in import scripts (see #93).
+  * fix #82: change SCHOOL_LONGNAME in sophomorix' school.conf during setup.
+  * more error verbosity in setup scripts.
+  * performance improvements for dhcp events hooks.
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 18 Apr 2020 21:42:56 +0200
 
 linuxmuster-base7 (7.0.68-0ubuntu0) lmn7; urgency=low
 
-* performance improvements for dhcṕ-samba-dns-update script.
+  * performance improvements for dhcṕ-samba-dns-update script.
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 17 Apr 2020 13:32:56 +0200
 
 linuxmuster-base7 (7.0.67-0ubuntu0) lmn7; urgency=low
 
-* webui-sudoers update.
+  * webui-sudoers update.
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 16 Apr 2020 21:05:08 +0200
 
 linuxmuster-base7 (7.0.66-0ubuntu0) lmn7; urgency=low
 
-* events.conf template path fix.
+  * events.conf template path fix.
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 16 Apr 2020 10:32:13 +0200
 
 linuxmuster-base7 (7.0.65-0ubuntu0) lmn7; urgency=low
 
-* merged #94 Allow nested Groups from @mcazautet (smb.conf options).
+  * merged #94 Allow nested Groups from @mcazautet (smb.conf options).
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 16 Apr 2020 10:08:08 +0200
 
 linuxmuster-base7 (7.0.64-3ubuntu0) lmn7; urgency=low
 
-* postinst: skip fixes on unconfigured systems.
+  * postinst: skip fixes on unconfigured systems.
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 16 Apr 2020 09:43:31 +0200
 

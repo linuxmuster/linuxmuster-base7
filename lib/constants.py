@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20200415
+# 20200527
 #
 
 # don't change this file
@@ -78,6 +78,7 @@ OPSIWSIMPORT = '/usr/sbin/linuxmuster-opsi --wsimport'
 OPSISETUP = '/usr/sbin/linuxmuster-opsi --setup'
 OPSICLIENTDIR = '/var/lib/opsi/config/clients'
 OPSIPXEFILE = 'linux/pxelinux.0'
+OPSIEFIPXEFILE = 'linux/pxelinux.cfg/elilo.efi'
 
 # grub stuff
 GRUBCOMMONMODS = 'all_video boot chain configfile cpuid echo net ext2 extcmd fat \

@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 2020415
+# 2020527
 #
 
 import codecs
@@ -199,6 +199,28 @@ def ipMatchSubnet(ip, subnet):
         print(error)
     return False
 
+
+# get ip's subnet
+def getIpSubnet(ip):
+    subnets = getSubnetArray('0')
+    for item in subnets:
+        subnet = item[0]
+        if ipMatchSubnet(ip, subnet):
+            return subnet
+
+
+# get ip's broadcast address
+def getIpBcAddress(ip):
+    try:
+        subnet = getIpSubnet(ip)
+        if subnet is None:
+            return
+        net = IPNetwork(subnet)
+        bcaddr = str(net.broadcast)
+        return bcaddr
+    except Exception as error:
+        print(error)
+    
 
 # reads devices.csv and returns a list of devices arrays: [array1, array2, ...]
 # fieldnrs: comma separated list of field nrs ('0,1,2,3,...') to be returned, default is all fields were returned
