@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 2020527
+# 2020623
 #
 
 import codecs
@@ -220,7 +220,7 @@ def getIpBcAddress(ip):
         return bcaddr
     except Exception as error:
         print(error)
-    
+
 
 # reads devices.csv and returns a list of devices arrays: [array1, array2, ...]
 # fieldnrs: comma separated list of field nrs ('0,1,2,3,...') to be returned, default is all fields were returned
@@ -531,11 +531,11 @@ def firewallApi(request, path, data=''):
     headers = {'content-type': 'application/json'}
     url = 'https://firewall.' + domainname + '/api' + path
     if request == 'get':
-        req = requests.get(url, verify=constants.FWFULLCHAIN, auth=(apikey, apisecret))
+        req = requests.get(url, auth=(apikey, apisecret))
     elif request == 'post' and data == '':
-        req = requests.post(url, verify=constants.FWFULLCHAIN, auth=(apikey, apisecret))
+        req = requests.post(url, auth=(apikey, apisecret))
     elif request == 'post' and data != '':
-        req = requests.post(url, data=data, verify=constants.FWFULLCHAIN, auth=(apikey, apisecret), headers=headers)
+        req = requests.post(url, data=data, auth=(apikey, apisecret), headers=headers)
     else:
         return None
     # get response
