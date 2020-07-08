@@ -3,7 +3,7 @@ linuxmuster-base7 (7.0.72-0ubuntu0) lmn7; urgency=low
   * fix #100: smb.conf faulty.
   * fix #103: import-devices fails in some circumstances when using opsi.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 23 Jun 2020 18:13:49 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 08 Jul 2020 18:19:50 +0200
 
 linuxmuster-base7 (7.0.71-0ubuntu0) lmn7; urgency=low
 
