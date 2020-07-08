@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20200527
+# 20200708
 #
 
 import configparser
@@ -232,7 +232,7 @@ def writeDhcpDevicesConfig():
                         bootimage = getBootImage(systemtype)
                         # opsi pxe boot
                         if pxeflag == '3':
-                            if 'efi' in bootimage:
+                            if bootimage is not None and 'efi' in bootimage:
                                 bootimage = constants.OPSIEFIPXEFILE
                             else:
                                 bootimage = constants.OPSIPXEFILE
