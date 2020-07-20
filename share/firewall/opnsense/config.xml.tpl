@@ -622,7 +622,7 @@
         <identity>CN=global-binduser,OU=Management,OU=GLOBAL,@@basedn@@</identity>
         <password>@@binduserpw@@</password>
         <base_dn>OU=SCHOOLS,@@basedn@@</base_dn>
-        <user_filter>(&amp;(objectClass=person)(sAMAccountName=%{%{Stripped-User-Name}:-%{User-Name}})(memberOf=CN=wifi*))</user_filter>
+        <user_filter>(&amp;(objectClass=person)(sAMAccountName=%{%{Stripped-User-Name}:-%{User-Name}})(memberOf=CN=wifi,OU=Management,OU=*))</user_filter>
         <group_filter>(objectClass=group)</group_filter>
       </ldap>
     </freeradius>
