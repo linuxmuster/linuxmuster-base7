@@ -1,6 +1,6 @@
 linuxmuster-base7 (7.0.73-0ubuntu0) lmn7; urgency=low
 
-  * fix #106: Optimierung des OPNsense Freeradius LDAP Benutzerfilters.
+  * fix #106: OPNsense Freeradius LDAP user filter optimized.
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 08 Jul 2020 18:19:50 +0200
 
