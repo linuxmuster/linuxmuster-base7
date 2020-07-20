@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20200418
+# 20200720
 # GPL v3
 #
 
@@ -90,14 +90,19 @@ case "$1" in
     systemctl daemon-reload
   fi
 
-  # smb.conf update (pr #94)
+  # smb.conf update (pr #105)
   conf="/etc/samba/smb.conf"
-  search="winbind nested groups"
-  if ! grep -q "$search" "$conf"; then
+  search="# 20200720"
+  if ! grep -q ^"$search" "$conf"; then
     echo "Updating samba configuration."
     cp "$conf" "$conf".dpkg-bak
-    linuxmuster-modini -i "$conf" -s global -o 'winbind nested groups' -v Yes
-    linuxmuster-modini -i "$conf" -s global -o 'winbind expand groups' -v 6 -r samba-ad-dc
+    tpl="$TPLDIR/smb.conf"
+    sed -e "s|@@sambadomain@@|$sambadomain|g
+            s|@@realm@@|$realm|g
+            s|@@netbiosname@@|$netbiosname|g
+            s|@@servername@@|$servername|g
+            s|@@domainname@@|$domainname|g" "$tpl" > "$conf"
+    systemctl reload samba-ad-dc.service
   fi
 
   # create dns-admin account
