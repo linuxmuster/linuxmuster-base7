@@ -173,7 +173,7 @@ case "$1" in
   # install necessary sudoers config for webui (#91)
   tpl="$TPLDIR/webui-sudoers"
   conf="$(head -1 $tpl | awk '{ print $2 }')"
-  search="# 20200416"
+  search="# 20200720"
   if [ ! -e "$conf" ] || ! grep -q ^"$search" "$conf"; then
     echo "Updating webui sudoers."
     sed -e "s|@@sambadomain@@|$sambadomain|g" "$tpl" > "$conf"

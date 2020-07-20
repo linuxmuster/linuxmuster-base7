@@ -2,8 +2,9 @@ linuxmuster-base7 (7.0.73-0ubuntu0) lmn7; urgency=low
 
   * fix #106: OPNsense Freeradius LDAP user filter optimized.
   * fix #105: Remove slow name resolution in sudo env.
+  * fix #104: Added sudoers entry for sophomorix-user for teacher role.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 20 Jul 2020 17:20:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 20 Jul 2020 17:31:00 +0200
 
 linuxmuster-base7 (7.0.72-0ubuntu0) lmn7; urgency=low
 
