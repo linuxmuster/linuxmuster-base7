@@ -2,14 +2,13 @@
 #
 # create samba users & shares
 # thomas@linuxmuster.net
-# 20200418
+# 20200722
 #
 
 import configparser
 import constants
 import os
 import sys
-from functions import modIni
 from functions import randomPassword
 from functions import readTextfile
 from functions import printScript
@@ -146,14 +145,14 @@ except Exception as error:
     sys.exit(1)
 
 # add firewall as dns forwarder
-# smb.conf
-msg = 'Add firewall as dns forwarder '
-printScript(msg, '', False, False, True)
-try:
-    modIni('/etc/samba/smb.conf','global', 'dns forwarder', firewallip)
-    subProc('echo "nameserver ' + firewallip + '" >> /etc/resolv.conf', logfile)
-    subProc('systemctl restart samba-ad-dc.service', logfile)
-    printScript(' Success!', '', True, True, False, len(msg))
-except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
-    sys.exit(1)
+# obsolete with #107
+#msg = 'Add firewall as dns forwarder '
+#printScript(msg, '', False, False, True)
+#try:
+#    modIni('/etc/samba/smb.conf','global', 'dns forwarder', firewallip)
+#    subProc('echo "nameserver ' + firewallip + '" >> /etc/resolv.conf', logfile)
+#    subProc('systemctl restart samba-ad-dc.service', logfile)
+#    printScript(' Success!', '', True, True, False, len(msg))
+#except Exception as error:
+#    printScript(error, '', True, True, False, len(msg))
+#    sys.exit(1)

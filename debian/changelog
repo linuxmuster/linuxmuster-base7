@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.75-0ubuntu0) lmn7; urgency=low
+
+  * fixed smb.conf handling during setup in conjunction with #100, #105 and #100.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 22 Jul 2020 13:52:23 +0200
+
 linuxmuster-base7 (7.0.74-0ubuntu0) lmn7; urgency=low
 
   * fix #107: dns forwarder ip misses in smb.conf.
