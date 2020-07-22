@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.74-0ubuntu0) lmn7; urgency=low
+
+  * fix #107: dns forwarder ip misses in smb.conf.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 22 Jul 2020 09:15:59 +0200
+
 linuxmuster-base7 (7.0.73-0ubuntu0) lmn7; urgency=low
 
   * fix #106: OPNsense Freeradius LDAP user filter optimized.

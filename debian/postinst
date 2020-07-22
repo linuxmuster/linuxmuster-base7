@@ -92,13 +92,14 @@ case "$1" in
 
   # smb.conf update (pr #105)
   conf="/etc/samba/smb.conf"
-  search="# 20200720"
+  search="# 20200722"
   if ! grep -q ^"$search" "$conf"; then
     echo "Updating samba configuration."
     cp "$conf" "$conf".dpkg-bak
     tpl="$TPLDIR/smb.conf"
     sed -e "s|@@sambadomain@@|$sambadomain|g
             s|@@realm@@|$realm|g
+            s|@@firewallip@@|$firewallip|g
             s|@@netbiosname@@|$netbiosname|g
             s|@@servername@@|$servername|g
             s|@@domainname@@|$domainname|g" "$tpl" > "$conf"
