@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.76-0ubuntu0) lmn7; urgency=low
+
+  * added "ntlm auth = mschapv2-and-ntlmv2-only" needed for wpa2 enterprise to smb.conf.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 30 Jul 2020 13:23:00 +0200
+
 linuxmuster-base7 (7.0.75-1ubuntu0) lmn7; urgency=low
 
   * fixed smb.conf handling during setup in conjunction with #100, #105 and #107.
