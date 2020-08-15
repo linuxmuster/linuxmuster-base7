@@ -33,7 +33,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     serverip = setup.get('setup', 'serverip')
     printScript(' Success!', '', True, True, False, len(msg))

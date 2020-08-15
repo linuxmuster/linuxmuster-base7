@@ -26,7 +26,7 @@ from functions import setGlobalStartconfOption, writeTextfile
 devices = constants.WIMPORTDATA
 
 # read INIFILE
-setup = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+setup = configparser.ConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
 setup.read(constants.SETUPINI)
 serverip = setup.get('setup', 'serverip')
 opsiip = setup.get('setup', 'opsiip')

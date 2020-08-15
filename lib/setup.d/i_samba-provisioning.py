@@ -40,7 +40,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     realm = setup.get('setup', 'domainname').upper()
     sambadomain = setup.get('setup', 'sambadomain')
@@ -92,7 +92,7 @@ try:
     if os.path.isfile(krb5conf_dst):
         os.remove(krb5conf_dst)
         os.symlink(krb5conf_src, krb5conf_dst)
-        k = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+        k = configparser.ConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
         k.read(krb5conf_dst)
         k.set('libdefaults', 'dns_lookup_realm', 'true')
         with open(krb5conf_dst, 'w') as config:

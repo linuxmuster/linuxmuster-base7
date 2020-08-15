@@ -172,7 +172,7 @@ def printScript(msg='', header='', lf=True, noleft=False, noright=False, offset=
 def getSetupValue(keyname):
     setupini = constants.SETUPINI
     try:
-        setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
+        setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
         setup.read(setupini)
         rc = setup.get('setup', keyname)
     except Exception as error:
@@ -490,7 +490,7 @@ def replaceInFile(tfile, search, replace):
 # modify and write ini file
 def modIni(inifile, section, option, value):
     try:
-        i = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
+        i = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
         if not os.path.isfile(inifile):
             # create inifile
             writeTextfile(inifile, '[' + section + ']\n', 'w')
@@ -524,7 +524,7 @@ def waitForFw(timeout=300, wait=0):
 # firewall api get request
 def firewallApi(request, path, data=''):
     domainname = getSetupValue('domainname')
-    fwapi = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
+    fwapi = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
     fwapi.read(constants.FWAPIKEYS)
     apikey = fwapi.get('api', 'key')
     apisecret = fwapi.get('api', 'secret')
@@ -659,7 +659,7 @@ def getStartconfOption(startconf, section, option):
         return None
     try:
         # read in to configparser
-        s = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
+        s = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
         s.read_string(content)
         return s.get(section, option)
     except:
@@ -719,7 +719,7 @@ def getStartconfOsValues(startconf):
         return None
     try:
         # read in to configparser
-        s = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
+        s = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
         s.read_string(content)
         count = 1
         oslists = {}

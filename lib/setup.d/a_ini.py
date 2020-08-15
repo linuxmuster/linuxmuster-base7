@@ -24,7 +24,7 @@ printScript('', 'begin')
 printScript(title)
 
 # read ini files
-setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
+setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
 for item in [constants.DEFAULTSINI, constants.PREPINI, constants.SETUPINI, constants.CUSTOMINI]:
     # skip non existant file
     if not os.path.isfile(item):

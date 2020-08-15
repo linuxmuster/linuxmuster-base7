@@ -30,10 +30,10 @@ printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
     # setupdefaults.ini
-    defaults = configparser.ConfigParser(inline_comment_prefixes=('#', ';'))
+    defaults = configparser.ConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
     defaults.read(constants.DEFAULTSINI)
     # setup.ini
-    setup = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     adminpw = setup.get('setup', 'adminpw')
     bitmask = setup.get('setup', 'bitmask')
