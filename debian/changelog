@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.76-1ubuntu0) lmn7; urgency=low
+
+  * fixed "ntp signd socket directory" in smb.conf (#110).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2020 22:07:24 +0200
+
 linuxmuster-base7 (7.0.76-0ubuntu0) lmn7; urgency=low
 
   * added "ntlm auth = mschapv2-and-ntlmv2-only" needed for wpa2 enterprise to smb.conf.

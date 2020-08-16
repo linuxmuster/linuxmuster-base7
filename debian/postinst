@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20200816
+# 20200817
 # GPL v3
 #
 
@@ -92,7 +92,7 @@ case "$1" in
 
   # smb.conf update (pr #105)
   conf="/etc/samba/smb.conf"
-  search="# 20200816"
+  search="# 20200817"
   if ! grep -q ^"$search" "$conf"; then
     echo "Updating samba configuration."
     cp "$conf" "$conf".dpkg-bak
