@@ -1,9 +1,10 @@
 linuxmuster-base7 (7.0.76-0ubuntu0) lmn7; urgency=low
 
   * added "ntlm auth = mschapv2-and-ntlmv2-only" needed for wpa2 enterprise to smb.conf.
-  * fix  #111: colon is used as a delimiter by python's configparser.
+  * fix #111: colon is used as a delimiter by python's configparser.
+  * fix #110: linuxmuster setup prevents NT5DS from working.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 15 Aug 2020 19:20:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2020 11:15:14 +0200
 
 linuxmuster-base7 (7.0.75-1ubuntu0) lmn7; urgency=low
 
