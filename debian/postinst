@@ -92,7 +92,7 @@ case "$1" in
 
   # smb.conf update (pr #105)
   conf="/etc/samba/smb.conf"
-  search="# 20200817"
+  search="# 20200722"
   if ! grep -q ^"$search" "$conf"; then
     echo "Updating samba configuration."
     cp "$conf" "$conf".dpkg-bak
@@ -156,14 +156,16 @@ case "$1" in
     systemctl start ntp.service
   fi
   conf="/etc/ntp.conf"
-  if ! grep -qi ^"pool $firewallip" "$conf"; then
-    echo "Adding firewall ip to $conf."
+  search="# 20200817"
+  if ! grep -q ^"$search" "$conf"; then
+    echo "Updating $conf."
     cp "$conf" "$conf".dpkg-bak
-    sed -i "s|^pool|#pool|g" "$conf"
-    sed -i "s|# use firewall as primary ntp server|# use firewall as primary ntp server\npool $firewallip|" "$conf"
-    grep -qi ^"pool $firewallip" "$conf" || echo "pool $firewallip" >> "$conf"
+    tpl="$TPLDIR/ntp.conf"
+    sed -e "s|@@firewallip@@|$firewallip|g" "$tpl" > "$conf"
     systemctl restart ntp.service
   fi
+  ntpsigndsocket="$(grep ^ntpsigndsocket /etc/ntp.conf | awk '{ print $2 }')"
+  [ -n "$ntpsigndsocket" ] && chgrp ntp "$ntpsigndsocket"
 
   # remove obsolete sudo users for webui (#90)
   for i in student teacher; do

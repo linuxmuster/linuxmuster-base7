@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.77-0ubuntu0) lmn7; urgency=low
+
+  * fix #110  (finally): linuxmuster setup prevents NT5DS from working.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 17 Aug 2020 09:02:32 +0200
+
 linuxmuster-base7 (7.0.76-1ubuntu0) lmn7; urgency=low
 
   * fixed "ntp signd socket directory" in smb.conf (#110).
