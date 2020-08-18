@@ -5,7 +5,7 @@ linuxmuster-base7 (7.0.78-0ubuntu0) lmn7; urgency=low
   * added includefile "/etc/ntp.conf.admin" to "/etc/ntp.conf" for custom settings.
   * added "/etc/ntp.conf.dist" to document default ntp settings.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 18 Aug 2020 16:04:56 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 18 Aug 2020 16:14:45 +0200
 
  linuxmuster-base7 (7.0.77-0ubuntu0) lmn7; urgency=low
 
