@@ -1,8 +1,10 @@
-linuxmuster-base7 (7.0.77-0ubuntu0) lmn7; urgency=low
+linuxmuster-base7 (7.0.78-0ubuntu0) lmn7; urgency=low
 
-  * fix #110  (finally): linuxmuster setup prevents NT5DS from working.
+  * final fix #110 (Lac de Narlay version): changed ntp signd socket directory to "/run/samba/ntp_signd".
+  * added includefile "/etc/ntp.conf.admin" to "/etc/ntp.conf" for custom settings.
+  * added "/etc/ntp.conf.dist" to document default ntp settings.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 17 Aug 2020 09:02:32 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 18 Aug 2020 15:42:20 +0200
 
 linuxmuster-base7 (7.0.76-1ubuntu0) lmn7; urgency=low
 

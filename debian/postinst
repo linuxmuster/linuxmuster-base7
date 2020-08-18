@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20200817
+# 20200818
 # GPL v3
 #
 
@@ -24,6 +24,7 @@ set -e
 
 # get constants
 source /usr/share/linuxmuster/defaults.sh
+datestr="$(date +%Y%m%d%H%M)"
 
 case "$1" in
 
@@ -85,17 +86,17 @@ case "$1" in
   search="NTP=${firewallip}"
   if ! grep -q ^"$search" "$conf"; then
     echo "Updating time server related timesyncd configuration."
-    cp "$conf" "$conf".dpkg-bak
+    cp "$conf" "$conf".dpkg-bak."$datestr"
     echo "$search" >> "$conf"
     systemctl daemon-reload
   fi
 
   # smb.conf update (pr #105)
   conf="/etc/samba/smb.conf"
-  search="# 20200722"
+  search="# 20200818"
   if ! grep -q ^"$search" "$conf"; then
     echo "Updating samba configuration."
-    cp "$conf" "$conf".dpkg-bak
+    cp "$conf" "$conf".dpkg-bak."$datestr"
     tpl="$TPLDIR/smb.conf"
     sed -e "s|@@sambadomain@@|$sambadomain|g
             s|@@realm@@|$realm|g
@@ -129,7 +130,7 @@ case "$1" in
     echo "Updating dhcp configuration."
     cp "$TPLDIR/dhcpd.events.conf" "$conf"
     conf='/etc/dhcp/dhcpd.conf'
-    cp "$conf" "$conf".dpkg-bak
+    cp "$conf" "$conf".dpkg-bak."$datestr"
     tpl="$TPLDIR/dhcpd.conf"
     sed -e "s|@@servername@@|$servername|g
             s|@@domainname@@|$domainname|g
@@ -140,7 +141,7 @@ case "$1" in
   conf="/etc/apparmor.d/local/usr.sbin.dhcpd"
   if ! grep -q dhcpd-update-samba-dns.py "$conf"; then
     echo "Updating apparmor configuration."
-    cp "$conf" "$conf".dpkg-bak
+    cp "$conf" "$conf".dpkg-bak."$datestr"
     cp "$TPLDIR/dhcpd.apparmor.d" "$conf"
     systemctl restart apparmor.service
   fi
@@ -156,12 +157,14 @@ case "$1" in
     systemctl start ntp.service
   fi
   conf="/etc/ntp.conf"
-  search="# 20200817"
+  search="# 20200818"
   if ! grep -q ^"$search" "$conf"; then
-    echo "Updating $conf."
-    cp "$conf" "$conf".dpkg-bak
+    echo "Updating npt configuration."
+    cp "$conf" "$conf".dpkg-bak."$datestr"
     tpl="$TPLDIR/ntp.conf"
     sed -e "s|@@firewallip@@|$firewallip|g" "$tpl" > "$conf"
+    cp "$tpl.admin" "$conf.admin"
+    cp "$tpl.dist" "$conf.dist"
     systemctl restart ntp.service
   fi
   ntpsigndsocket="$(grep ^ntpsigndsocket /etc/ntp.conf | awk '{ print $2 }')"
