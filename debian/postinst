@@ -106,6 +106,14 @@ case "$1" in
             s|@@domainname@@|$domainname|g" "$tpl" > "$conf"
     systemctl reload samba-ad-dc.service
   fi
+  # check ntp ntpsigndsocket
+  ntpsigndsocket="/run/samba/ntp_signd"
+  if [ ! -d "$ntpsigndsocket" ]; then
+    mkdir -p "$ntpsigndsocket"
+    systemctl restart samba-ad-dc.service
+    sleep 2
+  fi
+  chgrp ntp "$ntpsigndsocket"
 
   # create dns-admin account
   if ! id dns-admin &> /dev/null; then
@@ -167,8 +175,6 @@ case "$1" in
     cp "$tpl.dist" "$conf.dist"
     systemctl restart ntp.service
   fi
-  ntpsigndsocket="$(grep ^ntpsigndsocket /etc/ntp.conf | awk '{ print $2 }')"
-  [ -n "$ntpsigndsocket" ] && chgrp ntp "$ntpsigndsocket"
 
   # remove obsolete sudo users for webui (#90)
   for i in student teacher; do
