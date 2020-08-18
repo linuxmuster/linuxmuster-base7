@@ -159,7 +159,7 @@ case "$1" in
   conf="/etc/ntp.conf"
   search="# 20200818"
   if ! grep -q ^"$search" "$conf"; then
-    echo "Updating npt configuration."
+    echo "Updating ntp configuration."
     cp "$conf" "$conf".dpkg-bak."$datestr"
     tpl="$TPLDIR/ntp.conf"
     sed -e "s|@@firewallip@@|$firewallip|g" "$tpl" > "$conf"
