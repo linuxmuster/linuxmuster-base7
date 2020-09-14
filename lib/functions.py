@@ -307,6 +307,8 @@ def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False):
                 if not row[0][0:1].isalnum():
                     continue
                 # collect values
+                if school != "default-school":
+                    row[1] = school+"-"+row[1] # add the prefix to the computername for DHCP config
                 hostname = row[1]
                 group = row[2]
                 mac = row[3]
