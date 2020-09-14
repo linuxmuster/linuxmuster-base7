@@ -23,6 +23,9 @@ import shutil
 import socket
 import string
 import time
+import threading
+import ast
+import dpath
 
 from contextlib import closing
 from IPy import IP
@@ -221,6 +224,64 @@ def getIpBcAddress(ip):
     except Exception as error:
         print(error)
 
+class SophomorixProcess(threading.Thread):
+    """Worker for processing sophomorix commands"""
+
+    def __init__(self, command):
+        self.stdout = None
+        self.stderr = None
+        self.command = command
+        threading.Thread.__init__(self)
+
+    def run(self):
+        p = Popen(self.command, stdout=PIPE, stderr=PIPE, shell=False)
+        self.stdout, self.stderr = p.communicate()
+
+def lmn_getSophomorixValue(sophomorixCommand, jsonpath, ignoreErrors=False):
+    """Get the response dict or value for a key after running a sophomorix command"""
+
+    uid = os.getuid()
+    if uid != 0:
+        sophomorixCommand = ['sudo'] + sophomorixCommand
+
+    ## New Thread for one process to avoid conflicts
+    t = SophomorixProcess(sophomorixCommand)
+    t.daemon = True
+    t.start()
+    t.join()
+
+    ## Cleanup stderr output
+    #output = t.stderr.replace(':null,', ":\"null\",")
+    #TODO: Maybe sophomorix should provide the null value  in  a python usable format
+    output = t.stderr.decode("utf8").replace(':null', ":\"null\"")
+    output = output.replace(':null}', ":\"null\"}")
+    output = output.replace(':null]', ":\"null\"]")
+
+
+    ## Some comands get many dicts, we just want the first
+    output = output.replace('\n', '').split('# JSON-end')[0]
+    output = output.split('# JSON-begin')[1]
+
+    ## Convert str to dict
+    jsonDict = {}
+    if output:
+        jsonDict = ast.literal_eval(output)
+
+    ## Without key, simply return the dict
+    if jsonpath is '':
+        return jsonDict
+
+    if ignoreErrors is False:
+        try:
+            resultString = dpath.util.get(jsonDict, jsonpath)
+        except Exception as e:
+            raise Exception('getSophomorix Value error. Either sophomorix field does not exist or ajenti binduser does not have sufficient permissions:\n' +
+                            'Error Message: ' + str(e) + '\n Dictionary we looked for information:\n' + str(jsonDict))
+    else:
+        resultString = dpath.util.get(jsonDict, jsonpath)
+    return resultString
+
+
 
 # reads devices.csv and returns a list of devices arrays: [array1, array2, ...]
 # fieldnrs: comma separated list of field nrs ('0,1,2,3,...') to be returned, default is all fields were returned
@@ -228,54 +289,63 @@ def getIpBcAddress(ip):
 # pxeflag filter: comma separated list of flags ('0,1,2,3'), only hosts with the specified pxeflags were returned
 # stype: True additionally returns SystemType from start.conf as last element
 def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False):
-    infile = open(constants.WIMPORTDATA, newline='')
-    content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
+    command = ["sophomorix-school", "-i", "-j"]
+    schools = lmn_getSophomorixValue(command, "LISTS/SCHOOLS")
     devices_array = []
-    for row in content:
-        try:
-            # skip rows, which begin with non alphanumeric characters
-            if not row[0][0:1].isalnum():
+    for school in schools:
+
+        if school == "default-school":
+            infile = open(constants.SOPHOSYSDIR+"/default-school/devices.csv", newline='')
+        else:
+            infile = open(constants.SOPHOSYSDIR+"/"+school+"/"+school+".devices.csv", newline='')
+        #infile = open(constants.WIMPORTDATA, newline='')
+
+        content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
+        for row in content:
+            try:
+                # skip rows, which begin with non alphanumeric characters
+                if not row[0][0:1].isalnum():
+                    continue
+                # collect values
+                hostname = row[1]
+                group = row[2]
+                mac = row[3]
+                ip = row[4]
+                pxe = row[10]
+                # skip rows with invalid values
+                # filter dynamic ip hosts
+                if subnet == 'DHCP' and ip != 'DHCP':
+                    continue
+                # filter invalid hostnames and macs
+                if not isValidHostname(hostname) or not isValidMac(mac):
+                    continue
+                # filter invalid ips
+                if not isValidHostIpv4(ip) and ip != 'DHCP':
+                    continue
+                # filter not matching pxeflags
+                if pxeflag != '' and pxe not in pxeflag.split(','):
+                    continue
+                # filter not matching subnet
+                if subnet != '' and subnet != 'DHCP' and not ipMatchSubnet(ip, subnet):
+                    continue
+                # collect fields
+                if fieldnrs == '':
+                    row_res = row
+                else:
+                    row_res = []
+                    for field in fieldnrs.split(','):
+                        row_res.append(row[int(field)])
+                # add systemtype from start.conf
+                if stype:
+                    startconf = constants.LINBODIR + '/start.conf.' + group
+                    systemtype = None
+                    if os.path.isfile(startconf):
+                        systemtype = getStartconfOption(startconf, 'LINBO', 'SystemType')
+                    row_res.append(systemtype)
+                devices_array.append(row_res)
+            except Exception as error:
+                # print(error)
                 continue
-            # collect values
-            hostname = row[1]
-            group = row[2]
-            mac = row[3]
-            ip = row[4]
-            pxe = row[10]
-            # skip rows with invalid values
-            # filter dynamic ip hosts
-            if subnet == 'DHCP' and ip != 'DHCP':
-                continue
-            # filter invalid hostnames and macs
-            if not isValidHostname(hostname) or not isValidMac(mac):
-                continue
-            # filter invalid ips
-            if not isValidHostIpv4(ip) and ip != 'DHCP':
-                continue
-            # filter not matching pxeflags
-            if pxeflag != '' and pxe not in pxeflag.split(','):
-                continue
-            # filter not matching subnet
-            if subnet != '' and subnet != 'DHCP' and not ipMatchSubnet(ip, subnet):
-                continue
-            # collect fields
-            if fieldnrs == '':
-                row_res = row
-            else:
-                row_res = []
-                for field in fieldnrs.split(','):
-                    row_res.append(row[int(field)])
-            # add systemtype from start.conf
-            if stype:
-                startconf = constants.LINBODIR + '/start.conf.' + group
-                systemtype = None
-                if os.path.isfile(startconf):
-                    systemtype = getStartconfOption(startconf, 'LINBO', 'SystemType')
-                row_res.append(systemtype)
-            devices_array.append(row_res)
-        except Exception as error:
-            # print(error)
-            continue
     return devices_array
 
 
