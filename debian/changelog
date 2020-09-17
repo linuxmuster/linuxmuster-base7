@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.1.2-0ubuntu0) lmn7; urgency=low
+
+  * functions-py: added possibility to define nameserver in subnets.csv
+
+ -- Andreas Till <andreas.till@netzint.de>  Tue, 17 Sep 2020 08:26:45 +0200
+
 linuxmuster-base7 (7.1.1-0ubuntu0) lmn7; urgency=low
 
   * functions-py: made multischool enhancements.
