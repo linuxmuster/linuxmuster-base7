@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.1.3-1ubuntu0) lmn7; urgency=low
+
+  * linuxmuster-import-subnets: fixed wrong dhcp option for nextserver
+
+ -- Andreas Till <andreas.till@netzint.de>  Tue, 17 Sep 2020 13:49:30 +0200
+
 linuxmuster-base7 (7.1.3-0ubuntu0) lmn7; urgency=low
 
   * linuxmuster-import-subnets: added option to define nextserver for dhcp

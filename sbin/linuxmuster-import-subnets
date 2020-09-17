@@ -429,7 +429,7 @@ for row in getSubnetArray():
     else:
         subnetconf.write('  option netbios-name-servers ' + serverip + ';\n')
     if nextserver != '':
-        subnetconf.write('  option next-server '+ nextserver + ';\n')
+        subnetconf.write('  next-server '+ nextserver + ';\n')
     if range1 != '':
         subnetconf.write('  range ' + range1 + ' ' + range2 + ';\n')
     subnetconf.write('  option host-name pxeclient;\n')
