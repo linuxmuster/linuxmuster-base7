@@ -384,6 +384,7 @@ for row in getSubnetArray():
         router = row[1]
         range1 = row[2]
         range2 = row[3]
+        nameserver = row[4]
     except:
         continue
     if ipnet[:1] == '#' or ipnet[:1] == ';' or not isValidHostIpv4(router):
@@ -413,11 +414,16 @@ for row in getSubnetArray():
     subnetconf.write('  option routers ' + router + ';\n')
     subnetconf.write('  option subnet-mask ' + netmask + ';\n')
     subnetconf.write('  option broadcast-address ' + broadcast + ';\n')
-    subnetconf.write('  option netbios-name-servers ' + serverip + ';\n')
+    if nameserver != "":
+        subnetconf.write('  option domain-name-servers '+ nameserver + ';\n')
+        nameserver = ""
+    else:
+        subnetconf.write('  option netbios-name-servers ' + serverip + ';\n')
     if range1 != '':
         subnetconf.write('  range ' + range1 + ' ' + range2 + ';\n')
     subnetconf.write('  option host-name pxeclient;\n')
     subnetconf.write('}\n')
+    
 subnetconf.close()
 
 # restart dhcp service

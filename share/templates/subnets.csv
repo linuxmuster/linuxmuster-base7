@@ -3,10 +3,10 @@
 # thomas@linuxmuster.net
 # 20181205
 #
-# Network/Prefix ; Router-IP (last available IP in network) ; 1. Range-IP ; Last-Range-IP ; SETUP-Flag
+# Network/Prefix ; Router-IP (last available IP in network) ; 1. Range-IP ; Last-Range-IP ;Namserver(use lmn server if empty); SETUP-Flag
 #
 # server subnet definition
-@@network@@/@@bitmask@@;@@firewallip@@;@@dhcprange1@@;@@dhcprange2@@;SETUP
+@@network@@/@@bitmask@@;@@firewallip@@;@@dhcprange1@@;@@dhcprange2@@;;SETUP
 
 # add your subnets below
 #
