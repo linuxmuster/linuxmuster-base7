@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.1.2-2ubuntu0) lmn7; urgency=low
+
+  * linuxmuster-import-subnets: fixed string error
+
+ -- Andreas Till <andreas.till@netzint.de>  Tue, 17 Sep 2020 10:54:42 +0200
+
 linuxmuster-base7 (7.1.2-1ubuntu0) lmn7; urgency=low
 
   * linuxmuster-import-subnets: fixed handling if coloumn 5 is set to SETUP
