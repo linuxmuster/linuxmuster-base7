@@ -392,6 +392,8 @@ for row in getSubnetArray():
     if not isValidHostIpv4(range1) or not isValidHostIpv4(range2):
         range1 = ''
         range2 = ''
+    if nameserver == SETUP:
+        nameserver = ""
     # compute network data
     try:
         n = IP(ipnet, make_net=True)

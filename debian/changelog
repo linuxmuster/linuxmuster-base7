@@ -1,6 +1,12 @@
+linuxmuster-base7 (7.1.2-1ubuntu0) lmn7; urgency=low
+
+  * linuxmuster-import-subnets: fixed handling if coloumn 5 is set to SETUP
+
+ -- Andreas Till <andreas.till@netzint.de>  Tue, 17 Sep 2020 10:44:42 +0200
+
 linuxmuster-base7 (7.1.2-0ubuntu0) lmn7; urgency=low
 
-  * functions-py: added possibility to define nameserver in subnets.csv
+  * linuxmuster-import-subnets: added possibility to define nameserver in subnets.csv
 
  -- Andreas Till <andreas.till@netzint.de>  Tue, 17 Sep 2020 08:26:45 +0200
 
