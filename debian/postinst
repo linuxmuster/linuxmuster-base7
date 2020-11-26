@@ -91,29 +91,29 @@ case "$1" in
     systemctl daemon-reload
   fi
 
-  # smb.conf update (pr #105)
-  conf="/etc/samba/smb.conf"
-  search="# 20200818"
-  if ! grep -q ^"$search" "$conf"; then
-    echo "Updating samba configuration."
-    cp "$conf" "$conf".dpkg-bak."$datestr"
-    tpl="$TPLDIR/smb.conf"
-    sed -e "s|@@sambadomain@@|$sambadomain|g
-            s|@@realm@@|$realm|g
-            s|@@firewallip@@|$firewallip|g
-            s|@@netbiosname@@|$netbiosname|g
-            s|@@servername@@|$servername|g
-            s|@@domainname@@|$domainname|g" "$tpl" > "$conf"
-    systemctl reload samba-ad-dc.service
-  fi
+  # smb.conf update (pr #105), deprecated
+  #conf="/etc/samba/smb.conf"
+  #search="# 20200818"
+  #if ! grep -q ^"$search" "$conf"; then
+  #  echo "Updating samba configuration."
+  #  cp "$conf" "$conf".dpkg-bak."$datestr"
+  #  tpl="$TPLDIR/smb.conf"
+  #  sed -e "s|@@sambadomain@@|$sambadomain|g
+  #          s|@@realm@@|$realm|g
+  #          s|@@firewallip@@|$firewallip|g
+  #          s|@@netbiosname@@|$netbiosname|g
+  #          s|@@servername@@|$servername|g
+  #          s|@@domainname@@|$domainname|g" "$tpl" > "$conf"
+  #  systemctl reload samba-ad-dc.service
+  #fi
   # check ntp ntpsigndsocket
-  ntpsigndsocket="/run/samba/ntp_signd"
-  if [ ! -d "$ntpsigndsocket" ]; then
-    mkdir -p "$ntpsigndsocket"
-    systemctl restart samba-ad-dc.service
-    sleep 2
-  fi
-  chgrp ntp "$ntpsigndsocket"
+  #ntpsigndsocket="/run/samba/ntp_signd"
+  #if [ ! -d "$ntpsigndsocket" ]; then
+  #  mkdir -p "$ntpsigndsocket"
+  #  systemctl restart samba-ad-dc.service
+  #  sleep 2
+  #fi
+  #chgrp ntp "$ntpsigndsocket"
 
   # create dns-admin account
   if ! id dns-admin &> /dev/null; then
@@ -164,17 +164,18 @@ case "$1" in
     systemctl enable ntp.service
     systemctl start ntp.service
   fi
-  conf="/etc/ntp.conf"
-  search="# 20200818"
-  if ! grep -q ^"$search" "$conf"; then
-    echo "Updating ntp configuration."
-    cp "$conf" "$conf".dpkg-bak."$datestr"
-    tpl="$TPLDIR/ntp.conf"
-    sed -e "s|@@firewallip@@|$firewallip|g" "$tpl" > "$conf"
-    cp "$tpl.admin" "$conf.admin"
-    cp "$tpl.dist" "$conf.dist"
-    systemctl restart ntp.service
-  fi
+  # deprecated
+  #conf="/etc/ntp.conf"
+  #search="# 20200818"
+  #if ! grep -q ^"$search" "$conf"; then
+  #  echo "Updating ntp configuration."
+  #  cp "$conf" "$conf".dpkg-bak."$datestr"
+  #  tpl="$TPLDIR/ntp.conf"
+  #  sed -e "s|@@firewallip@@|$firewallip|g" "$tpl" > "$conf"
+  #  cp "$tpl.admin" "$conf.admin"
+  #  cp "$tpl.dist" "$conf.dist"
+  #  systemctl restart ntp.service
+  #fi
 
   # remove obsolete sudo users for webui (#90)
   for i in student teacher; do

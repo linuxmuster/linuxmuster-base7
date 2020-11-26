@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.0.79-0ubuntu0) lmn7; urgency=low
+
+  * removed smb.conf and ntp.conf update from postinst.
+  * readded "ntlm auth = mschapv2-and-ntlmv2-only" needed for wpa2 enterprise to smb.conf template.
+  * removed useless templates ntp.conf.admin and ntp.conf.dist.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 11 Sep 2020 14:00:33 +0200
+
 linuxmuster-base7 (7.0.78-2ubuntu0) lmn7; urgency=low
 
   * postinst fix.
