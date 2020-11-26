@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.0.79-1ubuntu0) lmn7; urgency=low
+
+  * postinst timesyncd.conf fix due to ubuntu 20.04 compatibility.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 26 Nov 2020 20:25:08 +0100
+
 linuxmuster-base7 (7.0.79-0ubuntu0) lmn7; urgency=low
 
   * removed smb.conf and ntp.conf update from postinst.

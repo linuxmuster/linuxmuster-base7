@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20200818
+# 20201126
 # GPL v3
 #
 
@@ -83,12 +83,14 @@ case "$1" in
 
   # timesyncd update, add firewall ip as parent ntp server
   conf='/etc/systemd/timesyncd.conf'
-  search="NTP=${firewallip}"
-  if ! grep -q ^"$search" "$conf"; then
-    echo "Updating time server related timesyncd configuration."
-    cp "$conf" "$conf".dpkg-bak."$datestr"
-    echo "$search" >> "$conf"
-    systemctl daemon-reload
+  if [ -e "$conf" ]; then
+    search="NTP=${firewallip}"
+    if ! grep -q ^"$search" "$conf"; then
+      echo "Updating time server related timesyncd configuration."
+      cp "$conf" "$conf".dpkg-bak."$datestr"
+      echo "$search" >> "$conf"
+      systemctl daemon-reload
+    fi
   fi
 
   # smb.conf update (pr #105), deprecated
