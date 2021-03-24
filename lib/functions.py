@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 2020623
+# 20201127
 #
 
 import codecs
@@ -441,10 +441,16 @@ def getGrubPart(partition, systemtype):
 # return grub ostype
 def getGrubOstype(osname):
     osname = osname.lower()
-    ostype_list = ['windows', 'kubuntu', 'lubuntu', 'xubuntu', 'ubuntu', 'centos', 'arch', 'linuxmint', 'fedora', 'gentoo', 'debian', 'opensuse', 'suse', 'linux']
+    if 'windows 10' in osname:
+        return 'win10'
+    if 'windows' in osname:
+        return 'win'
+    if 'mint' in osname:
+        return 'linuxmint'
+    ostype_list = ['win10', 'win', 'kubuntu', 'lubuntu', 'xubuntu', 'ubuntu', 'centos', 'arch', 'linuxmint', 'fedora', 'gentoo', 'debian', 'opensuse', 'suse', 'linux']
     for ostype in ostype_list:
-         if ostype in osname:
-             return ostype
+        if ostype in osname:
+            return ostype
     return 'unknown'
 
 # return content of text file
