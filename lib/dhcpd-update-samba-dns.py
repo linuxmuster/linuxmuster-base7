@@ -2,7 +2,7 @@
 #
 # adds/updates/removes A DNS records
 # thomas@linuxmuster.net
-# 20200417
+# 20210321
 #
 
 import socket
@@ -32,32 +32,61 @@ if not isValidHostname(hostname):
 if hostname.lower() == 'pxeclient':
     sys.exit(0)
 
-# check if ip has not changed or has to be updated
-if cmd == 'add':
-    try:
-        ip_resolved = socket.gethostbyname(hostname)
-        if ip_resolved == ip:
-            print('IP for ' + hostname + ' has remained unchanged, doing nothing.')
-            sys.exit(0)
-        else:
-            cmd = 'update'
-            ip = ip_resolved + ' ' + ip
-    except Exception as error:
-        print(error)
-
 # check if it is a dynamic ip device
 if not isDynamicIpDevice(hostname):
-    print(hostname + ' is no dynamic ip device, doing nothing.')
     sys.exit(0)
 
-# print message
-if cmd == 'add':
-    print('Creating A record for ' + hostname + '.')
-elif cmd == 'update':
-    print('IP for ' + hostname + ' has changed, performing update.')
-else:
-    print("Deleting " + hostname + "'s A record.")
+# test if there are already valid dns records for this host
+try:
+    ip_resolved = socket.gethostbyname(hostname)
+except:
+    ip_resolved = ''
+try:
+    name_resolved = socket.gethostbyaddr(ip)[0].split('.')[0]
+except:
+    name_resolved = ''
+if cmd == 'add' and ip == ip_resolved and hostname == name_resolved:
+    print('DNS records for host ' + hostname + ' with ip ' + ip + ' are already up-to-date.')
+    sys.exit(0)
 
+# delete existing dns records if there are any
 domainname = socket.getfqdn().split('.', 1)[1]
+fqdn = hostname + '.' + domainname
+for item in ip_resolved, ip:
+    if item == '':
+        continue
+    if sambaTool('dns delete localhost ' + domainname + ' ' + hostname + ' A ' + item):
+        print('Deleted A record for ' + fqdn + ' -> ' + item + '.')
+    oc1, oc2, oc3, oc4 = item.split('.')
+    zone = oc3 + '.' + oc2 + '.' + oc1 + '.in-addr.arpa'
+    if sambaTool('dns delete localhost ' + zone + ' ' + oc4 + ' PTR ' + fqdn):
+        print('Deleted PTR record for ' + item + ' -> ' + fqdn + '.')
 
-sambaTool('dns ' + cmd + ' localhost ' + domainname + ' ' + hostname + ' A ' + ip)
+# in case of deletion job is already done
+if cmd == 'delete':
+    sys.exit(0)
+
+# add dns A record
+try:
+    sambaTool('dns add localhost ' + domainname + ' ' + hostname + ' A ' + ip)
+    print('Added A record for ' + fqdn + '.')
+except:
+    print('Failed to add A record for ' + fqdn + '.')
+    sys.exit(1)
+
+# add dns zone if necessary
+if not sambaTool('dns zoneinfo localhost ' + zone):
+    try:
+        sambaTool('dns zonecreate localhost ' + zone)
+        print('Created dns zone ' + zone + '.')
+    except:
+        print('Failed to create zone ' + zone + '.')
+        sys.exit(1)
+
+# add dns PTR record
+try:
+    sambaTool('dns add localhost ' + zone + ' ' + oc4 + ' PTR ' + fqdn)
+    print('Added PTR record for ' + ip + '.')
+except:
+    print('Failed to add PTR record for ' + ip + '.')
+    sys.exit(1)

@@ -1,3 +1,15 @@
+linuxmuster-base7 (7.0.81-0ubuntu0) lmn7; urgency=low
+
+  * fix #115: create also a reverse dns entry for dynamic dhcp clients.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 24 Mar 2021 15:09:31 +0100
+
+linuxmuster-base7 (7.0.80-0ubuntu0) lmn7; urgency=low
+
+  * functions.py, getGrubOstype(): improved grub ostype recognition for linuxmuster-import-devices.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 27 Nov 2020 18:41:09 +0100
+
 linuxmuster-base7 (7.0.79-1ubuntu0) lmn7; urgency=low
 
   * postinst timesyncd.conf fix due to ubuntu 20.04 compatibility.
