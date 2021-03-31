@@ -23,9 +23,6 @@ import shutil
 import socket
 import string
 import time
-import threading
-import ast
-import dpath
 
 from contextlib import closing
 from IPy import IP
@@ -231,7 +228,6 @@ def getIpBcAddress(ip):
 # pxeflag filter: comma separated list of flags ('0,1,2,3'), only hosts with the specified pxeflags were returned
 # stype: True additionally returns SystemType from start.conf as last element
 def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False, school='default-school'):
-    command = ["sophomorix-school", "-i", "-j"]
     devices_array = []
     if school == "default-school":
         infile = open(constants.SOPHOSYSDIR+"/default-school/devices.csv", newline='')
@@ -287,7 +283,7 @@ def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False, school='def
         except Exception as error:
             # print(error)
             continue
-        
+
     return devices_array
 
 
