@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20200418
+# 20200917
 #
 
 import ast
@@ -384,13 +384,23 @@ for row in getSubnetArray():
         router = row[1]
         range1 = row[2]
         range2 = row[3]
+        nameserver = row[4]
     except:
         continue
+    try:
+        nextserver = row[5]
+    except:
+        nextserver =''
     if ipnet[:1] == '#' or ipnet[:1] == ';' or not isValidHostIpv4(router):
         continue
     if not isValidHostIpv4(range1) or not isValidHostIpv4(range2):
         range1 = ''
         range2 = ''
+    if not isValidHostIpv4(nameserver):
+        nameserver = ''
+    if not isValidHostIpv4(nextserver):
+        nextserver = ''
+
     # compute network data
     try:
         n = IP(ipnet, make_net=True)
@@ -413,11 +423,18 @@ for row in getSubnetArray():
     subnetconf.write('  option routers ' + router + ';\n')
     subnetconf.write('  option subnet-mask ' + netmask + ';\n')
     subnetconf.write('  option broadcast-address ' + broadcast + ';\n')
-    subnetconf.write('  option netbios-name-servers ' + serverip + ';\n')
+    if nameserver != '':
+        subnetconf.write('  option domain-name-servers '+ nameserver + ';\n')
+        nameserver = ''
+    else:
+        subnetconf.write('  option netbios-name-servers ' + serverip + ';\n')
+    if nextserver != '':
+        subnetconf.write('  next-server '+ nextserver + ';\n')
     if range1 != '':
         subnetconf.write('  range ' + range1 + ' ' + range2 + ';\n')
     subnetconf.write('  option host-name pxeclient;\n')
     subnetconf.write('}\n')
+    
 subnetconf.close()
 
 # restart dhcp service

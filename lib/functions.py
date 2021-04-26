@@ -227,16 +227,23 @@ def getIpBcAddress(ip):
 # subnet filter: only hosts whose ip matches the specified subnet (CIDR) were returned, if 'all' is specified all subnets defined in subnets.csv were checked, if 'DHCP' is specified all dynamic ip hosts are returned
 # pxeflag filter: comma separated list of flags ('0,1,2,3'), only hosts with the specified pxeflags were returned
 # stype: True additionally returns SystemType from start.conf as last element
-def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False):
-    infile = open(constants.WIMPORTDATA, newline='')
-    content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
+def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False, school='default-school'):
     devices_array = []
+    if school == "default-school":
+        infile = open(constants.SOPHOSYSDIR+"/default-school/devices.csv", newline='')
+    else:
+        infile = open(constants.SOPHOSYSDIR+"/"+school+"/"+school+".devices.csv", newline='')
+    #infile = open(constants.WIMPORTDATA, newline='')
+
+    content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
     for row in content:
         try:
             # skip rows, which begin with non alphanumeric characters
             if not row[0][0:1].isalnum():
                 continue
             # collect values
+            if school != "default-school":
+                row[1] = school+"-"+row[1] # add the prefix to the computername for DHCP config
             hostname = row[1]
             group = row[2]
             mac = row[3]
@@ -276,6 +283,7 @@ def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False):
         except Exception as error:
             # print(error)
             continue
+
     return devices_array
 
 

@@ -12,6 +12,7 @@ import re
 import subprocess
 import sys
 import time
+import getopt
 
 from os import listdir
 from os.path import isfile, join
@@ -21,6 +22,29 @@ from functions import getSetupValue, getStartconfOsValues, getStartconfOption
 from functions import getStartconfPartnr, getStartconfPartlabel, getSubnetArray
 from functions import isValidHostIpv4, printScript, readTextfile
 from functions import setGlobalStartconfOption, writeTextfile
+
+def usage():
+    print('Usage: linuxmuster-import-devices [options]')
+    print(' [options] may be:')
+    print(' -s <schoolname>,   --school=<schoolname>   : Select a school other than default-school.')
+
+# read commandline arguments
+# get cli args
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "s:", ["school="])
+except getopt.GetoptError as err:
+    # print help information and exit:
+    print(err) # will print something like "option -a not recognized"
+    usage()
+    sys.exit(2)
+
+# default valued
+school = 'default-school'
+
+# evaluate options
+for o, a in opts:
+    if o in ("-s", "--school"):
+        school = a
 
 # default school's devices.csv
 devices = constants.WIMPORTDATA
@@ -182,7 +206,7 @@ def doOpsi():
 
 
 # write dhcp subnet devices config
-def writeDhcpDevicesConfig():
+def writeDhcpDevicesConfig(school='default-school'):
     printScript('', 'begin')
     printScript('Working on dhcp configuration for devices')
     opsiip = getSetupValue('opsiip')
@@ -203,7 +227,7 @@ def writeDhcpDevicesConfig():
                 subnet = item[0]
                 # iterate over devices per subnet
                 headline = False
-                for device_array in getDevicesArray(fieldnrs='1,2,3,4,7,8,10',subnet=subnet,stype=True):
+                for device_array in getDevicesArray(fieldnrs='1,2,3,4,7,8,10',subnet=subnet,stype=True, school=school):
                     if not headline:
                         # write corresponding subnet as a comment
                         if subnet == 'DHCP':
@@ -264,14 +288,14 @@ os.system('find ' + constants.LINBOGRUBDIR + '/hostcfg -name \*.cfg -type l -exe
 
 
 # write dhcp devices.conf
-writeDhcpDevicesConfig()
+writeDhcpDevicesConfig(school=school)
 
 
 # linbo stuff
 printScript('', 'begin')
 printScript('Working on linbo/grub configuration for devices:')
 pxe_groups = []
-for device_array in getDevicesArray(fieldnrs='1,2,3,4,10', subnet='all', pxeflag='1,2,3'):
+for device_array in getDevicesArray(fieldnrs='1,2,3,4,10', subnet='all', pxeflag='1,2,3', school=school):
     host, group, mac, ip, pxeflag = device_array
     # collect groups with pxe for later use
     if group not in pxe_groups:

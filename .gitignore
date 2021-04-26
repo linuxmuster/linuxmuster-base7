@@ -1,3 +1,4 @@
 .directory
 share/firewall/opnsense/opnsense*
 mkpkg
+/syncToTestServer.sh
