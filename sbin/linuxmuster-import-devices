@@ -16,6 +16,7 @@ import getopt
 
 from os import listdir
 from os.path import isfile, join
+from pathlib import Path
 
 from functions import getBootImage, getDevicesArray, getGrubOstype, getGrubPart
 from functions import getSetupValue, getStartconfOsValues, getStartconfOption
@@ -214,11 +215,17 @@ def writeDhcpDevicesConfig(school='default-school'):
   option host-name "@@hostname@@";
   hardware ethernet @@mac@@;
 """
-    cfgfile = constants.DHCPDEVCONF
+    baseConfigFilePath = constants.DHCPDEVCONF
+    devicesConfigBasedir = "/etc/dhcp/devices"
+    Path(devicesConfigBasedir).mkdir(parents=True, exist_ok=True)
+
+    cfgfile = devicesConfigBasedir + "/" + school + ".conf"
     if os.path.isfile(cfgfile):
         os.unlink(cfgfile)
+    if os.path.isfile(baseConfigFilePath):
+        os.unlink(baseConfigFilePath)
     try:
-        # open devices.conf for append
+        # open devices/<school>.conf for append
         with open(cfgfile, 'a') as outfile:
             # iterate over the defined subnets
             subnets = getSubnetArray('0')
@@ -275,6 +282,12 @@ def writeDhcpDevicesConfig(school='default-school'):
                     host_decl = host_decl + '}\n'
                     # finallý write host declaration
                     outfile.write(host_decl)
+    
+        # open devices.conf for append
+        with open(baseConfigFilePath, 'a') as outfile:
+            for devicesConf in listdir(devicesConfigBasedir):
+                outfile.write("include \"{0}/{1}\";\n".format(devicesConfigBasedir, devicesConf))
+
     except Exception as error:
         print(error)
         return False
