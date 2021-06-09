@@ -6,7 +6,7 @@ linuxmuster-base7 (7.0.82-0ubuntu0) lmn7; urgency=low
   * replace os.system with subprocess in linuxmuster-import-devices (#121).
   * Fix #118: Remove linux-login.script.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 09 Jun 2021 07:27:40 +0000
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 09 Jun 2021 13:49:08 +0000
 
 linuxmuster-base7 (7.0.81-0ubuntu0) lmn7; urgency=low
 

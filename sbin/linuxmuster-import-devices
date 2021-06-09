@@ -63,7 +63,7 @@ printScript(os.path.basename(__file__), 'begin')
 # do sophomorix-devices first
 msg = 'Starting sophomorix-device syntax check:'
 printScript(msg)
-result = subprocess.check_call('sophomorix-device --dry-run')
+result = subprocess.check_call('sophomorix-device --dry-run', shell=True)
 msg = 'sophomorix-device finished '
 if result != 0:
     printScript(msg + ' errors detected!')
@@ -363,7 +363,7 @@ if len(hookscripts) > 0:
 printScript('', 'begin')
 printScript('Restarting services:')
 service = 'isc-dhcp-server'
-subprocess.call('server ' + service + ' restart', shell=True)
+subprocess.call('service ' + service + ' restart', shell=True)
 # wait one second before service check
 time.sleep(1)
 rc = 0
