@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20220120
+# 20220601
 #
 
 import configparser
@@ -275,6 +275,66 @@ def writeDhcpDevicesConfig(school='default-school'):
     except Exception as error:
         print(error)
         return False
+
+
+# Create necessary host-based symlinks
+def doSchoolSpecificGroupLinksAndGetPxeGroups(school='default-school'):
+    pxe_groups = []
+
+    # clean up
+    linksFileBasepath = constants.LINBODIR + "/boot/links"
+    Path(linksFileBasepath).mkdir(parents=True, exist_ok=True)
+    linksFile = linksFileBasepath + "/" + school + ".csv"
+    if os.path.isfile(linksFile):
+        os.unlink(linksFile)
+
+    with open(linksFile, "w+") as csvfile:
+        csvWriter = csv.writer(csvfile, delimiter=';',
+                                quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+        for device_array in getDevicesArray(fieldnrs='1,2,3,4,10', subnet='all', pxeflag='1,2,3', school=school):
+            host, group, mac, ip, pxeflag = device_array
+            # collect groups with pxe for later use
+            if group not in pxe_groups:
+                pxe_groups.append(group)
+
+            # format row in columns for output
+            printScript("  {: <15} | {: <15}".format(host, group))
+
+            # start.conf
+            linkSource = 'start.conf.' + group
+            linkTarget = constants.LINBODIR + '/start.conf-'
+            if ip == 'DHCP':
+                linkTarget += mac.lower()
+            else:
+                linkTarget += ip
+            csvWriter.writerow([linkSource, linkTarget])
+
+            # Grub.cfg
+            linkSource = '../' + group + '.cfg'
+            linkTarget = constants.LINBOGRUBDIR + '/hostcfg/' + host + '.cfg'
+            csvWriter.writerow([linkSource, linkTarget])
+
+    return pxe_groups
+
+
+# look up all links for all schools and place them in the correct place
+def doAllGroupLinks():
+    # delete old config links
+    subprocess.call(['find', constants.LINBODIR, '-maxdepth', '1', '-name', 'start.conf-*', '-type', 'l', '-exec', 'rm', '{}', ';'])
+    subprocess.call(['find', constants.LINBOGRUBDIR + '/hostcfg', '-maxdepth', '1', '-name', '*.cfg', '-type', 'l', '-exec', 'rm', '{}', ';'])
+
+    linksConfBasedir = constants.LINBODIR + "/boot/links"
+    for schoolLinksConf in listdir(linksConfBasedir):
+        schoolLinksConfPath = linksConfBasedir + "/" + schoolLinksConf
+        if not os.path.isfile(schoolLinksConfPath) or not schoolLinksConf.endswith(".csv"):
+            continue
+
+        with open(schoolLinksConfPath, newline='') as csvfile:
+            csvReader = csv.reader(csvfile, delimiter=';', quotechar='"')
+            for row in csvReader:
+                os.symlink(row[0], row[1])
+
 # functions end
 
 
