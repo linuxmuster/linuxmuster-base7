@@ -320,7 +320,7 @@ def doSchoolSpecificGroupLinksAndGetPxeGroups(school='default-school'):
             printScript("  {: <15} | {: <15}".format(host, group))
 
             # start.conf
-            linkSource = constants.LINBODIR + '/start.conf.' + group
+            linkSource = 'start.conf.' + group
             linkTarget = constants.LINBODIR + '/start.conf-'
             if ip == 'DHCP':
                 linkTarget += mac.lower()
@@ -329,7 +329,7 @@ def doSchoolSpecificGroupLinksAndGetPxeGroups(school='default-school'):
             csvWriter.writerow([linkSource, linkTarget])
 
             # Grub.cfg
-            linkSource = constants.LINBOGRUBDIR + '/' + group + '.cfg'
+            linkSource = '../' + group + '.cfg'
             linkTarget = constants.LINBOGRUBDIR + '/hostcfg/' + host + '.cfg'
             csvWriter.writerow([linkSource, linkTarget])
 
