@@ -2,7 +2,7 @@
 #
 # thomas@linuxmuster.net
 # GPL v3
-# 20200409
+# 20210731
 #
 # sources system constants and setup values for shell scripts
 
@@ -20,3 +20,6 @@ eval "$(sed -e :a -e '/\\$/N; s/\\\n//; ta' "$CONSTANTS" | grep ^'[A-Z]' | \
 if [ -e "$SETUPINI" ]; then
  eval "$(grep ^'[a-z]' "$SETUPINI" | sed 's| = |="|g' | sed 's|$|"|g')"
 fi
+
+# get linbo-version
+LINBOVERSION="$(awk '{print $2}' "$LINBOVERFILE" | awk -F: '{print $1}')"

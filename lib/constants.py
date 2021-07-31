@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20200527
+# 20210731
 #
 
 # don't change this file
@@ -56,6 +56,8 @@ SETUPINI = VARDIR + '/setup.ini'
 DEFAULTSINI = SHAREDIR + '/setupdefaults.ini'
 PREPINI = VARDIR + '/prepare.ini'
 LINBODIR = '/srv/linbo'
+LINBOVERFILE = LINBODIR + '/linbo-version'
+LINBOIMGDIR = LINBODIR + '/images'
 LINBOGRUBDIR = LINBODIR + '/boot/grub'
 LINBOLOGDIR = LOGDIR + '/linbo'
 LINBOSHAREDIR = SHAREDIR + '/linbo'

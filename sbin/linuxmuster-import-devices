@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20210609
+# 20210731
 #
 
 import configparser
@@ -21,7 +21,7 @@ from pathlib import Path
 from functions import getBootImage, getDevicesArray, getGrubOstype, getGrubPart
 from functions import getSetupValue, getStartconfOsValues, getStartconfOption
 from functions import getStartconfPartnr, getStartconfPartlabel, getSubnetArray
-from functions import isValidHostIpv4, printScript, readTextfile
+from functions import isValidHostIpv4, getLinboVersion, printScript, readTextfile
 from functions import setGlobalStartconfOption, writeTextfile
 
 def usage():
@@ -305,6 +305,7 @@ writeDhcpDevicesConfig(school=school)
 
 
 # linbo stuff
+linbo_version = int(getLinboVersion().split('.')[0])
 printScript('', 'begin')
 printScript('Working on linbo/grub configuration for devices:')
 pxe_groups = []
@@ -316,6 +317,9 @@ for device_array in getDevicesArray(fieldnrs='1,2,3,4,10', subnet='all', pxeflag
     # format row in columns for output
     row = [host, group]
     printScript("  {: <15} | {: <15}".format(*row))
+    # skip start.conf links for versions < 4
+    if linbo_version >= 4:
+        continue
     groupconf = 'start.conf.' + group
     hostlink = constants.LINBODIR + '/start.conf-'
     if ip == 'DHCP':

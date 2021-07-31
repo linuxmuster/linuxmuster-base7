@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20201127
+# 20210731
 #
 
 import codecs
@@ -775,6 +775,13 @@ def getStartconfOsValues(startconf):
         return result
     except:
         return None
+
+def getLinboVersion():
+    rc, content = readTextfile(constants.LINBOVERFILE)
+    if not rc:
+        return
+    content = content.split(' ')[1]
+    return content.split(':')[0]
 
 def checkSocket(host, port):
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
