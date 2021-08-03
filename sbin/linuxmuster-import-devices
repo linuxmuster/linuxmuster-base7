@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20210731
+# 20210803
 #
 
 import configparser
@@ -317,7 +317,7 @@ for device_array in getDevicesArray(fieldnrs='1,2,3,4,10', subnet='all', pxeflag
     # format row in columns for output
     row = [host, group]
     printScript("  {: <15} | {: <15}".format(*row))
-    # skip start.conf links for versions < 4
+    # skip start.conf links for linbo versions >= 4
     if linbo_version >= 4:
         continue
     groupconf = 'start.conf.' + group
