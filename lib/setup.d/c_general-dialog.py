@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20200306
+# 20211125
 #
 
 import constants
@@ -31,7 +31,8 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(
+        delimiters=('='), inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     serverip = setup.get('setup', 'serverip')
     servername = setup.get('setup', 'servername')
@@ -45,7 +46,8 @@ except:
 # iface_list, iface_default = detectedInterfaces()
 
 # begin dialog
-title = 'linuxmuster.net 7: Setup for ' + servername + '.' + domainname + '\n\n'
+title = 'linuxmuster.net 7.1: Setup for ' + \
+    servername + '.' + domainname + '\n\n'
 dialog = Dialog(dialog="dialog")
 dialog.set_background_title(title)
 button_names = {dialog.OK:     "OK",
@@ -93,7 +95,8 @@ setup.set('setup', 'sambadomain', sambadomain)
 # servername
 ititle = title + ': Servername'
 while True:
-    rc, servername = dialog.inputbox('Enter the hostname of the main server:', title=ititle, height=16, width=64, init=setup.get('setup', 'servername'))
+    rc, servername = dialog.inputbox('Enter the hostname of the main server:',
+                                     title=ititle, height=16, width=64, init=setup.get('setup', 'servername'))
     if rc == 'cancel':
         sys.exit(1)
     if isValidHostname(servername):
@@ -109,7 +112,8 @@ setup.set('setup', 'netbiosname', netbiosname)
 # domainname
 ititle = title + ': Domainname'
 while True:
-    rc, domainname = dialog.inputbox('Note that the first part of the domain name is used automatically as samba domain (maximal 15 characters using a-z and "-"). Use a prepending "linuxmuster" if your domain has more characters. Enter the internet domain name:', title=ititle, height=16, width=64, init=domainname)
+    rc, domainname = dialog.inputbox(
+        'Note that the first part of the domain name is used automatically as samba domain (maximal 15 characters using a-z and "-"). Use a prepending "linuxmuster" if your domain has more characters. Enter the internet domain name:', title=ititle, height=16, width=64, init=domainname)
     if rc == 'cancel':
         sys.exit(1)
     if isValidDomainname(domainname):
@@ -130,11 +134,14 @@ setup.set('setup', 'sambadomain', sambadomain)
 
 # dhcprange
 ititle = title + ': DHCP Range'
-dhcprange1 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '100'
-dhcprange2 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '200'
+dhcprange1 = serverip.split('.')[
+                            0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '100'
+dhcprange2 = serverip.split('.')[
+                            0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '200'
 dhcprange = dhcprange1 + ' ' + dhcprange2
 while True:
-    rc, dhcprange = dialog.inputbox('Enter the two ip addresses for the free dhcp range (space separated):', title=ititle, height=16, width=64, init=dhcprange)
+    rc, dhcprange = dialog.inputbox(
+        'Enter the two ip addresses for the free dhcp range (space separated):', title=ititle, height=16, width=64, init=dhcprange)
     if rc == 'cancel':
         sys.exit(1)
     dhcprange1 = dhcprange.split(' ')[0]
@@ -144,7 +151,8 @@ while True:
 print('DHCP range: ' + dhcprange)
 setup.set('setup', 'dhcprange', dhcprange)
 
-# opsi
+"""
+# opsi (deprecated)
 ititle = title + ': Opsi-IP'
 try:
     opsiip=setup.get('setup', 'opsiip')
@@ -157,9 +165,12 @@ while True:
     if opsiip == '' or isValidHostIpv4(opsiip):
         break
 print('Opsi ip: ' + opsiip)
+"""
+opsiip = ''
 setup.set('setup', 'opsiip', opsiip)
 
-# dockerip
+"""
+# dockerip (deprecated)
 ititle = title + ': Dockerhost-IP'
 try:
     dockerip=setup.get('setup', 'dockerip')
@@ -172,9 +183,12 @@ while True:
     if isValidHostIpv4(dockerip) or dockerip == '':
         break
 print('Docker host ip: ' + dockerip)
+"""
+dockerip = ''
 setup.set('setup', 'dockerip', dockerip)
 
-# mail
+"""
+# mail (deprecated)
 nostatus = False
 servermail = False
 dockermail = False
@@ -199,9 +213,12 @@ while True:
     if mailip == '' or isValidHostIpv4(mailip):
         break
 print('Mail ip: ' + mailip)
+"""
+mailip = ''
 setup.set('setup', 'mailip', mailip)
 
-# smtp access data
+"""
+# smtp access data (deprecated)
 if mailip != '':
     # smtp relay ip of fully qualified domain name
     ititle = title + ': SMTP Relay'
@@ -264,18 +281,21 @@ if mailip != '':
                 break
         print('SMTP Password: ' + smtppw)
         setup.set('setup', 'smtppw', smtppw)
+"""
 
 # global admin password
 ititle = title + ': Administrator password'
 adminpw = ''
 adminpw_repeated = ''
 while True:
-    rc, adminpw = dialog.passwordbox('Enter the Administrator password (Note: Input will be unvisible!). Minimal length is 7 characters. Use upper and lower and special characters or numbers (e.g. mUster!):', title=ititle, insecure=True)
+    rc, adminpw = dialog.passwordbox(
+        'Enter the Administrator password (Note: Input will be unvisible!). Minimal length is 7 characters. Use upper and lower and special characters or numbers (e.g. mUster!):', title=ititle, insecure=True)
     if rc == 'cancel':
         sys.exit(1)
     if isValidPassword(adminpw):
         while True:
-            rc, adminpw_repeated = dialog.passwordbox('Re-enter the Administrator password:', title=ititle, insecure=True)
+            rc, adminpw_repeated = dialog.passwordbox(
+                'Re-enter the Administrator password:', title=ititle, insecure=True)
             if rc == 'cancel':
                 sys.exit(1)
             if isValidPassword(adminpw_repeated):

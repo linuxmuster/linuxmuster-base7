@@ -2,7 +2,7 @@
 #
 # linuxmuster-setup
 # thomas@linuxmuster.net
-# 20190724
+# 20211125
 #
 
 import constants
@@ -15,15 +15,13 @@ from functions import printScript
 from functions import subProc
 from functions import tee
 
+
 def usage():
     print('Usage: linuxmuster-setup [options]')
     print(' [options] may be:')
     print(' -n <hostname>,   --servername=<hostname>   : Set server hostname.')
     print(' -d <domainname>, --domainname=<domainname> : Set domainname.')
     print(' -r <dhcprange>,  --dhcprange=<dhcprange>   : Set dhcp range.')
-    print(' -o <opsiip>,     --opsiip=<opsiip>         : Set opsi ip.')
-    print(' -k <dockerip>,   --dockerip=<dockerip>     : Set docker ip.')
-    print(' -m <mailip>,     --mailip=<mailip>         : Set mailserver ip.')
     print(' -a <adminpw>,    --adminpw=<adminpw>       : Set admin password.')
     print(' -y <smtprelay>,  --smtprelay=<smtprelay>   : Set smtp relay.')
     print(' -t <smtpuser>,   --smtpuser=<smtpuser>     : Set smtp user.')
@@ -37,12 +35,16 @@ def usage():
     print(' -s,              --skip-fw                 : skip firewall setup per ssh')
     print(' -h,              --help                    : print this help')
 
+
 # get cli args
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "a:c:d:e:hk:l:m:n:o:p:r:st:uv:y:z:", ["adminpw=", "config=", "domainname=", "schoolname=", "help", "dockerip=", "location=", "mailip=", "servername=", "opsiip=", "smtppw=", "dhcprange=", "skip-fw", "smtpuser=", "unattended", "state=", "smtprelay=", "country="])
+    opts, args = getopt.getopt(sys.argv[1:], "a:c:d:e:hl:n:p:r:st:uv:y:z:",
+                               ["adminpw=", "config=", "domainname=", "schoolname=", "help",
+                                "location=", "servername=", "smtppw=", "dhcprange=", "skip-fw",
+                                "smtpuser=", "unattended", "state=", "smtprelay=", "country="])
 except getopt.GetoptError as err:
     # print help information and exit:
-    print(err) # will print something like "option -a not recognized"
+    print(err)  # will print something like "option -a not recognized"
     usage()
     sys.exit(2)
 
@@ -105,12 +107,6 @@ for o, a in opts:
         domainname = a
     elif o in ("-r", "--dhcprange"):
         dhcprange = a
-    elif o in ("-o", "--opsiip"):
-        opsiip = a
-    elif o in ("-k", "--dockerip"):
-        dockerip = a
-    elif o in ("-m", "--mailip"):
-        mailip = a
     elif o in ("-s", "--skip-fw"):
         skipfw = True
     elif o in ("-c", "--config"):
@@ -130,7 +126,8 @@ printScript(os.path.basename(__file__), 'begin')
 
 # custom ini file given on cli
 if cli_customini != '':
-    print('Custom inifile ' + cli_customini + ' given on cli, ignoring other arguments!')
+    print('Custom inifile ' + cli_customini
+          + ' given on cli, ignoring other arguments!')
     subProc('cp ' + cli_customini + ' ' + constants.CUSTOMINI)
     subProc('chmod 600 ' + constants.CUSTOMINI)
 else:
@@ -142,12 +139,6 @@ else:
         rc = modIni(constants.CUSTOMINI, 'setup', 'domainname', domainname)
     if dhcprange != '':
         rc = modIni(constants.CUSTOMINI, 'setup', 'dhcprange', dhcprange)
-    if opsiip != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'opsiip', opsiip)
-    if dockerip != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'dockerip', dockerip)
-    if mailip != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'mailip', mailip)
     if adminpw != '':
         rc = modIni(constants.CUSTOMINI, 'setup', 'adminpw', adminpw)
     if smtprelay != '':
