@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.1.0-0) lmn71; urgency=low
+
+  * lmn71 prerelease.
+  * workflow implementation.
+  * remove docker, mail & opsi setup.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 25 Nov 2021 13:57:00 +0001
+
 linuxmuster-base7 (7.0.83-0ubuntu0) lmn7; urgency=low
 
   * introduces new global variable LINBOIMGDIR.
