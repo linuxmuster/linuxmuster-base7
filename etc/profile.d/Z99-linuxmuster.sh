@@ -3,7 +3,7 @@
 #
 # thomas@linuxmuster.net
 # credits to joanna
-# 20200405
+# 20211125
 #
 
 upSeconds="$(/usr/bin/cut -d. -f1 /proc/uptime)"
@@ -22,7 +22,7 @@ VERSIONsophomorix=`dpkg --status sophomorix-samba | grep ^Version | awk '{print 
 
 
 printf "\e[38;5;208m
-  ███               ███      \e[4m\e[38;5;15mWELCOME TO LINUXMUSTER.NET 7.0 - bond\e[38;5;208m\e[24m
+  ███               ███      \e[4m\e[38;5;15mWELCOME TO LINUXMUSTER.NET 7.1 - prerelease\e[38;5;208m\e[24m
  █████             █████    \e[38;5;15m `date +"%A, %e %B %Y, %r"`\e[38;5;208m
   ███               ███
       ███       ███         \e[38;5;15m Uptime..........: \e[38;5;208m${UPTIME}\e[38;5;208m
