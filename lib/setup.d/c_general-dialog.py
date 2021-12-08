@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20211125
+# 20211208
 #
 
 import constants
@@ -216,72 +216,6 @@ print('Mail ip: ' + mailip)
 """
 mailip = ''
 setup.set('setup', 'mailip', mailip)
-
-"""
-# smtp access data (deprecated)
-if mailip != '':
-    # smtp relay ip of fully qualified domain name
-    ititle = title + ': SMTP Relay'
-    try:
-        smtprelay_full = setup.get('setup', 'smtprelay')
-    except:
-        smtprelay_full = ''
-    while True:
-        rc, smtprelay_full = dialog.inputbox('Enter the ip address or fqdn and port of the smtp relay, eg. mail.example.com:587 (optional). If port is omitted default port 25 is used. :', title=ititle, height=16, width=64, init=smtprelay_full)
-        if rc == 'cancel':
-            sys.exit(1)
-        # split relay address and port
-        smtprelay = smtprelay_full.split(':')[0]
-        try:
-            smtpport = smtprelay_full.split(':')[1]
-        except:
-            smtpport = '25'
-        # test valid relay address
-        if (isValidHostIpv4(smtprelay) or isValidDomainname(smtprelay) or smtprelay == ''):
-            smtprelay_ok = True
-        else:
-            smtprelay_ok = False
-        # test valid port nr
-        try:
-            smtpport_nr = int(smtpport)
-            smtpport_ok = True
-        except:
-            smtpport_ok = False
-        if smtprelay_ok is True and smtpport_ok is True:
-            break
-    print('SMTP relay: ' + smtprelay + ':' + smtpport)
-    setup.set('setup', 'smtprelay', smtprelay_full)
-    # ask only if smtprelay is set
-    if smtprelay_full != '':
-        # smtp user
-        ititle = title + ': SMTP Username'
-        try:
-            smtpuser=setup.get('setup', 'smtpuser')
-        except:
-            smtpuser = ''
-        while True:
-            rc, smtpuser = dialog.inputbox('Enter the name of the smtp user:', title=ititle, height=16, width=64, init=smtpuser)
-            if rc == 'cancel':
-                sys.exit(1)
-            if smtpuser != '':
-                break
-        print('SMTP Username: ' + smtpuser)
-        setup.set('setup', 'smtpuser', smtpuser)
-        # smtp password
-        ititle = title + ': SMTP Password'
-        try:
-            smtppw=setup.get('setup', 'smtppw')
-        except:
-            smtppw = ''
-        while True:
-            rc, smtppw = dialog.inputbox('Enter the password of the smtp user:', title=ititle, height=16, width=64, init=smtppw)
-            if rc == 'cancel':
-                sys.exit(1)
-            if smtppw != '':
-                break
-        print('SMTP Password: ' + smtppw)
-        setup.set('setup', 'smtppw', smtppw)
-"""
 
 # global admin password
 ititle = title + ': Administrator password'

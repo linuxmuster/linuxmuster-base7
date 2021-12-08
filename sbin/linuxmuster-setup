@@ -2,7 +2,7 @@
 #
 # linuxmuster-setup
 # thomas@linuxmuster.net
-# 20211125
+# 20211208
 #
 
 import constants
@@ -23,9 +23,6 @@ def usage():
     print(' -d <domainname>, --domainname=<domainname> : Set domainname.')
     print(' -r <dhcprange>,  --dhcprange=<dhcprange>   : Set dhcp range.')
     print(' -a <adminpw>,    --adminpw=<adminpw>       : Set admin password.')
-    print(' -y <smtprelay>,  --smtprelay=<smtprelay>   : Set smtp relay.')
-    print(' -t <smtpuser>,   --smtpuser=<smtpuser>     : Set smtp user.')
-    print(' -p <smtppw>,     --smtppw=<smtppw>         : Set smtp user password.')
     print(' -e <schoolname>, --schoolname=<schoolname> : Set school name.')
     print(' -l <location>,   --location=<location>     : Set school location.')
     print(' -z <country>,    --country=<country>       : Set school country.')
@@ -38,10 +35,9 @@ def usage():
 
 # get cli args
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "a:c:d:e:hl:n:p:r:st:uv:y:z:",
+    opts, args = getopt.getopt(sys.argv[1:], "a:c:d:e:hl:n:r:suv:z:",
                                ["adminpw=", "config=", "domainname=", "schoolname=", "help",
-                                "location=", "servername=", "smtppw=", "dhcprange=", "skip-fw",
-                                "smtpuser=", "unattended", "state=", "smtprelay=", "country="])
+                                "location=", "servername=", "dhcprange=", "skip-fw", "unattended", "state=", "country="])
 except getopt.GetoptError as err:
     # print help information and exit:
     print(err)  # will print something like "option -a not recognized"
@@ -58,9 +54,6 @@ dockerip = ''
 mailip = ''
 opsiip = ''
 adminpw = ''
-smtprelay = ''
-smtpuser = ''
-smtppw = ''
 schoolname = ''
 location = ''
 country = ''
@@ -93,12 +86,6 @@ for o, a in opts:
         location = a
     elif o in ("-e", "--schoolname"):
         schoolname = a
-    elif o in ("-p", "--smtppw"):
-        smtppw = a
-    elif o in ("-t", "--smtpuser"):
-        smtpuser = a
-    elif o in ("-y", "--smtprelay"):
-        smtprelay = a
     elif o in ("-a", "--adminpw"):
         adminpw = a
     elif o in ("-n", "--servername"):
@@ -141,12 +128,6 @@ else:
         rc = modIni(constants.CUSTOMINI, 'setup', 'dhcprange', dhcprange)
     if adminpw != '':
         rc = modIni(constants.CUSTOMINI, 'setup', 'adminpw', adminpw)
-    if smtprelay != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'smtprelay', smtprelay)
-    if smtpuser != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'smtpuser', smtpuser)
-    if smtppw != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'smtppw', smtppw)
     if schoolname != '':
         rc = modIni(constants.CUSTOMINI, 'setup', 'schoolname', schoolname)
     if location != '':
