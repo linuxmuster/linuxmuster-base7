@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20200917
+# 20211219
 #
 
 import ast
@@ -23,8 +23,6 @@ from IPy import IP
 # read necessary values from setup.ini and other sources
 serverip = getSetupValue('serverip')
 domainname = getSetupValue('domainname')
-opsiip = getSetupValue('opsiip')
-dockerip = getSetupValue('dockerip')
 firewallip = getSetupValue('firewallip')
 # get boolean value
 skipfw = ast.literal_eval(getSetupValue('skipfw'))
@@ -87,29 +85,9 @@ nat_rule_xml = nat_rule_xml.replace(
 
 # functions begin
 # update static routes in netplan configuration
-def updateNetplan(subnets, remoteip=''):
-    if remoteip == '':
-        machine = 'server'
-    elif remoteip == opsiip:
-        machine = 'opsi'
-    elif remoteip == dockerip:
-        machine = 'docker'
-    else:
-        printScript('Unknown ip address, skipping netplan configuration.')
-        return False
-    printScript('Processing netplan configuration on ' + machine + ':')
-    if machine == 'server':
-        cfgfile = constants.NETCFG
-    else:
-        # get file per sftp
-        cfgfile = '/tmp/' + os.path.basename(constants.NETCFG)
-        rc = getSftp(remoteip, constants.NETCFG, cfgfile)
-        if rc:
-            printScript('* Fetched configuration file from remote machine.')
-        else:
-            printScript(
-                '* Unable to fetch configuration file from remote machine!')
-            return False
+def updateNetplan(subnets):
+    printScript('Processing netplan configuration:')
+    cfgfile = constants.NETCFG
     # read netplan config file
     with open(cfgfile) as config:
         netcfg = yaml.safe_load(config)
@@ -129,89 +107,18 @@ def updateNetplan(subnets, remoteip=''):
         for item in subnets:
             subnet = item.split(':')[0]
             # tricky: concenate dict object for yaml using eval
-            subroute = eval('{"to": ' + '\'' + subnet + '\'' + ', "via": ' + '\'' + servernet_router + '\'' + '}')
+            subroute = eval('{"to": ' + '\'' + subnet + '\''
+                            + ', "via": ' + '\'' + servernet_router + '\'' + '}')
             ifcfg['routes'].append(subroute)
         printScript('* Added new routes for all subnets.')
     # save netcfg
     if changed:
         with open(cfgfile, 'w') as config:
             config.write(yaml.dump(netcfg, default_flow_style=False))
-        if machine == 'server':
-            os.system('netplan apply')
-            printScript('* Applied new configuration.')
-        else:
-            # upload modified netcfg
-            rc = putSftp(remoteip, cfgfile, constants.NETCFG)
-            if rc:
-                printScript('* Configuration transfered.')
-            else:
-                printScript('* Unable to transfer configuration!')
-                return False
-            rc = sshExec(remoteip, 'netplan apply')
-            if rc:
-                printScript('* Configuration applied.')
-            else:
-                printScript('* Unable to apply configuration!')
-                return False
-            os.unlink(cfgfile)
+        os.system('netplan apply')
+        printScript('* Applied new configuration.')
     # send changed configuration back and apply it
     return changed
-
-
-# update opsi network configuration with routes
-def updateOpsi(subnets, opsiip, ipnet_setup):
-    printScript('Processing opsi network configuration:')
-    # first delete routes on opsi, create script and invoke it on opsi server
-    remotefile = '/etc/network/if-up.d/999staticroutes'
-    content = """
-#!/bin/sh
-[ -e @@remotefile@@ ] || exit 0
-sed -i 's|route add|route del|g' @@remotefile@@
-chmod +x @@remotefile@@
-@@remotefile@@
-rm -f @@remotefile@@
-"""
-    content = content.replace('@@remotefile@@', remotefile)
-    localfile = constants.CACHEDIR + '/opsi_staticroutes'
-    remotescript = '/tmp/delroutes'
-    try:
-        writeTextfile(localfile, content, 'w')
-        putSftp(opsiip, localfile, remotescript)
-        sshExec(opsiip, 'chmod +x ' + remotescript)
-        sshExec(opsiip, remotescript)
-        sshExec(opsiip, 'rm -f ' + remotescript)
-        printScript('* Removed old routes.')
-    except:
-        printScript('* Unable to remove old routes!')
-        return False
-    # return if no subnets were defined
-    if len(subnets) == 0:
-        return True
-    # create new route script if subnets were defined
-    content = '#!/bin/sh\n#\n# linuxmuster.net\n# static routes for vlans\n\n'
-    try:
-        for item in subnets:
-            s = item.split(':')[0]
-            # skip server network
-            if s == ipnet_setup:
-                continue
-            content = content + 'route add -net ' + s + ' gw ' + servernet_router + '\n'
-            writeTextfile(localfile, content, 'w')
-        printScript('* Created new routes script.')
-    except:
-        printScript('* Unable to create routes script!')
-        return False
-    # transfer and invoke it
-    try:
-        putSftp(opsiip, localfile, remotefile)
-        sshExec(opsiip, 'chmod +x ' + remotefile)
-        sshExec(opsiip, remotefile)
-        printScript('* Script transfered and applied.')
-    except:
-        printScript('* Unable to transfer and apply script!.')
-        return False
-    os.unlink(localfile)
-    return True
 
 
 # update vlan gateway on firewall
@@ -390,7 +297,7 @@ for row in getSubnetArray():
     try:
         nextserver = row[5]
     except:
-        nextserver =''
+        nextserver = ''
     if ipnet[:1] == '#' or ipnet[:1] == ';' or not isValidHostIpv4(router):
         continue
     if not isValidHostIpv4(range1) or not isValidHostIpv4(range2):
@@ -424,17 +331,17 @@ for row in getSubnetArray():
     subnetconf.write('  option subnet-mask ' + netmask + ';\n')
     subnetconf.write('  option broadcast-address ' + broadcast + ';\n')
     if nameserver != '':
-        subnetconf.write('  option domain-name-servers '+ nameserver + ';\n')
+        subnetconf.write('  option domain-name-servers ' + nameserver + ';\n')
         nameserver = ''
     else:
         subnetconf.write('  option netbios-name-servers ' + serverip + ';\n')
     if nextserver != '':
-        subnetconf.write('  next-server '+ nextserver + ';\n')
+        subnetconf.write('  next-server ' + nextserver + ';\n')
     if range1 != '':
         subnetconf.write('  range ' + range1 + ' ' + range2 + ';\n')
     subnetconf.write('  option host-name pxeclient;\n')
     subnetconf.write('}\n')
-    
+
 subnetconf.close()
 
 # restart dhcp service
@@ -456,17 +363,10 @@ os.system('systemctl restart isc-dhcp-server.service')
 # update netplan config with new routes for server (localhost)
 changed = updateNetplan(subnets)
 
-# update netplan config with new routes for dockerhost if his ip matches lan subnets
-if isValidHostIpv4(dockerip) and ipMatchSubnet(dockerip, 'all'):
-    changed = updateNetplan(subnets, dockerip)
-
-# create static routes for opsi
-if isValidHostIpv4(opsiip):
-    changed = updateOpsi(subnets, opsiip, ipnet_setup)
-
 # update firewall
 if not skipfw:
-    changed = updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gw_lan_xml)
+    changed = updateFw(subnets, firewallip, ipnet_setup,
+                       serverip, servernet_router, gw_lan_xml)
     if changed:
         changed = firewallApi('post', '/routes/routes/reconfigure')
         if changed:

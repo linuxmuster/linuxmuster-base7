@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20211208
+# 20211219
 #
 
 import constants
@@ -37,6 +37,7 @@ try:
     serverip = setup.get('setup', 'serverip')
     servername = setup.get('setup', 'servername')
     domainname = setup.get('setup', 'domainname')
+    dhcprange = setup.get('setup', 'dhcprange')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -53,44 +54,6 @@ dialog.set_background_title(title)
 button_names = {dialog.OK:     "OK",
                 dialog.CANCEL: "Cancel"}
 
-"""
-# schoolname
-rc, schoolname = dialog.inputbox('Bitte geben Sie den Schulnamen ein:', height=16, width=64, init=setup.get('setup', 'schoolname'))
-if rc == 'cancel':
-    sys.exit(1)
-
-print('Schulname: ' + schoolname)
-setup.set('setup', 'schoolname', schoolname )
-
-# location
-rc, location = dialog.inputbox('Bitte geben Sie den Schulort ein:', height=16, width=64, init=setup.get('setup', 'location'))
-if rc == 'cancel':
-    sys.exit(1)
-
-print('Schulort: ' + location)
-setup.set('setup', 'location', location )
-
-# country
-rc, country = dialog.inputbox('Bitte geben Sie das Land in Kurzform ein:', height=16, width=64, init=setup.get('setup', 'country'))
-if rc == 'cancel':
-    sys.exit(1)
-country = country.upper()[0:2]
-print('Land: ' + country)
-setup.set('setup', 'country', country )
-
-# state
-rc, state = dialog.inputbox('Bitte geben Sie das Bundesland ein:', height=16, width=64, init=setup.get('setup', 'state'))
-if rc == 'cancel':
-    sys.exit(1)
-
-print('Bundesland: ' + state)
-setup.set('setup', 'state', state )
-
-# sambadomain
-sambadomain = domainname.split('.')[0].upper()
-print('Samba domain: ' + sambadomain)
-setup.set('setup', 'sambadomain', sambadomain)
-"""
 
 # servername
 ititle = title + ': Servername'
@@ -108,6 +71,7 @@ setup.set('setup', 'hostname', servername)
 netbiosname = servername.upper()
 print('Netbios name: ' + netbiosname)
 setup.set('setup', 'netbiosname', netbiosname)
+
 
 # domainname
 ititle = title + ': Domainname'
@@ -134,9 +98,13 @@ setup.set('setup', 'sambadomain', sambadomain)
 
 # dhcprange
 ititle = title + ': DHCP Range'
-dhcprange1 = serverip.split('.')[
+dhcprange1 = dhcprange.split(' ')[0]
+dhcprange2 = dhcprange.split(' ')[1]
+if dhcprange1 == '':
+    dhcprange1 = serverip.split('.')[
                             0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '100'
-dhcprange2 = serverip.split('.')[
+if dhcprange2 == '':
+    dhcprange2 = serverip.split('.')[
                             0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '200'
 dhcprange = dhcprange1 + ' ' + dhcprange2
 while True:
@@ -151,71 +119,6 @@ while True:
 print('DHCP range: ' + dhcprange)
 setup.set('setup', 'dhcprange', dhcprange)
 
-"""
-# opsi (deprecated)
-ititle = title + ': Opsi-IP'
-try:
-    opsiip=setup.get('setup', 'opsiip')
-except:
-    opsiip = ''
-while True:
-    rc, opsiip = dialog.inputbox('Enter the ip address of the opsi server (optional):', title=ititle, height=16, width=64, init=opsiip)
-    if rc == 'cancel':
-        sys.exit(1)
-    if opsiip == '' or isValidHostIpv4(opsiip):
-        break
-print('Opsi ip: ' + opsiip)
-"""
-opsiip = ''
-setup.set('setup', 'opsiip', opsiip)
-
-"""
-# dockerip (deprecated)
-ititle = title + ': Dockerhost-IP'
-try:
-    dockerip=setup.get('setup', 'dockerip')
-except:
-    dockerip = ''
-while True:
-    rc, dockerip = dialog.inputbox('Enter the ip address of the docker host (optional):', title=ititle, height=16, width=64, init=dockerip)
-    if rc == 'cancel':
-        sys.exit(1)
-    if isValidHostIpv4(dockerip) or dockerip == '':
-        break
-print('Docker host ip: ' + dockerip)
-"""
-dockerip = ''
-setup.set('setup', 'dockerip', dockerip)
-
-"""
-# mail (deprecated)
-nostatus = False
-servermail = False
-dockermail = False
-ititle = title + ': Mailserver IP'
-try:
-    mailip=setup.get('setup', 'mailip')
-    if isValidHostIpv4(mailip) and mailip == serverip:
-        servermail = True
-    elif isValidHostIpv4(mailip) and mailip == dockerip:
-        dockermail = True
-except:
-    mailip = ''
-    nostatus = True
-while True:
-    if dockerip != '':
-        rc, mailip = dialog.radiolist('Enter the ip address of the mail server (optional):', title=ititle, height=16, width=64, list_height=3, choices=[('', 'no mailserver', nostatus), (serverip, 'use server ip', servermail), (dockerip, 'use docker ip', dockermail)])
-    else:
-        rc, mailip = dialog.radiolist('Enter the ip address of the mail server (optional):', title=ititle, height=16, width=64, list_height=3, choices=[('', 'no mailserver', nostatus), (serverip, 'use server ip', servermail)])
-    #rc, mailip = dialog.inputbox('Enter the ip address of the mail server (optional):', title=ititle, height=16, width=64, init=mailip)
-    if rc == 'cancel':
-        sys.exit(1)
-    if mailip == '' or isValidHostIpv4(mailip):
-        break
-print('Mail ip: ' + mailip)
-"""
-mailip = ''
-setup.set('setup', 'mailip', mailip)
 
 # global admin password
 ititle = title + ': Administrator password'
@@ -240,6 +143,7 @@ while True:
 print('Administrator password: ' + adminpw)
 setup.set('setup', 'adminpw', adminpw)
 
+
 # write INIFILE
 msg = 'Writing input to setup ini file '
 printScript(msg, '', False, False, True)
@@ -250,6 +154,7 @@ try:
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
+
 
 # set root password
 msg = 'Setting root password '

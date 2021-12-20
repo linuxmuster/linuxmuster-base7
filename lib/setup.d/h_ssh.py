@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 #
-# setup ssh keys and ssh links to additional servers
+# setup ssh host keys
 # thomas@linuxmuster.net
-# 20190916
+# 20211216
 #
 
 import configparser
@@ -13,7 +13,6 @@ import sys
 
 from functions import backupCfg
 from functions import checkSocket
-from functions import doSshLink
 from functions import isValidHostIpv4
 from functions import printScript
 from functions import replaceInFile
@@ -32,12 +31,11 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(
+        delimiters=('='), inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     # get ip addresses
     serverip = setup.get('setup', 'serverip')
-    opsiip = setup.get('setup', 'opsiip')
-    dockerip = setup.get('setup', 'dockerip')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -59,7 +57,8 @@ for a in crypto_list:
     msg = '* ' + a + ' host key '
     printScript(msg, '', False, False, True)
     try:
-        subProc('ssh-keygen -t ' + a + ' -f ' + hostkey_prefix + a + '_key -N ""', logfile)
+        subProc('ssh-keygen -t ' + a + ' -f '
+                + hostkey_prefix + a + '_key -N ""', logfile)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
@@ -67,9 +66,11 @@ for a in crypto_list:
     msg = '* ' + a + ' root key '
     printScript(msg, '', False, False, True)
     try:
-        subProc('ssh-keygen -t ' + a + ' -f ' + rootkey_prefix + a + ' -N ""', logfile)
+        subProc('ssh-keygen -t ' + a + ' -f '
+                + rootkey_prefix + a + ' -N ""', logfile)
         if a == 'rsa':
-            subProc('base64 ' + constants.SSHPUBKEY + ' > ' + constants.SSHPUBKEYB64, logfile)
+            subProc('base64 ' + constants.SSHPUBKEY
+                    + ' > ' + constants.SSHPUBKEYB64, logfile)
             rc = replaceInFile(constants.SSHPUBKEYB64, '\n', '')
         printScript(' Success!', '', True, True, False, len(msg))
     except:
@@ -89,27 +90,3 @@ except:
 # remove known_hosts
 if os.path.isfile(known_hosts):
     subProc('rm -f ' + known_hosts, logfile)
-
-# install ssh link to additional servers
-success = []
-items = []
-if isValidHostIpv4(opsiip):
-    items.append((opsiip, 22))
-if isValidHostIpv4(dockerip):
-    items.append((dockerip, 22))
-for item in items:
-    ip = item[0]
-    port = item[1]
-    rc = doSshLink(ip, port, constants.ROOTPW)
-    if rc == True:
-        success.append(ip)
-
-# test success
-rc = 0
-for item in items:
-    ip = item[0]
-    if not ip in success:
-        printScript('No connection to host ' + ip + ' available!')
-        rc = 1
-if rc == 1:
-    sys.exit(rc)

@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20200311
+# 20211219
 #
 
 import bcrypt
@@ -44,8 +44,6 @@ def main():
         servername = getSetupValue('servername')
         domainname = getSetupValue('domainname')
         basedn = getSetupValue('basedn')
-        opsiip = getSetupValue('opsiip')
-        dockerip = getSetupValue('dockerip')
         network = getSetupValue('network')
         adminpw = getSetupValue('adminpw')
         printScript(' Success!', '', True, True, False, len(msg))
@@ -92,12 +90,6 @@ def main():
     fwconfbak = fwconftmp.replace('.xml', '-' + now + '.xml')
     fwconftpl = constants.FWOSCONFTPL
 
-    # dummy ip addresses
-    if not isValidHostIpv4(opsiip):
-        opsiip = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.2'
-    if not isValidHostIpv4(dockerip):
-        dockerip = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.3'
-
     # get current config
     rc = getFwConfig(firewallip, rolloutpw)
     if not rc:
@@ -140,7 +132,8 @@ def main():
         # save gateway configuration
         try:
             gwconfig = str(soup.findAll('gateways')[0])
-            gwconfig = gwconfig.replace('<gateways>', '').replace('</gateways>', '')
+            gwconfig = gwconfig.replace(
+                '<gateways>', '').replace('</gateways>', '')
         except:
             gwconfig = ''
         # save dnsserver configuration
@@ -169,7 +162,8 @@ def main():
     printScript(msg, '', False, False, True)
     try:
         rc, cacertb64 = readTextfile(constants.CACERTB64)
-        rc, fwcertb64 = readTextfile(constants.SSLDIR + '/firewall.cert.pem.b64')
+        rc, fwcertb64 = readTextfile(
+            constants.SSLDIR + '/firewall.cert.pem.b64')
         rc, fwkeyb64 = readTextfile(constants.SSLDIR + '/firewall.key.pem.b64')
         rc, authorizedkey = readTextfile(constants.SSHPUBKEYB64)
         printScript(' Success!', '', True, True, False, len(msg))
@@ -179,7 +173,8 @@ def main():
 
     # create list of first ten network ips for aliascontent (NoProxy group in firewall)
     aliascontent = ''
-    netpre = network.split('.')[0] + '.' + network.split('.')[1] + '.' + network.split('.')[2] + '.'
+    netpre = network.split(
+        '.')[0] + '.' + network.split('.')[1] + '.' + network.split('.')[2] + '.'
     c = 0
     max = 10
     while c < max:
@@ -189,10 +184,9 @@ def main():
             aliascontent = aliasip
         else:
             aliascontent = aliascontent + ' ' + aliasip
-    # add server ips if not already collected
-    for aliasip in [serverip, opsiip, dockerip]:
-        if not aliasip in aliascontent:
-            aliascontent = aliascontent + '\n' + aliasip
+    # add server ip if not already collected
+    if not serverip in aliascontent:
+        aliascontent = aliascontent + '\n' + serverip
 
     # create new firewall configuration
     msg = '* Creating xml configuration file '
@@ -216,7 +210,6 @@ def main():
         content = content.replace('@@dnsconfig@@', dnsconfig)
         content = content.replace('@@gwconfig@@', gwconfig)
         content = content.replace('@@serverip@@', serverip)
-        content = content.replace('@@dockerip@@', dockerip)
         content = content.replace('@@firewallip@@', firewallip)
         content = content.replace('@@network@@', network)
         content = content.replace('@@bitmask@@', bitmask)

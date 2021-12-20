@@ -2,7 +2,7 @@
 #
 # linuxmuster-setup
 # thomas@linuxmuster.net
-# 20211208
+# 20211219
 #
 
 import constants
@@ -50,9 +50,6 @@ skipfw = False
 servername = ''
 domainname = ''
 dhcprange = ''
-dockerip = ''
-mailip = ''
-opsiip = ''
 adminpw = ''
 schoolname = ''
 location = ''

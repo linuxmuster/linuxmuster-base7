@@ -2,7 +2,7 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20200304
+# 20211219
 #
 
 import configparser
@@ -24,7 +24,8 @@ printScript('', 'begin')
 printScript(title)
 
 # read ini files
-setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
+setup = configparser.RawConfigParser(
+    delimiters=('='), inline_comment_prefixes=('#', ';'))
 for item in [constants.DEFAULTSINI, constants.PREPINI, constants.SETUPINI, constants.CUSTOMINI]:
     # skip non existant file
     if not os.path.isfile(item):
@@ -46,7 +47,8 @@ printScript(msg, '', False, False, True)
 try:
     domainname = setup.get('setup', 'domainname')
     if not isValidDomainname(domainname):
-        printScript(' ' + domainname + ' is not valid!', '', True, True, False, len(msg))
+        printScript(' ' + domainname + ' is not valid!',
+                    '', True, True, False, len(msg))
         sys.exit(1)
     printScript(' ' + domainname, '', True, True, False, len(msg))
 except:
@@ -73,7 +75,8 @@ if 'servername' in setup['setup']:
 elif 'hostname' in setup['setup']:
     servername = setup.get('setup', 'hostname')
 if not isValidHostname(servername):
-    printScript(' servername ' + servername + ' is not valid!', '', True, True, False, len(msg))
+    printScript(' servername ' + servername + ' is not valid!',
+                '', True, True, False, len(msg))
     sys.exit(1)
 printScript(' ' + servername, '', True, True, False, len(msg))
 setup.set('setup', 'servername', servername)
@@ -88,7 +91,8 @@ printScript(msg, '', False, False, True)
 try:
     serverip = setup.get('setup', 'serverip')
     if not isValidHostIpv4(serverip):
-        printScript(' ' + serverip + ' is not valid!', '', True, True, False, len(msg))
+        printScript(' ' + serverip + ' is not valid!',
+                    '', True, True, False, len(msg))
         sys.exit(1)
     printScript(' ' + serverip, '', True, True, False, len(msg))
 except:
@@ -102,7 +106,8 @@ try:
     bitmask = setup.get('setup', 'bitmask')
     ip = IP(serverip + '/' + bitmask, make_net=True)
 except:
-    printScript(' ' + bitmask + ' is not valid!', '', True, True, False, len(msg))
+    printScript(' ' + bitmask + ' is not valid!',
+                '', True, True, False, len(msg))
     sys.exit(1)
 printScript(' ' + bitmask, '', True, True, False, len(msg))
 
@@ -128,17 +133,22 @@ except:
 if dhcprange == '':
     try:
         if int(bitmask) <= 16:
-            dhcprange1 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.255.1'
-            dhcprange2 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.255.254'
+            dhcprange1 = serverip.split(
+                '.')[0] + '.' + serverip.split('.')[1] + '.255.1'
+            dhcprange2 = serverip.split(
+                '.')[0] + '.' + serverip.split('.')[1] + '.255.254'
         else:
-            dhcprange1 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '201'
-            dhcprange2 = serverip.split('.')[0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '250'
+            dhcprange1 = serverip.split('.')[
+                                        0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '201'
+            dhcprange2 = serverip.split('.')[
+                                        0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '250'
         dhcprange = dhcprange1 + ' ' + dhcprange2
         setup.set('setup', 'dhcprange', dhcprange)
     except:
         printScript(' failed to set!', '', True, True, False, len(msg))
         sys.exit(1)
-printScript(' ' + dhcprange1 + '-' + dhcprange2, '', True, True, False, len(msg))
+printScript(' ' + dhcprange1 + '-' + dhcprange2,
+            '', True, True, False, len(msg))
 
 # firewallip
 msg = '* Firewall IP '
@@ -146,64 +156,13 @@ printScript(msg, '', False, False, True)
 try:
     firewallip = setup.get('setup', 'firewallip')
     if not isValidHostIpv4(firewallip):
-        printScript(' ' + firewallip + ' is not valid!', '', True, True, False, len(msg))
+        printScript(' ' + firewallip + ' is not valid!',
+                    '', True, True, False, len(msg))
         sys.exit(1)
     printScript(' ' + firewallip, '', True, True, False, len(msg))
 except:
     printScript(' not set!', '', True, True, False, len(msg))
     sys.exit(1)
-
-# dockerip
-msg = '* Dockerhost IP '
-printScript(msg, '', False, False, True)
-try:
-    dockerip = setup.get('setup', 'dockerip')
-    if dockerip == '':
-        printScript(' not set!', '', True, True, False, len(msg))
-    else:
-        if isValidHostIpv4(dockerip):
-            printScript(' ' + dockerip, '', True, True, False, len(msg))
-        else:
-            printScript(' ' + dockerip + ' is not valid!', '', True, True, False, len(msg))
-            sys.exit(1)
-except:
-    setup.set('setup', 'dockerip', '')
-    printScript(' not set!', '', True, True, False, len(msg))
-
-# mailip
-msg = '* Mailserver IP '
-printScript(msg, '', False, False, True)
-try:
-    mailip = setup.get('setup', 'mailip')
-    if mailip == '':
-        printScript(' not set!', '', True, True, False, len(msg))
-    else:
-        if isValidHostIpv4(mailip):
-            printScript(' ' + mailip, '', True, True, False, len(msg))
-        else:
-            printScript(' ' + mailip + ' is not valid!', '', True, True, False, len(msg))
-            sys.exit(1)
-except:
-    setup.set('setup', 'mailip', '')
-    printScript(' not set!', '', True, True, False, len(msg))
-
-# Network interface
-# msg = '* Default network interface '
-# printScript(msg, '', False, False, True)
-# try:
-#     iface = setup.get('setup', 'iface')
-# except:
-#     iface = ''
-# if iface == '' or iface == None:
-#     iface_list, iface = getDefaultIface()
-# if iface == '':
-#     printScript(' not set!', '', True, True, False, len(msg))
-# try:
-#     setup.set('setup', 'iface', iface)
-# except:
-#     printScript(' failed to set!', '', True, True, False, len(msg))
-#     sys.exit(1)
-# printScript(' ' + iface, '', True, True, False, len(msg))
 
 # create global binduser password
 msg = 'Creating global binduser secret '

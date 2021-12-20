@@ -2,7 +2,7 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20190916
+# 20211219
 #
 
 from __future__ import print_function
@@ -28,7 +28,8 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(
+        delimiters=('='), inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     schoolname = setup.get('setup', 'schoolname')
     servername = setup.get('setup', 'servername')
@@ -42,7 +43,7 @@ except:
     sys.exit(1)
 
 # key & cert files to create
-certlist = [servername, 'firewall', 'mail', 'docker', 'opsi']
+certlist = [servername, 'firewall']
 
 # basic subject string
 subjbase = '-subj /O="' + schoolname + '"/OU=' + sambadomain + '/CN='
@@ -62,14 +63,19 @@ try:
     with open(constants.CAKEYSECRET, 'w') as secret:
         secret.write(cakeypw)
     subProc('chmod 400 ' + constants.CAKEYSECRET, logfile)
-    subProc('openssl genrsa -out ' + constants.CAKEY + ' -aes128 -passout pass:' + cakeypw + ' 2048', logfile)
-    subProc('openssl req -batch -x509 ' + subj + ' -new -nodes ' + passin + ' -key ' + constants.CAKEY + shadays + ' -out ' + constants.CACERT, logfile)
-    subProc('openssl x509 -in ' + constants.CACERT + ' -inform PEM -out ' + constants.CACERTCRT, logfile)
+    subProc('openssl genrsa -out ' + constants.CAKEY
+            + ' -aes128 -passout pass:' + cakeypw + ' 2048', logfile)
+    subProc('openssl req -batch -x509 ' + subj + ' -new -nodes ' + passin
+            + ' -key ' + constants.CAKEY + shadays + ' -out ' + constants.CACERT, logfile)
+    subProc('openssl x509 -in ' + constants.CACERT
+            + ' -inform PEM -out ' + constants.CACERTCRT, logfile)
     # install crt
-    subProc('ln -sf ' + constants.CACERTCRT + ' /usr/local/share/ca-certificates/linuxmuster_cacert.crt', logfile)
+    subProc('ln -sf ' + constants.CACERTCRT
+            + ' /usr/local/share/ca-certificates/linuxmuster_cacert.crt', logfile)
     subProc('update-ca-certificates', logfile)
     # create base64 encoded version for opnsense's config.xml
-    subProc('base64 ' + constants.CACERT + ' > ' + constants.CACERTB64, logfile)
+    subProc('base64 ' + constants.CACERT
+            + ' > ' + constants.CACERTB64, logfile)
     rc = replaceInFile(constants.CACERTB64, '\n', '')
     if not os.path.isfile(constants.CACERTB64):
         printScript(' Failed!', '', True, True, False, len(msg))
@@ -95,11 +101,14 @@ for item in certlist:
     printScript(msg, '', False, False, True)
     try:
         subProc('openssl genrsa -out ' + keyfile + ' 2048', logfile)
-        subProc('openssl req -batch ' + subj + ' -new -key ' + keyfile + ' -out ' + csrfile, logfile)
-        subProc('openssl x509 -req -in ' + csrfile + ' -CA ' + constants.CACERT + passin + ' -CAkey ' + constants.CAKEY + ' -CAcreateserial -out ' + certfile + shadays, logfile)
+        subProc('openssl req -batch ' + subj + ' -new -key '
+                + keyfile + ' -out ' + csrfile, logfile)
+        subProc('openssl x509 -req -in ' + csrfile + ' -CA ' + constants.CACERT + passin
+                + ' -CAkey ' + constants.CAKEY + ' -CAcreateserial -out ' + certfile + shadays, logfile)
         # cert links for cups on server
         if item == servername:
-            subProc('ln -sf ' + certfile + ' /etc/cups/ssl/server.crt', logfile)
+            subProc('ln -sf ' + certfile
+                    + ' /etc/cups/ssl/server.crt', logfile)
             subProc('ln -sf ' + keyfile + ' /etc/cups/ssl/server.key', logfile)
             subProc('service cups restart', logfile)
         if item == 'firewall':
@@ -108,14 +117,15 @@ for item in certlist:
             subProc('base64 ' + certfile + ' > ' + b64certfile, logfile)
             rc = replaceInFile(b64keyfile, '\n', '')
             rc = replaceInFile(b64certfile, '\n', '')
-        printScript( 'Success!', '', True, True, False, len(msg))
+        printScript('Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
 
 # concenate firewall fullchain cert
 if not skipfw:
-    subProc('cat ' + constants.FWFULLCHAIN.replace('.fullchain.', '.cert.') + ' ' + constants.CACERT + ' > ' + constants.FWFULLCHAIN, logfile)
+    subProc('cat ' + constants.FWFULLCHAIN.replace('.fullchain.', '.cert.')
+            + ' ' + constants.CACERT + ' > ' + constants.FWFULLCHAIN, logfile)
 
 # copy cacert.pem to sysvol for clients
 sysvoltlsdir = constants.SYSVOLTLSDIR.replace('@@domainname@@', domainname)

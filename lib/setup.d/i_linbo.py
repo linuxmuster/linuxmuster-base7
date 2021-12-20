@@ -2,7 +2,7 @@
 #
 # linbo setup
 # thomas@linuxmuster.net
-# 20300311
+# 20211216
 #
 
 import configparser
@@ -33,7 +33,8 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
-    setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(
+        delimiters=('='), inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     serverip = setup.get('setup', 'serverip')
     printScript(' Success!', '', True, True, False, len(msg))
@@ -45,7 +46,7 @@ except:
 try:
     adminpw = setup.get('setup', 'adminpw')
 except:
-    adminpw=''
+    adminpw = ''
 if not isValidPassword(adminpw):
     printScript('There is no admin password!')
     adminpw = enterPassword('admin', True)
@@ -73,7 +74,7 @@ try:
     # set permissions
     subProc('chmod 600 ' + configfile, logfile)
     # enable rsync service
-    subProc('systemctl enable rsync.service', logfile)
+    subProc('systemctl -q enable rsync.service', logfile)
     # restart rsync service
     subProc('service rsync stop', logfile)
     subProc('service rsync start', logfile)
@@ -95,36 +96,18 @@ printScript(msg, '', False, False, True)
 try:
     for startconf in conffiles:
         rc, content = readTextfile(startconf)
-        rc = writeTextfile(startconf, content.replace('10.16.1.1', serverip), 'w')
+        rc = writeTextfile(startconf, content.replace(
+            '10.16.1.1', serverip), 'w')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# bittorrent service
-msg = 'Activating bittorrent tracker '
+# linbo-torrent service
+msg = 'Activating linbo-torrent service '
 printScript(msg, '', False, False, True)
 try:
-    defaultconf = '/etc/default/bittorrent'
-    rc, content = readTextfile(defaultconf)
-    content = re.sub(r'\nSTART_BTTRACK=.*\n', '\nSTART_BTTRACK=1\n', content, re.IGNORECASE)
-    content = re.sub(r'\n[#]*ALLOWED_DIR=.*\n', '\nALLOWED_DIR=' + constants.LINBODIR + '\n', content, re.IGNORECASE)
-    writeTextfile(defaultconf, content, 'w')
-    subProc('service bittorrent stop', logfile)
-    subProc('service bittorrent start', logfile)
-    printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
-    sys.exit(1)
-
-# linbo-bittorrent service
-msg = 'Activating linbo-bittorrent service '
-printScript(msg, '', False, False, True)
-try:
-    defaultconf = '/etc/default/linbo-bittorrent'
-    rc, content = readTextfile(defaultconf)
-    content = re.sub(r'\nSTART_BITTORRENT=.*\n', '\nSTART_BITTORRENT=1\n', content, re.IGNORECASE)
-    writeTextfile(defaultconf, content, 'w')
+    subprocess.call('systemctl -q enable linbo-torrent 2>&1', shell=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -135,7 +118,8 @@ msg = 'Reconfiguring linbo (forking to background) '
 printScript(msg, '', False, False, True)
 try:
     subProc('rm -f ' + constants.SYSDIR + '/linbo/*key*', logfile)
-    subprocess.call('dpkg-reconfigure linuxmuster-linbo7 >> ' + logfile + ' 2>&1 &', shell=True)
+    subprocess.call('dpkg-reconfigure linuxmuster-linbo7 >> '
+                    + logfile + ' 2>&1 &', shell=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20210731
+# 20211216
 #
 
 import codecs
@@ -22,6 +22,7 @@ import requests
 import shutil
 import socket
 import string
+import subprocess
 import time
 
 from contextlib import closing
@@ -52,7 +53,8 @@ class tee(object):
 def subProc(cmd, logfile=None):
     try:
         rc = True
-        p = Popen(cmd, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
+        p = Popen(cmd, shell=True, universal_newlines=True,
+                  stdout=PIPE, stderr=PIPE)
         output, errors = p.communicate()
         if p.returncode or errors:
             rc = False
@@ -104,7 +106,8 @@ def adSearch(search_filter, search_base=''):
 # return True if dynamic ip device
 def isDynamicIpDevice(name, school='default-school'):
     samacountname = name.upper() + '$'
-    search_filter = '(&(objectClass=computer)(sAMAccountName=' + samacountname + ')(sophomorixComputerIP=DHCP))'
+    search_filter = '(&(objectClass=computer)(sAMAccountName=' + \
+        samacountname + ')(sophomorixComputerIP=DHCP))'
     search_base = 'OU=Devices,OU=' + school + ',OU=SCHOOLS'
     res = adSearch(search_filter, search_base)
     if len(res) == 0:
@@ -124,13 +127,16 @@ def sambaTool(options, logfile=None):
         rc, adminpw = readTextfile(constants.ADADMINSECRET)
     if rc == False:
         return rc
-    cmd = 'samba-tool ' + options + ' --username=' + adminuser + ' --password=' + adminpw
+    cmd = 'samba-tool ' + options + ' --username=' + \
+        adminuser + ' --password=' + adminpw
     # for debugging
     #printScript(cmd)
     rc = subProc(cmd, logfile)
     return rc
 
 # print with or without linefeed
+
+
 def printLf(msg, lf):
     if lf == True:
         print(msg)
@@ -138,6 +144,8 @@ def printLf(msg, lf):
         print(msg, end='', flush=True)
 
 # print script output
+
+
 def printScript(msg='', header='', lf=True, noleft=False, noright=False, offset=0):
     linelen = 78
     borderlen = 4
@@ -172,7 +180,8 @@ def printScript(msg='', header='', lf=True, noleft=False, noright=False, offset=
 def getSetupValue(keyname):
     setupini = constants.SETUPINI
     try:
-        setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
+        setup = configparser.RawConfigParser(
+            delimiters=('='), inline_comment_prefixes=('#', ';'))
         setup.read(setupini)
         rc = setup.get('setup', keyname)
     except Exception as error:
@@ -185,7 +194,7 @@ def getSetupValue(keyname):
 def ipMatchSubnet(ip, subnet):
     if ip == 'DHCP' and subnet == 'all':
         return True
-    if ip =='DHCP':
+    if ip == 'DHCP':
         return False
     try:
         if subnet == 'all':
@@ -230,9 +239,11 @@ def getIpBcAddress(ip):
 def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False, school='default-school'):
     devices_array = []
     if school == "default-school":
-        infile = open(constants.SOPHOSYSDIR+"/default-school/devices.csv", newline='')
+        infile = open(constants.SOPHOSYSDIR
+                      + "/default-school/devices.csv", newline='')
     else:
-        infile = open(constants.SOPHOSYSDIR+"/"+school+"/"+school+".devices.csv", newline='')
+        infile = open(constants.SOPHOSYSDIR+"/"+school
+                      + "/"+school+".devices.csv", newline='')
     #infile = open(constants.WIMPORTDATA, newline='')
 
     content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
@@ -243,7 +254,8 @@ def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False, school='def
                 continue
             # collect values
             if school != "default-school":
-                row[1] = school+"-"+row[1] # add the prefix to the computername for DHCP config
+                # add the prefix to the computername for DHCP config
+                row[1] = school+"-"+row[1]
             hostname = row[1]
             group = row[2]
             mac = row[3]
@@ -277,7 +289,8 @@ def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False, school='def
                 startconf = constants.LINBODIR + '/start.conf.' + group
                 systemtype = None
                 if os.path.isfile(startconf):
-                    systemtype = getStartconfOption(startconf, 'LINBO', 'SystemType')
+                    systemtype = getStartconfOption(
+                        startconf, 'LINBO', 'SystemType')
                 row_res.append(systemtype)
             devices_array.append(row_res)
         except Exception as error:
@@ -327,98 +340,6 @@ def getBootImage(systemtype):
     return bootimage
 
 
-# establish pw less ssh connection to ip & port
-def doSshLink(ip, port, secret):
-    domainname = getSetupValue('domainname')
-    bitmask = getSetupValue('bitmask')
-    serverip = getSetupValue('serverip')
-    firewallip = getSetupValue('firewallip')
-    opsiip = getSetupValue('opsiip')
-    dockerip = getSetupValue('dockerip')
-    adminpw = getSetupValue('adminpw')
-    msg = '* Processing ssh link to host ' + ip + ' on port ' + str(port) + ':'
-    printScript(msg)
-    # test connection on ip and port
-    msg = '  > Testing ssh connection '
-    printScript(msg, '', False, False, True)
-    if checkSocket(ip, port):
-        printScript(' Open!', '', True, True, False, len(msg))
-    else:
-        printScript(' Closed!', '', True, True, False, len(msg))
-        return False
-    # establish ssh connection to ip on port
-    msg = '  > Establishing ssh connection '
-    printScript(msg, '', False, False, True)
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    try:
-        ssh.connect(ip, port=port, username='root', password=secret)
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
-        return False
-    # deploy public key to host
-    msg = '  > Deploying public key '
-    sshdir = '/root/.ssh'
-    printScript(msg, '', False, False, True)
-    try:
-        ssh.exec_command('mkdir -p ' + sshdir)
-        ssh.exec_command('chmod 700 ' + sshdir)
-        ftp = ssh.open_sftp()
-        ftp.put(sshdir + '/id_rsa.pub', sshdir + '/authorized_keys')
-        ftp.close()
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
-        return False
-    # deploy ssl cert & key to opsi or docker
-    hostname = ''
-    if ip == opsiip:
-        hostname = 'opsi'
-    elif ip == dockerip:
-        hostname = 'docker'
-    profile = ''
-    if hostname != '':
-        msg = '  > Deploying ssl certs & key '
-        profile = ' -p ' + hostname
-        keyfile = constants.SSLDIR + '/' + hostname + '.key.pem'
-        certfile = constants.SSLDIR + '/' + hostname + '.cert.pem'
-        printScript(msg, '', False, False, True)
-        try:
-            ssh.exec_command('mkdir -p ' + constants.SSLDIR)
-            ftp = ssh.open_sftp()
-            ftp.put(constants.CACERT, constants.CACERT)
-            ftp.put(keyfile, keyfile)
-            ftp.put(certfile, certfile)
-            ftp.close()
-            ssh.exec_command('chmod 640 ' + constants.SSLDIR + '/*.key.pem')
-            printScript(' Success!', '', True, True, False, len(msg))
-        except:
-            printScript(' Failed!', '', True, True, False, len(msg))
-            return False
-    # close ssh connection
-    ssh.close()
-    # prepare host
-    if serverip != '' and adminpw != '' and hostname != '':
-        msg = '  > Preparing ' + hostname + ' '
-        printScript(msg, '', False, False, True)
-        try:
-            sshcmd = 'ssh -oNumberOfPasswordPrompts=0 -oStrictHostKeyChecking=no -p ' + str(port) + ' ' + ip + ' '
-            preparecmd = sshcmd + '/usr/sbin/linuxmuster-prepare -s -u -t ' + hostname + ' -r ' + serverip + ' -a "' + adminpw + '"' + profile + ' -n ' + ip + '/' + bitmask + ' -d ' + domainname + ' -f ' + firewallip
-            rebootcmd = sshcmd + '/sbin/reboot'
-            logfile = constants.LOGDIR + '/setup.ssh.' + hostname + '.log'
-            subProc(preparecmd, logfile)
-            knownhosts = '/root/.ssh/known_hosts'
-            if os.path.isfile(knownhosts):
-                cmd = 'ssh-keygen -f ' + knownhosts + ' -R ' + ip
-                subProc(cmd, logfile)
-            subProc(rebootcmd, logfile)
-            printScript(' Success!', '', True, True, False, len(msg))
-        except:
-            printScript(' Failed!', '', True, True, False, len(msg))
-            return False
-    return True
-
 # return grub name of partition's device name
 def getGrubPart(partition, systemtype):
     try:
@@ -446,6 +367,7 @@ def getGrubPart(partition, systemtype):
     grubpart = '(hd' + hdnr + ',' + partnr + ')'
     return grubpart
 
+
 # return grub ostype
 def getGrubOstype(osname):
     osname = osname.lower()
@@ -455,24 +377,27 @@ def getGrubOstype(osname):
         return 'win'
     if 'mint' in osname:
         return 'linuxmint'
-    ostype_list = ['win10', 'win', 'kubuntu', 'lubuntu', 'xubuntu', 'ubuntu', 'centos', 'arch', 'linuxmint', 'fedora', 'gentoo', 'debian', 'opensuse', 'suse', 'linux']
+    ostype_list = ['win10', 'win', 'kubuntu', 'lubuntu', 'xubuntu', 'ubuntu', 'centos',
+                   'arch', 'linuxmint', 'fedora', 'gentoo', 'debian', 'opensuse', 'suse', 'linux']
     for ostype in ostype_list:
         if ostype in osname:
             return ostype
     return 'unknown'
+
 
 # return content of text file
 def readTextfile(tfile):
     if not os.path.isfile(tfile):
         return False, None
     try:
-        infile = codecs.open(tfile ,'r', encoding='utf-8', errors='ignore')
+        infile = codecs.open(tfile, 'r', encoding='utf-8', errors='ignore')
         content = infile.read()
         infile.close()
         return True, content
     except:
         print('Cannot read ' + tfile + '!')
         return False, None
+
 
 # write textfile
 def writeTextfile(tfile, content, flag):
@@ -484,6 +409,7 @@ def writeTextfile(tfile, content, flag):
     except:
         print('Failed to write ' + tfile + '!')
         return False
+
 
 # replace string in file
 def replaceInFile(tfile, search, replace):
@@ -501,10 +427,12 @@ def replaceInFile(tfile, search, replace):
         os.unlink(bakfile)
     return rc
 
+
 # modify and write ini file
 def modIni(inifile, section, option, value):
     try:
-        i = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
+        i = configparser.RawConfigParser(delimiters=(
+            '='), inline_comment_prefixes=('#', ';'))
         if not os.path.isfile(inifile):
             # create inifile
             writeTextfile(inifile, '[' + section + ']\n', 'w')
@@ -538,7 +466,8 @@ def waitForFw(timeout=300, wait=0):
 # firewall api get request
 def firewallApi(request, path, data=''):
     domainname = getSetupValue('domainname')
-    fwapi = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
+    fwapi = configparser.RawConfigParser(
+        delimiters=('='), inline_comment_prefixes=('#', ';'))
     fwapi.read(constants.FWAPIKEYS)
     apikey = fwapi.get('api', 'key')
     apisecret = fwapi.get('api', 'secret')
@@ -549,7 +478,8 @@ def firewallApi(request, path, data=''):
     elif request == 'post' and data == '':
         req = requests.post(url, auth=(apikey, apisecret))
     elif request == 'post' and data != '':
-        req = requests.post(url, data=data, auth=(apikey, apisecret), headers=headers)
+        req = requests.post(url, data=data, auth=(
+            apikey, apisecret), headers=headers)
     else:
         return None
     # get response
@@ -562,12 +492,14 @@ def firewallApi(request, path, data=''):
         return None
 
 # download per sftp
+
+
 def getSftp(ip, remotefile, localfile, secret=''):
     # establish connection
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        if secret !='':
+        if secret != '':
             ssh.connect(ip, port=22, username='root', password=secret)
         else:
             ssh.connect(ip, port=22, username='root')
@@ -584,68 +516,94 @@ def getSftp(ip, remotefile, localfile, secret=''):
     return True
 
 # download firewall config.xml
+
+
 def getFwConfig(firewallip, secret=''):
     printScript('Downloading firewall configuration:')
-    rc = getSftp(firewallip, constants.FWCONFREMOTE, constants.FWCONFLOCAL, secret)
+    rc = getSftp(firewallip, constants.FWCONFREMOTE,
+                 constants.FWCONFLOCAL, secret)
     if rc:
         printScript('* Download finished successfully.')
     else:
         printScript('* Download failed!')
     return rc
 
+
 # upload per sftp
 def putSftp(ip, localfile, remotefile, secret=''):
+    sshopts = "-q -oNumberOfPasswordPrompts=0 -oStrictHostkeyChecking=no"
+    sshcmd = 'ssh ' + sshopts + ' -l root ' + ip
+    scpcmd = 'scp ' + sshopts + ' ' + localfile + ' root@' + ip + ':' + remotefile
+    # test ssh connection
     try:
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        if secret !='':
-            ssh.connect(ip, port=22, username='root', password=secret)
+        if secret == '':
+            subprocess.call(sshcmd + ' exit', shell=True)
         else:
-            ssh.connect(ip, port=22, username='root')
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(ip, port=22, username='root', password=secret)
     except:
         return False
+    # file upload
     try:
-        ftp = ssh.open_sftp()
-        ftp.put(localfile, remotefile)
+        if secret == '':
+            subprocess.call(scpcmd, shell=True)
+        else:
+            ftp = ssh.open_sftp()
+            ftp.put(localfile, remotefile)
     except:
         return False
     ftp.close()
     ssh.close()
     return True
 
+
 # upload firewall config
 def putFwConfig(firewallip, secret=''):
     printScript('Uploading firewall configuration:')
-    rc = putSftp(firewallip, constants.FWCONFLOCAL, constants.FWCONFREMOTE, secret)
+    rc = putSftp(firewallip, constants.FWCONFLOCAL,
+                 constants.FWCONFREMOTE, secret)
     if rc:
         printScript('* Upload finished successfully.')
     else:
         printScript('* Upload failed!')
     return rc
 
+
 # execute ssh command
+# note: paramiko key based connection is obviously broken in 18.04, so we use ssh shell command
 def sshExec(ip, cmd, secret=''):
     printScript('Executing ssh command on ' + ip + ':')
     printScript('* -> "' + cmd + '"')
+    sshcmd = 'ssh -q -oNumberOfPasswordPrompts=0 -oStrictHostkeyChecking=no -l root ' + ip
+    # first test connection
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        if secret !='':
-            ssh.connect(ip, port=22, username='root', password=secret)
+        if secret == '':
+            subprocess.call(sshcmd + ' exit', shell=True)
+            #ssh.connect(ip, port=22, username='root')
         else:
-            ssh.connect(ip, port=22, username='root')
+            ssh.connect(ip, port=22, username='root', password=secret)
         printScript('* SSH connection successfully established.')
+        if cmd == 'exit':
+            return True
     except:
-        printScript('* Unable to establish a SSH connection!')
+        printScript('* Failed to establish a SSH connection!')
         return False
+    # second execute command
     try:
-        stdin, stdout, stderr = ssh.exec_command(cmd)
-        printScript('* Execution finished successfully.')
+        if secret != '':
+            stdin, stdout, stderr = ssh.exec_command(cmd)
+        else:
+            subprocess.call(sshcmd + ' ' + cmd, shell=True)
+        printScript('* SSH command execution finished successfully.')
     except:
-        printScript('* Unable to execute command!')
+        printScript('* Failed to execute SSH command!')
         return False
     ssh.close()
     return True
+
 
 # return linbo start.conf as string and modified to be used as ini file
 def readStartconf(startconf):
@@ -653,10 +611,12 @@ def readStartconf(startconf):
     if rc == False:
         return rc, None
     # [Partition] --> [Partition1]
-    content = re.sub(r'\[[Pp][Aa][Rr][Tt][Ii][Tt][Ii][Oo][Nn]\]', '[Partition]', content)
+    content = re.sub(
+        r'\[[Pp][Aa][Rr][Tt][Ii][Tt][Ii][Oo][Nn]\]', '[Partition]', content)
     count = 1
     while '[Partition]' in content:
-        content = content.replace('[Partition]', '[Partition' + str(count) + ']', 1)
+        content = content.replace(
+            '[Partition]', '[Partition' + str(count) + ']', 1)
         count = count + 1
     # replace os sections to make them unique
     content = re.sub(r'\[[Oo][Ss]\]', '[OS]', content)
@@ -667,19 +627,24 @@ def readStartconf(startconf):
     return True, content
 
 # get global options from startconf
+
+
 def getStartconfOption(startconf, section, option):
     rc, content = readStartconf(startconf)
     if rc == False:
         return None
     try:
         # read in to configparser
-        s = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
+        s = configparser.RawConfigParser(delimiters=(
+            '='), inline_comment_prefixes=('#', ';'))
         s.read_string(content)
         return s.get(section, option)
     except:
         return None
 
 # get partition label from start.conf
+
+
 def getStartconfPartlabel(startconf, partnr):
     partnr = int(partnr)
     rc, content = readStartconf(startconf)
@@ -693,6 +658,8 @@ def getStartconfPartlabel(startconf, partnr):
     return ""
 
 # get number of partition
+
+
 def getStartconfPartnr(startconf, partition):
     rc, content = readStartconf(startconf)
     if rc == False:
@@ -705,6 +672,8 @@ def getStartconfPartnr(startconf, partition):
     return 0
 
 # write global options to startconf
+
+
 def setGlobalStartconfOption(startconf, option, value):
     rc, content = readTextfile(startconf)
     if rc == False:
@@ -712,7 +681,8 @@ def setGlobalStartconfOption(startconf, option, value):
     # insert newline
     content = '\n' + content
     try:
-        line = re.search(r'\n' + option + ' =.*\n', content, re.IGNORECASE).group(0)
+        line = re.search(r'\n' + option + ' =.*\n',
+                         content, re.IGNORECASE).group(0)
     except:
         line = None
     if line == None:
@@ -727,13 +697,16 @@ def setGlobalStartconfOption(startconf, option, value):
     return rc
 
 # return os values from linbo start.conf as list
+
+
 def getStartconfOsValues(startconf):
     rc, content = readStartconf(startconf)
     if rc == False:
         return None
     try:
         # read in to configparser
-        s = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
+        s = configparser.RawConfigParser(delimiters=(
+            '='), inline_comment_prefixes=('#', ';'))
         s.read_string(content)
         count = 1
         oslists = {}
@@ -776,12 +749,14 @@ def getStartconfOsValues(startconf):
     except:
         return None
 
+
 def getLinboVersion():
     rc, content = readTextfile(constants.LINBOVERFILE)
     if not rc:
         return
     content = content.split(' ')[1]
     return content.split(':')[0]
+
 
 def checkSocket(host, port):
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
@@ -791,8 +766,10 @@ def checkSocket(host, port):
         else:
             return False
 
+
 def hasNumbers(password):
     return any(char.isdigit() for char in password)
+
 
 def randomPassword(size):
   chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
@@ -802,6 +779,7 @@ def randomPassword(size):
           break
   return password
 
+
 def isValidMac(mac):
     try:
         if re.match("[0-9a-f]{2}([-:])[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$", mac.lower()):
@@ -810,6 +788,7 @@ def isValidMac(mac):
             return False
     except:
         return False
+
 
 def isValidHostname(hostname):
     try:
@@ -823,6 +802,7 @@ def isValidHostname(hostname):
     except:
         return False
 
+
 def isValidDomainname(domainname):
     try:
         for label in domainname.split('.'):
@@ -831,6 +811,7 @@ def isValidDomainname(domainname):
         return True
     except:
         return False
+
 
 def isValidHostIpv4(ip):
     try:
@@ -852,6 +833,8 @@ def isValidHostIpv4(ip):
         return False
 
 # returns hostname and row from workstations file, search with ip, mac and hostname
+
+
 def getHostname(devices, search):
     try:
         hostname = None
@@ -874,6 +857,7 @@ def getHostname(devices, search):
         print('getHostname(): Error reading file ' + devices + '!')
     return hostname, hostrow
 
+
 def isValidPassword(password):
     """
     Verify the strength of 'password'
@@ -895,21 +879,26 @@ def isValidPassword(password):
     # searching for symbols
     if digit_error == True:
         digit_error = False
-        symbol_error = re.search(r"[!#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None
+        symbol_error = re.search(
+            r"[!#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None
     else:
         symbol_error = False
     # overall result
-    password_ok = not ( length_error or digit_error or uppercase_error or lowercase_error or symbol_error )
+    password_ok = not (
+        length_error or digit_error or uppercase_error or lowercase_error or symbol_error)
     return password_ok
 
 # enter password
+
+
 def enterPassword(pwtype='the', validate=True, repeat=True):
     msg = '#### Enter ' + pwtype + ' password: '
     re_msg = '#### Please re-enter ' + pwtype + ' password: '
     while True:
         password = getpass.getpass(msg)
         if validate == True and not isValidPassword(password):
-            printScript('Weak password! A password is considered strong if it contains:')
+            printScript(
+                'Weak password! A password is considered strong if it contains:')
             printScript(' * 7 characters length or more')
             printScript(' * 1 digit or 1 symbol or more')
             printScript(' * 1 uppercase letter or more')
@@ -929,6 +918,8 @@ def enterPassword(pwtype='the', validate=True, repeat=True):
     return password
 
 # return detected network interfaces
+
+
 def detectedInterfaces():
     iface_list = netifaces.interfaces()
     iface_list.remove('lo')
@@ -940,6 +931,8 @@ def detectedInterfaces():
     return iface_list, iface_default
 
 # return default network interface
+
+
 def getDefaultIface():
     # first try to get a single interface
     iface_list, iface_default = detectedInterfaces()
@@ -959,15 +952,21 @@ def getDefaultIface():
     return iface_list, iface_default
 
 # return datetime string
+
+
 def dtStr():
     return "{:%Y%m%d%H%M%S}".format(datetime.datetime.now())
 
 # return setup comment for modified configfiles
+
+
 def setupComment():
     msg = '# modified by linuxmuster-setup at ' + dtStr() + '\n'
     return msg
 
 # backup config file
+
+
 def backupCfg(configfile):
     if not os.path.isfile(configfile):
         return False
@@ -976,4 +975,5 @@ def backupCfg(configfile):
         shutil.copy(configfile, backupfile)
     except:
         return False
+    return True
     return True

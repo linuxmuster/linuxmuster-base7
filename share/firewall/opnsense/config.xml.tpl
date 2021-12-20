@@ -192,36 +192,6 @@
         <description>/firewall_nat_edit.php made changes</description>
       </created>
     </rule>
-    <rule>
-      <protocol>tcp</protocol>
-      <interface>wan</interface>
-      <ipprotocol>inet</ipprotocol>
-      <descr>SMTP -&gt; Docker</descr>
-      <tag/>
-      <tagged/>
-      <poolopts/>
-      <associated-rule-id>pass</associated-rule-id>
-      <disabled>1</disabled>
-      <target>@@dockerip@@</target>
-      <local-port>25</local-port>
-      <source>
-        <any>1</any>
-      </source>
-      <destination>
-        <any>1</any>
-        <port>25</port>
-      </destination>
-      <updated>
-        <username>linuxmuster</username>
-        <time>1543615644.9298</time>
-        <description>/firewall_nat_edit.php made changes</description>
-      </updated>
-      <created>
-        <username>linuxmuster</username>
-        <time>1543615644.9298</time>
-        <description>/firewall_nat_edit.php made changes</description>
-      </created>
-    </rule>
   </nat>
   <filter>
     <rule>

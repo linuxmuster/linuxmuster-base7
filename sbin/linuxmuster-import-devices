@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20210803
+# 20211219
 #
 
 import configparser
@@ -24,10 +24,12 @@ from functions import getStartconfPartnr, getStartconfPartlabel, getSubnetArray
 from functions import isValidHostIpv4, getLinboVersion, printScript, readTextfile
 from functions import setGlobalStartconfOption, writeTextfile
 
+
 def usage():
     print('Usage: linuxmuster-import-devices [options]')
     print(' [options] may be:')
     print(' -s <schoolname>,   --school=<schoolname>   : Select a school other than default-school.')
+
 
 # read commandline arguments
 # get cli args
@@ -35,7 +37,7 @@ try:
     opts, args = getopt.getopt(sys.argv[1:], "s:", ["school="])
 except getopt.GetoptError as err:
     # print help information and exit:
-    print(err) # will print something like "option -a not recognized"
+    print(err)  # will print something like "option -a not recognized"
     usage()
     sys.exit(2)
 
@@ -51,10 +53,10 @@ for o, a in opts:
 devices = constants.WIMPORTDATA
 
 # read INIFILE
-setup = configparser.ConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
+setup = configparser.ConfigParser(delimiters=(
+    '='), inline_comment_prefixes=('#', ';'))
 setup.read(constants.SETUPINI)
 serverip = setup.get('setup', 'serverip')
-opsiip = setup.get('setup', 'opsiip')
 domainname = setup.get('setup', 'domainname')
 
 # start message
@@ -101,7 +103,8 @@ def doGrubCfg(startconf, group, kopts):
     rc, content = readTextfile(globaltpl)
     if not rc:
         return 'error!'
-    replace_list = [('@@group@@', group), ('@@cachelabel@@', cachelabel), ('@@cacheroot@@', cacheroot), ('@@kopts@@', kopts)]
+    replace_list = [('@@group@@', group), ('@@cachelabel@@', cachelabel),
+                    ('@@cacheroot@@', cacheroot), ('@@kopts@@', kopts)]
     for item in replace_list:
         content = content.replace(item[0], item[1])
     rc = writeTextfile(grubcfg, content, 'w')
@@ -124,10 +127,12 @@ def doGrubCfg(startconf, group, kopts):
         if not rc:
             return 'error!'
         replace_list = [('@@group@@', group), ('@@cachelabel@@', cachelabel),
-            ('@@cacheroot@@', cacheroot), ('@@osname@@', osname),
-            ('@@osnr@@', osnr), ('@@ostype@@', ostype), ('@@oslabel@@', oslabel),
-            ('@@osroot@@', osroot), ('@@partnr@@', partnr), ('@@kernel@@', kernel),
-            ('@@initrd@@', initrd), ('@@kopts@@', kopts), ('@@append@@', kappend)]
+                        ('@@cacheroot@@', cacheroot), ('@@osname@@', osname),
+                        ('@@osnr@@', osnr), ('@@ostype@@',
+                                             ostype), ('@@oslabel@@', oslabel),
+                        ('@@osroot@@', osroot), ('@@partnr@@',
+                                                 partnr), ('@@kernel@@', kernel),
+                        ('@@initrd@@', initrd), ('@@kopts@@', kopts), ('@@append@@', kappend)]
         for item in replace_list:
             content = content.replace(item[0], str(item[1]))
         rc = writeTextfile(grubcfg, content, 'a')
@@ -147,14 +152,16 @@ def doLinboStartconf(group):
             msg1 = 'present'
     else:
         msg1 = 'not yet configured!'
-        subprocess.call('cp ' + constants.LINBODIR + '/start.conf ' + startconf, shell=True)
+        subprocess.call('cp ' + constants.LINBODIR
+                        + '/start.conf ' + startconf, shell=True)
     # read values from start.conf
     group_s = getStartconfOption(startconf, 'LINBO', 'Group')
     serverip_s = getStartconfOption(startconf, 'LINBO', 'Server')
     kopts_s = getStartconfOption(startconf, 'LINBO', 'KernelOptions')
     # get alternative server ip from kernel options
     try:
-        serverip_k = re.findall(r'server=[^ ]*', kopts_s, re.IGNORECASE)[0].split('=')[1]
+        serverip_k = re.findall(
+            r'server=[^ ]*', kopts_s, re.IGNORECASE)[0].split('=')[1]
     except Exception as error:
         # print(error)
         serverip_k = None
@@ -191,26 +198,10 @@ def doLinboStartconf(group):
     printScript("  {: <15} | {: <20} | {: <20}".format(*row))
 
 
-# opsi
-def doOpsi():
-    printScript('', 'begin')
-    printScript('Working on opsi integration')
-    sshcmd = 'ssh -oNumberOfPasswordPrompts=0 -oStrictHostKeyChecking=no'
-    rsynccmd = 'rsync -e "' + sshcmd + '"'
-    # upload workstations file
-    subprocess.call(rsynccmd + ' ' + constants.WIMPORTDATA + ' ' + opsiip + ':' + constants.OPSIWSDATA, shell=True)
-    # execute script
-    subprocess.call(sshcmd + ' ' + opsiip + ' ' + constants.OPSIWSIMPORT + ' --quiet', shell=True)
-    # download opsi host keys
-    subprocess.call(rsynccmd + ' ' + opsiip + ':' + constants.OPSIPCKEYS + ' ' + constants.LINBOOPSIKEYS, shell=True)
-    subprocess.call('chmod 600 ' + constants.LINBOOPSIKEYS, shell=True)
-
-
 # write dhcp subnet devices config
 def writeDhcpDevicesConfig(school='default-school'):
     printScript('', 'begin')
     printScript('Working on dhcp configuration for devices')
-    opsiip = getSetupValue('opsiip')
     host_decl_tpl = """host @@hostname@@ {
   option host-name "@@hostname@@";
   hardware ethernet @@mac@@;
@@ -234,7 +225,7 @@ def writeDhcpDevicesConfig(school='default-school'):
                 subnet = item[0]
                 # iterate over devices per subnet
                 headline = False
-                for device_array in getDevicesArray(fieldnrs='1,2,3,4,7,8,10',subnet=subnet,stype=True, school=school):
+                for device_array in getDevicesArray(fieldnrs='1,2,3,4,7,8,10', subnet=subnet, stype=True, school=school):
                     if not headline:
                         # write corresponding subnet as a comment
                         if subnet == 'DHCP':
@@ -251,9 +242,11 @@ def writeDhcpDevicesConfig(school='default-school'):
                         computertype = computertype[0:15]
                     # format row in columns for output
                     row = [hostname, ip, computertype, pxeflag, systemtype]
-                    printScript("  {: <15} | {: <15} | {: <15} | {: <1} | {: <6}".format(*row))
+                    printScript(
+                        "  {: <15} | {: <15} | {: <15} | {: <1} | {: <6}".format(*row))
                     # begin host declaration
-                    host_decl = host_decl_tpl.replace('@@mac@@', mac).replace('@@hostname@@', hostname)
+                    host_decl = host_decl_tpl.replace(
+                        '@@mac@@', mac).replace('@@hostname@@', hostname)
                     # fixed ip
                     if ip != 'DHCP':
                         host_decl = host_decl + '  fixed-address ' + ip + ';\n'
@@ -261,23 +254,14 @@ def writeDhcpDevicesConfig(school='default-school'):
                     if int(pxeflag) != 0:
                         # get grub bootimage dependend to group's systemtype in start.conf
                         bootimage = getBootImage(systemtype)
-                        # opsi pxe boot
-                        if pxeflag == '3':
-                            if bootimage is not None and 'efi' in bootimage:
-                                bootimage = constants.OPSIEFIPXEFILE
-                            else:
-                                bootimage = constants.OPSIPXEFILE
-                            host_decl = host_decl + '  filename "' + bootimage + '";\n'
-                            host_decl = host_decl + '  next-server ' + opsiip + ';\n'
                         # linbo pxe boot
-                        else:
-                            host_decl = host_decl + '  option extensions-path "' + group + '";\n'
-                            if 'filename' not in dhcpopts and bootimage is not None:
-                                host_decl = host_decl + '  filename "boot/grub/' + bootimage + '";\n'
-                            # dhcp options have to be 5 chars minimum to get processed
-                            if len(dhcpopts) > 4:
-                                for opt in dhcpopts.split(','):
-                                    host_decl = host_decl + '  ' + opt + ';\n'
+                        host_decl = host_decl + '  option extensions-path "' + group + '";\n'
+                        if 'filename' not in dhcpopts and bootimage is not None:
+                            host_decl = host_decl + '  filename "boot/grub/' + bootimage + '";\n'
+                        # dhcp options have to be 5 chars minimum to get processed
+                        if len(dhcpopts) > 4:
+                            for opt in dhcpopts.split(','):
+                                host_decl = host_decl + '  ' + opt + ';\n'
                     # finish host declaration
                     host_decl = host_decl + '}\n'
                     # finallý write host declaration
@@ -286,7 +270,8 @@ def writeDhcpDevicesConfig(school='default-school'):
         # open devices.conf for append
         with open(baseConfigFilePath, 'a') as outfile:
             for devicesConf in listdir(devicesConfigBasedir):
-                outfile.write("include \"{0}/{1}\";\n".format(devicesConfigBasedir, devicesConf))
+                outfile.write(
+                    "include \"{0}/{1}\";\n".format(devicesConfigBasedir, devicesConf))
 
     except Exception as error:
         print(error)
@@ -296,8 +281,10 @@ def writeDhcpDevicesConfig(school='default-school'):
 
 # delete old config links
 # start.conf-ip
-subprocess.call('find ' + constants.LINBODIR + ' -name start.conf-\* -type l -exec rm {} \;', shell=True)
-subprocess.call('find ' + constants.LINBOGRUBDIR + '/hostcfg -name \*.cfg -type l -exec rm {} \;', shell=True)
+subprocess.call('find ' + constants.LINBODIR
+                + ' -name start.conf-\* -type l -exec rm {} \;', shell=True)
+subprocess.call('find ' + constants.LINBOGRUBDIR
+                + '/hostcfg -name \*.cfg -type l -exec rm {} \;', shell=True)
 
 
 # write dhcp devices.conf
@@ -338,20 +325,17 @@ for device_array in getDevicesArray(fieldnrs='1,2,3,4,10', subnet='all', pxeflag
 # write pxe configs for collected groups
 printScript('', 'begin')
 printScript('Working on linbo/grub configuration for groups:')
-printScript("  {: <15} | {: <20} | {: <20}".format(*[' ', 'linbo start.conf', 'grub cfg']))
+printScript("  {: <15} | {: <20} | {: <20}".format(
+    *[' ', 'linbo start.conf', 'grub cfg']))
 printScript("  {: <15}+{: <20}+{: <20}".format(*['-'*16, '-'*22, '-'*21]))
 for group in pxe_groups:
     doLinboStartconf(group)
 
 
-# do opsi stuff if configured
-if opsiip != '':
-    doOpsi()
-
-
 # execute post hooks
 hookpath = constants.POSTDEVIMPORT
-hookscripts = [f for f in listdir(hookpath) if isfile(join(hookpath, f)) and os.access(join(hookpath, f), os.X_OK)]
+hookscripts = [f for f in listdir(hookpath) if isfile(
+    join(hookpath, f)) and os.access(join(hookpath, f), os.X_OK)]
 if len(hookscripts) > 0:
     printScript('', 'begin')
     printScript('Executing post hooks:')
@@ -373,7 +357,8 @@ time.sleep(1)
 rc = 0
 msg = '* ' + service + ' '
 printScript(msg, '', False, False, True)
-state = subprocess.check_call('systemctl is-active --quiet ' + service, shell=True)
+state = subprocess.check_call(
+    'systemctl is-active --quiet ' + service, shell=True)
 if state == 0:
     printScript(' OK!', '', True, True, False, len(msg))
 else:

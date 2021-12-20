@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20210731
+# 20211219
 #
 
 # don't change this file
@@ -63,24 +63,11 @@ LINBOLOGDIR = LOGDIR + '/linbo'
 LINBOSHAREDIR = SHAREDIR + '/linbo'
 LINBOTPLDIR = LINBOSHAREDIR + '/templates'
 LINBOCACHEDIR = CACHEDIR + '/linbo'
-LINBOOPSIKEYS = LINBODIR + '/opsikeys'
 DHCPDEVCONF = '/etc/dhcp/devices.conf'
 DHCPSUBCONF = '/etc/dhcp/subnets.conf'
 NETCFG = '/etc/netplan/01-netcfg.yaml'
 MANAGEDSTR = '### managed by linuxmuster.net ###'
 ROOTPW = 'Muster!'
-
-# opsi stuff
-OPSISYSDIR = '/etc/opsi'
-OPSIPCKEYS = OPSISYSDIR + '/pckeys'
-OPSILMNDIR = '/var/lib/linuxmuster-opsi'
-OPSILMNSETTINGS = OPSILMNDIR + '/settings'
-OPSIWSDATA = OPSILMNDIR + '/workstations'
-OPSIWSIMPORT = '/usr/sbin/linuxmuster-opsi --wsimport'
-OPSISETUP = '/usr/sbin/linuxmuster-opsi --setup'
-OPSICLIENTDIR = '/var/lib/opsi/config/clients'
-OPSIPXEFILE = 'linux/pxelinux.0'
-OPSIEFIPXEFILE = 'linux/pxelinux.cfg/elilo.efi'
 
 # grub stuff
 GRUBCOMMONMODS = 'all_video boot chain configfile cpuid echo net ext2 extcmd fat \
