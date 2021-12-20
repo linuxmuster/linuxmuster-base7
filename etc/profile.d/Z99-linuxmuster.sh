@@ -3,7 +3,7 @@
 #
 # thomas@linuxmuster.net
 # credits to joanna
-# 20211125
+# 20211220
 #
 
 upSeconds="$(/usr/bin/cut -d. -f1 /proc/uptime)"
@@ -14,7 +14,7 @@ days=$((${upSeconds}/86400))
 UPTIME=`printf "%d days, %02dh%02dm%02ds" "$days" "$hours" "$mins" "$sec"`
 MEM=`free -m | awk 'NR==2{printf "%s/%sMB (%.2f", $3,$2,$3*100/$2 }'`
 IPint=`ip a | grep glo | awk '{print $2}' | head -1 | cut -f1 -d/`
-IPext=`wget -q -O - http://icanhazip.com/ | tail`
+IPext=`wget -q -O - http://ipinfo.io/ip | tail`
 VRESIONbase7=`dpkg --status linuxmuster-base7 | grep ^Version | awk '{print $2}'`
 VERSIONlinbo7=`dpkg --status linuxmuster-linbo7 | grep ^Version | awk '{print $2}'`
 VERSIONwebui7=`dpkg --status linuxmuster-webui7 | grep ^Version | awk '{print $2}'`
