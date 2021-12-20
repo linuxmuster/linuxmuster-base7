@@ -2,7 +2,7 @@
 #
 # create a bunch of testusers
 # thomas@linuxmuster.net
-# 20181005
+# 20211218
 #
 
 import configparser
@@ -21,11 +21,13 @@ from subprocess import Popen, PIPE, STDOUT
 starget = constants.DEFAULTSCHOOL + '/students.csv'
 ttarget = constants.DEFAULTSCHOOL + '/teachers.csv'
 
+
 def usage():
     print('Usage: create-testusers.py [options]')
     print(' [options] may be:')
     print(' -f, --force   : Ignore existing users.')
     print(' -h, --help    : Print this help.')
+
 
 # get cli args
 force = False
@@ -33,7 +35,7 @@ try:
     opts, args = getopt.getopt(sys.argv[1:], "fh", ["force", "help"])
 except getopt.GetoptError as err:
     # print help information and exit:
-    print(err) # will print something like "option -a not recognized"
+    print(err)  # will print something like "option -a not recognized"
     usage()
     sys.exit(2)
 for o, a in opts:
@@ -113,8 +115,10 @@ except:
 msg = 'Get usernames '
 printScript(msg, '', False, False, True)
 try:
-    students = os.popen("sophomorix-query --schoolbase default-school --student --user-minimal | grep [1-9]: | awk '{ print $2 }'").read().split('\n')
-    teachers = os.popen("sophomorix-query --schoolbase default-school --teacher --user-minimal | grep [1-9]: | awk '{ print $2 }'").read().split('\n')
+    students = os.popen(
+        "sophomorix-query --schoolbase default-school --student --user-minimal | grep [1-9]: | awk '{ print $2 }'").read().split('\n')
+    teachers = os.popen(
+        "sophomorix-query --schoolbase default-school --teacher --user-minimal | grep [1-9]: | awk '{ print $2 }'").read().split('\n')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -130,7 +134,8 @@ for user in students + teachers:
     msg = ' * ' + user + ' '
     printScript(msg, '', False, False, True)
     try:
-        sambaTool('user setpassword ' + user + ' --newpassword="' + pw + '"')
+        subProc('sophomorix-passwd --user ' + user
+                + ' --pass "' + pw + '"', logfile)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
