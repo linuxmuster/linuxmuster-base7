@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20211219
+# 20211221
 #
 
 # don't change this file
@@ -20,6 +20,7 @@ WIMPORTDATA = DEFAULTSCHOOL + '/devices.csv'
 SYSVOLDIR = '/var/lib/samba/sysvol'
 SYSVOLTLSDIR = SYSVOLDIR + '/@@domainname@@/tls'
 SSLDIR = SYSDIR + '/ssl'
+SSLCNF = SSLDIR + '/server_cert_ext.cnf'
 CAKEY = SSLDIR + '/cakey.pem'
 CACERT = SSLDIR + '/cacert.pem'
 CACERTCRT = SSLDIR + '/cacert.crt'

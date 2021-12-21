@@ -2,7 +2,7 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20211219
+# 20211221
 #
 
 from __future__ import print_function
@@ -35,15 +35,12 @@ try:
     servername = setup.get('setup', 'servername')
     domainname = setup.get('setup', 'domainname')
     sambadomain = setup.get('setup', 'sambadomain')
-    realm = setup.get('setup', 'realm')
     skipfw = setup.getboolean('setup', 'skipfw')
+    realm = setup.get('setup', 'realm')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
-
-# key & cert files to create
-certlist = [servername, 'firewall']
 
 # basic subject string
 subjbase = '-subj /O="' + schoolname + '"/OU=' + sambadomain + '/CN='
@@ -85,47 +82,63 @@ except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# iterate through certlist
-for item in certlist:
-    # skip firewall cert
-    if item == 'firewall' and skipfw:
-        continue
-    fqdn = item + '.' + domainname
-    csrfile = constants.SSLDIR + '/' + item + '.csr'
-    keyfile = constants.SSLDIR + '/' + item + '.key.pem'
-    certfile = constants.SSLDIR + '/' + item + '.cert.pem'
+# create server cert
+fqdn = servername + '.' + domainname
+csrfile = constants.SSLDIR + '/' + servername + '.csr'
+keyfile = constants.SSLDIR + '/' + servername + '.key.pem'
+certfile = constants.SSLDIR + '/' + servername + '.cert.pem'
+#subj = subjbase + fqdn + '/subjectAltName=' + fqdn + '/'
+subj = '-subj /CN=' + fqdn + '/'
+msg = 'Creating private ' + servername + ' key & certificate '
+printScript(msg, '', False, False, True)
+try:
+    subProc('openssl genrsa -out ' + keyfile + ' 2048', logfile)
+    subProc('openssl req -batch ' + subj + ' -new -key '
+            + keyfile + ' -out ' + csrfile, logfile)
+    subProc('openssl x509 -req -in ' + csrfile + ' -CA ' + constants.CACERT + passin
+            + ' -CAkey ' + constants.CAKEY + ' -CAcreateserial -out ' + certfile + shadays
+            + ' -extfile ' + constants.SSLCNF, logfile)
+    # cert links for cups on server
+    subProc('ln -sf ' + certfile
+            + ' /etc/cups/ssl/server.crt', logfile)
+    subProc('ln -sf ' + keyfile + ' /etc/cups/ssl/server.key', logfile)
+    subProc('service cups restart', logfile)
+    printScript('Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# create firewall cert
+if not skipfw:
+    fqdn = 'firewall.' + domainname
+    csrfile = constants.SSLDIR + '/firewall.csr'
+    keyfile = constants.SSLDIR + '/firewall.key.pem'
+    certfile = constants.SSLDIR + '/firewall.cert.pem'
     b64keyfile = keyfile + '.b64'
     b64certfile = certfile + '.b64'
-    subj = subjbase + fqdn + '/subjectAltName=' + fqdn + '/'
-    msg = 'Creating private ' + item + ' key & certificate '
+    #subj = subjbase + fqdn + '/subjectAltName=' + fqdn + '/'
+    subj = '-subj /CN=' + fqdn + '/'
+    msg = 'Creating private firewall key & certificate '
     printScript(msg, '', False, False, True)
     try:
         subProc('openssl genrsa -out ' + keyfile + ' 2048', logfile)
         subProc('openssl req -batch ' + subj + ' -new -key '
                 + keyfile + ' -out ' + csrfile, logfile)
         subProc('openssl x509 -req -in ' + csrfile + ' -CA ' + constants.CACERT + passin
-                + ' -CAkey ' + constants.CAKEY + ' -CAcreateserial -out ' + certfile + shadays, logfile)
-        # cert links for cups on server
-        if item == servername:
-            subProc('ln -sf ' + certfile
-                    + ' /etc/cups/ssl/server.crt', logfile)
-            subProc('ln -sf ' + keyfile + ' /etc/cups/ssl/server.key', logfile)
-            subProc('service cups restart', logfile)
-        if item == 'firewall':
-            # create base64 encoded version for opnsense's config.xml
-            subProc('base64 ' + keyfile + ' > ' + b64keyfile, logfile)
-            subProc('base64 ' + certfile + ' > ' + b64certfile, logfile)
-            rc = replaceInFile(b64keyfile, '\n', '')
-            rc = replaceInFile(b64certfile, '\n', '')
+                + ' -CAkey ' + constants.CAKEY + ' -CAcreateserial -out ' + certfile + shadays
+                + ' -extfile ' + constants.SSLCNF, logfile)
+        # create base64 encoded version for opnsense's config.xml
+        subProc('base64 ' + keyfile + ' > ' + b64keyfile, logfile)
+        subProc('base64 ' + certfile + ' > ' + b64certfile, logfile)
+        rc = replaceInFile(b64keyfile, '\n', '')
+        rc = replaceInFile(b64certfile, '\n', '')
+        # concenate firewall fullchain cert
+        subProc('cat ' + constants.FWFULLCHAIN.replace('.fullchain.', '.cert.')
+                + ' ' + constants.CACERT + ' > ' + constants.FWFULLCHAIN, logfile)
         printScript('Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
-
-# concenate firewall fullchain cert
-if not skipfw:
-    subProc('cat ' + constants.FWFULLCHAIN.replace('.fullchain.', '.cert.')
-            + ' ' + constants.CACERT + ' > ' + constants.FWFULLCHAIN, logfile)
 
 # copy cacert.pem to sysvol for clients
 sysvoltlsdir = constants.SYSVOLTLSDIR.replace('@@domainname@@', domainname)
