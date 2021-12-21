@@ -1,9 +1,12 @@
 linuxmuster-base7 (7.1.2-0) lmn71; urgency=low
 
+  * Fix #126: /etc/profile.d/Z99-linuxmuster.sh icanhazip.com blocked by Belwue Filter.
   * Fix #127: remove finally all deprecated docker, mail and opsi setup code.
-  * several further function & setup fixes.
+  * Fix #128: OPNSense Certificate Problem.
+  * further function & setup fixes and improvements.
+  * linuxmuster-opnsense-reset: fix waiting for firewall.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 20 Dec 2021 12:37:00 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 21 Dec 2021 16:35:00 +0100
 
 linuxmuster-base7 (7.1.1-1) lmn71; urgency=low
 
