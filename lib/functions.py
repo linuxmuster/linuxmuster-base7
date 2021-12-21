@@ -3,9 +3,16 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20211216
+# 20211221
 #
 
+import warnings
+from subprocess import Popen, PIPE
+from shutil import copyfile
+from netaddr import IPNetwork, IPAddress
+from ldap3 import Server, Connection, ALL
+from IPy import IP
+from contextlib import closing
 import codecs
 import configparser
 import constants
@@ -24,13 +31,11 @@ import socket
 import string
 import subprocess
 import time
+import urllib3
+import warnings
 
-from contextlib import closing
-from IPy import IP
-from ldap3 import Server, Connection, ALL
-from netaddr import IPNetwork, IPAddress
-from shutil import copyfile
-from subprocess import Popen, PIPE
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+warnings.filterwarnings(action='ignore', module='.*paramiko.*')
 
 
 # append stdout to logfile
@@ -134,18 +139,16 @@ def sambaTool(options, logfile=None):
     rc = subProc(cmd, logfile)
     return rc
 
+
 # print with or without linefeed
-
-
 def printLf(msg, lf):
     if lf == True:
         print(msg)
     else:
         print(msg, end='', flush=True)
 
+
 # print script output
-
-
 def printScript(msg='', header='', lf=True, noleft=False, noright=False, offset=0):
     linelen = 78
     borderlen = 4
@@ -474,12 +477,12 @@ def firewallApi(request, path, data=''):
     headers = {'content-type': 'application/json'}
     url = 'https://firewall.' + domainname + '/api' + path
     if request == 'get':
-        req = requests.get(url, auth=(apikey, apisecret))
+        req = requests.get(url, auth=(apikey, apisecret), verify=False)
     elif request == 'post' and data == '':
-        req = requests.post(url, auth=(apikey, apisecret))
+        req = requests.post(url, auth=(apikey, apisecret), verify=False)
     elif request == 'post' and data != '':
         req = requests.post(url, data=data, auth=(
-            apikey, apisecret), headers=headers)
+            apikey, apisecret), headers=headers, verify=False)
     else:
         return None
     # get response
@@ -491,9 +494,8 @@ def firewallApi(request, path, data=''):
         print(req.text)
         return None
 
+
 # download per sftp
-
-
 def getSftp(ip, remotefile, localfile, secret=''):
     # establish connection
     try:
