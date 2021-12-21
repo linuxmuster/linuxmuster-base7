@@ -2,7 +2,7 @@
 #
 # reset opnsense configuration to setup state
 # thomas@linuxmuster.net
-# 20200312
+# 20211221
 #
 
 import constants
@@ -30,6 +30,8 @@ if skipfw == 'True':
 infotxt = 'Sets the firewall to the state after setup.\n\
 Custom adjustments made since then are lost.\n\
 Note: The firewall will be restartet during the process.'
+
+
 def usage():
     print('Usage: linuxmuster-opnsense-reset [options]')
     print(infotxt)
@@ -98,7 +100,10 @@ rc = os.system('python3 ' + constants.SETUPDIR + '/m_firewall.py')
 
 
 # wait for firewall
-if not waitForFw(wait=60):
+try:
+    waitForFw(wait=30)
+except Exception as error:
+    print(error)
     sys.exit(1)
 
 
