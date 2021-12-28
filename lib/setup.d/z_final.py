@@ -2,9 +2,10 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20200418
+# 20211228
 #
 
+import configparser
 import constants
 import os
 import re
@@ -52,7 +53,8 @@ try:
     schoolname = getSetupValue('schoolname')
     rc, content = readTextfile(constants.SCHOOLCONF)
     # need to use regex because sophomorix config files do not do not comply with the ini file standard
-    content = re.sub(r'SCHOOL_LONGNAME=.*\n', 'SCHOOL_LONGNAME=' + schoolname + '\n', content)
+    content = re.sub(r'SCHOOL_LONGNAME=.*\n',
+                     'SCHOOL_LONGNAME=' + schoolname + '\n', content)
     rc = writeTextfile(constants.SCHOOLCONF, content, 'w')
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
@@ -96,4 +98,20 @@ try:
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))
+    sys.exit(1)
+
+# admin password not more needed in setup.ini
+msg = 'Removing admin password from setup.ini '
+printScript(msg, '', False, False, True)
+setupini = constants.SETUPINI
+try:
+    setup = configparser.RawConfigParser(
+        delimiters=('='), inline_comment_prefixes=('#', ';'))
+    setup.read(setupini)
+    setup.set('setup', 'adminpw', '')
+    with open(setupini, 'w') as INIFILE:
+        setup.write(INIFILE)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)

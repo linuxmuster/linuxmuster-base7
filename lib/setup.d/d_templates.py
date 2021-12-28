@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20200327
+# 20211228
 #
 
 import configparser
@@ -30,10 +30,12 @@ printScript(msg, '', False, False, True)
 setupini = constants.SETUPINI
 try:
     # setupdefaults.ini
-    defaults = configparser.ConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
+    defaults = configparser.ConfigParser(
+        delimiters=('='), inline_comment_prefixes=('#', ';'))
     defaults.read(constants.DEFAULTSINI)
     # setup.ini
-    setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(
+        delimiters=('='), inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
     adminpw = setup.get('setup', 'adminpw')
     bitmask = setup.get('setup', 'bitmask')
@@ -59,7 +61,8 @@ except:
 # templates, whose corresponding configfiles must not be overwritten
 do_not_overwrite = 'dhcpd.custom.conf'
 # templates, whose corresponding configfiles must not be backed up
-do_not_backup = [ 'interfaces.linuxmuster', 'dovecot.linuxmuster.conf', 'smb.conf']
+do_not_backup = ['interfaces.linuxmuster',
+                 'dovecot.linuxmuster.conf', 'smb.conf']
 
 printScript('Processing config templates:')
 for f in os.listdir(constants.TPLDIR):
@@ -114,25 +117,20 @@ for f in os.listdir(constants.TPLDIR):
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
 
-# restart network interface
-msg = 'Network setup '
+# server prepare update
+msg = 'Server prepare update '
 printScript(msg, '', False, False, True)
 try:
-    subProc('/usr/sbin/linuxmuster-prepare -x -s -u -p server -f ' + firewallip + ' -n ' + serverip + '/' + bitmask + ' -d ' + domainname + ' -t ' + servername + ' -r ' + serverip + ' -a "' + adminpw + '"', logfile)
+    subProc('/usr/sbin/linuxmuster-prepare -x -s -u -p server -f ' + firewallip
+            + ' -n ' + serverip + '/'
+            + bitmask + ' -d ' + domainname + ' -t ' + servername + ' -r '
+            + serverip + ' -a "' + adminpw + '"', logfile)
+    # remove adminpw from logfile
+    replaceInFile(logfile, adminpw, '******')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
-
-# restart network interface
-#msg = 'Restarting network '
-#printScript(msg, '', False, False, True)
-#try:
-#    subProc('service networking restart', logfile)
-#    printScript(' Success!', '', True, True, False, len(msg))
-#except:
-#    printScript(' Failed!', '', True, True, False, len(msg))
-#    sys.exit(1)
 
 # set server time
 msg = 'Adjusting server time '

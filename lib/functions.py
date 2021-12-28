@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20211221
+# 20211228
 #
 
 import warnings
@@ -137,6 +137,9 @@ def sambaTool(options, logfile=None):
     # for debugging
     #printScript(cmd)
     rc = subProc(cmd, logfile)
+    # mask password in logfile
+    if os.path.isfile(logfile):
+        replaceInFile(logfile, adminpw, '******')
     return rc
 
 

@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.1.3-0) lmn71; urgency=low
+
+  * Fix #130: secure admin password entered during setup.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 28 Dec 2021 10:30:10 +0000
+
 linuxmuster-base7 (7.1.2-0) lmn71; urgency=low
 
   * Fix #126: /etc/profile.d/Z99-linuxmuster.sh icanhazip.com blocked by Belwue Filter.
@@ -6,7 +12,7 @@ linuxmuster-base7 (7.1.2-0) lmn71; urgency=low
   * further function & setup fixes and improvements.
   * linuxmuster-opnsense-reset: fix waiting for firewall.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 21 Dec 2021 16:35:00 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 21 Dec 2021 15:59:54 +0000
 
 linuxmuster-base7 (7.1.1-1) lmn71; urgency=low
 

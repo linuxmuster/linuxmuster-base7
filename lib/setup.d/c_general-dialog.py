@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20211219
+# 20211228
 #
 
 import constants
@@ -140,7 +140,7 @@ while True:
     if adminpw == adminpw_repeated:
         break
 
-print('Administrator password: ' + adminpw)
+# print('Administrator password: ' + adminpw)
 setup.set('setup', 'adminpw', adminpw)
 
 
@@ -148,7 +148,7 @@ setup.set('setup', 'adminpw', adminpw)
 msg = 'Writing input to setup ini file '
 printScript(msg, '', False, False, True)
 try:
-    with open(constants.SETUPINI, 'w') as INIFILE:
+    with open(setupini, 'w') as INIFILE:
         setup.write(INIFILE)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
