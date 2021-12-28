@@ -121,7 +121,7 @@ for f in os.listdir(constants.TPLDIR):
 msg = 'Server prepare update '
 printScript(msg, '', False, False, True)
 try:
-    subProc('/usr/sbin/linuxmuster-prepare -x -s -u -p server -f ' + firewallip
+    subProc('/usr/sbin/lmn71-prepare -x -s -u -p server -f ' + firewallip
             + ' -n ' + serverip + '/'
             + bitmask + ' -d ' + domainname + ' -t ' + servername + ' -r '
             + serverip + ' -a "' + adminpw + '"', logfile)
