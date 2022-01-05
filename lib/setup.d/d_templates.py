@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20211228
+# 20220105
 #
 
 import configparser
@@ -11,18 +11,10 @@ import datetime
 import os
 import sys
 
-from functions import setupComment
-from functions import backupCfg
-from functions import printScript
-from functions import readTextfile
-from functions import replaceInFile
-from functions import subProc
+from functions import backupCfg, mySetupLogfile, printScript, readTextfile
+from functions import replaceInFile, setupComment, subProc
 
-title = os.path.basename(__file__).replace('.py', '').split('_')[1]
-logfile = constants.LOGDIR + '/setup.' + title + '.log'
-
-printScript('', 'begin')
-printScript(title)
+logfile = mySetupLogfile(__file__)
 
 # read setup data
 msg = 'Reading setup data '

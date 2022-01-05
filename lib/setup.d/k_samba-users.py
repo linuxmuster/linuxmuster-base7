@@ -2,26 +2,18 @@
 #
 # create samba users & shares
 # thomas@linuxmuster.net
-# 20211228
+# 20220105
 #
 
 import configparser
 import constants
 import os
 import sys
-from functions import randomPassword
-from functions import readTextfile
-from functions import replaceInFile
-from functions import printScript
-from functions import sambaTool
-from functions import subProc
-from functions import writeTextfile
 
-title = os.path.basename(__file__).replace('.py', '').split('_')[1]
-logfile = constants.LOGDIR + '/setup.' + title + '.log'
+from functions import mySetupLogfile, printScript, randomPassword, readTextfile
+from functions import replaceInFile, sambaTool, subProc, writeTextfile
 
-printScript('', 'begin')
-printScript(title)
+logfile = mySetupLogfile(__file__)
 
 # read setup ini
 msg = 'Reading setup data '

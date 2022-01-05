@@ -2,7 +2,7 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20211221
+# 20220105
 #
 
 from __future__ import print_function
@@ -12,16 +12,10 @@ import constants
 import os
 import sys
 
-from functions import randomPassword
-from functions import replaceInFile
-from functions import printScript
-from functions import subProc
+from functions import mySetupLogfile, randomPassword, replaceInFile
+from functions import printScript, subProc
 
-title = os.path.basename(__file__).replace('.py', '').split('_')[1]
-logfile = constants.LOGDIR + '/setup.' + title + '.log'
-
-printScript('', 'begin')
-printScript(title)
+logfile = mySetupLogfile(__file__)
 
 # read setup ini
 msg = 'Reading setup data '

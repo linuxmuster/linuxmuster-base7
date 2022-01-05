@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20200418
+# 20220105
 #
 
 import configparser
@@ -10,13 +10,10 @@ import constants
 import datetime
 import os
 import sys
-from functions import randomPassword, printScript, subProc, writeTextfile
+from functions import mySetupLogfile, printScript, randomPassword
+from functions import subProc, writeTextfile
 
-title = os.path.basename(__file__).replace('.py', '').split('_')[1]
-logfile = constants.LOGDIR + '/setup.' + title + '.log'
-
-printScript('', 'begin')
-printScript(title)
+logfile = mySetupLogfile(__file__)
 
 # stop services
 msg = 'Stopping samba services '

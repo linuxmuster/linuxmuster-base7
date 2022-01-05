@@ -451,6 +451,13 @@ def modIni(inifile, section, option, value):
         return False
 
 
+# return my setup logfile path
+def mySetupLogfile(fpath):
+    myname = os.path.splitext(os.path.basename(fpath))[0].split('_')[1]
+    logfile = constants.LOGDIR + '/setup.' + myname + '.log'
+    return logfile
+
+
 # wait for firewall to come up, after timeout seconds loop will be canceled
 def waitForFw(timeout=300, wait=0):
     printScript('Waiting for opnsense to come up')

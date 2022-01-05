@@ -2,7 +2,7 @@
 #
 # linbo setup
 # thomas@linuxmuster.net
-# 20211216
+# 20220105
 #
 
 import configparser
@@ -12,21 +12,11 @@ import re
 import subprocess
 import sys
 
-from functions import setupComment
-from functions import backupCfg
-from functions import readTextfile
-from functions import writeTextfile
-from functions import printScript
-from functions import modIni
-from functions import isValidPassword
-from functions import enterPassword
-from functions import subProc
+from functions import backupCfg, enterPassword, isValidPassword, mySetupLogfile
+from functions import modIni, printScript, readTextfile, setupComment
+from functions import subProc, writeTextfile
 
-title = os.path.basename(__file__).replace('.py', '').split('_')[1]
-logfile = constants.LOGDIR + '/setup.' + title + '.log'
-
-printScript('', 'begin')
-printScript(title)
+logfile = mySetupLogfile(__file__)
 
 # read INIFILE, get schoolname
 msg = 'Reading setup data '

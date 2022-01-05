@@ -2,7 +2,7 @@
 #
 # patch fstab with mount options
 # thomas@linuxmuster.net
-# 20190916
+# 20220105
 #
 
 import constants
@@ -10,16 +10,11 @@ import os
 import reconfigure
 import sys
 
+from functions import mySetupLogfile, printScript, subProc
 from reconfigure.configs import FSTabConfig
 from reconfigure.items.fstab import FilesystemData
-from functions import printScript
-from functions import subProc
 
-title = os.path.basename(__file__).replace('.py', '').split('_')[1]
-logfile = constants.LOGDIR + '/setup.' + title + '.log'
-
-printScript('', 'begin')
-printScript(title)
+logfile = mySetupLogfile(__file__)
 
 # patch fstab with mount options
 config = FSTabConfig(path='/etc/fstab')

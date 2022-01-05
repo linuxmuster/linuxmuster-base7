@@ -2,7 +2,7 @@
 #
 # linuxmuster-setup
 # thomas@linuxmuster.net
-# 20211219
+# 20220105
 #
 
 import constants
@@ -139,12 +139,15 @@ else:
 setup_modules = os.listdir(constants.SETUPDIR)
 setup_modules.remove('__pycache__')
 setup_modules.sort()
-for f in setup_modules:
+for module_file in setup_modules:
     # skip dialog in unattended mode
-    if (unattended and 'dialog.py' in f):
+    if (unattended and 'dialog.py' in module_file):
         continue
+    # print module name
+    module_name = os.path.basename(os.path.splitext(module_file)[0]).split('_')[1]
+    printScript('', 'begin')
+    printScript(module_name)
     # execute module
-    m = os.path.splitext(f)[0]
-    importlib.import_module(m)
+    importlib.import_module(module_file.replace('.py', ''))
 
 printScript(os.path.basename(__file__), 'end')

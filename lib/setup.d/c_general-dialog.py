@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20211228
+# 20220105
 #
 
 import constants
@@ -11,20 +11,12 @@ import sys
 import configparser
 
 from dialog import Dialog
-from functions import detectedInterfaces
-from functions import isValidHostname
-from functions import isValidDomainname
-from functions import isValidHostIpv4
-from functions import isValidPassword
-from functions import printScript
-from functions import subProc
+from functions import detectedInterfaces, isValidHostname, isValidDomainname
+from functions import isValidHostIpv4, isValidPassword, mySetupLogfile
+from functions import printScript, subProc
 from IPy import IP
 
-title = os.path.basename(__file__).replace('.py', '').split('_')[1]
-logfile = constants.LOGDIR + '/setup.' + title + '.log'
-
-printScript('', 'begin')
-printScript(title)
+logfile = mySetupLogfile(__file__)
 
 # read setup ini
 msg = 'Reading setup data '

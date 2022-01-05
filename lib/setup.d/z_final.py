@@ -2,7 +2,7 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20211228
+# 20220105
 #
 
 import configparser
@@ -11,14 +11,10 @@ import os
 import re
 import sys
 
-from functions import getSetupValue, printScript, readTextfile, subProc
-from functions import waitForFw, writeTextfile
+from functions import getSetupValue, mySetupLogfile, printScript, readTextfile
+from functions import subProc, waitForFw, writeTextfile
 
-title = os.path.basename(__file__).replace('.py', '').split('_')[1]
-logfile = constants.LOGDIR + '/setup.' + title + '.log'
-
-printScript('', 'begin')
-printScript(title)
+logfile = mySetupLogfile(__file__)
 
 # remove temporary files
 if os.path.isfile('/tmp/setup.ini'):

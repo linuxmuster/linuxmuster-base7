@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20211219
+# 20220105
 #
 
 import bcrypt
@@ -11,25 +11,13 @@ import datetime
 import os
 import shutil
 import sys
+
 from bs4 import BeautifulSoup
-from functions import getFwConfig
-from functions import getSetupValue
-from functions import isValidHostIpv4
-from functions import modIni
-from functions import printScript
-from functions import putFwConfig
-from functions import putSftp
-from functions import randomPassword
-from functions import readTextfile
-from functions import sshExec
-from functions import subProc
-from functions import writeTextfile
+from functions import getFwConfig, getSetupValue, isValidHostIpv4, mySetupLogfile
+from functions import modIni, printScript, putFwConfig, putSftp, randomPassword
+from functions import readTextfile, sshExec, subProc, writeTextfile
 
-title = os.path.basename(__file__).replace('.py', '').split('_')[1]
-logfile = constants.LOGDIR + '/setup.' + title + '.log'
-
-printScript('', 'begin')
-printScript(title)
+logfile = mySetupLogfile(__file__)
 
 
 # main routine

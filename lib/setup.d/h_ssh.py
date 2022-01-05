@@ -2,7 +2,7 @@
 #
 # setup ssh host keys
 # thomas@linuxmuster.net
-# 20211216
+# 20220105
 #
 
 import configparser
@@ -11,20 +11,11 @@ import os
 import re
 import sys
 
-from functions import backupCfg
-from functions import checkSocket
-from functions import isValidHostIpv4
-from functions import printScript
-from functions import replaceInFile
-from functions import setupComment
-from functions import subProc
-from functions import modIni
+from functions import backupCfg, checkSocket, isValidHostIpv4, modIni
+from functions import mySetupLogfile, printScript, replaceInFile
+from functions import setupComment, subProc
 
-title = os.path.basename(__file__).replace('.py', '').split('_')[1]
-logfile = constants.LOGDIR + '/setup.' + title + '.log'
-
-printScript('', 'begin')
-printScript(title)
+logfile = mySetupLogfile(__file__)
 
 # read setup ini
 msg = 'Reading setup data '

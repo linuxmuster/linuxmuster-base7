@@ -2,26 +2,19 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20211219
+# 20220105
 #
 
 import configparser
 import constants
 import os
 import sys
-from functions import printScript
-from functions import isValidHostname
-from functions import isValidDomainname
-from functions import isValidHostIpv4
-from functions import randomPassword
-from functions import subProc
+
+from functions import isValidHostname, isValidDomainname, isValidHostIpv4
+from functions import mySetupLogfile, printScript, randomPassword, subProc
 from IPy import IP
 
-title = os.path.basename(__file__).replace('.py', '').split('_')[1]
-logfile = constants.LOGDIR + '/setup.' + title + '.log'
-
-printScript('', 'begin')
-printScript(title)
+logfile = mySetupLogfile(__file__)
 
 # read ini files
 setup = configparser.RawConfigParser(

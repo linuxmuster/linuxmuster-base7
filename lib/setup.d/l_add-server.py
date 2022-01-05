@@ -2,7 +2,7 @@
 #
 # add additional servers to devices.csv
 # thomas@linuxmuster.net
-# 20211219
+# 20220105
 #
 
 import configparser
@@ -12,20 +12,12 @@ import random
 import re
 import sys
 
-from functions import printScript
-from functions import readTextfile
-from functions import writeTextfile
-from functions import isValidHostIpv4
-from functions import isValidMac
-from functions import subProc
+from functions import isValidHostIpv4, isValidMac, mySetupLogfile, printScript
+from functions import readTextfile, subProc, writeTextfile
 from subprocess import Popen, PIPE
 from uuid import getnode
 
-title = os.path.basename(__file__).replace('.py', '').split('_')[1]
-logfile = constants.LOGDIR + '/setup.' + title + '.log'
-
-printScript('', 'begin')
-printScript(title)
+logfile = mySetupLogfile(__file__)
 
 # read setup.ini
 msg = 'Reading setup data '
