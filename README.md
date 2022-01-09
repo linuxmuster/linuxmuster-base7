@@ -3,14 +3,17 @@
 </h1>
 
 <p align="center">
-    <a href="https://raw.githubusercontent.com/ajenti/ajenti/master/LICENSE">
-        <img src="https://img.shields.io/badge/Python-v3-green" alt="Badge License" />
+    <a href="https://github.com/linuxmuster/linuxmuster-base7/releases/latest">
+        <img src="https://img.shields.io/github/v/release/linuxmuster/linuxmuster-base7?logo=github&logoColor=white" alt="GitHub release"/>
     </a>
     <a href="https://codeclimate.com/github/linuxmuster/linuxmuster-base7/maintainability">
         <img src="https://api.codeclimate.com/v1/badges/ebf664bd4f09aa90c360/maintainability" />
     </a>
     <a href="https://raw.githubusercontent.com/linuxmuster/linuxmuster-base7/master/LICENSE"> 
         <img src="https://img.shields.io/github/license/linuxmuster/linuxmuster-base7?label=License" alt="Badge License" />
+    </a>
+    <a href="https://github.com/linuxmuster/linuxmuster-base7/actions/workflows/release.yml">
+        <img src="https://github.com/linuxmuster/linuxmuster-base7/actions/workflows/release.yml/badge.svg" />
     </a>
     <a href="https://ask.linuxmuster.net">
         <img src="https://img.shields.io/discourse/users?logo=discourse&logoColor=white&server=https%3A%2F%2Fask.linuxmuster.net" alt="Community Forum"/>
