@@ -1,5 +1,27 @@
-# linuxmuster-base7
+<h1 align="center">
+    Linuxmuster-base7
+</h1>
+
+<p align="center">
+    <a href="https://raw.githubusercontent.com/ajenti/ajenti/master/LICENSE">
+        <img src="https://img.shields.io/badge/Python-v3-green" alt="Badge License" />
+    </a>
+    <a href="https://codeclimate.com/github/linuxmuster/linuxmuster-base7/maintainability">
+        <img src="https://api.codeclimate.com/v1/badges/ebf664bd4f09aa90c360/maintainability" />
+    </a>
+    <a href="https://raw.githubusercontent.com/linuxmuster/linuxmuster-base7/master/LICENSE"> 
+        <img src="https://img.shields.io/github/license/linuxmuster/linuxmuster-base7?label=License" alt="Badge License" />
+    </a>
+    <a href="https://ask.linuxmuster.net">
+        <img src="https://img.shields.io/discourse/users?logo=discourse&logoColor=white&server=https%3A%2F%2Fask.linuxmuster.net" alt="Community Forum"/>
+    </a>
+</p>
+
+# Features
 Management scripts for linuxmuster.net V7
+- Setup of a linuxmuster.net server
+- Device import and boot preparation for [Linbo](https://github.com/linuxmuster/linuxmuster-linbo7)
+- Subnet import and setup in OPNSense
 
 Further information is available in the [Wiki](https://github.com/linuxmuster/linuxmuster-base7/wiki).
 
