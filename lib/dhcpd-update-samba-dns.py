@@ -2,7 +2,9 @@
 #
 # adds/updates/removes A DNS records
 # thomas@linuxmuster.net
-# 20210321
+# 20220119
+#
+# usage: dhcpd-update-samba-dns.py <add|delete> <ip address> <hostname> <yes|no>
 #
 
 import socket
@@ -16,9 +18,10 @@ from functions import sambaTool
 cmd = ''
 ip = ''
 hostname = ''
+skipad = ''
 
 # get arguments
-cmd, ip, hostname = sys.argv[1:]
+cmd, ip, hostname, skipad = sys.argv[1:]
 
 # check arguments
 if cmd not in ['add', 'delete']:
@@ -32,9 +35,11 @@ if not isValidHostname(hostname):
 if hostname.lower() == 'pxeclient':
     sys.exit(0)
 
-# check if it is a dynamic ip device
-if not isDynamicIpDevice(hostname):
-    sys.exit(0)
+# check if it is a dynamic ip device, skipped if skipad is set to yes
+# (see /etc/dhcp/events.conf)
+if skipad != 'yes':
+    if not isDynamicIpDevice(hostname):
+        sys.exit(0)
 
 # test if there are already valid dns records for this host
 try:
@@ -46,7 +51,8 @@ try:
 except:
     name_resolved = ''
 if cmd == 'add' and ip == ip_resolved and hostname == name_resolved:
-    print('DNS records for host ' + hostname + ' with ip ' + ip + ' are already up-to-date.')
+    print('DNS records for host ' + hostname
+          + ' with ip ' + ip + ' are already up-to-date.')
     sys.exit(0)
 
 # delete existing dns records if there are any
