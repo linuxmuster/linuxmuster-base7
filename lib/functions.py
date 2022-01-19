@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20211228
+# 20220119
 #
 
 import warnings
@@ -138,7 +138,7 @@ def sambaTool(options, logfile=None):
     #printScript(cmd)
     rc = subProc(cmd, logfile)
     # mask password in logfile
-    if os.path.isfile(logfile):
+    if logfile is not None and os.path.isfile(logfile):
         replaceInFile(logfile, adminpw, '******')
     return rc
 
