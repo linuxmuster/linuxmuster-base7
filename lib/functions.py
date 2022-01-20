@@ -3,14 +3,13 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20220119
+# 20220120
 #
 
-import warnings
 from subprocess import Popen, PIPE
 from shutil import copyfile
 from netaddr import IPNetwork, IPAddress
-from ldap3 import Server, Connection, ALL
+from ldap3 import Server, Connection
 from IPy import IP
 from contextlib import closing
 import codecs
@@ -63,19 +62,21 @@ def subProc(cmd, logfile=None):
         output, errors = p.communicate()
         if p.returncode or errors:
             rc = False
-        if logfile != None:
-            l = open(logfile, 'a')
-            l.write('-' * 78 + '\n')
+        if logfile is not None:
+            log = open(logfile, 'a')
+            log.write('-' * 78 + '\n')
             now = str(datetime.datetime.now()).split('.')[0]
-            l.write('#### ' + now + ' ' * (68 - len(now)) + ' ####\n')
-            l.write('#### ' + cmd + ' ' * (68 - len(cmd)) + ' ####\n')
-            l.write(output)
-            if rc == False:
-                l.write(errors)
-            l.write('-' * 78 + '\n')
-            l.close()
+            log.write('#### ' + now + ' ' * (68 - len(now)) + ' ####\n')
+            log.write('#### ' + cmd + ' ' * (68 - len(cmd)) + ' ####\n')
+            log.write(output)
+            if not rc:
+                log.write(errors)
+            log.write('-' * 78 + '\n')
+            log.close()
         return rc
-    except:
+    except Exception as error:
+        if logfile is not None:
+            writeTextfile(logfile, error, 'a')
         return False
 
 
@@ -130,12 +131,12 @@ def sambaTool(options, logfile=None):
     else:
         adminuser = 'administrator'
         rc, adminpw = readTextfile(constants.ADADMINSECRET)
-    if rc == False:
+    if not rc:
         return rc
     cmd = 'samba-tool ' + options + ' --username=' + \
         adminuser + ' --password=' + adminpw
     # for debugging
-    #printScript(cmd)
+    # printScript(cmd)
     rc = subProc(cmd, logfile)
     # mask password in logfile
     if logfile is not None and os.path.isfile(logfile):
@@ -145,14 +146,15 @@ def sambaTool(options, logfile=None):
 
 # print with or without linefeed
 def printLf(msg, lf):
-    if lf == True:
+    if lf:
         print(msg)
     else:
         print(msg, end='', flush=True)
 
 
 # print script output
-def printScript(msg='', header='', lf=True, noleft=False, noright=False, offset=0):
+def printScript(msg='', header='', lf=True, noleft=False, noright=False,
+                offset=0):
     linelen = 78
     borderlen = 4
     border = '#' * borderlen
@@ -167,13 +169,13 @@ def printScript(msg='', header='', lf=True, noleft=False, noright=False, offset=
             headermsg = 'finished'
         now = datetime.datetime.now()
         msg = msg + ' ' + headermsg + ' at ' + str(now).split('.')[0]
-    if noleft == False:
+    if not noleft:
         line = border + ' ' + msg
     else:
         line = msg
-    if noright == False:
+    if not noright:
         padding = linelen - len(msg) - borderlen * 2 - 2 - offset
-        if noleft == True:
+        if noleft:
             line = '.' * padding + msg + ' ' + border
         else:
             line = line + ' ' * padding + ' ' + border
@@ -238,30 +240,37 @@ def getIpBcAddress(ip):
 
 
 # reads devices.csv and returns a list of devices arrays: [array1, array2, ...]
-# fieldnrs: comma separated list of field nrs ('0,1,2,3,...') to be returned, default is all fields were returned
-# subnet filter: only hosts whose ip matches the specified subnet (CIDR) were returned, if 'all' is specified all subnets defined in subnets.csv were checked, if 'DHCP' is specified all dynamic ip hosts are returned
-# pxeflag filter: comma separated list of flags ('0,1,2,3'), only hosts with the specified pxeflags were returned
+# fieldnrs: comma separated list of field nrs ('0,1,2,3,...') to be returned,
+#   default is all fields were returned
+# subnet filter: only hosts whose ip matches the specified subnet (CIDR) were
+#   returned, if 'all' is specified all subnets defined insubnets.csv were
+#   checked, if 'DHCP' is specified all dynamic ip hosts are returned
+# pxeflag filter: comma separated list of flags ('0,1,2,3'), only hosts with
+#   the specified pxeflags were returned
 # stype: True additionally returns SystemType from start.conf as last element
-def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False, school='default-school'):
+def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False,
+                    school='default-school'):
     devices_array = []
     if school == "default-school":
         infile = open(constants.SOPHOSYSDIR
                       + "/default-school/devices.csv", newline='')
     else:
-        infile = open(constants.SOPHOSYSDIR+"/"+school
-                      + "/"+school+".devices.csv", newline='')
-    #infile = open(constants.WIMPORTDATA, newline='')
+        infile = open(constants.SOPHOSYSDIR+"/" + school
+                      + "/" + school + ".devices.csv", newline='')
 
     content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
     for row in content:
+        # skip rows, which begin with non alphanumeric characters
         try:
-            # skip rows, which begin with non alphanumeric characters
             if not row[0][0:1].isalnum():
                 continue
+        except Exception:
+            continue
+        try:
             # collect values
             if school != "default-school":
                 # add the prefix to the computername for DHCP config
-                row[1] = school+"-"+row[1]
+                row[1] = school + "-" + row[1]
             hostname = row[1]
             group = row[2]
             mac = row[3]
@@ -300,19 +309,26 @@ def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False, school='def
                 row_res.append(systemtype)
             devices_array.append(row_res)
         except Exception as error:
-            # print(error)
+            print(error)
             continue
 
     return devices_array
 
 
 # read subnets.csv and return subnet array
-# fieldnrs: comma separated list of field nrs to be returned, default is all fields were returned
+# fieldnrs: comma separated list of field nrs to be returned, default is all
+# fields are returned
 def getSubnetArray(fieldnrs=''):
     infile = open(constants.SUBNETSCSV, newline='')
     content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
     subnet_array = []
     for row in content:
+        # skip rows, which begin with non alphanumeric characters
+        try:
+            if not row[0][0:1].isalnum():
+                continue
+        except Exception:
+            continue
         try:
             ipnet = row[0]
             router = row[1]
@@ -326,7 +342,7 @@ def getSubnetArray(fieldnrs=''):
                         row_res.append(row[int(field)])
                 subnet_array.append(row_res)
         except Exception as error:
-            # print(error)
+            print(error)
             continue
     return subnet_array
 
@@ -367,7 +383,8 @@ def getGrubPart(partition, systemtype):
             hdnr = str(int(hdnr) - 1)
         else:
             return None
-    except:
+    except Exception as error:
+        print(error)
         return None
     # return grub partition designation
     grubpart = '(hd' + hdnr + ',' + partnr + ')'
@@ -383,8 +400,9 @@ def getGrubOstype(osname):
         return 'win'
     if 'mint' in osname:
         return 'linuxmint'
-    ostype_list = ['win10', 'win', 'kubuntu', 'lubuntu', 'xubuntu', 'ubuntu', 'centos',
-                   'arch', 'linuxmint', 'fedora', 'gentoo', 'debian', 'opensuse', 'suse', 'linux']
+    ostype_list = ['win10', 'win', 'kubuntu', 'lubuntu', 'xubuntu', 'ubuntu',
+                   'centos', 'arch', 'linuxmint', 'fedora', 'gentoo', 'debian',
+                   'opensuse', 'suse', 'linux']
     for ostype in ostype_list:
         if ostype in osname:
             return ostype
@@ -400,8 +418,8 @@ def readTextfile(tfile):
         content = infile.read()
         infile.close()
         return True, content
-    except:
-        print('Cannot read ' + tfile + '!')
+    except Exception as error:
+        print(error)
         return False, None
 
 
@@ -412,8 +430,8 @@ def writeTextfile(tfile, content, flag):
         outfile.write(content)
         outfile.close()
         return True
-    except:
-        print('Failed to write ' + tfile + '!')
+    except Exception as error:
+        print(error)
         return False
 
 
@@ -425,8 +443,8 @@ def replaceInFile(tfile, search, replace):
         copyfile(tfile, bakfile)
         rc, content = readTextfile(tfile)
         rc = writeTextfile(tfile, content.replace(search, replace), 'w')
-    except:
-        print('Failed to write ' + tfile + '!')
+    except Exception as error:
+        print(error)
         if os.path.isfile(bakfile):
             copyfile(bakfile, tfile)
     if os.path.isfile(bakfile):
@@ -447,7 +465,8 @@ def modIni(inifile, section, option, value):
         with open(inifile, 'w') as outfile:
             i.write(outfile)
         return True
-    except:
+    except Exception as error:
+        print(error)
         return False
 
 
@@ -515,21 +534,22 @@ def getSftp(ip, remotefile, localfile, secret=''):
             ssh.connect(ip, port=22, username='root', password=secret)
         else:
             ssh.connect(ip, port=22, username='root')
-    except:
+    except Exception as error:
+        print(error)
         return False
     # get file
     try:
         ftp = ssh.open_sftp()
         ftp.get(remotefile, localfile)
-    except:
+    except Exception as error:
+        print(error)
         return False
     ftp.close()
     ssh.close()
     return True
 
+
 # download firewall config.xml
-
-
 def getFwConfig(firewallip, secret=''):
     printScript('Downloading firewall configuration:')
     rc = getSftp(firewallip, constants.FWCONFREMOTE,
@@ -554,7 +574,8 @@ def putSftp(ip, localfile, remotefile, secret=''):
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(ip, port=22, username='root', password=secret)
-    except:
+    except Exception as error:
+        print(error)
         return False
     # file upload
     try:
@@ -563,7 +584,8 @@ def putSftp(ip, localfile, remotefile, secret=''):
         else:
             ftp = ssh.open_sftp()
             ftp.put(localfile, remotefile)
-    except:
+    except Exception as error:
+        print(error)
         return False
     ftp.close()
     ssh.close()
@@ -583,7 +605,8 @@ def putFwConfig(firewallip, secret=''):
 
 
 # execute ssh command
-# note: paramiko key based connection is obviously broken in 18.04, so we use ssh shell command
+# note: paramiko key based connection is obviously broken in 18.04, so we use
+#   ssh shell command
 def sshExec(ip, cmd, secret=''):
     printScript('Executing ssh command on ' + ip + ':')
     printScript('* -> "' + cmd + '"')
@@ -594,14 +617,13 @@ def sshExec(ip, cmd, secret=''):
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         if secret == '':
             subprocess.call(sshcmd + ' exit', shell=True)
-            #ssh.connect(ip, port=22, username='root')
         else:
             ssh.connect(ip, port=22, username='root', password=secret)
         printScript('* SSH connection successfully established.')
         if cmd == 'exit':
             return True
-    except:
-        printScript('* Failed to establish a SSH connection!')
+    except Exception as error:
+        print(error)
         return False
     # second execute command
     try:
@@ -610,8 +632,8 @@ def sshExec(ip, cmd, secret=''):
         else:
             subprocess.call(sshcmd + ' ' + cmd, shell=True)
         printScript('* SSH command execution finished successfully.')
-    except:
-        printScript('* Failed to execute SSH command!')
+    except Exception as error:
+        print(error)
         return False
     ssh.close()
     return True
@@ -620,7 +642,7 @@ def sshExec(ip, cmd, secret=''):
 # return linbo start.conf as string and modified to be used as ini file
 def readStartconf(startconf):
     rc, content = readTextfile(startconf)
-    if rc == False:
+    if not rc:
         return rc, None
     # [Partition] --> [Partition1]
     content = re.sub(
@@ -638,12 +660,11 @@ def readStartconf(startconf):
         count = count + 1
     return True, content
 
+
 # get global options from startconf
-
-
 def getStartconfOption(startconf, section, option):
     rc, content = readStartconf(startconf)
-    if rc == False:
+    if not rc:
         return None
     try:
         # read in to configparser
@@ -651,30 +672,29 @@ def getStartconfOption(startconf, section, option):
             '='), inline_comment_prefixes=('#', ';'))
         s.read_string(content)
         return s.get(section, option)
-    except:
+    except Exception as error:
+        print(error)
         return None
 
+
 # get partition label from start.conf
-
-
 def getStartconfPartlabel(startconf, partnr):
     partnr = int(partnr)
     rc, content = readStartconf(startconf)
-    if rc == False:
-        return ""
+    if not rc:
+        return ''
     count = 1
     for item in re.findall(r'\nLabel.*\n', content, re.IGNORECASE):
         if count == partnr:
             return item.split('#')[0].split('=')[1].strip()
         count = count + 1
-    return ""
+    return ''
+
 
 # get number of partition
-
-
 def getStartconfPartnr(startconf, partition):
     rc, content = readStartconf(startconf)
-    if rc == False:
+    if not rc:
         return 0
     count = 1
     for item in re.findall(r'\nDev.*\n', content, re.IGNORECASE):
@@ -683,21 +703,20 @@ def getStartconfPartnr(startconf, partition):
         count = count + 1
     return 0
 
+
 # write global options to startconf
-
-
 def setGlobalStartconfOption(startconf, option, value):
     rc, content = readTextfile(startconf)
-    if rc == False:
+    if not rc:
         return rc
     # insert newline
     content = '\n' + content
     try:
         line = re.search(r'\n' + option + ' =.*\n',
                          content, re.IGNORECASE).group(0)
-    except:
+    except Exception:
         line = None
-    if line == None:
+    if line is None:
         line = re.search(r'\n\[LINBO\].*\n', content, re.IGNORECASE).group(0)
         content = content.replace(line, line + option + ' = ' + value + '\n')
     else:
@@ -708,12 +727,11 @@ def setGlobalStartconfOption(startconf, option, value):
     rc = writeTextfile(startconf, content, 'w')
     return rc
 
+
 # return os values from linbo start.conf as list
-
-
 def getStartconfOsValues(startconf):
     rc, content = readStartconf(startconf)
-    if rc == False:
+    if not rc:
         return None
     try:
         # read in to configparser
@@ -747,7 +765,7 @@ def getStartconfOsValues(startconf):
                 oslists[count].append(kappend)
                 oslists[count].append(str(count))
                 count = count + 1
-            except:
+            except Exception:
                 break
         if oslists[1] == []:
             return None
@@ -758,7 +776,8 @@ def getStartconfOsValues(startconf):
             result.append(oslists[count])
             count = count + 1
         return result
-    except:
+    except Exception as error:
+        print(error)
         return None
 
 
@@ -784,12 +803,12 @@ def hasNumbers(password):
 
 
 def randomPassword(size):
-  chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
-  while True:
-      password = ''.join(random.choice(chars) for x in range(size))
-      if hasNumbers(password) == True:
-          break
-  return password
+    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
+    while True:
+        password = ''.join(random.choice(chars) for x in range(size))
+        if hasNumbers(password) is True:
+            break
+    return password
 
 
 def isValidMac(mac):
@@ -798,7 +817,7 @@ def isValidMac(mac):
             return True
         else:
             return False
-    except:
+    except Exception:
         return False
 
 
@@ -811,7 +830,7 @@ def isValidHostname(hostname):
             return True
         else:
             return False
-    except:
+    except Exception:
         return False
 
 
@@ -821,7 +840,7 @@ def isValidDomainname(domainname):
             if not isValidHostname(label):
                 return False
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -841,12 +860,11 @@ def isValidHostIpv4(ip):
             if c == 4 and int(i) > 254:
                 return False
         return True
-    except:
+    except Exception:
         return False
 
+
 # returns hostname and row from workstations file, search with ip, mac and hostname
-
-
 def getHostname(devices, search):
     try:
         hostname = None
@@ -865,8 +883,8 @@ def getHostname(devices, search):
                 hostrow = row
                 break
         f.close()
-    except:
-        print('getHostname(): Error reading file ' + devices + '!')
+    except Exception as error:
+        print(error)
     return hostname, hostrow
 
 
@@ -889,7 +907,7 @@ def isValidPassword(password):
     # searching for lowercase
     lowercase_error = re.search(r"[a-z]", password) is None
     # searching for symbols
-    if digit_error == True:
+    if digit_error is True:
         digit_error = False
         symbol_error = re.search(
             r"[!#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None
@@ -897,18 +915,19 @@ def isValidPassword(password):
         symbol_error = False
     # overall result
     password_ok = not (
-        length_error or digit_error or uppercase_error or lowercase_error or symbol_error)
+        length_error or digit_error or uppercase_error or lowercase_error
+        or symbol_error
+        )
     return password_ok
 
+
 # enter password
-
-
 def enterPassword(pwtype='the', validate=True, repeat=True):
     msg = '#### Enter ' + pwtype + ' password: '
     re_msg = '#### Please re-enter ' + pwtype + ' password: '
     while True:
         password = getpass.getpass(msg)
-        if validate == True and not isValidPassword(password):
+        if validate and not isValidPassword(password):
             printScript(
                 'Weak password! A password is considered strong if it contains:')
             printScript(' * 7 characters length or more')
@@ -916,9 +935,9 @@ def enterPassword(pwtype='the', validate=True, repeat=True):
             printScript(' * 1 uppercase letter or more')
             printScript(' * 1 lowercase letter or more')
             continue
-        elif password == '' or password == None:
+        elif password == '' or password is None:
             continue
-        if repeat == True:
+        if repeat:
             password_repeated = getpass.getpass(re_msg)
             if password != password_repeated:
                 printScript('Passwords do not match!')
@@ -929,9 +948,8 @@ def enterPassword(pwtype='the', validate=True, repeat=True):
             break
     return password
 
+
 # return detected network interfaces
-
-
 def detectedInterfaces():
     iface_list = netifaces.interfaces()
     iface_list.remove('lo')
@@ -942,9 +960,8 @@ def detectedInterfaces():
         iface_default = ''
     return iface_list, iface_default
 
+
 # return default network interface
-
-
 def getDefaultIface():
     # first try to get a single interface
     iface_list, iface_default = detectedInterfaces()
@@ -959,33 +976,30 @@ def getDefaultIface():
                 if dest != '00000000' or not int(flags, 16) & 2:
                     continue
                 return iface_list, iface
-            except:
+            except Exception:
                 continue
     return iface_list, iface_default
 
+
 # return datetime string
-
-
 def dtStr():
     return "{:%Y%m%d%H%M%S}".format(datetime.datetime.now())
 
+
 # return setup comment for modified configfiles
-
-
 def setupComment():
     msg = '# modified by linuxmuster-setup at ' + dtStr() + '\n'
     return msg
 
+
 # backup config file
-
-
 def backupCfg(configfile):
     if not os.path.isfile(configfile):
         return False
     backupfile = configfile + '.' + dtStr()
     try:
         shutil.copy(configfile, backupfile)
-    except:
+    except Exception as error:
+        print(error)
         return False
-    return True
     return True
