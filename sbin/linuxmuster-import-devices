@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20211219
+# 20220120
 #
 
 import configparser
@@ -19,7 +19,7 @@ from os.path import isfile, join
 from pathlib import Path
 
 from functions import getBootImage, getDevicesArray, getGrubOstype, getGrubPart
-from functions import getSetupValue, getStartconfOsValues, getStartconfOption
+from functions import getStartconfOsValues, getStartconfOption
 from functions import getStartconfPartnr, getStartconfPartlabel, getSubnetArray
 from functions import isValidHostIpv4, getLinboVersion, printScript, readTextfile
 from functions import setGlobalStartconfOption, writeTextfile
@@ -162,8 +162,7 @@ def doLinboStartconf(group):
     try:
         serverip_k = re.findall(
             r'server=[^ ]*', kopts_s, re.IGNORECASE)[0].split('=')[1]
-    except Exception as error:
-        # print(error)
+    except Exception:
         serverip_k = None
     # determine whether global values from start conf have to changed
     if serverip_k is not None and isValidHostIpv4(serverip_k):
