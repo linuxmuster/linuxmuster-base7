@@ -1,0 +1,79 @@
+#! /usr/bin/env python3
+
+"""
+Simple script to test if today is holiday, based on the configuration file /etc/linuxmuster/holidays.yml.
+
+Structure of the configuration file (YAML):
+holiday_name1:
+  start: "dd.mm.yyyy"
+  end: "dd.mm.yyyy"
+holiday_name2:
+  start: "dd.mm.yyyy"
+  end: "dd.mm.yyyy"
+"""
+
+import yaml
+import sys
+from datetime import date
+
+
+HOLIDAYS_FILE = "/etc/linuxmuster/holidays.yml"
+
+class Holiday:
+    def __init__(self, name, start, end):
+        """
+        Holiday object.
+        :param name: Name of holiday
+        :type name: string
+        :param start: Start date as dd.mm.yyyy
+        :type start: string
+        :param end: End as dd.mm.yyyy
+        :type end: string
+        """
+        
+        self.name = name
+        self.start = date(*map(int, start.split('.')[::-1]))
+        self.end = date(*map(int, end.split('.')[::-1]))
+
+    def __str__(self):
+        return f"{self.name} ({self.start} - {self.end})"
+
+def TestToday():
+    """
+    Method to get all holidays stored in configuration file  and test if the current day is in holiday.
+    """
+
+    today = date.today()
+
+    try:
+        with open(HOLIDAYS_FILE, 'r') as f:
+            holidays_dict = yaml.load(f.read(), Loader=yaml.SafeLoader)
+    except FileNotFoundError as e:
+        print(f"The file {HOLIDAYS_FILE} does not seem to exists, you need to configure it first with the Webui.")
+        return None
+    except yaml.scanner.ScannerError as e:
+        print(f"The file {HOLIDAYS_FILE} does not seem to respect yaml standards, you need to verify it.")
+        return None
+
+    holidays = []
+    for name, dates in holidays_dict.items():
+        holidays.append(Holiday(name, dates['start'], dates['end']))
+    
+    for holiday in holidays:
+        if holiday.start <= today <= holiday.end:
+            return holiday
+
+    return None
+
+
+if __name__ == "__main__":
+    isTodayInHoliday = TestToday()
+    if isTodayInHoliday is None:
+        print("Today is not holiday")
+        sys.exit()
+    else:
+        print(f"Today is holiday in: {isTodayInHoliday}")
+        sys.exit(-1)
+
+
+
