@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.1.5-0) lmn71; urgency=low
+
+  * Refactored functions.py & linuxmuster-import-devices (#129).
+  * merged #135 linuxmuster-holiday.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 05 Feb 2022 10:12:51 +0000
+
 linuxmuster-base7 (7.1.4-0) lmn71; urgency=low
 
   * Refactoring setup code (#129).
