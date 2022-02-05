@@ -56,12 +56,15 @@ def TestToday():
         return None
 
     holidays = []
-    for name, dates in holidays_dict.items():
-        holidays.append(Holiday(name, dates['start'], dates['end']))
+    try:
+        for name, dates in holidays_dict.items():
+            holidays.append(Holiday(name, dates['start'], dates['end']))
     
-    for holiday in holidays:
-        if holiday.start <= today <= holiday.end:
-            return holiday
+        for holiday in holidays:
+            if holiday.start <= today <= holiday.end:
+                return holiday
+    except AttributeError:
+        print(f"The file {HOLIDAYS_FILE} seems to be empty, you need to configure it first with the Webui.")
 
     return None
 
