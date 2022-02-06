@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.1.6-0) lmn71; urgency=low
+
+  * linuxmuster-holiday: Handle empty holidays config file.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 06 Feb 2022 11:23:14 +0000
+
 linuxmuster-base7 (7.1.5-0) lmn71; urgency=low
 
   * Refactored functions.py & linuxmuster-import-devices (#129).
