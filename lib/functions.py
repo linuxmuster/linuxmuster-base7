@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20220120
+# 20220210
 #
 
 from subprocess import Popen, PIPE
@@ -524,29 +524,64 @@ def firewallApi(request, path, data=''):
         return None
 
 
-# download per sftp
-def getSftp(ip, remotefile, localfile, secret=''):
-    # establish connection
-    try:
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        if secret != '':
-            ssh.connect(ip, port=22, username='root', password=secret)
-        else:
-            ssh.connect(ip, port=22, username='root')
-    except Exception as error:
-        print(error)
-        return False
-    # get file
-    try:
-        ftp = ssh.open_sftp()
-        ftp.get(remotefile, localfile)
-    except Exception as error:
-        print(error)
-        return False
-    ftp.close()
-    ssh.close()
+# file transfer per scp
+def scpTransfer(ip, mode, sourcefile, targetfile, secret='', sshuser='root'):
+    if mode == 'get' or mode == 'put':
+        printScript(mode + ' ' + ip + ' ' + sourcefile + ' ' + targetfile)
+    else:
+        print('Usage: scpTransfer(ip, mode, sourcefile, targetfile, secret, sshuser)')
+        return 1
+    # passwordless transfer
+    if secret == '':
+        sshopts = "-q -oNumberOfPasswordPrompts=0 -oStrictHostkeyChecking=no"
+        sshcmd = 'ssh ' + sshopts + ' -l ' + sshuser + ' ' + ip
+        if mode == 'put':
+            targetfile = sshuser + '@' + ip + ':' + targetfile
+        if mode == 'get':
+            sourcefile = sshuser + '@' + ip + ':' + sourcefile
+        scpcmd = 'scp ' + sshopts + ' ' + sourcefile + ' ' + targetfile
+        # test ssh connection
+        try:
+            subprocess.call(sshcmd + ' exit', shell=True)
+        except Exception as error:
+            print(error)
+            return False
+        # file transfer
+        try:
+            subprocess.call(scpcmd, shell=True)
+        except Exception as error:
+            print(error)
+            return False
+    # transfer with password
+    else:
+        # test ssh connection
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(ip, port=22, username=sshuser, password=secret)
+        except Exception as error:
+            print(error)
+            return False
+        # file upload
+        try:
+            ftp = ssh.open_sftp()
+            if mode == 'put':
+                ftp.put(sourcefile, targetfile)
+            if mode == 'get':
+                ftp.get(sourcefile, targetfile)
+        except Exception as error:
+            print(error)
+            return False
+        ftp.close()
+        ssh.close()
+    # return success
     return True
+
+
+# download per sftp
+def getSftp(ip, remotefile, localfile, secret='', sshuser='root'):
+    rc = scpTransfer(ip, 'get', remotefile, localfile, secret, sshuser)
+    return rc
 
 
 # download firewall config.xml
@@ -562,34 +597,9 @@ def getFwConfig(firewallip, secret=''):
 
 
 # upload per sftp
-def putSftp(ip, localfile, remotefile, secret=''):
-    sshopts = "-q -oNumberOfPasswordPrompts=0 -oStrictHostkeyChecking=no"
-    sshcmd = 'ssh ' + sshopts + ' -l root ' + ip
-    scpcmd = 'scp ' + sshopts + ' ' + localfile + ' root@' + ip + ':' + remotefile
-    # test ssh connection
-    try:
-        if secret == '':
-            subprocess.call(sshcmd + ' exit', shell=True)
-        else:
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(ip, port=22, username='root', password=secret)
-    except Exception as error:
-        print(error)
-        return False
-    # file upload
-    try:
-        if secret == '':
-            subprocess.call(scpcmd, shell=True)
-        else:
-            ftp = ssh.open_sftp()
-            ftp.put(localfile, remotefile)
-    except Exception as error:
-        print(error)
-        return False
-    ftp.close()
-    ssh.close()
-    return True
+def putSftp(ip, localfile, remotefile, secret='', sshuser='root'):
+    rc = scpTransfer(ip, 'put', localfile, remotefile, secret, sshuser)
+    return rc
 
 
 # upload firewall config

@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.1.7-0) lmn71; urgency=low
+
+  * Fix #136: linuxmuster-opnsense-reset fails.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 10 Feb 2022 18:37:29 +0000
+
 linuxmuster-base7 (7.1.6-0) lmn71; urgency=low
 
   * linuxmuster-holiday: Handle empty holidays config file.
