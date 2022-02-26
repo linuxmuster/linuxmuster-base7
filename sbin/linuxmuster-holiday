@@ -1,7 +1,8 @@
 #! /usr/bin/env python3
 
 """
-Simple script to test if today is holiday, based on the configuration file /etc/linuxmuster/holidays.yml.
+Simple script to test if today is holiday, based on the configuration file 
+/etc/linuxmuster/sophomorix/SCHOOL/holidays.yml.
 
 Structure of the configuration file (YAML):
 holiday_name1:
@@ -18,8 +19,6 @@ import getopt
 
 from datetime import date
 
-
-HOLIDAYS_FILE = "/etc/linuxmuster/holidays.yml"
 
 class Holiday:
     def __init__(self, name, start, end):
@@ -40,7 +39,7 @@ class Holiday:
     def __str__(self):
         return f"{self.name} ({self.start} - {self.end})"
 
-def TestToday():
+def TestToday(config):
     """
     Method to get all holidays stored in configuration file  and test if the current day is in holiday.
     """
@@ -48,13 +47,13 @@ def TestToday():
     today = date.today()
 
     try:
-        with open(HOLIDAYS_FILE, 'r') as f:
+        with open(config, 'r') as f:
             holidays_dict = yaml.load(f.read(), Loader=yaml.SafeLoader)
     except FileNotFoundError as e:
-        print(f"The file {HOLIDAYS_FILE} does not seem to exists, you need to configure it first with the Webui.")
+        print(f"The file {config} does not seem to exists, you need to configure it first with the Webui.")
         return None
     except yaml.scanner.ScannerError as e:
-        print(f"The file {HOLIDAYS_FILE} does not seem to respect yaml standards, you need to verify it.")
+        print(f"The file {config} does not seem to respect yaml standards, you need to verify it.")
         return None
 
     holidays = []
@@ -66,7 +65,7 @@ def TestToday():
             if holiday.start <= today <= holiday.end:
                 return holiday
     except AttributeError:
-        print(f"The file {HOLIDAYS_FILE} seems to be empty, you need to configure it first with the Webui.")
+        print(f"The file {config} seems to be empty, you need to configure it first with the Webui.")
 
     return None
 
@@ -79,12 +78,14 @@ Options:
     """)
 
 if __name__ == "__main__":
-    
+
+    school = 'default-school'
+
     try:
         opts, args = getopt.getopt(
             sys.argv[1:],
-            'h',
-            ['help']
+            'hs:',
+            ['help', 'school=']
         )
     except getopt.GetoptError as err:
         print(err)
@@ -95,9 +96,13 @@ if __name__ == "__main__":
         if o in ("-h", "--help"):
             usage()
             sys.exit()
+        elif o in ("-s", "--school"):
+            school = a
 
 
-    isTodayInHoliday = TestToday()
+    config = f"/etc/linuxmuster/sophomorix/{school}/holidays.yml"
+
+    isTodayInHoliday = TestToday(config)
     
     if isTodayInHoliday is None:
         print("Today is not holiday")
