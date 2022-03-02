@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.1.8-0) lmn71; urgency=low
+
+  * linuxmuster-holiday:
+    - Add option parser and help.
+    - Add multischool support.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 2 Mar 2022 20:17:00 +0100
+
 linuxmuster-base7 (7.1.7-0) lmn71; urgency=low
 
   * Fix #136: linuxmuster-opnsense-reset fails.
