@@ -2,7 +2,7 @@
 #
 # reset opnsense configuration to setup state
 # thomas@linuxmuster.net
-# 20211221
+# 20220530
 #
 
 import constants
@@ -10,14 +10,8 @@ import getopt
 import os
 import sys
 
-from functions import datetime
-from functions import enterPassword
-from functions import firewallApi
-from functions import getSetupValue
-from functions import printScript
-from functions import sshExec
-from functions import writeTextfile
-from functions import waitForFw
+from functions import createServerCert, datetime, enterPassword, firewallApi, \
+    getSetupValue, printScript, randomPassword, sshExec, writeTextfile, waitForFw
 
 
 # check first if firewall is skipped by setup
@@ -67,6 +61,7 @@ for o, a in opts:
         assert False, "unhandled option"
 
 
+logfile = constants.LOGDIR + '/opnsense-reset.log'
 now = str(datetime.datetime.now()).split('.')[0]
 printScript('linuxmuster-opnsense-reset ' + now)
 
@@ -94,6 +89,10 @@ if not sshExec(firewallip, 'exit', adminpw):
 if not writeTextfile('/tmp/linuxmuster-opnsense-reset', adminpw, 'w'):
     sys.exit(1)
 
+# create firewall cert if not there
+if not os.path.isfile(constants.SSLDIR + '/firewall.cert.pem'):
+    if not createServerCert('firewall', logfile):
+        sys.exit(1)
 
 # invoke setup script
 rc = os.system('python3 ' + constants.SETUPDIR + '/m_firewall.py')

@@ -524,6 +524,50 @@ def firewallApi(request, path, data=''):
         return None
 
 
+# creates server cert
+def createServerCert(item, logfile):
+    domainname = getSetupValue('domainname')
+    fqdn = item + '.' + domainname
+    csrfile = constants.SSLDIR + '/' + item + '.csr'
+    keyfile = constants.SSLDIR + '/' + item + '.key.pem'
+    certfile = constants.SSLDIR + '/' + item + '.cert.pem'
+    subj = '-subj /CN=' + fqdn + '/'
+    shadays = ' -sha256 -days 3650'
+    msg = 'Creating private ' + item + ' key & certificate '
+    printScript(msg, '', False, False, True)
+    try:
+        rc, cakeypw = readTextfile(constants.CAKEYSECRET)
+        passin = ' -passin pass:' + cakeypw
+        subProc('openssl genrsa -out ' + keyfile + ' 2048', logfile)
+        subProc('openssl req -batch ' + subj + ' -new -key '
+                + keyfile + ' -out ' + csrfile, logfile)
+        subProc('openssl x509 -req -in ' + csrfile + ' -CA ' + constants.CACERT + passin
+                + ' -CAkey ' + constants.CAKEY + ' -CAcreateserial -out ' + certfile + shadays
+                + ' -extfile ' + constants.SSLCNF, logfile)
+        if item == 'firewall':
+            # create base64 encoded version for opnsense's config.xml
+            b64keyfile = keyfile + '.b64'
+            b64certfile = certfile + '.b64'
+            subProc('base64 ' + keyfile + ' > ' + b64keyfile, logfile)
+            subProc('base64 ' + certfile + ' > ' + b64certfile, logfile)
+            rc = replaceInFile(b64keyfile, '\n', '')
+            rc = replaceInFile(b64certfile, '\n', '')
+            # concenate firewall fullchain cert
+            subProc('cat ' + constants.FWFULLCHAIN.replace('.fullchain.', '.cert.')
+                    + ' ' + constants.CACERT + ' > ' + constants.FWFULLCHAIN, logfile)
+        else:
+            # cert links for cups on server
+            subProc('ln -sf ' + certfile
+                    + ' /etc/cups/ssl/server.crt', logfile)
+            subProc('ln -sf ' + keyfile + ' /etc/cups/ssl/server.key', logfile)
+            subProc('service cups restart', logfile)
+        printScript('Success!', '', True, True, False, len(msg))
+        return True
+    except:
+        printScript(' Failed!', '', True, True, False, len(msg))
+        return False
+
+
 # file transfer per scp
 def scpTransfer(ip, mode, sourcefile, targetfile, secret='', sshuser='root'):
     if mode == 'get' or mode == 'put':
