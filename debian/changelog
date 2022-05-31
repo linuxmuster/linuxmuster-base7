@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.1.9-0) lmn71; urgency=low
+
+  * linuxmuster-opnsense-reset: create firewall cert if not there.
+  * change codename to 'release'.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 31 May 2022 16:46:00 +0200
+
 linuxmuster-base7 (7.1.8-0) lmn71; urgency=low
 
   * linuxmuster-holiday:
