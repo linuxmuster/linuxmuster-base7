@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20220210
+# 20220531
 #
 
 from subprocess import Popen, PIPE
@@ -960,17 +960,18 @@ def isValidPassword(password):
     uppercase_error = re.search(r"[A-Z]", password) is None
     # searching for lowercase
     lowercase_error = re.search(r"[a-z]", password) is None
+    # no $ in pw
+    unwanted_error = re.search(r"$", password) is not None
     # searching for symbols
     if digit_error is True:
         digit_error = False
-        symbol_error = re.search(
-            r"[!#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None
+        symbol_error = re.search(r"[!#%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None
     else:
         symbol_error = False
     # overall result
     password_ok = not (
         length_error or digit_error or uppercase_error or lowercase_error
-        or symbol_error
+        or symbol_error or unwanted_error
         )
     return password_ok
 
