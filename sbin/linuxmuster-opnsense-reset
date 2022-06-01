@@ -2,16 +2,18 @@
 #
 # reset opnsense configuration to setup state
 # thomas@linuxmuster.net
-# 20220530
+# 20220601
 #
 
 import constants
 import getopt
 import os
 import sys
+import time
 
 from functions import createServerCert, datetime, enterPassword, firewallApi, \
-    getSetupValue, printScript, randomPassword, sshExec, writeTextfile, waitForFw
+    getSetupValue, printScript, randomPassword, sshExec, subProc, writeTextfile, \
+    waitForFw
 
 
 # check first if firewall is skipped by setup
@@ -33,12 +35,14 @@ def usage():
     print(' -f, --force       : Force execution without asking for consent.')
     print(' -p, --pw=<secret> : Current firewall root password,')
     print('                     if it is omitted script will ask for it.')
+    print(' -s, --sleep=<#>   : Sleep time in secs after firewall restart and before')
+    print('                     keytab creation (default 10).')
     print(' -h, --help        : Print this help.')
 
 
 # get cli args
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "fhp:", ["force", "help", "pw="])
+    opts, args = getopt.getopt(sys.argv[1:], "fhp:s:", ["force", "help", "pw=", "sleep="])
 except getopt.GetoptError as err:
     # print help information and exit:
     print(err)  # will print something like "option -a not recognized"
@@ -49,11 +53,14 @@ except getopt.GetoptError as err:
 # evaluate options
 force = False
 adminpw = None
+sleep = 10
 for o, a in opts:
     if o in ("-f", "--force"):
         force = True
     elif o in ("-p", "--pw"):
         adminpw = a
+    elif o in ("-s", "--sleep"):
+        sleep = int(a)
     elif o in ("-h", "--help"):
         usage()
         sys.exit()
@@ -95,7 +102,7 @@ if not os.path.isfile(constants.SSLDIR + '/firewall.cert.pem'):
         sys.exit(1)
 
 # invoke setup script
-rc = os.system('python3 ' + constants.SETUPDIR + '/m_firewall.py')
+rc = subProc('python3 ' + constants.SETUPDIR + '/m_firewall.py', logfile)
 
 
 # wait for firewall
@@ -105,16 +112,27 @@ except Exception as error:
     print(error)
     sys.exit(1)
 
+printScript('Waiting ' + str(sleep) + ' seconds.')
+time.sleep(sleep)
+
 
 # delete old keytable
-printScript('Deleting old keytab.')
-apipath = '/proxysso/service/deletekeytab'
-res = firewallApi('get', apipath)
-print(res)
+rc = subProc(constants.FWSHAREDIR + '/create-keytab.py -c', logfile)
+if rc:
+    printScript('Deleting old keytab.')
+    apipath = '/proxysso/service/deletekeytab'
+    res = firewallApi('get', apipath)
+    print(res)
+
+    printScript('Waiting ' + str(sleep) + ' seconds.')
+    time.sleep(sleep)
 
 
 # create new keytab
-rc = os.system(constants.FWSHAREDIR + '/create-keytab.py')
-
+rc = subProc(constants.FWSHAREDIR + '/create-keytab.py', logfile)
+if rc:
+    printScript('New kerberos key table has been successfully created.')
+else:
+    printScript('Failed to create new kerberos key table. See opnsense-reset.log for details.')
 
 sys.exit(rc)
