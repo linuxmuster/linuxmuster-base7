@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20220119
+# 20220601
 # GPL v3
 #
 
@@ -142,18 +142,10 @@ case "$1" in
     systemctl enable ntp.service
     systemctl start ntp.service
   fi
-  # deprecated
-  #conf="/etc/ntp.conf"
-  #search="# 20200818"
-  #if ! grep -q ^"$search" "$conf"; then
-  #  echo "Updating ntp configuration."
-  #  cp "$conf" "$conf".dpkg-bak."$datestr"
-  #  tpl="$TPLDIR/ntp.conf"
-  #  sed -e "s|@@firewallip@@|$firewallip|g" "$tpl" > "$conf"
-  #  cp "$tpl.admin" "$conf.admin"
-  #  cp "$tpl.dist" "$conf.dist"
-  #  systemctl restart ntp.service
-  #fi
+
+
+  # ensure python3-paramiko is installed
+  pip3 install paramiko
 
   # remove obsolete sudo users for webui (#90)
   for i in student teacher; do
