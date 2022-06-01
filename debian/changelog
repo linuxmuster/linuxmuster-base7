@@ -1,3 +1,15 @@
+linuxmuster-base7 (7.1.10-0) lmn71; urgency=low
+
+  * Fix #139: Old version of paramiko for 18.04.
+  * Merge #125: Fix device specific links.
+  * linuxmuster-opnsense-reset:
+    - add sleep time option [-s|--sleep] to wait after firewall restart and
+      before keytab creation (default 10s).
+    - changed os.system to subprocess.
+  * don't accept $ in passwords.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 01 Jun 2022 21:18:22 +0200
+
 linuxmuster-base7 (7.1.9-0) lmn71; urgency=low
 
   * linuxmuster-opnsense-reset: create firewall cert if not there.
