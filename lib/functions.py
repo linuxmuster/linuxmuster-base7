@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20220531
+# 20220603
 #
 
 from subprocess import Popen, PIPE
@@ -961,7 +961,7 @@ def isValidPassword(password):
     # searching for lowercase
     lowercase_error = re.search(r"[a-z]", password) is None
     # no $ in pw
-    unwanted_error = re.search(r"$", password) is not None
+    unwanted_error = re.search(r"\$", password) is not None
     # searching for symbols
     if digit_error is True:
         digit_error = False
