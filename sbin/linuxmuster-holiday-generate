@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from datetime import datetime
+from datetime import datetime, date
 import requests
 from requests.structures import CaseInsensitiveDict
 import argparse
 import yaml
+import sys
 
 """
 Simple script to generate yaml file for holidays based on ferien-api.de
@@ -19,7 +20,6 @@ holiday_name2:
   start: "dd.mm.yyyy"
   end: "dd.mm.yyyy"
 """
-
 
 def get_holidays(year,state):
     url = "https://ferien-api.de/api/v1/holidays/" + state
@@ -36,26 +36,28 @@ def get_holidays(year,state):
             holidays.append({entry['name']:{'start': start.strftime('%d.%m.%Y'), 'end': end.strftime('%d.%m.%Y')}})
     return holidays
 
-  
 def print_holiday_yaml(holidays):
-    print (yaml.dump(holidays))
+    yaml.dump(holidays, sys.stdout, default_flow_style=False)
 
-    
+
 def main():
     possible_states = ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI", "NW", "RP", "SL", "SN", "ST", "SH", "TH"]
     parser = argparse.ArgumentParser()
-    parser.add_argument("-y", "--year", required = True, help = "Define which year too look for")
+    parser.add_argument("-y", "--year", required = False, help = "Define which year too look for")
     parser.add_argument("-s", "--state", required = True, help = "Define state, possible values are: " + ','.join(possible_states))
 
     args = parser.parse_args()
 
+    args.state = args.state.upper()
     if args.state not in possible_states:
         print ("Provided state is not supported.\nSupported states are: "+ ','.join(possible_states))
         quit(1)
 
+    if not args.year:
+        args.year = date.today().year
+
     holidays = get_holidays(args.year,args.state)
     print_holiday_yaml(holidays)
 
-    
 if __name__ == "__main__":
     main()
