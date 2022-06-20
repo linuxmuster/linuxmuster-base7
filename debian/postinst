@@ -29,6 +29,8 @@ datestr="$(date +%Y%m%d%H%M)"
 case "$1" in
 
  configure)
+  # ensure python3 paramiko and reconfigure are installed
+  /usr/bin/python3 -m pip install paramiko reconfigure
 
   # add lmn paths to python environment
   usersite="$(python3 -c 'import site; site._script()' --user-site)"
@@ -142,10 +144,6 @@ case "$1" in
     systemctl enable ntp.service
     systemctl start ntp.service
   fi
-
-
-  # ensure python3-paramiko is installed
-  pip3 install paramiko
 
   # remove obsolete sudo users for webui (#90)
   for i in student teacher; do
