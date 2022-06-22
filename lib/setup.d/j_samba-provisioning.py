@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20220105
+# 20220622
 #
 
 import configparser
@@ -11,7 +11,7 @@ import datetime
 import os
 import sys
 from functions import mySetupLogfile, printScript, randomPassword
-from functions import subProc, writeTextfile
+from functions import readTextfile, subProc, writeTextfile
 
 logfile = mySetupLogfile(__file__)
 
@@ -88,12 +88,10 @@ try:
     krb5conf_dst = '/etc/krb5.conf'
     if os.path.isfile(krb5conf_dst):
         os.remove(krb5conf_dst)
-        os.symlink(krb5conf_src, krb5conf_dst)
-        k = configparser.ConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
-        k.read(krb5conf_dst)
-        k.set('libdefaults', 'dns_lookup_realm', 'true')
-        with open(krb5conf_dst, 'w') as config:
-            k.write(config)
+    os.symlink(krb5conf_src, krb5conf_dst)
+    rc, filedata = readTextfile(krb5conf_dst)
+    filedata = filedata.replace('dns_lookup_realm = false', 'dns_lookup_realm = true')
+    rc = writeTextfile(krb5conf_dst, filedata, 'w')
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))
