@@ -81,21 +81,22 @@ except Exception as error:
     sys.exit(1)
 
 # create krb5.conf symlink
-msg = 'Provisioning krb5 '
-printScript(msg, '', False, False, True)
-try:
-    krb5conf_src = '/var/lib/samba/private/krb5.conf'
-    krb5conf_dst = '/etc/krb5.conf'
-    if os.path.isfile(krb5conf_dst):
-        os.remove(krb5conf_dst)
-    os.symlink(krb5conf_src, krb5conf_dst)
-    rc, filedata = readTextfile(krb5conf_dst)
-    filedata = filedata.replace('dns_lookup_realm = false', 'dns_lookup_realm = true')
-    rc = writeTextfile(krb5conf_dst, filedata, 'w')
-    printScript(' Success!', '', True, True, False, len(msg))
-except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
-    sys.exit(1)
+krb5conf_src = '/var/lib/samba/private/krb5.conf'
+if os.path.isfile(krb5conf_src):
+    msg = 'Provisioning krb5 '
+    printScript(msg, '', False, False, True)
+    try:
+        krb5conf_dst = '/etc/krb5.conf'
+        if os.path.isfile(krb5conf_dst):
+            os.remove(krb5conf_dst)
+        os.symlink(krb5conf_src, krb5conf_dst)
+        rc, filedata = readTextfile(krb5conf_dst)
+        filedata = filedata.replace('dns_lookup_realm = false', 'dns_lookup_realm = true')
+        rc = writeTextfile(krb5conf_dst, filedata, 'w')
+        printScript(' Success!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(error, '', True, True, False, len(msg))
+        sys.exit(1)
 
 # restart services
 msg = 'Enabling samba services '
