@@ -1,8 +1,10 @@
-linuxmuster-base7 (7.2.0-0) lmn72; urgency=low
+linuxmuster-base7 (7.2.0-alpha0) lmn72; urgency=low
 
-  * remove webui from dependencies temporarily.
+  * remove webui from dependencies temporarily (56605cc).
+  * Set compatibility level to 10 (fee4984).
+  * Fix krb5.conf patch (ecb4272, e702fea).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 22 Jun 2022 13:05:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 22 Jun 2022 15:14:30 +0200
 
 linuxmuster-base7 (7.1.12-0) lmn71; urgency=low
 
