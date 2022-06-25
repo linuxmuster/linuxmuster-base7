@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.0-rc0) lmn72; urgency=low
+
+  * add webui to dependencies again (4e8c1c4).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 25 Jun 2022 16:55:00 +0200
+
 linuxmuster-base7 (7.2.0-alpha0) lmn72; urgency=low
 
   * remove webui from dependencies temporarily (56605cc).
