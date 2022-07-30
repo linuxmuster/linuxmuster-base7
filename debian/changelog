@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.1.14-0) lmn71; urgency=low
+
+  * Merge pull request #141 from PLanB2008/master (6490d87).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 30 Jul 2022 11:36:00 +0200
+
 linuxmuster-base7 (7.1.13-0) lmn71; urgency=low
 
   * Merge pull request #142 from linuxmuster/nolog-sophpass (87f95f7).
