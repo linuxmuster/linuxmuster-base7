@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.1.15-0) lmn71; urgency=low
+
+  * Fix executability of linuxmuster-holiday-generate (e3d55b7).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 30 Jul 2022 13:55:00 +0200
+
 linuxmuster-base7 (7.1.14-0) lmn71; urgency=low
 
   * Merge pull request #141 from PLanB2008/master (6490d87).
