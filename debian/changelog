@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.2.0-rc1) lmn72; urgency=low
+
+  * Merge pull request #141 from PLanB2008/master (71d28e4).
+  * Merge pull request #142 from linuxmuster/nolog-sophpass (60f7f32).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 30 Jul 2022 13:44:00 +0200
+
 linuxmuster-base7 (7.2.0-rc0) lmn72; urgency=low
 
   * add webui to dependencies again (4e8c1c4).
