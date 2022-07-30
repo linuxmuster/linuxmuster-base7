@@ -1,7 +1,7 @@
 # /etc/sudoers.d/linuxmuster
 #
 # thomas@linuxmuster.net
-# 20200720
+# 20220730
 #
 # sudoer groups for webui
 #
@@ -10,3 +10,6 @@
 %@@sambadomain@@\\role-teacher ALL=(ALL:ALL) NOPASSWD:ALL
 %@@sambadomain@@\\role-globaladministrator ALL=(ALL:ALL) NOPASSWD:ALL
 %@@sambadomain@@\\role-schooladministrator ALL=(ALL:ALL) NOPASSWD:ALL
+
+Cmnd_Alias SOPHPASS = /usr/sbin/sophomorix-passwd
+Defaults!SOPHPASS !syslog
