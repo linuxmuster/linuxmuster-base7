@@ -1,8 +1,9 @@
 linuxmuster-base7 (7.2.0-rc3) lmn72; urgency=low
 
-  * Fix #144: /run/samba/ntp_signd/ directory: wrong permissions prevent time synchronisation.
+  * Fix ntp socket directory (abddebf, 930a9da, 414cd02).
+  * Fix lmn-prepare invokation in setup (7d50c9e).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 10 Sep 2022 14:06:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 10 Sep 2022 14:13:00 +0200
 
 linuxmuster-base7 (7.2.0-rc2) lmn72; urgency=low
 
