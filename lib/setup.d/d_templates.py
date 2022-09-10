@@ -128,9 +128,9 @@ except:
 # set server time
 msg = 'Adjusting server time '
 printScript(msg, '', False, False, True)
-subProc('mkdir -p /var/lib/samba/ntp_signd', logfile)
-subProc('chgrp ntp /var/lib/samba/ntp_signd', logfile)
-subProc('chmod 640 /var/lib/samba/ntp_signd', logfile)
+subProc('mkdir -p ' + constants.NTPSOCKDIR, logfile)
+subProc('chgrp ntp ' + constants.NTPSOCKDIR, logfile)
+subProc('chmod 640 ' + constants.NTPSOCKDIR, logfile)
 subProc('timedatectl set-ntp false', logfile)
 subProc('systemctl stop ntp', logfile)
 subProc('ntpdate pool.ntp.org', logfile)
