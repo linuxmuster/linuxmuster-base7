@@ -80,6 +80,7 @@ for f in os.listdir(constants.TPLDIR):
         filedata = filedata.replace('@@sambadomain@@', sambadomain)
         filedata = filedata.replace('@@servername@@', servername)
         filedata = filedata.replace('@@serverip@@', serverip)
+        filedata = filedata.replace('@@ntpsockdir@@', constants.NTPSOCKDIR)
         # get target path
         firstline = filedata.split('\n')[0]
         target = firstline.partition(' ')[2]
@@ -127,6 +128,9 @@ except:
 # set server time
 msg = 'Adjusting server time '
 printScript(msg, '', False, False, True)
+subProc('mkdir -p /var/lib/samba/ntp_signd', logfile)
+subProc('chgrp ntp /var/lib/samba/ntp_signd', logfile)
+subProc('chmod 640 /var/lib/samba/ntp_signd', logfile)
 subProc('timedatectl set-ntp false', logfile)
 subProc('systemctl stop ntp', logfile)
 subProc('ntpdate pool.ntp.org', logfile)

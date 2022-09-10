@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20211221
+# 20220910
 #
 
 # don't change this file
@@ -17,6 +17,7 @@ DEFAULTSCHOOL = SOPHOSYSDIR + '/default-school'
 SCHOOLCONF = DEFAULTSCHOOL + '/school.conf'
 SCHOOLSSHARE = '/srv/samba/schools'
 WIMPORTDATA = DEFAULTSCHOOL + '/devices.csv'
+NTPSOCKDIR = '/var/lib/samba/ntp_signd'
 SYSVOLDIR = '/var/lib/samba/sysvol'
 SYSVOLTLSDIR = SYSVOLDIR + '/@@domainname@@/tls'
 SSLDIR = SYSDIR + '/ssl'
