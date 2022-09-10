@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.1.17-0) lmn71; urgency=low
+
+  * Fix lmn-prepare invokation in setup (76d6a36).
+  * Fix #144: /run/samba/ntp_signd/ directory: wrong permissions prevent time synchronisation. 
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 10 Sep 2022 13:41:00 +0200
+
 linuxmuster-base7 (7.1.16-0) lmn71; urgency=low
 
   *  Merge pull request #143 from linuxmuster/fix-sudoers (286d391).
