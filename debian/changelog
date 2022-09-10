@@ -2,7 +2,7 @@ linuxmuster-base7 (7.1.16-0) lmn71; urgency=low
 
   *  Merge pull request #143 from linuxmuster/fix-sudoers (286d391).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 1 Sep 2022 12:29:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 05 Sep 2022 18:50:45 +0200
 
 linuxmuster-base7 (7.1.15-0) lmn71; urgency=low
 
