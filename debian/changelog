@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.0-rc4) lmn72; urgency=low
+
+  *  add ntpd apparmor config template (#144).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 12 Sep 2022 19:22:00 +0200
+
 linuxmuster-base7 (7.2.0-rc3) lmn72; urgency=low
 
   * Fix ntp socket directory (abddebf, 930a9da, 414cd02).
