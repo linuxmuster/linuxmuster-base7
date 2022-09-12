@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.1.18-0) lmn71; urgency=low
+
+  * Provide ntp_signd directory patch script (#144).
+  * add ntpd apparmor config template (#144). 
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 12 Sep 2022 15:47:25 +0200
+
 linuxmuster-base7 (7.1.17-0) lmn71; urgency=low
 
   * Fix lmn-prepare invokation in setup (76d6a36).
