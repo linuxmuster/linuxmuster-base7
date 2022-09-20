@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20220910
+# 20220920
 #
 
 import configparser
@@ -130,7 +130,7 @@ msg = 'Adjusting server time '
 printScript(msg, '', False, False, True)
 subProc('mkdir -p ' + constants.NTPSOCKDIR, logfile)
 subProc('chgrp ntp ' + constants.NTPSOCKDIR, logfile)
-subProc('chmod 640 ' + constants.NTPSOCKDIR, logfile)
+subProc('chmod 750 ' + constants.NTPSOCKDIR, logfile)
 subProc('timedatectl set-ntp false', logfile)
 subProc('systemctl stop ntp', logfile)
 subProc('ntpdate pool.ntp.org', logfile)
