@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.1.20-0) lmn71; urgency=low
+
+  * Fix NTPSOCKDIR permissions in setup (#144). 
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 20 Sep 2022 18:13:00 +0200
+
 linuxmuster-base7 (7.1.19-0) lmn71; urgency=low
 
   * Fix NTPSOCKDIR permissions in fix-ntp_signd-dir.sh (#144). 
