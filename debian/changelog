@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.0-rc5) lmn72; urgency=low
+
+  *  Fix NTPSOCKDIR permissions in setup (#144).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 20 Sep 2022 18:28:00 +0200
+
 linuxmuster-base7 (7.2.0-rc4) lmn72; urgency=low
 
   *  add ntpd apparmor config template (#144).
