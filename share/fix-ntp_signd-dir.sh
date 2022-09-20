@@ -4,7 +4,7 @@
 # use this at your own risk
 # 
 # thomas@linuxmuster.net
-# 20220912
+# 20220920
 #
 
 # get environment
@@ -31,7 +31,7 @@ cp "$ntpd_template" "$ntpd_target"
 echo "Creating $NTPSOCKDIR ..."
 mkdir -p "$NTPSOCKDIR"
 chgrp ntp "$NTPSOCKDIR"
-chmod 640 "$NTPSOCKDIR"
+chmod 750 "$NTPSOCKDIR"
 
 # patch config files
 for item in $conffiles; do
