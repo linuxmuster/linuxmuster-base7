@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.1.21-0) lmn71; urgency=low
+
+  * Merge pull request #147 from linuxmuster/sophomorix-custom: Add sophomorix-user-custom for students
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 11 Jan 2023 12:55:00 +0200
+
 linuxmuster-base7 (7.1.20-0) lmn71; urgency=low
 
   * Fix NTPSOCKDIR permissions in setup (#144). 
