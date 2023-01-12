@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20220601
+# 20230112
 #
 
 import configparser
@@ -256,7 +256,7 @@ def writeDhcpDevicesConfig(school='default-school'):
                         # get grub bootimage dependend to group's systemtype in start.conf
                         bootimage = getBootImage(systemtype)
                         # linbo pxe boot
-                        host_decl = host_decl + '  option extensions-path "' + group + '";\n'
+                        host_decl = host_decl + '  option extensions-path "' + group + '";\n  option nis-domain "' + group + '";\n'
                         if 'filename' not in dhcpopts and bootimage is not None:
                             host_decl = host_decl + '  filename "boot/grub/' + bootimage + '";\n'
                         # dhcp options have to be 5 chars minimum to get processed
@@ -265,9 +265,8 @@ def writeDhcpDevicesConfig(school='default-school'):
                                 host_decl = host_decl + '  ' + opt + ';\n'
                     # finish host declaration
                     host_decl = host_decl + '}\n'
-                    # finallý write host declaration
+                    # finally write host declaration
                     outfile.write(host_decl)
-
 
         # open devices.conf for append
         with open(baseConfigFilePath, 'a') as outfile:
