@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.2.0-rc6) lmn72; urgency=low
+
+  * Merge #146: Write groupname in dhcp-server nis-domain option as well (b586138).
+  * Merge #147: Add sophomorix-user-custom for students (00e923e).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 12 Jan 2023 20:37:00 +0100
+
 linuxmuster-base7 (7.2.0-rc5) lmn72; urgency=low
 
   *  Fix NTPSOCKDIR permissions in setup (#144).
