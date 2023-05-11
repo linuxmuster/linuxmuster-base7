@@ -2,7 +2,7 @@
 #
 # linbo setup
 # thomas@linuxmuster.net
-# 20220105
+# 20230511
 #
 
 import configparser
@@ -97,6 +97,7 @@ except:
 msg = 'Activating linbo-torrent service '
 printScript(msg, '', False, False, True)
 try:
+    subprocess.call('systemctl -q enable opentracker 2>&1', shell=True)
     subprocess.call('systemctl -q enable linbo-torrent 2>&1', shell=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
