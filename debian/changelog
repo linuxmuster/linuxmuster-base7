@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.2.0-rc7) lmn72; urgency=low
+
+  * Changed codename to beta-release (8741a6d).
+  * Add activation of opentracker service to setup (7faae82).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 11 May 2023 19:08:13 +0200
+
 linuxmuster-base7 (7.2.0-rc6) lmn72; urgency=low
 
   * Merge #146: Write groupname in dhcp-server nis-domain option as well (b586138).
