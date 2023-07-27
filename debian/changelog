@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.0-rc9) lmn72; urgency=low
+
+  * revert netplan fix (b50a4ed).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 27 Jul 2023 13:11:00 +0200
+
 linuxmuster-base7 (7.2.0-rc8) lmn72; urgency=low
 
   * Remove netplan update in linuxmuster-import-subnets (4866dc9).
