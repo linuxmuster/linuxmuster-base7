@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20211219
+# 20230728
 #
 
 import ast
@@ -10,6 +10,7 @@ import constants
 import datetime
 import os
 import re
+import subprocess
 import time
 import yaml
 
@@ -88,37 +89,56 @@ nat_rule_xml = nat_rule_xml.replace(
 def updateNetplan(subnets):
     printScript('Processing netplan configuration:')
     cfgfile = constants.NETCFG
+    # create backup of current configuration
+    timestamp = str(datetime.datetime.now()).replace('-', '').replace(' ', '').replace(':', '').split('.')[0]
+    bakfile = cfgfile + '-' + timestamp
+    rc = subprocess.call('cp ' + cfgfile + ' ' + bakfile, shell=True)
+    if rc != 0:
+        printScript('* Failed to backup ' + cfgfile + '!')
+        return False
     # read netplan config file
     with open(cfgfile) as config:
         netcfg = yaml.safe_load(config)
     iface = str(netcfg['network']['ethernets']).split('\'')[1]
     ifcfg = netcfg['network']['ethernets'][iface]
+    # remove deprecated gateway4
+    try:
+        del ifcfg['gateway4']
+        printScript('* Removed deprecated gateway4 statement.')
+    except:
+        None
     # first delete the old routes if there are any
     try:
         del ifcfg['routes']
-        changed = True
         printScript('* Removed old routes.')
     except:
-        changed = False
-    # only if there are subnets beside server network
+        None
+    # set default route
+    ifcfg['routes'] = []
+    subroute = eval('{"to": \'default\', "via": \'' + firewallip + '\'}')
+    ifcfg['routes'].append(subroute)
+    # add subnet routes if there are any beside server network
     if len(subnets) > 0:
-        changed = True
-        ifcfg['routes'] = []
         for item in subnets:
+            # skip if firewall is gateway, it's the default gw anyway
+            if servernet_router == firewallip:
+                continue
             subnet = item.split(':')[0]
             # tricky: concenate dict object for yaml using eval
-            subroute = eval('{"to": ' + '\'' + subnet + '\''
-                            + ', "via": ' + '\'' + servernet_router + '\'' + '}')
+            subroute = eval('{"to": \'' + subnet + '\', "via": \'' + servernet_router + '\'}')
             ifcfg['routes'].append(subroute)
         printScript('* Added new routes for all subnets.')
     # save netcfg
-    if changed:
-        with open(cfgfile, 'w') as config:
-            config.write(yaml.dump(netcfg, default_flow_style=False))
-        os.system('netplan apply')
-        printScript('* Applied new configuration.')
-    # send changed configuration back and apply it
-    return changed
+    with open(cfgfile, 'w') as config:
+        config.write(yaml.dump(netcfg, default_flow_style=False))
+    rc = subprocess.call('netplan apply', shell=True)
+    if rc == 0:
+        printScript('* Applied new netplan configuration.')
+    else:
+        printScript('* Failed to apply new netplan configuration. Rolling back to previous status.')
+        subprocess.call('cp ' + bakfile + ' ' + cfgfile, shell=True)
+        subprocess.call('netplan apply', shell=True)
+        return False
 
 
 # update vlan gateway on firewall
@@ -161,8 +181,7 @@ def updateFwNat(subnets, ipnet_setup, serverip, content):
         # skip servernet
         if subnet == ipnet_setup:
             continue
-        timestamp = str(datetime.datetime.now(
-            datetime.timezone.utc).timestamp())
+        timestamp = str(datetime.datetime.now(datetime.timezone.utc).timestamp())
         nat_rule = nat_rule_xml.replace('@@subnet@@', subnet)
         nat_rule = nat_rule.replace('@@timestamp@@', timestamp)
         nat_rules.append(nat_rule)
