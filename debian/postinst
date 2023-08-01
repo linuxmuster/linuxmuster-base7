@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20220601
+# 20230801
 # GPL v3
 #
 
@@ -47,9 +47,11 @@ case "$1" in
   # create ssl-cert group
   groupadd --force --system ssl-cert
 
-  # permissions
+  # set permissions
+  # linuxmuster ssl certs 
   chgrp ssl-cert "$SSLDIR" -R
   chmod 750 "$SSLDIR"
+  # linuxmuster secrets directory
   for i in "$SECRETDIR" "$BINDUSERSECRET" "$DNSADMINSECRET"; do
     [ -e "$i" ] && chgrp dhcpd "$i"
     if [ -d "$i" ]; then
@@ -58,8 +60,14 @@ case "$1" in
       [ -e "$i" ] && chmod 440 "$i"
     fi
   done
+  # samba sysvol directory
   sysvol="/var/lib/samba/sysvol"
   [ -d "$sysvol" ] && find "$sysvol" -type d -exec chmod 775 '{}' \;
+  # samba ntp socket directory
+  mkdir -p "$NTPSOCKDIR"
+  chgrp ntp "$NTPSOCKDIR"
+  chmod 750 "$NTPSOCKDIR"
+
 
   # skip subsequent actions on configured systems
   [ -s "$SETUPINI" ] || exit 0
