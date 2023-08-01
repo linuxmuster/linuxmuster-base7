@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20230728
+# 20230801
 #
 
 import ast
@@ -24,6 +24,7 @@ from IPy import IP
 # read necessary values from setup.ini and other sources
 serverip = getSetupValue('serverip')
 domainname = getSetupValue('domainname')
+gateway = getSetupValue('gateway')
 firewallip = getSetupValue('firewallip')
 # get boolean value
 skipfw = ast.literal_eval(getSetupValue('skipfw'))
@@ -115,13 +116,13 @@ def updateNetplan(subnets):
         None
     # set default route
     ifcfg['routes'] = []
-    subroute = eval('{"to": \'default\', "via": \'' + firewallip + '\'}')
+    subroute = eval('{"to": \'default\', "via": \'' + gateway + '\'}')
     ifcfg['routes'].append(subroute)
     # add subnet routes if there are any beside server network
     if len(subnets) > 0:
         for item in subnets:
-            # skip if firewall is gateway, it's the default gw anyway
-            if servernet_router == firewallip:
+            # skip if subnet gateway is the default
+            if servernet_router == gateway:
                 continue
             subnet = item.split(':')[0]
             # tricky: concenate dict object for yaml using eval
