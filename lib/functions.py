@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20220603
+# 20230831
 #
 
 from subprocess import Popen, PIPE
@@ -904,7 +904,7 @@ def isValidHostIpv4(ip):
         if not ipv4.version() == 4:
             return False
         ipv4str = IP(ipv4).strNormal(0)
-        if (int(ipv4str.split('.')[0]) == 0 or int(ipv4str.split('.')[3]) == 0):
+        if (int(ipv4str.split('.')[0]) == 0):
             return False
         c = 0
         for i in ipv4str.split('.'):
