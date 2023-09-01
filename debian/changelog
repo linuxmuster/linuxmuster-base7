@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.0-rc12) lmn72; urgency=low
+
+  * allow trailing 0 in host ip address (1570f07).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 01 Sep 2023 15:15:58 +0200
+
 linuxmuster-base7 (7.2.0-rc11) lmn72; urgency=low
 
   * postinst: fix permissions of samba's ntp socket directory (f84835a).
