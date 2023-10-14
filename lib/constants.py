@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20220910
+# 20231014
 #
 
 # don't change this file
@@ -65,6 +65,8 @@ LINBOLOGDIR = LOGDIR + '/linbo'
 LINBOSHAREDIR = SHAREDIR + '/linbo'
 LINBOTPLDIR = LINBOSHAREDIR + '/templates'
 LINBOCACHEDIR = CACHEDIR + '/linbo'
+LINBOSYSDIR = SYSDIR + '/linbo'
+LINBOVARDIR = VARDIR + '/linbo'
 DHCPDEVCONF = '/etc/dhcp/devices.conf'
 DHCPSUBCONF = '/etc/dhcp/subnets.conf'
 NETCFG = '/etc/netplan/01-netcfg.yaml'
