@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.0-rc13) lmn72; urgency=low
+
+  * introducing new environment variables LINBOSYSDIR and LINBOVARDIR (7687b40).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 14 Oct 2023 12:32:13 +0200
+
 linuxmuster-base7 (7.2.0-rc12) lmn72; urgency=low
 
   * allow trailing 0 in host ip address (1570f07).
