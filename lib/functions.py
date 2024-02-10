@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20230831
+# 20240210
 #
 
 from subprocess import Popen, PIPE
@@ -647,10 +647,10 @@ def putSftp(ip, localfile, remotefile, secret='', sshuser='root'):
 
 
 # upload firewall config
-def putFwConfig(firewallip, secret=''):
+def putFwConfig(firewallip, fwconf=constants.FWCONFREMOTE, secret=''):
     printScript('Uploading firewall configuration:')
     rc = putSftp(firewallip, constants.FWCONFLOCAL,
-                 constants.FWCONFREMOTE, secret)
+                 fwconf, secret)
     if rc:
         printScript('* Upload finished successfully.')
     else:

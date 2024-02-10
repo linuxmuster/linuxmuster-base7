@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20220105
+# 20220210
 #
 
 import bcrypt
@@ -119,9 +119,7 @@ def main():
             language = '<language>' + lang + '</language>'
         # save gateway configuration
         try:
-            gwconfig = str(soup.findAll('gateways')[0])
-            gwconfig = gwconfig.replace(
-                '<gateways>', '').replace('</gateways>', '')
+            gwconfig = str(soup.find('gateways').content)
         except:
             gwconfig = ''
         # save dnsserver configuration
@@ -235,7 +233,7 @@ def main():
 
     # upload config files
     # upload modified main config.xml
-    rc = putFwConfig(firewallip, rolloutpw)
+    rc = putFwConfig(firewallip, '/tmp/opnsense.xml', rolloutpw)
     if not rc:
         sys.exit(1)
 
@@ -247,7 +245,7 @@ def main():
         sys.exit(1)
     rc, content = readTextfile(conftmp)
     fwpath = content.split('\n')[0].partition(' ')[2]
-    rc = putSftp(firewallip, conftmp, fwpath, productionpw)
+    rc = putSftp(firewallip, conftmp, fwpath, rolloutpw)
     if not rc:
         sys.exit(1)
 
@@ -258,9 +256,9 @@ def main():
     printScript('Installing extensions and rebooting firewall')
     fwsetup_local = constants.FWSHAREDIR + '/fwsetup.sh'
     fwsetup_remote = '/tmp/fwsetup.sh'
-    rc = putSftp(firewallip, fwsetup_local, fwsetup_remote, productionpw)
-    rc = sshExec(firewallip, 'chmod +x ' + fwsetup_remote, productionpw)
-    rc = sshExec(firewallip, fwsetup_remote, productionpw)
+    rc = putSftp(firewallip, fwsetup_local, fwsetup_remote, rolloutpw)
+    rc = sshExec(firewallip, 'chmod +x ' + fwsetup_remote, rolloutpw)
+    rc = sshExec(firewallip, fwsetup_remote, rolloutpw)
     if not rc:
         sys.exit(1)
 

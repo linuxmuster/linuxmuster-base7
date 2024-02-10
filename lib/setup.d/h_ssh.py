@@ -2,7 +2,7 @@
 #
 # setup ssh host keys
 # thomas@linuxmuster.net
-# 20220105
+# 20240209
 #
 
 import configparser
@@ -60,8 +60,7 @@ for a in crypto_list:
         subProc('ssh-keygen -t ' + a + ' -f '
                 + rootkey_prefix + a + ' -N ""', logfile)
         if a == 'rsa':
-            subProc('base64 ' + constants.SSHPUBKEY
-                    + ' > ' + constants.SSHPUBKEYB64, logfile)
+            subProc('echo -n "$(cat ' + constants.SSHPUBKEY + ')" | base64 -w0 > ' + constants.SSHPUBKEYB64, logfile)
             rc = replaceInFile(constants.SSHPUBKEYB64, '\n', '')
         printScript(' Success!', '', True, True, False, len(msg))
     except:
