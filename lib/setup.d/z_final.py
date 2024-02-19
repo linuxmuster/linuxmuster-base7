@@ -2,11 +2,12 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20220105
+# 20240219
 #
 
 import configparser
 import constants
+import glob
 import os
 import re
 import sys
@@ -29,6 +30,10 @@ try:
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
+
+# fix netplan file permissions
+for file in glob.glob('/etc/netplan/*.yaml*'):
+    os.chmod(file, 0o600)
 
 # restart apparmor service
 msg = 'Restarting apparmor service '
