@@ -2,7 +2,7 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20220105
+# 20240219
 #
 
 import configparser
@@ -19,18 +19,6 @@ logfile = mySetupLogfile(__file__)
 # remove temporary files
 if os.path.isfile('/tmp/setup.ini'):
     os.unlink('/tmp/setup.ini')
-
-# disable unwanted services
-unwanted = ['iscsid', 'dropbear', 'lxcfs']
-for item in unwanted:
-    msg = 'Disabling service ' + item + ' '
-    printScript(msg, '', False, False, True)
-    try:
-        subProc('systemctl stop ' + item + '.service', logfile)
-        subProc('systemctl disable ' + item + '.service', logfile)
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' not installed!', '', True, True, False, len(msg))
 
 # restart apparmor service
 msg = 'Restarting apparmor service '
