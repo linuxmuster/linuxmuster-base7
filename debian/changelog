@@ -1,3 +1,21 @@
+linuxmuster-base7 (7.2.2-0) lmn72; urgency=low
+
+  * refactor ssh key creation (492f9a1).
+  * refactor ssl certs creation (9e61b17).
+  * establish setup compatibility with opnsense 24.1.*,
+    use dns0.eu child protection dns servers per default (6de6c58).
+  * remove deprecated code from setup (05df6b7).
+  * fix firewall web proxy sso keytab creation (10f7bb3).
+  * add ability to hide command options in subProc() (fd8e99b).
+  * don't log admin password on keytab creation (3702efa).
+  * linuxmuster-import-devices:
+    - subprocess improvements (95e27be).
+    - fix console output (cc60379).
+  * fix netplan file permissions (8332294).
+  * check firewall major version before setup changes anything (ca48d4f).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 19 Feb 2024 18:30:03 +0100
+
 linuxmuster-base7 (7.2.1-0) lmn72; urgency=low
 
   * fix firewall sshkey & gateway setup (496049a).
