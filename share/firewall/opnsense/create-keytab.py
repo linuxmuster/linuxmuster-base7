@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 #
-#  create web proxy sso keytab
+# create web proxy sso keytab
 # thomas@linuxmuster.net
-# 20200311
+# 20240219
 #
 
 import constants
 import getopt
 import os
+import subprocess
 import sys
 
 from functions import datetime
@@ -92,6 +93,14 @@ if not check:
     res = firewallApi('post', apipath, payload)
     if verbose:
         print(res)
+
+    # set firewall spn if it does not exist yet
+    entry = 'HTTP/firewall\n'
+    output = subprocess.check_output(['samba-tool', 'spn', 'list', 'FIREWALL-K$']).decode('utf-8')
+    if entry not in output:
+        entry = entry.replace('\n', '')
+        printScript('Adding servicePrincipalName ' + entry + ' for FIREWALL-K$')
+        subprocess.run(['samba-tool', 'spn', 'add', entry, 'FIREWALL-K$'])
 
 
 # check success

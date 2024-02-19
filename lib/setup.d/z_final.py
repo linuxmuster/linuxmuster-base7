@@ -2,7 +2,7 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20240219
+# 20220105
 #
 
 import configparser
@@ -19,6 +19,16 @@ logfile = mySetupLogfile(__file__)
 # remove temporary files
 if os.path.isfile('/tmp/setup.ini'):
     os.unlink('/tmp/setup.ini')
+
+# get various setup values
+msg = 'Reading setup data '
+printScript(msg, '', False, False, True)
+try:
+    adminpw = getSetupValue('adminpw')
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
 
 # restart apparmor service
 msg = 'Restarting apparmor service '
@@ -78,7 +88,7 @@ except Exception as error:
 msg = 'Creating web proxy sso keytab '
 printScript(msg, '', False, False, True)
 try:
-    subProc(constants.FWSHAREDIR + '/create-keytab.py -v', logfile)
+    subProc(constants.FWSHAREDIR + "/create-keytab.py -v -a '" + adminpw + "'", logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))
