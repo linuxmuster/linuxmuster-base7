@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20240210
+# 20240219
 #
 
 from subprocess import Popen, PIPE
@@ -54,7 +54,7 @@ class tee(object):
 
 
 # invoke system commands
-def subProc(cmd, logfile=None):
+def subProc(cmd, logfile=None, hideopts=False):
     try:
         rc = True
         p = Popen(cmd, shell=True, universal_newlines=True,
@@ -67,6 +67,8 @@ def subProc(cmd, logfile=None):
             log.write('-' * 78 + '\n')
             now = str(datetime.datetime.now()).split('.')[0]
             log.write('#### ' + now + ' ' * (68 - len(now)) + ' ####\n')
+            if hideopts:
+                cmd = cmd.split()[0]
             log.write('#### ' + cmd + ' ' * (68 - len(cmd)) + ' ####\n')
             log.write(output)
             if not rc:
