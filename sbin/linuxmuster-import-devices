@@ -380,7 +380,7 @@ if len(hookscripts) > 0:
 
 # restart services
 printScript('', 'begin')
-printScript('Restarting dhcp service:')
+printScript('Finally restarting dhcp service.')
 subProc('service isc-dhcp-server restart')
 
 # end message
