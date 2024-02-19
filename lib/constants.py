@@ -3,7 +3,7 @@
 # constants.py
 #
 # thomas@linuxmuster.net
-# 20231014
+# 20240219
 #
 
 # don't change this file
@@ -49,7 +49,7 @@ SETUPDIR = LIBDIR + '/setup.d'
 TPLDIR = SHAREDIR + '/templates'
 CUSTOMINI = CACHEDIR + '/custom.ini'
 FWSHAREDIR = SHAREDIR + '/firewall/opnsense'
-FWAUTHCFG = FWSHAREDIR + '/50-linuxmuster.pre-auth.conf'
+FWAUTHCFG = FWSHAREDIR + '/pre-auth.conf'
 FWOSCONFTPL = FWSHAREDIR + '/config.xml.tpl'
 FWCONFLOCAL = CACHEDIR + '/opnsense.xml'
 FWCONFREMOTE = '/conf/config.xml'

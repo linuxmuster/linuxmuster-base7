@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20220210
+# 20220219
 #
 
 import bcrypt
@@ -100,7 +100,8 @@ def main():
         rc, content = readTextfile(fwconftmp)
         soup = BeautifulSoup(content, 'lxml')
         # save certain configuration values for later use
-        sysctl = str(soup.findAll('sysctl')[0])
+        firmware = str(soup.find('firmware'))
+        sysctl = str(soup.find('sysctl'))
         # get already configured interfaces
         for item in soup.findAll('interfaces'):
             if '<lan>' in str(item):
@@ -122,17 +123,6 @@ def main():
             gwconfig = str(soup.find('gateways').content)
         except:
             gwconfig = ''
-        # save dnsserver configuration
-        try:
-            dnsconfig = str(soup.findAll('dnsserver')[0])
-        except:
-            dnsconfig = ''
-        # add server as dnsserver
-        dnsserver = '<dnsserver>' + serverip + '</dnsserver>'
-        if dnsconfig == '':
-            dnsconfig = dnsserver
-        else:
-            dnsconfig = dnsserver + '\n    ' + dnsconfig
         # save opt1 configuration if present
         try:
             opt1config = str(soup.findAll('opt1')[0])
@@ -188,12 +178,12 @@ def main():
         # read template
         rc, content = readTextfile(fwconftpl)
         # replace placeholders with values
+        content = content.replace('@@firmware@@', firmware)
         content = content.replace('@@sysctl@@', sysctl)
         content = content.replace('@@servername@@', servername)
         content = content.replace('@@domainname@@', domainname)
         content = content.replace('@@basedn@@', basedn)
         content = content.replace('@@interfaces@@', interfaces)
-        content = content.replace('@@dnsconfig@@', dnsconfig)
         content = content.replace('@@gwconfig@@', gwconfig)
         content = content.replace('@@serverip@@', serverip)
         content = content.replace('@@firewallip@@', firewallip)
@@ -243,9 +233,7 @@ def main():
     conftmp = '/tmp/' + os.path.basename(constants.FWAUTHCFG)
     if not os.path.isfile(conftmp):
         sys.exit(1)
-    rc, content = readTextfile(conftmp)
-    fwpath = content.split('\n')[0].partition(' ')[2]
-    rc = putSftp(firewallip, conftmp, fwpath, rolloutpw)
+    rc = putSftp(firewallip, conftmp, conftmp, rolloutpw)
     if not rc:
         sys.exit(1)
 
