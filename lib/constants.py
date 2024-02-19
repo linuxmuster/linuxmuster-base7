@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 #
-# constants.py
-#
+# constants.py: linuxmuster environment
+# don't change this
 # thomas@linuxmuster.net
 # 20240219
 #
 
-# don't change this file
+# firewall major version to match
+FWMAJORVER = 24
 
 # global variables
 ROOTMNTOPTS = 'user_xattr,acl,usrquota,usrjquota=aquota.user,grpquota,grpjquota=aquota.group,jqfmt=vfsv0,errors=remount-ro,barrier=1'

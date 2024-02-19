@@ -660,6 +660,27 @@ def putFwConfig(firewallip, fwconf=constants.FWCONFREMOTE, secret=''):
     return rc
 
 
+# check firewall's major version
+def checkFwMajorVer():
+    try:
+        firewallip = getSetupValue('firewallip')
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(firewallip, port=22, username='root', password=constants.ROOTPW)
+        stdin, stdout, stderr = ssh.exec_command('opnsense-version')
+        output = stdout.readlines()[0]
+        fver = output.split()[1]
+        mver = int(fver.split('.')[0])
+        if mver == constants.FWMAJORVER:
+            return True
+        else:
+            print('Firewall version ' + fver + ' does not match ' + str(constants.FWMAJORVER) + '.*!')
+            return False
+    except Exception as error:
+        print(error)
+        return False
+
+
 # execute ssh command
 # note: paramiko key based connection is obviously broken in 18.04, so we use
 #   ssh shell command
