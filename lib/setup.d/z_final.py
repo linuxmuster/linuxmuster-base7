@@ -93,7 +93,7 @@ except Exception as error:
 msg = 'Creating web proxy sso keytab '
 printScript(msg, '', False, False, True)
 try:
-    subProc(constants.FWSHAREDIR + "/create-keytab.py -v -a '" + adminpw + "'", logfile)
+    subProc(constants.FWSHAREDIR + "/create-keytab.py -v -a '" + adminpw + "'", logfile, True)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))
