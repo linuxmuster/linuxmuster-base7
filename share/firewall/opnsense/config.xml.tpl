@@ -113,6 +113,9 @@
       <ip>@@serverip@@</ip>
       <descr>linuxmuster</descr>
     </domainoverrides>
+    <forwarding>
+      <enabled>1</enabled>
+    </forwarding>
     <hosts>
       <host>@@servername@@</host>
       <domain>@@domainname@@</domain>
