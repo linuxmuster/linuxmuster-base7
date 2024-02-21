@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20220601
+# 20230112
 #
 
 import configparser
@@ -24,7 +24,7 @@ from functions import getBootImage, getDevicesArray, getGrubOstype, getGrubPart
 from functions import getStartconfOsValues, getStartconfOption
 from functions import getStartconfPartnr, getStartconfPartlabel, getSubnetArray
 from functions import isValidHostIpv4, getLinboVersion, printScript, readTextfile
-from functions import setGlobalStartconfOption, writeTextfile
+from functions import setGlobalStartconfOption, subProc, writeTextfile
 
 
 def usage():
@@ -67,14 +67,14 @@ printScript(os.path.basename(__file__), 'begin')
 # do sophomorix-devices first
 msg = 'Starting sophomorix-device syntax check:'
 printScript(msg)
-result = subprocess.check_call('sophomorix-device --dry-run', shell=True)
+result = subProc('sophomorix-device --dry-run')
 msg = 'sophomorix-device finished '
-if result != 0:
+if not result:
     printScript(msg + ' errors detected!')
-    sys.exit(result)
+    sys.exit(1)
 
 printScript(msg + ' OK!')
-subprocess.call('sophomorix-device --sync', shell=True)
+subProc('sophomorix-device --sync')
 
 
 # functions begin
@@ -93,7 +93,7 @@ def doGrubCfg(startconf, group, kopts):
     # if cache is not defined provide a forced netboot cfg
     if cacheroot is None:
         netboottpl = constants.LINBOTPLDIR + '/grub.cfg.forced_netboot'
-        subprocess.call('cp ' + netboottpl + ' ' + grubcfg, shell=True)
+        subProc('cp ' + netboottpl + ' ' + grubcfg)
         return 'not yet configured!'
     # create return message
     if os.path.isfile(grubcfg):
@@ -154,8 +154,7 @@ def doLinboStartconf(group):
             msg1 = 'present'
     else:
         msg1 = 'not yet configured!'
-        subprocess.call('cp ' + constants.LINBODIR
-                        + '/start.conf ' + startconf, shell=True)
+        subProc('cp ' + constants.LINBODIR + '/start.conf ' + startconf)
     # read values from start.conf
     group_s = getStartconfOption(startconf, 'LINBO', 'Group')
     serverip_s = getStartconfOption(startconf, 'LINBO', 'Server')
@@ -256,7 +255,7 @@ def writeDhcpDevicesConfig(school='default-school'):
                         # get grub bootimage dependend to group's systemtype in start.conf
                         bootimage = getBootImage(systemtype)
                         # linbo pxe boot
-                        host_decl = host_decl + '  option extensions-path "' + group + '";\n'
+                        host_decl = host_decl + '  option extensions-path "' + group + '";\n  option nis-domain "' + group + '";\n'
                         if 'filename' not in dhcpopts and bootimage is not None:
                             host_decl = host_decl + '  filename "boot/grub/' + bootimage + '";\n'
                         # dhcp options have to be 5 chars minimum to get processed
@@ -265,9 +264,8 @@ def writeDhcpDevicesConfig(school='default-school'):
                                 host_decl = host_decl + '  ' + opt + ';\n'
                     # finish host declaration
                     host_decl = host_decl + '}\n'
-                    # finallý write host declaration
+                    # finally write host declaration
                     outfile.write(host_decl)
-
 
         # open devices.conf for append
         with open(baseConfigFilePath, 'a') as outfile:
@@ -324,8 +322,8 @@ def doSchoolSpecificGroupLinksAndGetPxeGroups(school='default-school'):
 # look up all links for all schools and place them in the correct place
 def doAllGroupLinks():
     # delete old config links
-    subprocess.call(['find', constants.LINBODIR, '-maxdepth', '1', '-name', 'start.conf-*', '-type', 'l', '-exec', 'rm', '{}', ';'])
-    subprocess.call(['find', constants.LINBOGRUBDIR + '/hostcfg', '-maxdepth', '1', '-name', '*.cfg', '-type', 'l', '-exec', 'rm', '{}', ';'])
+    subProc("find " + constants.LINBODIR + " -maxdepth 1 -name start.conf-\* -type l -exec rm '{}' \;")
+    subProc("find " + constants.LINBOGRUBDIR + "/hostcfg -maxdepth 1 -name \*.cfg -type l -exec rm '{}' \;")
 
     linksConfBasedir = constants.LINBODIR + "/boot/links"
     for schoolLinksConf in listdir(linksConfBasedir):
@@ -376,29 +374,14 @@ if len(hookscripts) > 0:
         hookscript = hookpath + '/' + h
         msg = '* ' + h + ' '
         printScript(msg, '', False, False, True)
-        output = subprocess.getoutput(hookscript)
+        output = subprocess.check_output(hookscript).decode('utf-8')
         if output != '':
             print(output)
 
 # restart services
 printScript('', 'begin')
-printScript('Restarting services:')
-service = 'isc-dhcp-server'
-subprocess.call('service ' + service + ' restart', shell=True)
-# wait one second before service check
-time.sleep(1)
-rc = 0
-msg = '* ' + service + ' '
-printScript(msg, '', False, False, True)
-state = subprocess.check_call(
-    'systemctl is-active --quiet ' + service, shell=True)
-if state == 0:
-    printScript(' OK!', '', True, True, False, len(msg))
-else:
-    printScript(' Failed!', '', True, True, False, len(msg))
-    rc = 1
+printScript('Finally restarting dhcp service.')
+subProc('service isc-dhcp-server restart')
 
 # end message
 printScript(os.path.basename(__file__), 'end')
-
-sys.exit(rc)

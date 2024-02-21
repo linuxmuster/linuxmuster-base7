@@ -2,18 +2,20 @@
 #
 # setup ssh host keys
 # thomas@linuxmuster.net
-# 20220105
+# 20240219
 #
 
 import configparser
 import constants
+import glob
 import os
 import re
+import subprocess
 import sys
 
 from functions import backupCfg, checkSocket, isValidHostIpv4, modIni
 from functions import mySetupLogfile, printScript, replaceInFile
-from functions import setupComment, subProc
+from functions import setupComment, subProc, writeTextfile
 
 logfile = mySetupLogfile(__file__)
 
@@ -39,45 +41,53 @@ sshdir = '/root/.ssh'
 rootkey_prefix = sshdir + '/id_'
 known_hosts = sshdir + '/known_hosts'
 
-# delete old ssh keys
-subProc('rm -f /etc/ssh/*key* ' + sshdir + '/id*', logfile)
-
-# create ssh keys
-printScript('Creating ssh keys:')
-for a in crypto_list:
-    msg = '* ' + a + ' host key '
-    printScript(msg, '', False, False, True)
-    try:
-        subProc('ssh-keygen -t ' + a + ' -f '
-                + hostkey_prefix + a + '_key -N ""', logfile)
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
-        sys.exit(1)
-    msg = '* ' + a + ' root key '
-    printScript(msg, '', False, False, True)
-    try:
-        subProc('ssh-keygen -t ' + a + ' -f '
-                + rootkey_prefix + a + ' -N ""', logfile)
-        if a == 'rsa':
-            subProc('base64 ' + constants.SSHPUBKEY
-                    + ' > ' + constants.SSHPUBKEYB64, logfile)
-            rc = replaceInFile(constants.SSHPUBKEYB64, '\n', '')
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
-        sys.exit(1)
-
-# restart ssh service
-msg = 'Restarting ssh service '
+# stop ssh service
+msg = 'Stopping ssh service '
 printScript(msg, '', False, False, True)
 try:
-    subProc('service ssh restart', logfile)
+    subProc('service ssh stop', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
     sys.exit(1)
 
-# remove known_hosts
-if os.path.isfile(known_hosts):
-    subProc('rm -f ' + known_hosts, logfile)
+# delete old ssh keys
+for file in glob.glob('/etc/ssh/*key*'):
+    os.unlink(file)
+for file in glob.glob(sshdir + '/id*'):
+    os.unlink(file)
+
+# create ssh keys
+msg = "Creating ssh host keys "
+printScript(msg, '', False, False, True)
+try:
+    subProc('ssh-keygen -A', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+printScript('Creating ssh root keys:')
+for a in crypto_list:
+    msg = '* ' + a + ' key '
+    printScript(msg, '', False, False, True)
+    try:
+        subProc('ssh-keygen -t ' + a + ' -f '
+                + rootkey_prefix + a + ' -N ""', logfile)
+        if a == 'rsa':
+            keyfile = rootkey_prefix + a + '.pub'
+            b64sshkey = subprocess.check_output(['base64', keyfile]).decode('utf-8').replace('\n', '')
+            writeTextfile(constants.SSHPUBKEYB64, b64sshkey, 'w')
+        printScript(' Success!', '', True, True, False, len(msg))
+    except:
+        printScript(' Failed!', '', True, True, False, len(msg))
+        sys.exit(1)
+
+# start ssh service
+msg = 'starting ssh service '
+printScript(msg, '', False, False, True)
+try:
+    subProc('service ssh start', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)

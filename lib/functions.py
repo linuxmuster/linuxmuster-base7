@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20220603
+# 20240219
 #
 
 from subprocess import Popen, PIPE
@@ -54,7 +54,7 @@ class tee(object):
 
 
 # invoke system commands
-def subProc(cmd, logfile=None):
+def subProc(cmd, logfile=None, hideopts=False):
     try:
         rc = True
         p = Popen(cmd, shell=True, universal_newlines=True,
@@ -67,6 +67,8 @@ def subProc(cmd, logfile=None):
             log.write('-' * 78 + '\n')
             now = str(datetime.datetime.now()).split('.')[0]
             log.write('#### ' + now + ' ' * (68 - len(now)) + ' ####\n')
+            if hideopts:
+                cmd = cmd.split()[0]
             log.write('#### ' + cmd + ' ' * (68 - len(cmd)) + ' ####\n')
             log.write(output)
             if not rc:
@@ -647,15 +649,36 @@ def putSftp(ip, localfile, remotefile, secret='', sshuser='root'):
 
 
 # upload firewall config
-def putFwConfig(firewallip, secret=''):
+def putFwConfig(firewallip, fwconf=constants.FWCONFREMOTE, secret=''):
     printScript('Uploading firewall configuration:')
     rc = putSftp(firewallip, constants.FWCONFLOCAL,
-                 constants.FWCONFREMOTE, secret)
+                 fwconf, secret)
     if rc:
         printScript('* Upload finished successfully.')
     else:
         printScript('* Upload failed!')
     return rc
+
+
+# check firewall's major version
+def checkFwMajorVer():
+    try:
+        firewallip = getSetupValue('firewallip')
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(firewallip, port=22, username='root', password=constants.ROOTPW)
+        stdin, stdout, stderr = ssh.exec_command('opnsense-version')
+        output = stdout.readlines()[0]
+        fver = output.split()[1]
+        mver = int(fver.split('.')[0])
+        if mver == constants.FWMAJORVER:
+            return True
+        else:
+            print('Firewall version ' + fver + ' does not match ' + str(constants.FWMAJORVER) + '.*!')
+            return False
+    except Exception as error:
+        print(error)
+        return False
 
 
 # execute ssh command
@@ -904,7 +927,7 @@ def isValidHostIpv4(ip):
         if not ipv4.version() == 4:
             return False
         ipv4str = IP(ipv4).strNormal(0)
-        if (int(ipv4str.split('.')[0]) == 0 or int(ipv4str.split('.')[3]) == 0):
+        if (int(ipv4str.split('.')[0]) == 0):
             return False
         c = 0
         for i in ipv4str.split('.'):

@@ -2,18 +2,20 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20220530
+# 20240219
 #
 
 from __future__ import print_function
 
 import configparser
 import constants
+import glob
 import os
+import subprocess
 import sys
 
 from functions import createServerCert, mySetupLogfile, randomPassword
-from functions import replaceInFile, printScript, subProc
+from functions import replaceInFile, printScript, subProc, writeTextfile
 
 logfile = mySetupLogfile(__file__)
 
@@ -51,9 +53,8 @@ msg = 'Creating private CA key & certificate '
 subj = subjbase + realm + '/subjectAltName=' + realm + '/'
 printScript(msg, '', False, False, True)
 try:
-    with open(constants.CAKEYSECRET, 'w') as secret:
-        secret.write(cakeypw)
-    subProc('chmod 400 ' + constants.CAKEYSECRET, logfile)
+    writeTextfile(constants.CAKEYSECRET, cakeypw, 'w')
+    os.chmod(constants.CAKEYSECRET, 0o400)
     subProc('openssl genrsa -out ' + constants.CAKEY
             + ' -aes128 -passout pass:' + cakeypw + ' 2048', logfile)
     subProc('openssl req -batch -x509 ' + subj + ' -new -nodes ' + passin
@@ -65,9 +66,8 @@ try:
             + ' /usr/local/share/ca-certificates/linuxmuster_cacert.crt', logfile)
     subProc('update-ca-certificates', logfile)
     # create base64 encoded version for opnsense's config.xml
-    subProc('base64 ' + constants.CACERT
-            + ' > ' + constants.CACERTB64, logfile)
-    rc = replaceInFile(constants.CACERTB64, '\n', '')
+    cacertb64 = subprocess.check_output(['base64', constants.CACERT]).decode('utf-8').replace('\n', '')
+    writeTextfile(constants.CACERTB64, cacertb64, 'w')
     if not os.path.isfile(constants.CACERTB64):
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
@@ -95,9 +95,11 @@ msg = 'Ensure key and certificate permissions '
 printScript(msg, '', False, False, True)
 try:
     subProc('chgrp -R ssl-cert ' + constants.SSLDIR, logfile)
-    subProc('chmod 750 ' + constants.SSLDIR, logfile)
-    subProc('chmod 640 ' + constants.SSLDIR + '/*', logfile)
-    subProc('chmod 600 ' + constants.SSLDIR + '/*key*', logfile)
+    os.chmod(constants.SSLDIR, 0o750)
+    for file in glob.glob(constants.SSLDIR + '/*'):
+        os.chmod(file, 0o640)
+    for file in glob.glob(constants.SSLDIR + '/*key*'):
+        os.chmod(file, 0o600)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

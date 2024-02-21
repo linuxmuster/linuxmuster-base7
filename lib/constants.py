@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 #
-# constants.py
-#
+# constants.py: linuxmuster environment
+# don't change this
 # thomas@linuxmuster.net
-# 20220910
+# 20240219
 #
 
-# don't change this file
+# firewall major version to match
+FWMAJORVER = 24
 
 # global variables
 ROOTMNTOPTS = 'user_xattr,acl,usrquota,usrjquota=aquota.user,grpquota,grpjquota=aquota.group,jqfmt=vfsv0,errors=remount-ro,barrier=1'
@@ -49,7 +50,7 @@ SETUPDIR = LIBDIR + '/setup.d'
 TPLDIR = SHAREDIR + '/templates'
 CUSTOMINI = CACHEDIR + '/custom.ini'
 FWSHAREDIR = SHAREDIR + '/firewall/opnsense'
-FWAUTHCFG = FWSHAREDIR + '/50-linuxmuster.pre-auth.conf'
+FWAUTHCFG = FWSHAREDIR + '/pre-auth.conf'
 FWOSCONFTPL = FWSHAREDIR + '/config.xml.tpl'
 FWCONFLOCAL = CACHEDIR + '/opnsense.xml'
 FWCONFREMOTE = '/conf/config.xml'
@@ -65,6 +66,8 @@ LINBOLOGDIR = LOGDIR + '/linbo'
 LINBOSHAREDIR = SHAREDIR + '/linbo'
 LINBOTPLDIR = LINBOSHAREDIR + '/templates'
 LINBOCACHEDIR = CACHEDIR + '/linbo'
+LINBOSYSDIR = SYSDIR + '/linbo'
+LINBOVARDIR = VARDIR + '/linbo'
 DHCPDEVCONF = '/etc/dhcp/devices.conf'
 DHCPSUBCONF = '/etc/dhcp/subnets.conf'
 NETCFG = '/etc/netplan/01-netcfg.yaml'

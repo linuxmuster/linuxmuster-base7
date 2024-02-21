@@ -1,58 +1,132 @@
-linuxmuster-base7 (7.1.21-0) lmn71; urgency=low
+linuxmuster-base7 (7.2.3-0) lmn72; urgency=low
 
-  * Merge pull request #147 from linuxmuster/sophomorix-custom: Add sophomorix-user-custom for students
+  * Fix #150: Update ignores skipfw = True, remove deprecated postinst code (203f4fc).
+  * change initial opnsense unbound configuration to use system nameservers per default (cfeecc9).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 11 Jan 2023 12:55:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 21 Feb 2024 11:52:36 +0100
 
-linuxmuster-base7 (7.1.20-0) lmn71; urgency=low
+linuxmuster-base7 (7.2.2-0) lmn72; urgency=low
 
-  * Fix NTPSOCKDIR permissions in setup (#144). 
+  * refactor ssh key creation (492f9a1).
+  * refactor ssl certs creation (9e61b17).
+  * establish setup compatibility with opnsense 24.1.*,
+    use dns0.eu child protection dns servers per default (6de6c58).
+  * remove deprecated code from setup (05df6b7).
+  * fix firewall web proxy sso keytab creation (10f7bb3).
+  * add ability to hide command options in subProc() (fd8e99b).
+  * don't log admin password on keytab creation (3702efa).
+  * linuxmuster-import-devices:
+    - subprocess improvements (95e27be).
+    - fix console output (cc60379).
+  * fix netplan file permissions (8332294).
+  * check firewall major version before setup changes anything (ca48d4f).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 20 Sep 2022 18:13:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 19 Feb 2024 18:30:03 +0100
 
-linuxmuster-base7 (7.1.19-0) lmn71; urgency=low
+linuxmuster-base7 (7.2.1-0) lmn72; urgency=low
 
-  * Fix NTPSOCKDIR permissions in fix-ntp_signd-dir.sh (#144). 
+  * fix firewall sshkey & gateway setup (496049a).
+  * change codename to "production" (84f0461).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 20 Sep 2022 08:41:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 10 Feb 2024 15:09:37 +0100
 
-linuxmuster-base7 (7.1.18-0) lmn71; urgency=low
+linuxmuster-base7 (7.2.0-rc13) lmn72; urgency=low
 
-  * Provide ntp_signd directory patch script (#144).
-  * add ntpd apparmor config template (#144). 
+  * introducing new environment variables LINBOSYSDIR and LINBOVARDIR (7687b40).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 12 Sep 2022 15:47:25 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 14 Oct 2023 12:32:13 +0200
 
-linuxmuster-base7 (7.1.17-0) lmn71; urgency=low
+linuxmuster-base7 (7.2.0-rc12) lmn72; urgency=low
 
-  * Fix lmn-prepare invokation in setup (76d6a36).
-  * Fix #144: /run/samba/ntp_signd/ directory: wrong permissions prevent time synchronisation. 
+  * allow trailing 0 in host ip address (1570f07).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 10 Sep 2022 13:41:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 01 Sep 2023 15:15:58 +0200
 
-linuxmuster-base7 (7.1.16-0) lmn71; urgency=low
+linuxmuster-base7 (7.2.0-rc11) lmn72; urgency=low
 
-  *  Merge pull request #143 from linuxmuster/fix-sudoers (286d391).
+  * postinst: fix permissions of samba's ntp socket directory (f84835a).
+  * linuxmuster-import-subnets: use gateway ip from setup.ini rather than firewall ip (fa83151).
+  * change codename to "release candidate" (8b86c6d).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 01 Aug 2023 11:11:55 +0200
+
+linuxmuster-base7 (7.2.0-rc10) lmn72; urgency=low
+
+  * added netplan gateway fix to linuxmuster-import-subnets (a206eac).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 28 Jul 2023 18:47:49 +0200
+
+linuxmuster-base7 (7.2.0-rc9) lmn72; urgency=low
+
+  * revert netplan fix (b50a4ed).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 27 Jul 2023 13:11:00 +0200
+
+linuxmuster-base7 (7.2.0-rc8) lmn72; urgency=low
+
+  * Remove netplan update in linuxmuster-import-subnets (4866dc9).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 25 Jul 2023 21:37:00 +0200
+
+linuxmuster-base7 (7.2.0-rc7) lmn72; urgency=low
+
+  * Changed codename to beta-release (8741a6d).
+  * Add activation of opentracker service to setup (7faae82).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 11 May 2023 19:08:13 +0200
+
+linuxmuster-base7 (7.2.0-rc6) lmn72; urgency=low
+
+  * Merge #146: Write groupname in dhcp-server nis-domain option as well (b586138).
+  * Merge #147: Add sophomorix-user-custom for students (00e923e).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 12 Jan 2023 20:37:00 +0100
+
+linuxmuster-base7 (7.2.0-rc5) lmn72; urgency=low
+
+  *  Fix NTPSOCKDIR permissions in setup (#144).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 20 Sep 2022 18:28:00 +0200
+
+linuxmuster-base7 (7.2.0-rc4) lmn72; urgency=low
+
+  *  add ntpd apparmor config template (#144).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 12 Sep 2022 19:22:00 +0200
+
+linuxmuster-base7 (7.2.0-rc3) lmn72; urgency=low
+
+  * Fix ntp socket directory (abddebf, 930a9da, 414cd02).
+  * Fix lmn-prepare invokation in setup (7d50c9e).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 10 Sep 2022 14:13:00 +0200
+
+linuxmuster-base7 (7.2.0-rc2) lmn72; urgency=low
+
+  * Merge pull request #143 from linuxmuster/fix-sudoers (f2d2e8e).
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 05 Sep 2022 18:50:45 +0200
 
-linuxmuster-base7 (7.1.15-0) lmn71; urgency=low
+linuxmuster-base7 (7.2.0-rc1) lmn72; urgency=low
 
-  * Fix executability of linuxmuster-holiday-generate (e3d55b7).
+  * Merge pull request #141 from PLanB2008/master (71d28e4).
+  * Merge pull request #142 from linuxmuster/nolog-sophpass (60f7f32).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 16 Aug 2022 20:34:11 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 30 Jul 2022 13:44:00 +0200
 
-linuxmuster-base7 (7.1.14-0) lmn71; urgency=low
+linuxmuster-base7 (7.2.0-rc0) lmn72; urgency=low
 
-  * Merge pull request #141 from PLanB2008/master (6490d87).
+  * add webui to dependencies again (4e8c1c4).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 30 Jul 2022 11:36:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 25 Jun 2022 16:55:00 +0200
 
-linuxmuster-base7 (7.1.13-0) lmn71; urgency=low
+linuxmuster-base7 (7.2.0-alpha0) lmn72; urgency=low
 
-  * Merge pull request #142 from linuxmuster/nolog-sophpass (87f95f7).
+  * remove webui from dependencies temporarily (56605cc).
+  * Set compatibility level to 10 (fee4984).
+  * Fix krb5.conf patch (ecb4272, e702fea).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 30 Jul 2022 11:06:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 22 Jun 2022 15:14:30 +0200
 
 linuxmuster-base7 (7.1.12-0) lmn71; urgency=low
 

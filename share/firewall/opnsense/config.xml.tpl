@@ -7,7 +7,6 @@
     <optimization>normal</optimization>
     <hostname>firewall</hostname>
     <domain>@@domainname@@</domain>
-    <dnsallowoverride/>
     <group>
       <name>admins</name>
       <description>System Administrators</description>
@@ -89,8 +88,12 @@
       <passwordauth>1</passwordauth>
       <permitrootlogin>1</permitrootlogin>
     </ssh>
-    @@dnsconfig@@
+    <dnsserver>@@serverip@@</dnsserver>
+    <dnsserver>193.110.81.1</dnsserver>
+    <dnsserver>185.253.5.1</dnsserver>
+    <dnslocalhost>1</dnslocalhost>
     <secondaryconsole>serial</secondaryconsole>
+    @@firmware@@
   </system>
   @@interfaces@@
   <dhcpd>
@@ -110,6 +113,9 @@
       <ip>@@serverip@@</ip>
       <descr>linuxmuster</descr>
     </domainoverrides>
+    <forwarding>
+      <enabled>1</enabled>
+    </forwarding>
     <hosts>
       <host>@@servername@@</host>
       <domain>@@domainname@@</domain>
@@ -435,9 +441,10 @@
         <LogPayload>0</LogPayload>
       </general>
     </IDS>
-    <proxy version="1.0.0">
+    <proxy version="1.0.6">
       <general>
         <enabled>1</enabled>
+        <error_pages/>
         <icpPort/>
         <logging>
           <enable>
@@ -448,11 +455,12 @@
           <target/>
         </logging>
         <alternateDNSservers/>
-        <dnsV4First>0</dnsV4First>
         <forwardedForHandling>on</forwardedForHandling>
         <uriWhitespaceHandling>strip</uriWhitespaceHandling>
+        <enablePinger>1</enablePinger>
         <useViaHeader>1</useViaHeader>
         <suppressVersion>0</suppressVersion>
+        <connecttimeout/>
         <VisibleEmail>administrator@@@domainname@@</VisibleEmail>
         <VisibleHostname>firewall</VisibleHostname>
         <cache>
@@ -461,6 +469,8 @@
             <directory>/var/squid/cache</directory>
             <cache_mem>256</cache_mem>
             <maximum_object_size/>
+            <maximum_object_size_in_memory/>
+            <memory_cache_mode/>
             <size>100</size>
             <l1>16</l1>
             <l2>256</l2>
@@ -475,6 +485,16 @@
           <OverallBandwidthTrotteling>1024</OverallBandwidthTrotteling>
           <perHostTrotteling>256</perHostTrotteling>
         </traffic>
+        <parentproxy>
+          <enabled>0</enabled>
+          <host/>
+          <enableauth>0</enableauth>
+          <user>username</user>
+          <password>password</password>
+          <port/>
+          <localdomains/>
+          <localips/>
+        </parentproxy>
       </general>
       <forward>
         <interfaces>lan</interfaces>
@@ -486,6 +506,9 @@
         <sslnobumpsites/>
         <ssl_crtd_storage_max_size>4</ssl_crtd_storage_max_size>
         <sslcrtd_children>5</sslcrtd_children>
+        <snmp_enable>0</snmp_enable>
+        <snmp_port>3401</snmp_port>
+        <snmp_password>public</snmp_password>
         <ftpInterfaces/>
         <ftpPort>2121</ftpPort>
         <ftpTransparentMode>0</ftpTransparentMode>
@@ -499,6 +522,8 @@
           <blackList/>
           <browser/>
           <mimeType/>
+          <googleapps/>
+          <youtube/>
           <safePorts>80:http,21:ftp,443:https,70:gopher,210:wais,1025-65535:unregistered ports,280:http-mgmt,488:gss-http,591:filemaker,777:multiling http</safePorts>
           <sslPorts>443:https</sslPorts>
           <remoteACLs>
@@ -521,11 +546,16 @@
         </icap>
         <authentication>
           <method>linuxmuster</method>
+          <authEnforceGroup/>
           <realm>OPNsense proxy authentication</realm>
           <credentialsttl>2</credentialsttl>
           <children>5</children>
         </authentication>
       </forward>
+      <pac/>
+      <error_pages>
+        <template/>
+      </error_pages>
     </proxy>
     <ProxyUserACL version="1.0.0">
       <general>

@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20220601
+# 20240220
 # GPL v3
 #
 
@@ -47,9 +47,11 @@ case "$1" in
   # create ssl-cert group
   groupadd --force --system ssl-cert
 
-  # permissions
+  # set permissions
+  # linuxmuster ssl certs 
   chgrp ssl-cert "$SSLDIR" -R
   chmod 750 "$SSLDIR"
+  # linuxmuster secrets directory
   for i in "$SECRETDIR" "$BINDUSERSECRET" "$DNSADMINSECRET"; do
     [ -e "$i" ] && chgrp dhcpd "$i"
     if [ -d "$i" ]; then
@@ -58,19 +60,17 @@ case "$1" in
       [ -e "$i" ] && chmod 440 "$i"
     fi
   done
+  # samba sysvol directory
   sysvol="/var/lib/samba/sysvol"
   [ -d "$sysvol" ] && find "$sysvol" -type d -exec chmod 775 '{}' \;
+  # samba ntp socket directory
+  mkdir -p "$NTPSOCKDIR"
+  chgrp ntp "$NTPSOCKDIR"
+  chmod 750 "$NTPSOCKDIR"
+
 
   # skip subsequent actions on configured systems
   [ -s "$SETUPINI" ] || exit 0
-
-  # create firewall fullchain pem file
-  fwcert="$(echo "$FWFULLCHAIN" | sed -e 's|.fullchain.|.cert.|')"
-  if [ ! -s "$FWFULLCHAIN" -a -s "$fwcert" ]; then
-    echo "Creating $(basename "$FWFULLCHAIN")."
-    cat "$fwcert" "$CACERT" > "$FWFULLCHAIN"
-    chmod 640 "$FWFULLCHAIN"
-  fi
 
   # provide cacert.pem for clients if not present
   if [ -n "$domainname" -a -s "$CACERT" ]; then
@@ -95,45 +95,6 @@ case "$1" in
     fi
   fi
 
-  # create dns-admin account
-  if ! id dns-admin &> /dev/null; then
-    echo "Creating dns-admin account."
-    # create user password
-    conf="$DNSADMINSECRET"
-    dnspw="$(python3 -c 'from functions import randomPassword; print(randomPassword(16))')"
-    echo "$dnspw" > "$conf"
-    chgrp dhcpd "$conf"
-    chmod 440 "$conf"
-    # create account
-    desc="Unprivileged user for DNS updates via DHCP server"
-    auth="-U administrator --password="$(cat "$ADADMINSECRET")""
-    samba-tool user create dns-admin "$dnspw" --description="$desc" $auth
-    samba-tool user setexpiry dns-admin --noexpiry $auth
-    samba-tool group addmembers DnsAdmins dns-admin $auth
-  fi
-
-  # dhcpd updates
-  conf='/etc/dhcp/events.conf'
-  if [ ! -e "$conf" ] || ! grep -q '# 20220119' "$conf" ; then
-    echo "Updating dhcp configuration."
-    cp "$TPLDIR/dhcpd.events.conf" "$conf"
-    conf='/etc/dhcp/dhcpd.conf'
-    cp "$conf" "$conf".dpkg-bak."$datestr"
-    tpl="$TPLDIR/dhcpd.conf"
-    sed -e "s|@@servername@@|$servername|g
-            s|@@domainname@@|$domainname|g
-            s|@@serverip@@|$serverip|g" "$tpl" > "$conf"
-    systemctl restart isc-dhcp-server.service
-  fi
-  # apparmor dhcp update
-  conf="/etc/apparmor.d/local/usr.sbin.dhcpd"
-  if ! grep -q dhcpd-update-samba-dns.py "$conf"; then
-    echo "Updating apparmor configuration."
-    cp "$conf" "$conf".dpkg-bak."$datestr"
-    cp "$TPLDIR/dhcpd.apparmor.d" "$conf"
-    systemctl restart apparmor.service
-  fi
-
   # enable ntp service, change firewall name to ip (#88)
   if timedatectl status | grep -qi 'active: yes'; then
     echo "Disabling timesyncd service."
@@ -143,59 +104,6 @@ case "$1" in
     echo "Enabling & starting ntp service."
     systemctl enable ntp.service
     systemctl start ntp.service
-  fi
-
-  # remove obsolete sudo users for webui (#90)
-  for i in student teacher; do
-    id "$i" &> /dev/null && userdel "$i"
-    [ -e "/etc/sudoers.d/$i" ] && rm "/etc/sudoers.d/$i"
-  done
-
-  # install necessary sudoers config for webui (#91)
-  tpl="$TPLDIR/webui-sudoers"
-  conf="$(head -1 $tpl | awk '{ print $2 }')"
-  search="# 20200720"
-  if [ ! -e "$conf" ] || ! grep -q ^"$search" "$conf"; then
-    echo "Updating webui sudoers."
-    sed -e "s|@@sambadomain@@|$sambadomain|g" "$tpl" > "$conf"
-    chmod 400 "$conf"
-  fi
-
-  # fix #83, patch opnsense's web-proxy sso configuration (only if system is configured)
-  if [ -e "$FWAPIKEYS" ]; then
-    # test ssh link to firewall
-    if ssh -q -oBatchMode=yes -oStrictHostKeyChecking=accept-new "$firewallip" exit; then
-      echo "SSH connection to firewall $firewallip successfully established."
-    else
-      echo "SSH connection to firewall $firewallip failed!"
-      exit 0
-    fi
-    # remove obsolete configs
-    squiddir="/usr/local/etc/squid"
-    confs="$squiddir/auth/credentialsttl.conf $squiddir/pre-auth/50-linuxmuster.auth.conf"
-    for conf in $confs; do
-      if ssh -q -oBatchMode=yes -oStrictHostKeyChecking=accept-new "$firewallip" ls "$conf" &> /dev/null; then
-        echo "Removing obsolete opnsense configfile $(basename $conf)."
-        ssh "$firewallip" rm -f "$conf"
-        restart="yes"
-      fi
-    done
-    # create new config file
-    conf="$(head -1 $FWAUTHCFG | awk '{ print $2 }')"
-    if ! ssh -q -oBatchMode=yes -oStrictHostKeyChecking=accept-new "$firewallip" ls "$conf" &> /dev/null; then
-      echo "Creating new opnsense configfile $(basename $conf)."
-      # create config file
-      "$FWSHAREDIR/create-auth-config.py"
-      conftmp="/tmp/$(basename $FWAUTHCFG)"
-      [ -s "$conftmp" ] || exit 0
-      scp "$conftmp" "$firewallip":"$conf"
-      rm -f "$conftmp"
-      restart="yes"
-    fi
-    if [ -n "$restart" ]; then
-      echo "Restarting proxy:"
-      ssh "$firewallip" pluginctl -s squid restart
-    fi
   fi
 
  ;;

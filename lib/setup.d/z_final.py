@@ -2,11 +2,12 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20220105
+# 20240219
 #
 
 import configparser
 import constants
+import glob
 import os
 import re
 import sys
@@ -20,17 +21,19 @@ logfile = mySetupLogfile(__file__)
 if os.path.isfile('/tmp/setup.ini'):
     os.unlink('/tmp/setup.ini')
 
-# disable unwanted services
-unwanted = ['iscsid', 'dropbear', 'lxcfs']
-for item in unwanted:
-    msg = 'Disabling service ' + item + ' '
-    printScript(msg, '', False, False, True)
-    try:
-        subProc('systemctl stop ' + item + '.service', logfile)
-        subProc('systemctl disable ' + item + '.service', logfile)
-        printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' not installed!', '', True, True, False, len(msg))
+# get various setup values
+msg = 'Reading setup data '
+printScript(msg, '', False, False, True)
+try:
+    adminpw = getSetupValue('adminpw')
+    printScript(' Success!', '', True, True, False, len(msg))
+except:
+    printScript(' Failed!', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# fix netplan file permissions
+for file in glob.glob('/etc/netplan/*.yaml*'):
+    os.chmod(file, 0o600)
 
 # restart apparmor service
 msg = 'Restarting apparmor service '
@@ -90,7 +93,7 @@ except Exception as error:
 msg = 'Creating web proxy sso keytab '
 printScript(msg, '', False, False, True)
 try:
-    subProc(constants.FWSHAREDIR + '/create-keytab.py -v', logfile)
+    subProc(constants.FWSHAREDIR + "/create-keytab.py -v -a '" + adminpw + "'", logfile, True)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))

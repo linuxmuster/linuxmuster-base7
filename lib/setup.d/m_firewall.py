@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20220105
+# 20220219
 #
 
 import bcrypt
@@ -100,7 +100,8 @@ def main():
         rc, content = readTextfile(fwconftmp)
         soup = BeautifulSoup(content, 'lxml')
         # save certain configuration values for later use
-        sysctl = str(soup.findAll('sysctl')[0])
+        firmware = str(soup.find('firmware'))
+        sysctl = str(soup.find('sysctl'))
         # get already configured interfaces
         for item in soup.findAll('interfaces'):
             if '<lan>' in str(item):
@@ -119,22 +120,9 @@ def main():
             language = '<language>' + lang + '</language>'
         # save gateway configuration
         try:
-            gwconfig = str(soup.findAll('gateways')[0])
-            gwconfig = gwconfig.replace(
-                '<gateways>', '').replace('</gateways>', '')
+            gwconfig = str(soup.find('gateways').content)
         except:
             gwconfig = ''
-        # save dnsserver configuration
-        try:
-            dnsconfig = str(soup.findAll('dnsserver')[0])
-        except:
-            dnsconfig = ''
-        # add server as dnsserver
-        dnsserver = '<dnsserver>' + serverip + '</dnsserver>'
-        if dnsconfig == '':
-            dnsconfig = dnsserver
-        else:
-            dnsconfig = dnsserver + '\n    ' + dnsconfig
         # save opt1 configuration if present
         try:
             opt1config = str(soup.findAll('opt1')[0])
@@ -190,12 +178,12 @@ def main():
         # read template
         rc, content = readTextfile(fwconftpl)
         # replace placeholders with values
+        content = content.replace('@@firmware@@', firmware)
         content = content.replace('@@sysctl@@', sysctl)
         content = content.replace('@@servername@@', servername)
         content = content.replace('@@domainname@@', domainname)
         content = content.replace('@@basedn@@', basedn)
         content = content.replace('@@interfaces@@', interfaces)
-        content = content.replace('@@dnsconfig@@', dnsconfig)
         content = content.replace('@@gwconfig@@', gwconfig)
         content = content.replace('@@serverip@@', serverip)
         content = content.replace('@@firewallip@@', firewallip)
@@ -235,7 +223,7 @@ def main():
 
     # upload config files
     # upload modified main config.xml
-    rc = putFwConfig(firewallip, rolloutpw)
+    rc = putFwConfig(firewallip, '/tmp/opnsense.xml', rolloutpw)
     if not rc:
         sys.exit(1)
 
@@ -245,9 +233,7 @@ def main():
     conftmp = '/tmp/' + os.path.basename(constants.FWAUTHCFG)
     if not os.path.isfile(conftmp):
         sys.exit(1)
-    rc, content = readTextfile(conftmp)
-    fwpath = content.split('\n')[0].partition(' ')[2]
-    rc = putSftp(firewallip, conftmp, fwpath, productionpw)
+    rc = putSftp(firewallip, conftmp, conftmp, rolloutpw)
     if not rc:
         sys.exit(1)
 
@@ -258,9 +244,9 @@ def main():
     printScript('Installing extensions and rebooting firewall')
     fwsetup_local = constants.FWSHAREDIR + '/fwsetup.sh'
     fwsetup_remote = '/tmp/fwsetup.sh'
-    rc = putSftp(firewallip, fwsetup_local, fwsetup_remote, productionpw)
-    rc = sshExec(firewallip, 'chmod +x ' + fwsetup_remote, productionpw)
-    rc = sshExec(firewallip, fwsetup_remote, productionpw)
+    rc = putSftp(firewallip, fwsetup_local, fwsetup_remote, rolloutpw)
+    rc = sshExec(firewallip, 'chmod +x ' + fwsetup_remote, rolloutpw)
+    rc = sshExec(firewallip, fwsetup_remote, rolloutpw)
     if not rc:
         sys.exit(1)
 

@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20220105
+# 20220622
 #
 
 import configparser
@@ -11,7 +11,7 @@ import datetime
 import os
 import sys
 from functions import mySetupLogfile, printScript, randomPassword
-from functions import subProc, writeTextfile
+from functions import readTextfile, subProc, writeTextfile
 
 logfile = mySetupLogfile(__file__)
 
@@ -81,23 +81,22 @@ except Exception as error:
     sys.exit(1)
 
 # create krb5.conf symlink
-msg = 'Provisioning krb5 '
-printScript(msg, '', False, False, True)
-try:
-    krb5conf_src = '/var/lib/samba/private/krb5.conf'
-    krb5conf_dst = '/etc/krb5.conf'
-    if os.path.isfile(krb5conf_dst):
-        os.remove(krb5conf_dst)
+krb5conf_src = '/var/lib/samba/private/krb5.conf'
+if os.path.isfile(krb5conf_src):
+    msg = 'Provisioning krb5 '
+    printScript(msg, '', False, False, True)
+    try:
+        krb5conf_dst = '/etc/krb5.conf'
+        if os.path.isfile(krb5conf_dst):
+            os.remove(krb5conf_dst)
         os.symlink(krb5conf_src, krb5conf_dst)
-        k = configparser.ConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
-        k.read(krb5conf_dst)
-        k.set('libdefaults', 'dns_lookup_realm', 'true')
-        with open(krb5conf_dst, 'w') as config:
-            k.write(config)
-    printScript(' Success!', '', True, True, False, len(msg))
-except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
-    sys.exit(1)
+        rc, filedata = readTextfile(krb5conf_dst)
+        filedata = filedata.replace('dns_lookup_realm = false', 'dns_lookup_realm = true')
+        rc = writeTextfile(krb5conf_dst, filedata, 'w')
+        printScript(' Success!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(error, '', True, True, False, len(msg))
+        sys.exit(1)
 
 # restart services
 msg = 'Enabling samba services '
