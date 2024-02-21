@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.2.3-0) lmn72; urgency=low
+
+  * Fix #150: Update ignores skipfw = True, remove deprecated postinst code (203f4fc).
+  * change initial opnsense unbound configuration to use system nameservers per default (cfeecc9).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 21 Feb 2024 11:52:36 +0100
+
 linuxmuster-base7 (7.2.2-0) lmn72; urgency=low
 
   * refactor ssh key creation (492f9a1).
