@@ -374,7 +374,7 @@ if len(hookscripts) > 0:
         hookscript = hookpath + '/' + h
         msg = '* ' + h + ' '
         printScript(msg, '', False, False, True)
-        output = subprocess.check_output(hookscript).decode('utf-8')
+        output = subprocess.check_output([hookscript, "-s", school]).decode('utf-8')
         if output != '':
             print(output)
 
