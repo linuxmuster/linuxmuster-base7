@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.0-0) lmn72; urgency=low
+
+  * create compatibility to ubuntu server 24.04 (e339f56).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 30 Jan 2025 19:48:17 +0100
+
 linuxmuster-base7 (7.2.4-0) lmn72; urgency=low
 
   * Fix postinst installation of pip packages (4767558).
