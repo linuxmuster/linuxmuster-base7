@@ -1,3 +1,14 @@
+linuxmuster-base7 (7.2.4-0) lmn72; urgency=low
+
+  * Fix postinst installation of pip packages (4767558).
+  * Implement release upgrade script (#155).
+  * Merge pull request #154:
+    Bump actions/download-artifact from 2 to 4.1.7 in /.github/workflows.
+  * Merge pull request #153 from hermanntoast:
+    Add school parameter for hook scripts
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 30 Jan 2025 19:06:10 +0100
+
 linuxmuster-base7 (7.2.3-0) lmn72; urgency=low
 
   * Fix #150: Update ignores skipfw = True, remove deprecated postinst code (203f4fc).
