@@ -44,7 +44,7 @@ mv /etc/resolv.conf.release-upgrade /etc/resolv.conf
 
 # disable systemd resolver if activated by upgrade
 for i in stop disable mask; do
-    systemctl $i systemd-resolvd
+    systemctl $i systemd-resolved
 done
 
 # create repo list
