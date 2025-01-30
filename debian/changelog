@@ -1,4 +1,4 @@
-linuxmuster-base7 (7.3.0-0) lmn72; urgency=low
+linuxmuster-base7 (7.3.0-0) lmn73; urgency=low
 
   * create compatibility to ubuntu server 24.04 (e339f56).
 
