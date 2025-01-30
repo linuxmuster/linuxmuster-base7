@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.5-0) lmn72; urgency=low
+
+  * Fix disabling systemd-resolved (f62a7db).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 30 Jan 2025 21:43:40 +0100
+
 linuxmuster-base7 (7.2.4-0) lmn72; urgency=low
 
   * Fix postinst installation of pip packages (4767558).
