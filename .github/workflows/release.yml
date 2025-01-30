@@ -11,7 +11,7 @@ name: Build Release
 jobs:
   deb-package:
     name: build DEB-Package
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -35,7 +35,7 @@ jobs:
     needs: deb-package
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     name: GitHub Release
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4.1.7
@@ -57,7 +57,7 @@ jobs:
         id: check_prerelease
         uses: haya14busa/action-cond@v1
         with:
-          cond: ${{ env.DISTRIBUTION == 'lmn72' }}
+          cond: ${{ env.DISTRIBUTION == 'lmn73' }}
           if_true: "false"
           if_false: "true"
 

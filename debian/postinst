@@ -23,12 +23,22 @@ set -e
 #
 
 # get constants
-source /usr/share/linuxmuster/defaults.sh
+source /etc/os-release || exit 1
+source /usr/share/linuxmuster/defaults.sh || exit 1
 datestr="$(date +%Y%m%d%H%M)"
+
+# os version specific
+case "$VERSION_ID" in
+  24.04) ntpgrp="ntpsec" ;;
+  22.04) ntpgrp="ntp" ;;
+  *) echo "Wrong os version $VERSION_ID." ; exit 1 ;;
+esac
+
 
 case "$1" in
 
  configure)
+
   # ensure python3 paramiko and reconfigure are installed
   /usr/bin/python3 -m pip install paramiko reconfigure --break-system-packages
 
@@ -65,7 +75,7 @@ case "$1" in
   [ -d "$sysvol" ] && find "$sysvol" -type d -exec chmod 775 '{}' \;
   # samba ntp socket directory
   mkdir -p "$NTPSOCKDIR"
-  chgrp ntp "$NTPSOCKDIR"
+  chgrp "$ntpgrp" "$NTPSOCKDIR"
   chmod 750 "$NTPSOCKDIR"
 
 
@@ -104,6 +114,14 @@ case "$1" in
     echo "Enabling & starting ntp service."
     systemctl enable ntp.service
     systemctl start ntp.service
+  fi
+
+  # fix ubuntu version in sophomorix
+  conf="/usr/share/sophomorix/devel/sophomorix.ini"
+  if ! grep -q "$VERSION_ID" "$conf"; then
+    echo "Fixing ubuntu version in sophomorix.ini."
+    cp "$conf" "${conf}-${datestr}"
+    sed -i "s|DISTRIB_UPCOMING = .*|DISTRIB_UPCOMING = $VERSION_ID|" "$conf"
   fi
 
  ;;
