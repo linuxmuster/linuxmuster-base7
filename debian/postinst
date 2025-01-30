@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20240220
+# 20250130
 # GPL v3
 #
 
@@ -30,7 +30,7 @@ case "$1" in
 
  configure)
   # ensure python3 paramiko and reconfigure are installed
-  /usr/bin/python3 -m pip install paramiko reconfigure
+  /usr/bin/python3 -m pip install paramiko reconfigure --break-system-packages
 
   # add lmn paths to python environment
   usersite="$(python3 -c 'import site; site._script()' --user-site)"
