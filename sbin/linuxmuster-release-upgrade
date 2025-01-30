@@ -4,8 +4,16 @@
 # 20250130
 #
 
+# options
+echo "$@" | grep -q "\-\-force" && donotask="yes"
+echo "$@" | grep -q "\-\-reboot" && autoreboot="yes"
+if echo "$@" | grep -q "\-\-help"; then
+    echo "Usage: linuxmuster-release-upgrade [--force|--reboot|--help]"
+    exit 0
+fi
+
 # security query
-if [ "$1" = "--force" ]; then
+if [ -n "$donotask" ]; then
     echo "### linuxmuster.net 7.3 upgrade ###"
 else
     answer="I have been warned"
@@ -45,9 +53,9 @@ echo "deb https://deb.linuxmuster.net/ lmn73 main" >> /etc/apt/sources.list.d/lm
 
 # upgrade linuxmuster pkgs
 DEBIAN_FRONTEND=noninteractive linuxmuster-distupgrade && apt-get clean
-/usr/sbin/dpkg-reconfigure linuxmuster-base7
 
 # remove apt tweak
 rm -f /etc/apt/apt.conf.d/local
 
-
+# reboot
+[ -n "$autoreboot" ] && reboot
