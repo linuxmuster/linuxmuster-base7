@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.1-0) lmn73; urgency=low
+
+  * changed firewall major version to 25 (0e41dfa).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 31 Jan 2025 11:15:13 +0100
+
 linuxmuster-base7 (7.3.0-0) lmn73; urgency=low
 
   * create compatibility to ubuntu server 24.04 (e339f56).
