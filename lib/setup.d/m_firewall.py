@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20220219
+# 20240131
 #
 
 import bcrypt
@@ -98,7 +98,7 @@ def main():
     printScript(msg, '', False, False, True)
     try:
         rc, content = readTextfile(fwconftmp)
-        soup = BeautifulSoup(content, 'lxml')
+        soup = BeautifulSoup(content, features='xml')
         # save certain configuration values for later use
         firmware = str(soup.find('firmware'))
         sysctl = str(soup.find('sysctl'))
