@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.2-0) lmn73; urgency=low
+
+  * fix beautifulsoup's xml features (667abf1).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 31 Jan 2025 15:29:25 +0100
+
 linuxmuster-base7 (7.3.1-0) lmn73; urgency=low
 
   * changed firewall major version to 25 (0e41dfa).
