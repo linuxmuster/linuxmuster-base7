@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # thomas@linuxmuster.net
-# 20250130
+# 20250315
 #
 
 # options
@@ -48,7 +48,6 @@ for i in stop disable mask; do
 done
 
 # create repo list
-echo "deb https://deb.linuxmuster.net/ lmn72-testing main" > /etc/apt/sources.list.d/lmn.list
 echo "deb https://deb.linuxmuster.net/ lmn73 main" >> /etc/apt/sources.list.d/lmn.list
 
 # upgrade linuxmuster pkgs
