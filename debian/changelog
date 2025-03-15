@@ -1,4 +1,10 @@
-linuxmuster-base7 (7.2.5-0) lmn72; urgency=low
+linuxmuster-base7 (7.2.6-0) lmn72; urgency=low
+
+  * remove lmn72-testing repo from release upgrade script (7ab31cd).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 15 Mar 2025 15:13:00 +0100
+
+inuxmuster-base7 (7.2.5-0) lmn72; urgency=low
 
   * Fix disabling systemd-resolved (f62a7db).
 
