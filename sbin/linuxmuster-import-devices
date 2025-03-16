@@ -68,14 +68,14 @@ printScript(os.path.basename(__file__), 'begin')
 # do sophomorix-devices first
 msg = 'Starting sophomorix-device syntax check:'
 printScript(msg)
-result = subProc('sophomorix-device --dry-run')
-msg = 'sophomorix-device finished '
-if not result:
+try:
+    msg = 'sophomorix-device finished '
+    subProc('sophomorix-device --sync')
+    printScript(msg + ' OK!')
+except Exception as err:
     printScript(msg + ' errors detected!')
+    print(err)
     sys.exit(1)
-
-printScript(msg + ' OK!')
-subProc('sophomorix-device --sync')
 
 
 # functions begin
