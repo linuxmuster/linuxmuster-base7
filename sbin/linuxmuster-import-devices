@@ -2,11 +2,12 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20230112
+# 20250316
 #
 
 import configparser
 import constants
+import fnmatch
 import os
 import re
 import subprocess
@@ -78,6 +79,28 @@ subProc('sophomorix-device --sync')
 
 
 # functions begin
+
+
+# delete symlinks
+def delSymlinksByPattern(directory, pattern):
+    # check if dir exists
+    if not os.path.exists(directory):
+        #print(f"Directory '{directory}' does not exist.")  # debug
+        return
+    # iterate through dir
+    for root, dirs, files in os.walk(directory):
+        for name in files + dirs:
+            path = os.path.join(root, name)
+            # test for symlink
+            if os.path.islink(path) and fnmatch.fnmatch(name, pattern):
+                try:
+                    os.unlink(path)  # delete symlink
+                    #print(f"Symlink deleted: {path}")  # debug
+                except Exception as e:
+                    continue
+                    #print(f"Deletion of {path} failed: {e}")  # debug
+
+
 # write grub cfgs
 def doGrubCfg(startconf, group, kopts):
     grubcfg = constants.LINBOGRUBDIR + '/' + group + '.cfg'
@@ -322,8 +345,8 @@ def doSchoolSpecificGroupLinksAndGetPxeGroups(school='default-school'):
 # look up all links for all schools and place them in the correct place
 def doAllGroupLinks():
     # delete old config links
-    subProc("find " + constants.LINBODIR + " -maxdepth 1 -name start.conf-\* -type l -exec rm '{}' \;")
-    subProc("find " + constants.LINBOGRUBDIR + "/hostcfg -maxdepth 1 -name \*.cfg -type l -exec rm '{}' \;")
+    delSymlinksByPattern(constants.LINBODIR, "start.conf-*")
+    delSymlinksByPattern(constants.LINBOGRUBDIR + "/hostcfg", "*.cfg")
 
     linksConfBasedir = constants.LINBODIR + "/boot/links"
     for schoolLinksConf in listdir(linksConfBasedir):
