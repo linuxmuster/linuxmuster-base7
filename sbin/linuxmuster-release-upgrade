@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # thomas@linuxmuster.net
-# 20250315
+# 20250317
 #
 
 # options
@@ -36,6 +36,7 @@ cp /etc/resolv.conf /etc/resolv.conf.release-upgrade
 
 # start release upgrade noninteractively
 echo DPkg::options \{ \"--force-confdef\"\; \"--force-confold\"\; \} > /etc/apt/apt.conf.d/local
+apt-get -y install --reinstall python3-debian  # repair possibly broken package
 do-release-upgrade -m server -f DistUpgradeViewNonInteractive
 
 # restore resolv.conf
