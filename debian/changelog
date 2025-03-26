@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.4-0) lmn73; urgency=low
+
+  * move common files to extra package linuxmuster-common ().
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Mar 2025 13:38:56 +0100
+
 linuxmuster-base7 (7.3.3-0) lmn73; urgency=low
 
   * fix deletion of symlinks during device import (36f5973).
