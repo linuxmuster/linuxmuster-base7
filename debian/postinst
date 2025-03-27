@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20250130
+# 20250326
 # GPL v3
 #
 
@@ -22,9 +22,9 @@ set -e
 # the debian-policy package
 #
 
-# get constants
+# get environment
 source /etc/os-release || exit 1
-source /usr/share/linuxmuster/defaults.sh || exit 1
+source /usr/share/linuxmuster/environment.sh || exit 1
 datestr="$(date +%Y%m%d%H%M)"
 
 # os version specific

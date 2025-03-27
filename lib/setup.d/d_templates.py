@@ -6,7 +6,7 @@
 #
 
 import configparser
-import constants
+import environment
 import datetime
 import os
 import sys
@@ -19,12 +19,12 @@ logfile = mySetupLogfile(__file__)
 # read setup data
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
-setupini = constants.SETUPINI
+setupini = environment.SETUPINI
 try:
     # setupdefaults.ini
     defaults = configparser.ConfigParser(
         delimiters=('='), inline_comment_prefixes=('#', ';'))
-    defaults.read(constants.DEFAULTSINI)
+    defaults.read(environment.DEFAULTSINI)
     # setup.ini
     setup = configparser.RawConfigParser(
         delimiters=('='), inline_comment_prefixes=('#', ';'))
@@ -37,7 +37,7 @@ try:
     dhcprange2 = dhcprange.split(' ')[1]
     domainname = setup.get('setup', 'domainname')
     firewallip = setup.get('setup', 'firewallip')
-    linbodir = constants.LINBODIR
+    linbodir = environment.LINBODIR
     netbiosname = setup.get('setup', 'netbiosname')
     netmask = setup.get('setup', 'netmask')
     network = setup.get('setup', 'network')
@@ -57,8 +57,8 @@ do_not_backup = ['interfaces.linuxmuster',
                  'dovecot.linuxmuster.conf', 'smb.conf']
 
 printScript('Processing config templates:')
-for f in os.listdir(constants.TPLDIR):
-    source = constants.TPLDIR + '/' + f
+for f in os.listdir(environment.TPLDIR):
+    source = environment.TPLDIR + '/' + f
     msg = '* ' + f + ' '
     printScript(msg, '', False, False, True)
     try:
@@ -80,7 +80,7 @@ for f in os.listdir(constants.TPLDIR):
         filedata = filedata.replace('@@sambadomain@@', sambadomain)
         filedata = filedata.replace('@@servername@@', servername)
         filedata = filedata.replace('@@serverip@@', serverip)
-        filedata = filedata.replace('@@ntpsockdir@@', constants.NTPSOCKDIR)
+        filedata = filedata.replace('@@ntpsockdir@@', environment.NTPSOCKDIR)
         # get target path
         firstline = filedata.split('\n')[0]
         target = firstline.partition(' ')[2]
@@ -128,9 +128,9 @@ except:
 # set server time
 msg = 'Adjusting server time '
 printScript(msg, '', False, False, True)
-subProc('mkdir -p ' + constants.NTPSOCKDIR, logfile)
-subProc('chgrp ntp ' + constants.NTPSOCKDIR, logfile)
-subProc('chmod 750 ' + constants.NTPSOCKDIR, logfile)
+subProc('mkdir -p ' + environment.NTPSOCKDIR, logfile)
+subProc('chgrp ntp ' + environment.NTPSOCKDIR, logfile)
+subProc('chmod 750 ' + environment.NTPSOCKDIR, logfile)
 subProc('timedatectl set-ntp false', logfile)
 subProc('systemctl stop ntp', logfile)
 subProc('ntpdate pool.ntp.org', logfile)

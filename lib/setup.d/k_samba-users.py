@@ -6,7 +6,7 @@
 #
 
 import configparser
-import constants
+import environment
 import os
 import sys
 
@@ -18,7 +18,7 @@ logfile = mySetupLogfile(__file__)
 # read setup ini
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
-setupini = constants.SETUPINI
+setupini = environment.SETUPINI
 try:
     setup = configparser.RawConfigParser(
         delimiters=('='), inline_comment_prefixes=('#', ';'))
@@ -28,7 +28,7 @@ try:
     sambadomain = setup.get('setup', 'sambadomain')
     firewallip = setup.get('setup', 'firewallip')
     # get binduser password
-    rc, binduserpw = readTextfile(constants.BINDUSERSECRET)
+    rc, binduserpw = readTextfile(environment.BINDUSERSECRET)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))
@@ -45,13 +45,13 @@ except Exception as error:
     sys.exit(1)
 
 # renew sophomorix configs
-os.system('rm -f ' + constants.SCHOOLCONF)
-os.system('rm -f ' + constants.SOPHOSYSDIR + '/sophomorix.conf')
+os.system('rm -f ' + environment.SCHOOLCONF)
+os.system('rm -f ' + environment.SOPHOSYSDIR + '/sophomorix.conf')
 subProc('sophomorix-postinst', logfile)
 
 # create default-school share
-schoolname = os.path.basename(constants.DEFAULTSCHOOL)
-defaultpath = constants.SCHOOLSSHARE + '/' + schoolname
+schoolname = os.path.basename(environment.DEFAULTSCHOOL)
+defaultpath = environment.SCHOOLSSHARE + '/' + schoolname
 shareopts = 'writeable=y guest_ok=n'
 shareoptsex = ['comment "Share for default-school"', '"hide unreadable" yes', '"msdfs root" no',
                '"strict allocate" yes', '"valid users" "' + sambadomain + '\\administrator, @' + sambadomain + '\\SCHOOLS"']
@@ -139,9 +139,9 @@ try:
               + ' --description="' + desc + '"', logfile)
     sambaTool('user setexpiry dns-admin --noexpiry', logfile)
     sambaTool('group addmembers DnsAdmins dns-admin', logfile)
-    rc, writeTextfile(constants.DNSADMINSECRET, dnspw, 'w')
-    os.system('chgrp dhcpd ' + constants.DNSADMINSECRET)
-    os.system('chmod 440 ' + constants.DNSADMINSECRET)
+    rc, writeTextfile(environment.DNSADMINSECRET, dnspw, 'w')
+    os.system('chgrp dhcpd ' + environment.DNSADMINSECRET)
+    os.system('chmod 440 ' + environment.DNSADMINSECRET)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))

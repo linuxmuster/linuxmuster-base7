@@ -6,7 +6,7 @@
 #
 
 import configparser
-import constants
+import environment
 import os
 import sys
 
@@ -19,7 +19,7 @@ logfile = mySetupLogfile(__file__)
 # read ini files
 setup = configparser.RawConfigParser(
     delimiters=('='), inline_comment_prefixes=('#', ';'))
-for item in [constants.DEFAULTSINI, constants.PREPINI, constants.SETUPINI, constants.CUSTOMINI]:
+for item in [environment.DEFAULTSINI, environment.PREPINI, environment.SETUPINI, environment.CUSTOMINI]:
     # skip non existant file
     if not os.path.isfile(item):
         continue
@@ -162,10 +162,10 @@ msg = 'Creating global binduser secret '
 printScript(msg, '', False, False, True)
 try:
     binduserpw = randomPassword(16)
-    with open(constants.BINDUSERSECRET, 'w') as secret:
+    with open(environment.BINDUSERSECRET, 'w') as secret:
         secret.write(binduserpw)
-    subProc('chmod 440 ' + constants.BINDUSERSECRET, logfile)
-    subProc('chgrp dhcpd ' + constants.BINDUSERSECRET, logfile)
+    subProc('chmod 440 ' + environment.BINDUSERSECRET, logfile)
+    subProc('chgrp dhcpd ' + environment.BINDUSERSECRET, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -175,9 +175,9 @@ except:
 msg = 'Writing setup ini file '
 printScript(msg, '', False, False, True)
 try:
-    with open(constants.SETUPINI, 'w') as outfile:
+    with open(environment.SETUPINI, 'w') as outfile:
         setup.write(outfile)
-    subProc('chmod 600 ' + constants.SETUPINI, logfile)
+    subProc('chmod 600 ' + environment.SETUPINI, logfile)
     # temporary setup.ini for transfering it later to additional vms
     setup.set('setup', 'binduserpw', binduserpw)
     setup.set('setup', 'adminpw', '')
@@ -190,6 +190,6 @@ except:
     sys.exit(1)
 
 # delete obsolete ini files
-for item in [constants.CUSTOMINI, constants.PREPINI]:
+for item in [environment.CUSTOMINI, environment.PREPINI]:
     if os.path.isfile(item):
         os.unlink(item)

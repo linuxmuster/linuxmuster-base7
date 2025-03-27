@@ -6,7 +6,7 @@
 #
 
 import bcrypt
-import constants
+import environment
 import datetime
 import os
 import shutil
@@ -44,7 +44,7 @@ def main():
     timezone = timezone.replace('\n', '')
 
     # get binduser password
-    rc, binduserpw = readTextfile(constants.BINDUSERSECRET)
+    rc, binduserpw = readTextfile(environment.BINDUSERSECRET)
 
     # get firewall root password provided by linuxmuster-opnsense-reset
     pwfile = '/tmp/linuxmuster-opnsense-reset'
@@ -55,7 +55,7 @@ def main():
         os.unlink(pwfile)
     else:
         # initial setup, rollout root password is standardized
-        rolloutpw = constants.ROOTPW
+        rolloutpw = environment.ROOTPW
         # new root production password provided by setup
         productionpw = adminpw
 
@@ -64,9 +64,9 @@ def main():
     printScript(msg, '', False, False, True)
     try:
         radiussecret = randomPassword(16)
-        with open(constants.RADIUSSECRET, 'w') as secret:
+        with open(environment.RADIUSSECRET, 'w') as secret:
             secret.write(radiussecret)
-        subProc('chmod 400 ' + constants.RADIUSSECRET, logfile)
+        subProc('chmod 400 ' + environment.RADIUSSECRET, logfile)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
@@ -74,9 +74,9 @@ def main():
 
     # firewall config files
     now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    fwconftmp = constants.FWCONFLOCAL
+    fwconftmp = environment.FWCONFLOCAL
     fwconfbak = fwconftmp.replace('.xml', '-' + now + '.xml')
-    fwconftpl = constants.FWOSCONFTPL
+    fwconftpl = environment.FWOSCONFTPL
 
     # get current config
     rc = getFwConfig(firewallip, rolloutpw)
@@ -137,11 +137,11 @@ def main():
     msg = '* Reading certificates & ssh key '
     printScript(msg, '', False, False, True)
     try:
-        rc, cacertb64 = readTextfile(constants.CACERTB64)
+        rc, cacertb64 = readTextfile(environment.CACERTB64)
         rc, fwcertb64 = readTextfile(
-            constants.SSLDIR + '/firewall.cert.pem.b64')
-        rc, fwkeyb64 = readTextfile(constants.SSLDIR + '/firewall.key.pem.b64')
-        rc, authorizedkey = readTextfile(constants.SSHPUBKEYB64)
+            environment.SSLDIR + '/firewall.cert.pem.b64')
+        rc, fwkeyb64 = readTextfile(environment.SSLDIR + '/firewall.key.pem.b64')
+        rc, authorizedkey = readTextfile(environment.SSHPUBKEYB64)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
@@ -190,7 +190,7 @@ def main():
         content = content.replace('@@network@@', network)
         content = content.replace('@@bitmask@@', bitmask)
         content = content.replace('@@aliascontent@@', aliascontent)
-        content = content.replace('@@gw_lan@@', constants.GW_LAN)
+        content = content.replace('@@gw_lan@@', environment.GW_LAN)
         content = content.replace('@@fwrootpw_hashed@@', fwrootpw_hashed)
         content = content.replace('@@authorizedkey@@', authorizedkey)
         content = content.replace('@@apikey@@', apikey)
@@ -213,9 +213,9 @@ def main():
     msg = '* Saving api credentials '
     printScript(msg, '', False, False, True)
     try:
-        rc = modIni(constants.FWAPIKEYS, 'api', 'key', apikey)
-        rc = modIni(constants.FWAPIKEYS, 'api', 'secret', apisecret)
-        os.system('chmod 400 ' + constants.FWAPIKEYS)
+        rc = modIni(environment.FWAPIKEYS, 'api', 'key', apikey)
+        rc = modIni(environment.FWAPIKEYS, 'api', 'secret', apisecret)
+        os.system('chmod 400 ' + environment.FWAPIKEYS)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
@@ -229,8 +229,8 @@ def main():
 
     # upload modified auth config file for web-proxy sso (#83)
     printScript('Creating web proxy sso auth config file')
-    subProc(constants.FWSHAREDIR + '/create-auth-config.py', logfile)
-    conftmp = '/tmp/' + os.path.basename(constants.FWAUTHCFG)
+    subProc(environment.FWSHAREDIR + '/create-auth-config.py', logfile)
+    conftmp = '/tmp/' + os.path.basename(environment.FWAUTHCFG)
     if not os.path.isfile(conftmp):
         sys.exit(1)
     rc = putSftp(firewallip, conftmp, conftmp, rolloutpw)
@@ -242,7 +242,7 @@ def main():
 
     # reboot firewall
     printScript('Installing extensions and rebooting firewall')
-    fwsetup_local = constants.FWSHAREDIR + '/fwsetup.sh'
+    fwsetup_local = environment.FWSHAREDIR + '/fwsetup.sh'
     fwsetup_remote = '/tmp/fwsetup.sh'
     rc = putSftp(firewallip, fwsetup_local, fwsetup_remote, rolloutpw)
     rc = sshExec(firewallip, 'chmod +x ' + fwsetup_remote, rolloutpw)

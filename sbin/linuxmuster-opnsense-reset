@@ -5,7 +5,7 @@
 # 20220601
 #
 
-import constants
+import environment
 import getopt
 import os
 import sys
@@ -68,7 +68,7 @@ for o, a in opts:
         assert False, "unhandled option"
 
 
-logfile = constants.LOGDIR + '/opnsense-reset.log'
+logfile = environment.LOGDIR + '/opnsense-reset.log'
 now = str(datetime.datetime.now()).split('.')[0]
 printScript('linuxmuster-opnsense-reset ' + now)
 
@@ -97,12 +97,12 @@ if not writeTextfile('/tmp/linuxmuster-opnsense-reset', adminpw, 'w'):
     sys.exit(1)
 
 # create firewall cert if not there
-if not os.path.isfile(constants.SSLDIR + '/firewall.cert.pem'):
+if not os.path.isfile(environment.SSLDIR + '/firewall.cert.pem'):
     if not createServerCert('firewall', logfile):
         sys.exit(1)
 
 # invoke setup script
-rc = subProc('python3 ' + constants.SETUPDIR + '/m_firewall.py', logfile)
+rc = subProc('python3 ' + environment.SETUPDIR + '/m_firewall.py', logfile)
 
 
 # wait for firewall
@@ -117,7 +117,7 @@ time.sleep(sleep)
 
 
 # delete old keytable
-rc = subProc(constants.FWSHAREDIR + '/create-keytab.py -c', logfile)
+rc = subProc(environment.FWSHAREDIR + '/create-keytab.py -c', logfile)
 if rc:
     printScript('Deleting old keytab.')
     apipath = '/proxysso/service/deletekeytab'
@@ -129,7 +129,7 @@ if rc:
 
 
 # create new keytab
-rc = subProc(constants.FWSHAREDIR + '/create-keytab.py', logfile)
+rc = subProc(environment.FWSHAREDIR + '/create-keytab.py', logfile)
 if rc:
     printScript('New kerberos key table has been successfully created.')
 else:

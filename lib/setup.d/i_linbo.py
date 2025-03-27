@@ -6,7 +6,7 @@
 #
 
 import configparser
-import constants
+import environment
 import os
 import re
 import subprocess
@@ -21,7 +21,7 @@ logfile = mySetupLogfile(__file__)
 # read INIFILE, get schoolname
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
-setupini = constants.SETUPINI
+setupini = environment.SETUPINI
 try:
     setup = configparser.RawConfigParser(
         delimiters=('='), inline_comment_prefixes=('#', ';'))
@@ -46,7 +46,7 @@ if not isValidPassword(adminpw):
     else:
         msg = 'Saving admin password to setup.ini '
         printScript(msg, '', False, False, True)
-        rc = modIni(constants.SETUPINI, 'setup', 'adminpw', adminpw)
+        rc = modIni(environment.SETUPINI, 'setup', 'adminpw', adminpw)
         if rc == True:
             printScript(' Success!', '', True, True, False, len(msg))
         else:
@@ -76,12 +76,12 @@ except:
 # set serverip in default start.conf
 msg = 'Providing server ip to linbo start.conf files '
 # default start.conf
-conffiles = [constants.LINBODIR + '/start.conf']
+conffiles = [environment.LINBODIR + '/start.conf']
 # collect example start.conf files
-for item in os.listdir(constants.LINBODIR + '/examples'):
+for item in os.listdir(environment.LINBODIR + '/examples'):
     if not item.startswith('start.conf.'):
         continue
-    conffiles.append(constants.LINBODIR + '/examples/' + item)
+    conffiles.append(environment.LINBODIR + '/examples/' + item)
 printScript(msg, '', False, False, True)
 try:
     for startconf in conffiles:
@@ -108,7 +108,7 @@ except:
 msg = 'Reconfiguring linbo (forking to background) '
 printScript(msg, '', False, False, True)
 try:
-    subProc('rm -f ' + constants.SYSDIR + '/linbo/*key*', logfile)
+    subProc('rm -f ' + environment.SYSDIR + '/linbo/*key*', logfile)
     subprocess.call('dpkg-reconfigure linuxmuster-linbo7 >> '
                     + logfile + ' 2>&1 &', shell=True)
     printScript(' Success!', '', True, True, False, len(msg))

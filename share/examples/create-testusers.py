@@ -6,7 +6,7 @@
 #
 
 import configparser
-import constants
+import environment
 import getopt
 import os
 import sys
@@ -18,8 +18,8 @@ from functions import replaceInFile
 from shutil import copyfile
 from subprocess import Popen, PIPE, STDOUT
 
-starget = constants.DEFAULTSCHOOL + '/students.csv'
-ttarget = constants.DEFAULTSCHOOL + '/teachers.csv'
+starget = environment.DEFAULTSCHOOL + '/students.csv'
+ttarget = environment.DEFAULTSCHOOL + '/teachers.csv'
 
 
 def usage():
@@ -55,14 +55,14 @@ if not force:
         sys.exit(1)
 
 # copy example user files
-ssource = constants.EXAMPLEDIR + '/students.csv'
-tsource = constants.EXAMPLEDIR + '/teachers.csv'
+ssource = environment.EXAMPLEDIR + '/students.csv'
+tsource = environment.EXAMPLEDIR + '/teachers.csv'
 copyfile(ssource, starget)
 copyfile(tsource, ttarget)
 
 # script header
 filename = os.path.basename(__file__).replace('.py', '')
-logfile = constants.LOGDIR + '/' + filename + '.log'
+logfile = environment.LOGDIR + '/' + filename + '.log'
 
 title = 'Creating test users for default-school'
 printScript('', 'begin')
@@ -75,7 +75,7 @@ printScript(msg)
 msg = 'Password policy setup '
 printScript(msg, '', False, False, True)
 try:
-    replaceInFile(constants.SCHOOLCONF, 'RANDOM_PWD=yes', 'RANDOM_PWD=no')
+    replaceInFile(environment.SCHOOLCONF, 'RANDOM_PWD=yes', 'RANDOM_PWD=no')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -125,7 +125,7 @@ except:
     sys.exit(1)
 
 # change password to Muster!
-pw = constants.ROOTPW
+pw = environment.ROOTPW
 msg = 'Setting user passwords to "' + pw + '" '
 printScript(msg)
 for user in students + teachers:

@@ -4,11 +4,11 @@
 # use this at your own risk
 # 
 # thomas@linuxmuster.net
-# 20220920
+# 20250326
 #
 
 # get environment
-source /usr/share/linuxmuster/defaults.sh
+source /usr/share/linuxmuster/environment.sh
 
 # additional variables
 NTPSOCKDIR_OLD="${NTPSOCKDIR/\/var\/lib\//\/run\/}"

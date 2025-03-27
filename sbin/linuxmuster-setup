@@ -5,7 +5,7 @@
 # 20240219
 #
 
-import constants
+import environment
 import getopt
 import importlib
 import os
@@ -56,7 +56,7 @@ cli_customini = ''
 
 # open logfile
 global logfile
-logfile = constants.SETUPLOG
+logfile = environment.SETUPLOG
 subProc('touch ' + logfile)
 subProc('chmod 600 ' + logfile)
 try:
@@ -109,32 +109,32 @@ printScript(os.path.basename(__file__), 'begin')
 if cli_customini != '':
     print('Custom inifile ' + cli_customini
           + ' given on cli, ignoring other arguments!')
-    subProc('cp ' + cli_customini + ' ' + constants.CUSTOMINI)
-    subProc('chmod 600 ' + constants.CUSTOMINI)
+    subProc('cp ' + cli_customini + ' ' + environment.CUSTOMINI)
+    subProc('chmod 600 ' + environment.CUSTOMINI)
 else:
     # check params
     print('Processing commandline arguments.')
     if servername != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'servername', servername)
+        rc = modIni(environment.CUSTOMINI, 'setup', 'servername', servername)
     if domainname != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'domainname', domainname)
+        rc = modIni(environment.CUSTOMINI, 'setup', 'domainname', domainname)
     if dhcprange != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'dhcprange', dhcprange)
+        rc = modIni(environment.CUSTOMINI, 'setup', 'dhcprange', dhcprange)
     if adminpw != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'adminpw', adminpw)
+        rc = modIni(environment.CUSTOMINI, 'setup', 'adminpw', adminpw)
     if schoolname != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'schoolname', schoolname)
+        rc = modIni(environment.CUSTOMINI, 'setup', 'schoolname', schoolname)
     if location != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'location', location)
+        rc = modIni(environment.CUSTOMINI, 'setup', 'location', location)
     if country != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'country', country)
+        rc = modIni(environment.CUSTOMINI, 'setup', 'country', country)
     if state != '':
-        rc = modIni(constants.CUSTOMINI, 'setup', 'state', state)
-    rc = modIni(constants.CUSTOMINI, 'setup', 'skipfw', str(skipfw))
+        rc = modIni(environment.CUSTOMINI, 'setup', 'state', state)
+    rc = modIni(environment.CUSTOMINI, 'setup', 'skipfw', str(skipfw))
 
 
 # work off setup modules
-setup_modules = os.listdir(constants.SETUPDIR)
+setup_modules = os.listdir(environment.SETUPDIR)
 setup_modules.remove('__pycache__')
 setup_modules.sort()
 for module_file in setup_modules:

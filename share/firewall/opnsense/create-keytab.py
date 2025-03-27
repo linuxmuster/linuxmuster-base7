@@ -5,7 +5,7 @@
 # 20240219
 #
 
-import constants
+import environment
 import getopt
 import os
 import subprocess
@@ -75,7 +75,7 @@ if not check:
 
     # get administrator credentials if global-admin password was not provided
     if adminpw is None:
-        rc, adminpw = readTextfile(constants.ADADMINSECRET)
+        rc, adminpw = readTextfile(environment.ADADMINSECRET)
         adminlogin = 'administrator'
 
     # reload relevant services

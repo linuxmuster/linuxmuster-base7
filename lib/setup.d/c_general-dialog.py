@@ -5,7 +5,7 @@
 # 20240515
 #
 
-import constants
+import environment
 import os
 import sys
 import configparser
@@ -21,7 +21,7 @@ logfile = mySetupLogfile(__file__)
 # read setup ini
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
-setupini = constants.SETUPINI
+setupini = environment.SETUPINI
 try:
     setup = configparser.RawConfigParser(
         delimiters=('='), inline_comment_prefixes=('#', ';'))
