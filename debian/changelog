@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.5-0) lmn73; urgency=low
+
+  * fix local apparmor configs for dhcpd and ntpd (a116c0e).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 28 Mar 2025 19:56:49 +0100
+
 linuxmuster-base7 (7.3.4-0) lmn73; urgency=low
 
   * fix #156: move common files to own package linuxmuster-common.
