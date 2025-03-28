@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20250326
+# 20250328
 # GPL v3
 #
 
@@ -93,16 +93,21 @@ case "$1" in
     fi
   fi
 
-  # timesyncd update, add firewall ip as parent ntp server
-  conf='/etc/systemd/timesyncd.conf'
-  if [ -e "$conf" ]; then
-    search="NTP=${firewallip}"
-    if ! grep -q ^"$search" "$conf"; then
-      echo "Updating time server related timesyncd configuration."
-      cp "$conf" "$conf".dpkg-bak."$datestr"
-      echo "$search" >> "$conf"
-      systemctl daemon-reload
+  # update apparmor profiles
+  for tpl in "$TPLDIR"/*.apparmor.d; do
+    conf="$(head -1 "$tpl" | cut -d' ' -f2)"
+    [ -s "$conf" ] || continue
+    tpl_ver="$(grep -P '(?<!\d)\d{8}(?!\d)' "$tpl" | grep ^# | head -1 | cut -d' ' -f2)"
+    conf_ver="$(grep -P '(?<!\d)\d{8}(?!\d)' "$conf" | grep ^# | head -1 | cut -d' ' -f2)"
+    if [[ $conf_ver -ne $tpl_ver ]]; then
+      echo "Updating $(basename "$conf")."
+      cp "$conf" "${conf}.${confver}"
+      cp "$tpl" "$conf"
+      aa_reboot="yes"
     fi
+  done
+  if [[ "$aa_reboot" = "yes" ]]; then
+    echo "You need to restart the server to apply the updated apparmor configuration."
   fi
 
   # enable ntp service, change firewall name to ip (#88)
@@ -110,11 +115,19 @@ case "$1" in
     echo "Disabling timesyncd service."
     timedatectl set-ntp false
   fi
+  ntp_logdir="/var/log/ntpsec"
+  if [ ! -d "$ntp_logdir" ]; then
+    mkdir -p "$ntp_logdir"
+    chown ntpsec:ntpsec "$ntp_logdir"
+    ntp_restart="yes"
+  fi
   if systemctl status ntp | grep -qi 'inactive (dead)'; then
     echo "Enabling & starting ntp service."
     systemctl enable ntp.service
     systemctl start ntp.service
+    ntp_restart="no"
   fi
+  [ "$ntp_restart" = "yes" ] && systemctl restart ntp.service
 
   # fix ubuntu version in sophomorix
   conf="/usr/share/sophomorix/devel/sophomorix.ini"
