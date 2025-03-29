@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.8-0) lmn72; urgency=low
+
+  * add certificate renewal script (7a76373, 31a3637).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 29 Mar 2025 14:28:41 +0100
+
 linuxmuster-base7 (7.2.7-0) lmn72; urgency=low
 
   * fix possibly broken python3-debian package (839db15).
