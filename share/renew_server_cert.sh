@@ -5,7 +5,7 @@
 # 20250329
 #
 
-. /usr/share/linuxmuster/environment.sh || exit 1
+. /usr/share/linuxmuster/defaults.sh || exit 1
 
 DAYS="7300"
 
