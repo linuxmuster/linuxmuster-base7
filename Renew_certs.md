@@ -1,6 +1,6 @@
 # Renew self signed server and firewall certs
 
-- To renew ca and server cert for another 10 years, invoke
+- To renew ca and server cert for another 20 years, invoke
   `/usr/share/linuxmuster/renew_server_cert.sh`
    on the server.
 - Reboot the server to apply the new certs to all services.
