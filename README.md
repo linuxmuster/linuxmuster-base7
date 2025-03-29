@@ -26,7 +26,7 @@ Management scripts for linuxmuster.net V7
 - Device import and boot preparation for [Linbo](https://github.com/linuxmuster/linuxmuster-linbo7)
 - Subnet import and setup in OPNSense
 
-Further information is available in the [Wiki](https://github.com/linuxmuster/linuxmuster-base7/wiki).
+Further information is available in the [Docs](https://docs.linuxmuster.net/de/latest/).
 
 ## Maintainance Details
     
