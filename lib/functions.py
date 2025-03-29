@@ -14,7 +14,7 @@ from IPy import IP
 from contextlib import closing
 import codecs
 import configparser
-import constants
+import environment
 import csv
 import datetime
 import getpass
@@ -97,7 +97,7 @@ def getBaseDN():
 # AD query
 def adSearch(search_filter, search_base=''):
     # get search parameters
-    rc, bindsecret = readTextfile(constants.BINDUSERSECRET)
+    rc, bindsecret = readTextfile(environment.BINDUSERSECRET)
     basedn = getBaseDN()
     binduser = 'CN=global-binduser,OU=Management,OU=GLOBAL,' + basedn
     if search_base == '':
@@ -129,10 +129,10 @@ def sambaTool(options, logfile=None):
     subcmd = options.split(' ')[0]
     if subcmd == 'dns':
         adminuser = 'dns-admin'
-        rc, adminpw = readTextfile(constants.DNSADMINSECRET)
+        rc, adminpw = readTextfile(environment.DNSADMINSECRET)
     else:
         adminuser = 'administrator'
-        rc, adminpw = readTextfile(constants.ADADMINSECRET)
+        rc, adminpw = readTextfile(environment.ADADMINSECRET)
     if not rc:
         return rc
     cmd = 'samba-tool ' + options + ' --username=' + \
@@ -188,7 +188,7 @@ def printScript(msg='', header='', lf=True, noleft=False, noright=False,
 
 # get key value from setup.ini
 def getSetupValue(keyname):
-    setupini = constants.SETUPINI
+    setupini = environment.SETUPINI
     try:
         setup = configparser.RawConfigParser(
             delimiters=('='), inline_comment_prefixes=('#', ';'))
@@ -254,10 +254,10 @@ def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False,
                     school='default-school'):
     devices_array = []
     if school == "default-school":
-        infile = open(constants.SOPHOSYSDIR
+        infile = open(environment.SOPHOSYSDIR
                       + "/default-school/devices.csv", newline='')
     else:
-        infile = open(constants.SOPHOSYSDIR+"/" + school
+        infile = open(environment.SOPHOSYSDIR+"/" + school
                       + "/" + school + ".devices.csv", newline='')
 
     content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
@@ -303,7 +303,7 @@ def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False,
                     row_res.append(row[int(field)])
             # add systemtype from start.conf
             if stype:
-                startconf = constants.LINBODIR + '/start.conf.' + group
+                startconf = environment.LINBODIR + '/start.conf.' + group
                 systemtype = None
                 if os.path.isfile(startconf):
                     systemtype = getStartconfOption(
@@ -321,7 +321,7 @@ def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False,
 # fieldnrs: comma separated list of field nrs to be returned, default is all
 # fields are returned
 def getSubnetArray(fieldnrs=''):
-    infile = open(constants.SUBNETSCSV, newline='')
+    infile = open(environment.SUBNETSCSV, newline='')
     content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
     subnet_array = []
     for row in content:
@@ -475,7 +475,7 @@ def modIni(inifile, section, option, value):
 # return my setup logfile path
 def mySetupLogfile(fpath):
     myname = os.path.splitext(os.path.basename(fpath))[0].split('_')[1]
-    logfile = constants.LOGDIR + '/setup.' + myname + '.log'
+    logfile = environment.LOGDIR + '/setup.' + myname + '.log'
     return logfile
 
 
@@ -502,7 +502,7 @@ def firewallApi(request, path, data=''):
     domainname = getSetupValue('domainname')
     fwapi = configparser.RawConfigParser(
         delimiters=('='), inline_comment_prefixes=('#', ';'))
-    fwapi.read(constants.FWAPIKEYS)
+    fwapi.read(environment.FWAPIKEYS)
     apikey = fwapi.get('api', 'key')
     apisecret = fwapi.get('api', 'secret')
     headers = {'content-type': 'application/json'}
@@ -530,22 +530,22 @@ def firewallApi(request, path, data=''):
 def createServerCert(item, logfile):
     domainname = getSetupValue('domainname')
     fqdn = item + '.' + domainname
-    csrfile = constants.SSLDIR + '/' + item + '.csr'
-    keyfile = constants.SSLDIR + '/' + item + '.key.pem'
-    certfile = constants.SSLDIR + '/' + item + '.cert.pem'
+    csrfile = environment.SSLDIR + '/' + item + '.csr'
+    keyfile = environment.SSLDIR + '/' + item + '.key.pem'
+    certfile = environment.SSLDIR + '/' + item + '.cert.pem'
     subj = '-subj /CN=' + fqdn + '/'
     shadays = ' -sha256 -days 3650'
     msg = 'Creating private ' + item + ' key & certificate '
     printScript(msg, '', False, False, True)
     try:
-        rc, cakeypw = readTextfile(constants.CAKEYSECRET)
+        rc, cakeypw = readTextfile(environment.CAKEYSECRET)
         passin = ' -passin pass:' + cakeypw
         subProc('openssl genrsa -out ' + keyfile + ' 2048', logfile)
         subProc('openssl req -batch ' + subj + ' -new -key '
                 + keyfile + ' -out ' + csrfile, logfile)
-        subProc('openssl x509 -req -in ' + csrfile + ' -CA ' + constants.CACERT + passin
-                + ' -CAkey ' + constants.CAKEY + ' -CAcreateserial -out ' + certfile + shadays
-                + ' -extfile ' + constants.SSLCNF, logfile)
+        subProc('openssl x509 -req -in ' + csrfile + ' -CA ' + environment.CACERT + passin
+                + ' -CAkey ' + environment.CAKEY + ' -CAcreateserial -out ' + certfile + shadays
+                + ' -extfile ' + environment.SSLCNF, logfile)
         if item == 'firewall':
             # create base64 encoded version for opnsense's config.xml
             b64keyfile = keyfile + '.b64'
@@ -555,8 +555,8 @@ def createServerCert(item, logfile):
             rc = replaceInFile(b64keyfile, '\n', '')
             rc = replaceInFile(b64certfile, '\n', '')
             # concenate firewall fullchain cert
-            subProc('cat ' + constants.FWFULLCHAIN.replace('.fullchain.', '.cert.')
-                    + ' ' + constants.CACERT + ' > ' + constants.FWFULLCHAIN, logfile)
+            subProc('cat ' + environment.FWFULLCHAIN.replace('.fullchain.', '.cert.')
+                    + ' ' + environment.CACERT + ' > ' + environment.FWFULLCHAIN, logfile)
         else:
             # cert links for cups on server
             subProc('ln -sf ' + certfile
@@ -633,8 +633,8 @@ def getSftp(ip, remotefile, localfile, secret='', sshuser='root'):
 # download firewall config.xml
 def getFwConfig(firewallip, secret=''):
     printScript('Downloading firewall configuration:')
-    rc = getSftp(firewallip, constants.FWCONFREMOTE,
-                 constants.FWCONFLOCAL, secret)
+    rc = getSftp(firewallip, environment.FWCONFREMOTE,
+                 environment.FWCONFLOCAL, secret)
     if rc:
         printScript('* Download finished successfully.')
     else:
@@ -649,9 +649,9 @@ def putSftp(ip, localfile, remotefile, secret='', sshuser='root'):
 
 
 # upload firewall config
-def putFwConfig(firewallip, fwconf=constants.FWCONFREMOTE, secret=''):
+def putFwConfig(firewallip, fwconf=environment.FWCONFREMOTE, secret=''):
     printScript('Uploading firewall configuration:')
-    rc = putSftp(firewallip, constants.FWCONFLOCAL,
+    rc = putSftp(firewallip, environment.FWCONFLOCAL,
                  fwconf, secret)
     if rc:
         printScript('* Upload finished successfully.')
@@ -666,15 +666,15 @@ def checkFwMajorVer():
         firewallip = getSetupValue('firewallip')
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(firewallip, port=22, username='root', password=constants.ROOTPW)
+        ssh.connect(firewallip, port=22, username='root', password=environment.ROOTPW)
         stdin, stdout, stderr = ssh.exec_command('opnsense-version')
         output = stdout.readlines()[0]
         fver = output.split()[1]
         mver = int(fver.split('.')[0])
-        if mver == constants.FWMAJORVER:
+        if mver == environment.FWMAJORVER:
             return True
         else:
-            print('Firewall version ' + fver + ' does not match ' + str(constants.FWMAJORVER) + '.*!')
+            print('Firewall version ' + fver + ' does not match ' + str(environment.FWMAJORVER) + '.*!')
             return False
     except Exception as error:
         print(error)
@@ -859,7 +859,7 @@ def getStartconfOsValues(startconf):
 
 
 def getLinboVersion():
-    rc, content = readTextfile(constants.LINBOVERFILE)
+    rc, content = readTextfile(environment.LINBOVERFILE)
     if not rc:
         return
     content = content.split(' ')[1]

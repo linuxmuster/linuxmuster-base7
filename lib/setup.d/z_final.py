@@ -6,7 +6,7 @@
 #
 
 import configparser
-import constants
+import environment
 import glob
 import os
 import re
@@ -50,11 +50,11 @@ msg = 'Writing school name to school.conf '
 printScript(msg, '', False, False, True)
 try:
     schoolname = getSetupValue('schoolname')
-    rc, content = readTextfile(constants.SCHOOLCONF)
+    rc, content = readTextfile(environment.SCHOOLCONF)
     # need to use regex because sophomorix config files do not do not comply with the ini file standard
     content = re.sub(r'SCHOOL_LONGNAME=.*\n',
                      'SCHOOL_LONGNAME=' + schoolname + '\n', content)
-    rc = writeTextfile(constants.SCHOOLCONF, content, 'w')
+    rc = writeTextfile(environment.SCHOOLCONF, content, 'w')
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))
@@ -93,7 +93,7 @@ except Exception as error:
 msg = 'Creating web proxy sso keytab '
 printScript(msg, '', False, False, True)
 try:
-    subProc(constants.FWSHAREDIR + "/create-keytab.py -v -a '" + adminpw + "'", logfile, True)
+    subProc(environment.FWSHAREDIR + "/create-keytab.py -v -a '" + adminpw + "'", logfile, True)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))
@@ -102,7 +102,7 @@ except Exception as error:
 # admin password not more needed in setup.ini
 msg = 'Removing admin password from setup.ini '
 printScript(msg, '', False, False, True)
-setupini = constants.SETUPINI
+setupini = environment.SETUPINI
 try:
     setup = configparser.RawConfigParser(
         delimiters=('='), inline_comment_prefixes=('#', ';'))

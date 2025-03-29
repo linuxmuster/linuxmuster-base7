@@ -6,7 +6,7 @@
 #
 
 import configparser
-import constants
+import environment
 import glob
 import os
 import re
@@ -22,7 +22,7 @@ logfile = mySetupLogfile(__file__)
 # read setup ini
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
-setupini = constants.SETUPINI
+setupini = environment.SETUPINI
 try:
     setup = configparser.RawConfigParser(
         delimiters=('='), inline_comment_prefixes=('#', ';'))
@@ -76,7 +76,7 @@ for a in crypto_list:
         if a == 'rsa':
             keyfile = rootkey_prefix + a + '.pub'
             b64sshkey = subprocess.check_output(['base64', keyfile]).decode('utf-8').replace('\n', '')
-            writeTextfile(constants.SSHPUBKEYB64, b64sshkey, 'w')
+            writeTextfile(environment.SSHPUBKEYB64, b64sshkey, 'w')
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))

@@ -5,7 +5,7 @@
 # 20200311
 #
 
-import constants
+import environment
 import os
 import sys
 
@@ -25,13 +25,13 @@ printScript('Reading setup values.')
 servername = getSetupValue('servername')
 domainname = getSetupValue('domainname')
 realm = getSetupValue('realm')
-rc, bindpw = readTextfile(constants.BINDUSERSECRET)
+rc, bindpw = readTextfile(environment.BINDUSERSECRET)
 if not rc:
     sys.exit(1)
 
 # read config template
 printScript('Reading config template.')
-rc, content = readTextfile(constants.FWAUTHCFG)
+rc, content = readTextfile(environment.FWAUTHCFG)
 if not rc:
     sys.exit(1)
 
@@ -42,7 +42,7 @@ content = content.replace('@@realm@@', realm)
 content = content.replace('@@bindpw@@', bindpw)
 
 # write outfile
-outfile = '/tmp/' + os.path.basename(constants.FWAUTHCFG)
+outfile = '/tmp/' + os.path.basename(environment.FWAUTHCFG)
 printScript('Writing ' + outfile + '.')
 rc = writeTextfile(outfile, content, 'w')
 if not rc:

@@ -1,26 +1,47 @@
-linuxmuster-base7 (7.2.8-0) lmn72; urgency=low
+linuxmuster-base7 (7.3.6-0) lmn73; urgency=low
 
-  * add certificate renewal script (7a76373, 31a3637).
+  * add certificate renewal script (4c4992b).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 29 Mar 2025 14:28:41 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 29 Mar 2025 14:20:05 +0100
 
-linuxmuster-base7 (7.2.7-0) lmn72; urgency=low
+linuxmuster-base7 (7.3.5-0) lmn73; urgency=low
 
-  * fix possibly broken python3-debian package (839db15).
+  * fix local apparmor configs for dhcpd and ntpd (a116c0e).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 17 Mar 2025 12:14:00 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 28 Mar 2025 19:56:49 +0100
 
-linuxmuster-base7 (7.2.6-0) lmn72; urgency=low
+linuxmuster-base7 (7.3.4-0) lmn73; urgency=low
 
-  * remove lmn72-testing repo from release upgrade script (7ab31cd).
+  * fix #156: move common files to own package linuxmuster-common.
+  * fix all references to moved common files (#156).
+  * add dependency to linuxmuster-common (#156).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 15 Mar 2025 15:13:00 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 27 Mar 2025 15:11:55 +0100
 
-inuxmuster-base7 (7.2.5-0) lmn72; urgency=low
+linuxmuster-base7 (7.3.3-0) lmn73; urgency=low
 
-  * Fix disabling systemd-resolved (f62a7db).
+  * fix deletion of symlinks during device import (36f5973).
+  * fix invokation of sophomorix-device (2b10d73).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 30 Jan 2025 21:43:40 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Mar 2025 13:38:56 +0100
+
+linuxmuster-base7 (7.3.2-0) lmn73; urgency=low
+
+  * fix beautifulsoup's xml features (667abf1).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 31 Jan 2025 15:29:25 +0100
+
+linuxmuster-base7 (7.3.1-0) lmn73; urgency=low
+
+  * changed firewall major version to 25 (0e41dfa).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 31 Jan 2025 11:15:13 +0100
+
+linuxmuster-base7 (7.3.0-0) lmn73; urgency=low
+
+  * create compatibility to ubuntu server 24.04 (e339f56).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 30 Jan 2025 19:48:17 +0100
 
 linuxmuster-base7 (7.2.4-0) lmn72; urgency=low
 

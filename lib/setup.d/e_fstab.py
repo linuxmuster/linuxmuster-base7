@@ -5,7 +5,7 @@
 # 20220105
 #
 
-import constants
+import environment
 import os
 import reconfigure
 import sys
@@ -30,8 +30,8 @@ while True:
                 msg = 'Modifying mount options for ' + i + ' '
                 printScript(msg, '', False, False, True)
                 try:
-                    # get mount options from constants
-                    config.tree.filesystems[c].options = constants.ROOTMNTOPTS
+                    # get mount options from environment
+                    config.tree.filesystems[c].options = environment.ROOTMNTOPTS
                     # save fstab
                     config.save()
                     printScript(' Success!', '', True, True, False, len(msg))

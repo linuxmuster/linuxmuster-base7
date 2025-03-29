@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20250130
+# 20250328
 # GPL v3
 #
 
@@ -22,13 +22,23 @@ set -e
 # the debian-policy package
 #
 
-# get constants
-source /usr/share/linuxmuster/defaults.sh
+# get environment
+source /etc/os-release || exit 1
+source /usr/share/linuxmuster/environment.sh || exit 1
 datestr="$(date +%Y%m%d%H%M)"
+
+# os version specific
+case "$VERSION_ID" in
+  24.04) ntpgrp="ntpsec" ;;
+  22.04) ntpgrp="ntp" ;;
+  *) echo "Wrong os version $VERSION_ID." ; exit 1 ;;
+esac
+
 
 case "$1" in
 
  configure)
+
   # ensure python3 paramiko and reconfigure are installed
   /usr/bin/python3 -m pip install paramiko reconfigure --break-system-packages
 
@@ -65,7 +75,7 @@ case "$1" in
   [ -d "$sysvol" ] && find "$sysvol" -type d -exec chmod 775 '{}' \;
   # samba ntp socket directory
   mkdir -p "$NTPSOCKDIR"
-  chgrp ntp "$NTPSOCKDIR"
+  chgrp "$ntpgrp" "$NTPSOCKDIR"
   chmod 750 "$NTPSOCKDIR"
 
 
@@ -83,16 +93,21 @@ case "$1" in
     fi
   fi
 
-  # timesyncd update, add firewall ip as parent ntp server
-  conf='/etc/systemd/timesyncd.conf'
-  if [ -e "$conf" ]; then
-    search="NTP=${firewallip}"
-    if ! grep -q ^"$search" "$conf"; then
-      echo "Updating time server related timesyncd configuration."
-      cp "$conf" "$conf".dpkg-bak."$datestr"
-      echo "$search" >> "$conf"
-      systemctl daemon-reload
+  # update apparmor profiles
+  for tpl in "$TPLDIR"/*.apparmor.d; do
+    conf="$(head -1 "$tpl" | cut -d' ' -f2)"
+    [ -s "$conf" ] || continue
+    tpl_ver="$(grep -P '(?<!\d)\d{8}(?!\d)' "$tpl" | grep ^# | head -1 | cut -d' ' -f2)"
+    conf_ver="$(grep -P '(?<!\d)\d{8}(?!\d)' "$conf" | grep ^# | head -1 | cut -d' ' -f2)"
+    if [[ $conf_ver -ne $tpl_ver ]]; then
+      echo "Updating $(basename "$conf")."
+      cp "$conf" "${conf}.${confver}"
+      cp "$tpl" "$conf"
+      aa_reboot="yes"
     fi
+  done
+  if [[ "$aa_reboot" = "yes" ]]; then
+    echo "You need to restart the server to apply the updated apparmor configuration."
   fi
 
   # enable ntp service, change firewall name to ip (#88)
@@ -100,10 +115,26 @@ case "$1" in
     echo "Disabling timesyncd service."
     timedatectl set-ntp false
   fi
+  ntp_logdir="/var/log/ntpsec"
+  if [ ! -d "$ntp_logdir" ]; then
+    mkdir -p "$ntp_logdir"
+    chown ntpsec:ntpsec "$ntp_logdir"
+    ntp_restart="yes"
+  fi
   if systemctl status ntp | grep -qi 'inactive (dead)'; then
     echo "Enabling & starting ntp service."
     systemctl enable ntp.service
     systemctl start ntp.service
+    ntp_restart="no"
+  fi
+  [ "$ntp_restart" = "yes" ] && systemctl restart ntp.service
+
+  # fix ubuntu version in sophomorix
+  conf="/usr/share/sophomorix/devel/sophomorix.ini"
+  if ! grep -q "$VERSION_ID" "$conf"; then
+    echo "Fixing ubuntu version in sophomorix.ini."
+    cp "$conf" "${conf}-${datestr}"
+    sed -i "s|DISTRIB_UPCOMING = .*|DISTRIB_UPCOMING = $VERSION_ID|" "$conf"
   fi
 
  ;;

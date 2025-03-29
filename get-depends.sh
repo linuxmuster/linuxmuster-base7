@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # thomas@linuxmuster.net
-# 20211125
+# 20250327
 #
 
 set -e
@@ -16,7 +16,7 @@ PKGNAME="linuxmuster-base7"
 CONTROL_URL="https://raw.githubusercontent.com/linuxmuster/$PKGNAME/main/debian/control"
 
 echo "###############################################"
-echo "# Installing $PKGNAME build depends #"
+echo "# Installing $PKGNAME build depends  #"
 echo "###############################################"
 echo
 
@@ -32,8 +32,8 @@ fi
 
 # install prerequisites
 $SUDO apt-get update
-$SUDO apt-get -y install bash bash-completion curl debhelper dpkg-dev || exit 1
+$SUDO apt-get -y install bash bash-completion build-essential curl debhelper dpkg-dev || exit 1
 
 # install build depends
-BUILDDEPENDS="$(curl -s $CONTROL_URL | sed -n '/Build-Depends:/,/Package:/p' | grep -v ^Package | sed -e 's|^Build-Depends: ||' | sed -e 's|,||g')"
+BUILDDEPENDS="$(curl -s $CONTROL_URL | grep -v ^Standards-Version | sed -n '/Build-Depends:/,/Package:/p' | grep -v ^Package | sed -e 's|^Build-Depends: ||' | sed -e 's| (.*)||g' | sed -e 's|,||g')"
 $SUDO apt-get -y install $BUILDDEPENDS || exit 1

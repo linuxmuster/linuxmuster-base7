@@ -6,7 +6,7 @@
 #
 
 import configparser
-import constants
+import environment
 import os
 import random
 import re
@@ -22,7 +22,7 @@ logfile = mySetupLogfile(__file__)
 # read setup.ini
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
-setupini = constants.SETUPINI
+setupini = environment.SETUPINI
 try:
     setup = configparser.RawConfigParser(
         delimiters=('='), inline_comment_prefixes=('#', ';'))
@@ -30,7 +30,7 @@ try:
     firewallip = setup.get('setup', 'firewallip')
     servername = setup.get('setup', 'servername')
     serverip = setup.get('setup', 'serverip')
-    rc, devices = readTextfile(constants.WIMPORTDATA)
+    rc, devices = readTextfile(environment.WIMPORTDATA)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -134,5 +134,5 @@ for item in device_array:
         printScript(' ' + ip + ' ' + mac, '', True, True, False, len(msg))
 
 # finally write devices.csv
-if not writeTextfile(constants.WIMPORTDATA, devices, 'w'):
+if not writeTextfile(environment.WIMPORTDATA, devices, 'w'):
     sys.exit(1)

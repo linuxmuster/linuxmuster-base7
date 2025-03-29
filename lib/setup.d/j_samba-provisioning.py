@@ -6,7 +6,7 @@
 #
 
 import configparser
-import constants
+import environment
 import datetime
 import os
 import sys
@@ -35,7 +35,7 @@ except Exception as error:
 # read setup ini
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
-setupini = constants.SETUPINI
+setupini = environment.SETUPINI
 try:
     setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
     setup.read(setupini)
@@ -55,11 +55,11 @@ msg = 'Generating AD admin password '
 printScript(msg, '', False, False, True)
 try:
     adadminpw = randomPassword(16)
-    with open(constants.ADADMINSECRET, 'w') as secret:
+    with open(environment.ADADMINSECRET, 'w') as secret:
         secret.write(adadminpw)
-    subProc('chmod 400 ' + constants.ADADMINSECRET, logfile)
+    subProc('chmod 400 ' + environment.ADADMINSECRET, logfile)
     # symlink for sophomorix
-    subProc('ln -sf ' + constants.ADADMINSECRET + ' ' + constants.SOPHOSYSDIR + '/sophomorix-samba.secret', logfile)
+    subProc('ln -sf ' + environment.ADADMINSECRET + ' ' + environment.SOPHOSYSDIR + '/sophomorix-samba.secret', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))

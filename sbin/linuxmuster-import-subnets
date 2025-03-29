@@ -6,7 +6,7 @@
 #
 
 import ast
-import constants
+import environment
 import datetime
 import os
 import re
@@ -52,7 +52,7 @@ gw_lan_xml = """
             <monitor_disable>1</monitor_disable>
         </gateway_item>
 """
-gw_lan_xml = gw_lan_xml.replace('@@gw_lan@@', constants.GW_LAN).replace(
+gw_lan_xml = gw_lan_xml.replace('@@gw_lan@@', environment.GW_LAN).replace(
     '@@gw_lan_descr@@', gw_lan_descr)
 
 # outbound nat rules
@@ -89,7 +89,7 @@ nat_rule_xml = nat_rule_xml.replace(
 # update static routes in netplan configuration
 def updateNetplan(subnets):
     printScript('Processing netplan configuration:')
-    cfgfile = constants.NETCFG
+    cfgfile = environment.NETCFG
     # create backup of current configuration
     timestamp = str(datetime.datetime.now()).replace('-', '').replace(' ', '').replace(':', '').split('.')[0]
     bakfile = cfgfile + '-' + timestamp
@@ -202,7 +202,7 @@ def updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gw_la
     if not getFwConfig(firewallip):
         return False
     # load configfile
-    rc, content = readTextfile(constants.FWCONFLOCAL)
+    rc, content = readTextfile(environment.FWCONFLOCAL)
     if not rc:
         return rc
     changed = False
@@ -216,7 +216,7 @@ def updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gw_la
         changed = rc
     if changed:
         # write changed config
-        if writeTextfile(constants.FWCONFLOCAL, content, 'w'):
+        if writeTextfile(environment.FWCONFLOCAL, content, 'w'):
             printScript('* Saved changed config.')
         else:
             printScript('* Unable to save configfile!')
@@ -230,7 +230,7 @@ def updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gw_la
 def addFwRoute(subnet):
     try:
         payload = '{"route": {"network": "' + subnet + '", "gateway": "' + \
-            constants.GW_LAN + '", "descr": "Route for subnet ' + \
+            environment.GW_LAN + '", "descr": "Route for subnet ' + \
             subnet + '", "disabled": "0"}}'
         res = firewallApi('post', '/routes/routes/addroute', payload)
         printScript('* Added route for subnet ' + subnet + '.')
@@ -263,7 +263,7 @@ def updateFwRoutes(subnets, ipnet_setup, servernet_router):
         return False
     # iterate through firewall routes and delete them if necessary
     changed = False
-    gateway_orig = constants.GW_LAN + ' - ' + servernet_router
+    gateway_orig = environment.GW_LAN + ' - ' + servernet_router
     if staticroutes_nr > 0:
         count = 0
         while (count < staticroutes_nr):
@@ -304,7 +304,7 @@ printScript('Processing dhcp subnets:')
 servernet_router = firewallip
 subnets = []
 # collect subnet data and write dhcpd's subnet.conf
-subnetconf = open(constants.DHCPSUBCONF, 'w')
+subnetconf = open(environment.DHCPSUBCONF, 'w')
 for row in getSubnetArray():
     try:
         ipnet = row[0]

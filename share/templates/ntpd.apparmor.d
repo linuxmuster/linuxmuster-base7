@@ -1,12 +1,8 @@
 # /etc/apparmor.d/local/usr.sbin.ntpd
 #
 # thomas@linuxmuster.net
-# 20220912
+# 20250328
 #
 
-{
-
-  # samba4 ntp signing socket
-  /var/lib/samba/ntp_signd/socket rw,
-
-}
+# samba4 ntp signing socket
+/var/lib/samba/ntp_signd/socket rw,

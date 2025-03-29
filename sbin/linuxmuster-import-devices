@@ -2,11 +2,12 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20230112
+# 20250316
 #
 
 import configparser
-import constants
+import environment
+import fnmatch
 import os
 import re
 import subprocess
@@ -52,12 +53,12 @@ for o, a in opts:
         school = a
 
 # default school's devices.csv
-devices = constants.WIMPORTDATA
+devices = environment.WIMPORTDATA
 
 # read INIFILE
 setup = configparser.ConfigParser(delimiters=(
     '='), inline_comment_prefixes=('#', ';'))
-setup.read(constants.SETUPINI)
+setup.read(environment.SETUPINI)
 serverip = setup.get('setup', 'serverip')
 domainname = setup.get('setup', 'domainname')
 
@@ -67,22 +68,44 @@ printScript(os.path.basename(__file__), 'begin')
 # do sophomorix-devices first
 msg = 'Starting sophomorix-device syntax check:'
 printScript(msg)
-result = subProc('sophomorix-device --dry-run')
-msg = 'sophomorix-device finished '
-if not result:
+try:
+    msg = 'sophomorix-device finished '
+    subProc('sophomorix-device --sync')
+    printScript(msg + ' OK!')
+except Exception as err:
     printScript(msg + ' errors detected!')
+    print(err)
     sys.exit(1)
-
-printScript(msg + ' OK!')
-subProc('sophomorix-device --sync')
 
 
 # functions begin
+
+
+# delete symlinks
+def delSymlinksByPattern(directory, pattern):
+    # check if dir exists
+    if not os.path.exists(directory):
+        #print(f"Directory '{directory}' does not exist.")  # debug
+        return
+    # iterate through dir
+    for root, dirs, files in os.walk(directory):
+        for name in files + dirs:
+            path = os.path.join(root, name)
+            # test for symlink
+            if os.path.islink(path) and fnmatch.fnmatch(name, pattern):
+                try:
+                    os.unlink(path)  # delete symlink
+                    #print(f"Symlink deleted: {path}")  # debug
+                except Exception as err:
+                    continue
+                    #print(f"Deletion of {path} failed: {err}")  # debug
+
+
 # write grub cfgs
 def doGrubCfg(startconf, group, kopts):
-    grubcfg = constants.LINBOGRUBDIR + '/' + group + '.cfg'
+    grubcfg = environment.LINBOGRUBDIR + '/' + group + '.cfg'
     rc, content = readTextfile(grubcfg)
-    if rc and constants.MANAGEDSTR not in content:
+    if rc and environment.MANAGEDSTR not in content:
         return 'present'
     # get grub partition name of cache
     cache = getStartconfOption(startconf, 'LINBO', 'Cache')
@@ -92,7 +115,7 @@ def doGrubCfg(startconf, group, kopts):
     cachelabel = getStartconfPartlabel(startconf, partnr)
     # if cache is not defined provide a forced netboot cfg
     if cacheroot is None:
-        netboottpl = constants.LINBOTPLDIR + '/grub.cfg.forced_netboot'
+        netboottpl = environment.LINBOTPLDIR + '/grub.cfg.forced_netboot'
         subProc('cp ' + netboottpl + ' ' + grubcfg)
         return 'not yet configured!'
     # create return message
@@ -101,7 +124,7 @@ def doGrubCfg(startconf, group, kopts):
     else:
         msg = 'created'
     # create gobal part for group cfg
-    globaltpl = constants.LINBOTPLDIR + '/grub.cfg.global'
+    globaltpl = environment.LINBOTPLDIR + '/grub.cfg.global'
     rc, content = readTextfile(globaltpl)
     if not rc:
         return 'error!'
@@ -115,7 +138,7 @@ def doGrubCfg(startconf, group, kopts):
     if oslists is None:
         return 'error!'
     # write os parts to grub cfg
-    ostpl = constants.LINBOTPLDIR + '/grub.cfg.os'
+    ostpl = environment.LINBOTPLDIR + '/grub.cfg.os'
     for oslist in oslists:
         osname, partition, kernel, initrd, kappend, osnr = oslist
         osroot = getGrubPart(partition, systemtype)
@@ -145,7 +168,7 @@ def doGrubCfg(startconf, group, kopts):
 
 # write linbo start configuration file
 def doLinboStartconf(group):
-    startconf = constants.LINBODIR + '/start.conf.' + group
+    startconf = environment.LINBODIR + '/start.conf.' + group
     # provide unconfigured start.conf if there is none for this group
     if os.path.isfile(startconf):
         if getStartconfOption(startconf, 'LINBO', 'Cache') is None:
@@ -154,7 +177,7 @@ def doLinboStartconf(group):
             msg1 = 'present'
     else:
         msg1 = 'not yet configured!'
-        subProc('cp ' + constants.LINBODIR + '/start.conf ' + startconf)
+        subProc('cp ' + environment.LINBODIR + '/start.conf ' + startconf)
     # read values from start.conf
     group_s = getStartconfOption(startconf, 'LINBO', 'Group')
     serverip_s = getStartconfOption(startconf, 'LINBO', 'Server')
@@ -206,7 +229,7 @@ def writeDhcpDevicesConfig(school='default-school'):
   option host-name "@@hostname@@";
   hardware ethernet @@mac@@;
 """
-    baseConfigFilePath = constants.DHCPDEVCONF
+    baseConfigFilePath = environment.DHCPDEVCONF
     devicesConfigBasedir = "/etc/dhcp/devices"
     Path(devicesConfigBasedir).mkdir(parents=True, exist_ok=True)
 
@@ -283,7 +306,7 @@ def doSchoolSpecificGroupLinksAndGetPxeGroups(school='default-school'):
     pxe_groups = []
 
     # clean up
-    linksFileBasepath = constants.LINBODIR + "/boot/links"
+    linksFileBasepath = environment.LINBODIR + "/boot/links"
     Path(linksFileBasepath).mkdir(parents=True, exist_ok=True)
     linksFile = linksFileBasepath + "/" + school + ".csv"
     if os.path.isfile(linksFile):
@@ -304,7 +327,7 @@ def doSchoolSpecificGroupLinksAndGetPxeGroups(school='default-school'):
 
             # start.conf
             linkSource = 'start.conf.' + group
-            linkTarget = constants.LINBODIR + '/start.conf-'
+            linkTarget = environment.LINBODIR + '/start.conf-'
             if ip == 'DHCP':
                 linkTarget += mac.lower()
             else:
@@ -313,7 +336,7 @@ def doSchoolSpecificGroupLinksAndGetPxeGroups(school='default-school'):
 
             # Grub.cfg
             linkSource = '../' + group + '.cfg'
-            linkTarget = constants.LINBOGRUBDIR + '/hostcfg/' + host + '.cfg'
+            linkTarget = environment.LINBOGRUBDIR + '/hostcfg/' + host + '.cfg'
             csvWriter.writerow([linkSource, linkTarget])
 
     return pxe_groups
@@ -322,10 +345,10 @@ def doSchoolSpecificGroupLinksAndGetPxeGroups(school='default-school'):
 # look up all links for all schools and place them in the correct place
 def doAllGroupLinks():
     # delete old config links
-    subProc("find " + constants.LINBODIR + " -maxdepth 1 -name start.conf-\* -type l -exec rm '{}' \;")
-    subProc("find " + constants.LINBOGRUBDIR + "/hostcfg -maxdepth 1 -name \*.cfg -type l -exec rm '{}' \;")
+    delSymlinksByPattern(environment.LINBODIR, "start.conf-*")
+    delSymlinksByPattern(environment.LINBOGRUBDIR + "/hostcfg", "*.cfg")
 
-    linksConfBasedir = constants.LINBODIR + "/boot/links"
+    linksConfBasedir = environment.LINBODIR + "/boot/links"
     for schoolLinksConf in listdir(linksConfBasedir):
         schoolLinksConfPath = linksConfBasedir + "/" + schoolLinksConf
         if not os.path.isfile(schoolLinksConfPath) or not schoolLinksConf.endswith(".csv"):
@@ -364,7 +387,7 @@ for group in pxe_groups:
 
 
 # execute post hooks
-hookpath = constants.POSTDEVIMPORT
+hookpath = environment.POSTDEVIMPORT
 hookscripts = [f for f in listdir(hookpath) if isfile(
     join(hookpath, f)) and os.access(join(hookpath, f), os.X_OK)]
 if len(hookscripts) > 0:
