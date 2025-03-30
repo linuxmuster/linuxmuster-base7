@@ -1,0 +1,229 @@
+#!/usr/bin/env python3
+#
+# renew self-signed server certs
+# thomas@linuxmuster.net
+# 20250330
+#
+
+import datetime
+import environment
+import getopt
+import os
+import shutil
+import sys
+
+from functions import catFiles, getFwConfig, getSetupValue, replaceInFile, printScript, putFwConfig, readTextfile, sshExec, subProc, tee, writeTextfile
+
+
+def usage():
+    print('Usage: linuxmuster-renew-certs [options]')
+    print(' [options] may be:')
+    print(' -d <#>, --days=<#> : Set number of days.')
+    print(' -f,     --force    : Skip security prompt.')
+    print(' -r,     --reboot   : Reboot server and firewall finally.')
+    print(' -h,     --help     : print this help')
+
+
+# get cli args
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "d:hfr", ["days=", "help", "force", "reboot"])
+except getopt.GetoptError as err:
+    # print help information and exit:
+    print(err)  # will print something like "option -a not recognized"
+    usage()
+    sys.exit(2)
+
+
+# default values
+force = False
+reboot = False
+logfile = environment.LOGDIR + '/linuxmuster-renew-certs.log'
+now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+days = 7305
+ssldir = environment.SSLDIR
+cacert = environment.CACERT
+cacert_old = cacert + '_old'
+cacertb64 = environment.CACERTB64
+cacertb64_old = cacertb64 + '_old'
+cakey = environment.CAKEY
+srvcert = ssldir + '/server.cert.pem'
+srvcert_old = srvcert + '_old'
+srvkey = ssldir + '/server.key.pem'
+srvbundle = ssldir + '/server.cert.bundle.pem'
+srvfullchain = ssldir + '/server.fullchain.pem'
+fwcert = ssldir + '/firewall.cert.pem'
+fwcert_old = fwcert + '_old'
+fwcertb64 = fwcert + '.b64'
+fwcertb64_old = fwcertb64 + '_old'
+fwkey = ssldir + '/firewall.key.pem'
+fwfullchain = environment.FWFULLCHAIN
+fwconftmp = environment.FWCONFLOCAL
+fwconfbak = fwconftmp.replace('.xml', '-' + now + '.xml')
+
+
+# open logfile
+try:
+    l = open(logfile, 'a')
+    orig_out = sys.stdout
+    sys.stdout = tee(sys.stdout, l)
+    sys.stderr = tee(sys.stderr, l)
+except Exception as err:
+    printScript('Cannot open logfile ' + logfile + ' !')
+    printScript(err)
+    sys.exit()
+
+
+# start message
+printScript(os.path.basename(__file__), 'begin')
+
+
+# evaluate options
+for o, a in opts:
+    if o in ("-d", "--days"):
+        days = a
+    elif o in ("-f", "--force"):
+        force = True
+    elif o in ("-r", "--reboot"):
+        reboot = True
+    elif o in ("-h", "--help"):
+        usage()
+        sys.exit()
+    else:
+        assert False, "unhandled option"
+
+
+# security prompt
+if not force:
+    msg = 'Attention! Please confirm the renewing of the server certificates.'
+    printScript(msg)
+    answer = input("Answer \"YES\" to proceed: ")
+    if answer != "YES":
+        sys.exit(1)
+
+
+# get setup values
+msg = 'Reading setup data.'
+printScript(msg)
+try:
+    firewallip = getSetupValue('firewallip')
+except Exception as err:
+    printScript(msg + ' errors detected!')
+    print(err)
+    sys.exit(1)
+
+
+# test if current firewall certs match
+
+# get fw current config
+try:
+    getFwConfig(firewallip)
+    shutil.copyfile(fwconftmp, fwconfbak)
+except Exception as err:
+    printScript('Failed!')
+    print(err)
+    sys.exit(1)
+
+# test certs
+try:
+    msg = 'Testing if current firewall certs match.'
+    printScript(msg)
+    for item in [cacertb64, fwcertb64]:
+        rc, b64_test = readTextfile(item)
+        with open(fwconftmp) as fwconf:
+            if b64_test in fwconf.read():
+                printScript('* ' + os.path.basename(item) + ' matches.')
+            else:
+                printScript('* ' + os.path.basename(item) + ' does not match with firewall configuration!')
+                sys.exit(1)
+except Exception as err:
+    printScript('Failed!')
+    print(err)
+    sys.exit(1)
+
+
+# process ca cert
+try:
+    msg = 'Renewing ' + os.path.basename(cacert) + ' with ' + str(days) + ' days.'
+    printScript(msg)
+    os.replace(cacert, cacert_old)
+    rc, cakeysecret = readTextfile(environment.CAKEYSECRET)
+    subProc('openssl x509 -days ' + str(days) + ' -in ' + cacert_old + ' -signkey ' + cakey + ' -passin pass:' + cakeysecret + ' -out ' + cacert, logfile)
+    os.replace(cacertb64, cacertb64_old)
+    subProc('base64 ' + cacert + ' > ' + cacertb64, logfile)
+    replaceInFile(cacertb64, '\n', '')
+except Exception as err:
+    printScript('Failed!')
+    print(err)
+    sys.exit(1)
+
+
+# process server cert
+try:
+    msg = 'Renewing ' + os.path.basename(srvcert) + ' with ' + str(days) + ' days.'
+    printScript(msg)
+    os.replace(srvcert, srvcert_old)
+    subProc('openssl x509 -days ' + str(days) + ' -in ' + srvcert_old + ' -signkey ' + srvkey + ' -out ' + srvcert, logfile)
+    catFiles([srvcert, srvkey], srvfullchain)
+    if os.path.isfile(srvbundle):
+        os.unlink(srvbundle)
+except Exception as err:
+    printScript('Failed!')
+    print(err)
+    sys.exit(1)
+
+
+# process firewall cert
+try:
+    msg = 'Renewing ' + os.path.basename(fwcert) + ' with ' + str(days) + ' days.'
+    printScript(msg)
+    os.replace(fwcert, fwcert_old)
+    subProc('openssl x509 -days ' + str(days) + ' -in ' + fwcert_old + ' -signkey ' + fwkey + ' -out ' + fwcert, logfile)
+    catFiles([fwcert, fwkey], fwfullchain)
+    os.replace(fwcertb64, fwcertb64_old)
+    subProc('base64 ' + fwcert + ' > ' + fwcertb64, logfile)
+    replaceInFile(fwcertb64, '\n', '')
+except Exception as err:
+    printScript('Failed!')
+    print(err)
+    sys.exit(1)
+
+
+# fix permissions
+subProc('chgrp ssl-cert ' + ssldir + '/*')
+subProc('chmod 600 ' + ssldir + '/*key*')
+subProc('chmod 600 ' + ssldir + '/*chain*')
+
+
+# update firewall certs
+
+# patching config
+try:
+    msg = 'Patching firewall config with new certs.'
+    printScript(msg)
+    for item in [cacertb64_old, fwcertb64_old]:
+        certfile = item.replace('_old', '')
+        rc, cert_old = readTextfile(item)
+        rc, cert_new = readTextfile(certfile)
+        replaceInFile(fwconftmp, cert_old, cert_new)
+except Exception as err:
+    printScript('Failed!')
+    print(err)
+    sys.exit(1)
+
+# upload patched config
+try:
+    putFwConfig(firewallip)
+except Exception as err:
+    printScript('Failed!')
+    print(err)
+    sys.exit(1)
+
+
+# reboot if requested
+if reboot:
+    sshExec(firewallip, '/sbin/reboot')
+    subProc('/sbin/reboot', logfile)
+
+
+# end message
+printScript(os.path.basename(__file__), 'end')
