@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.2.9-0) lmn72; urgency=low
+
+  * reimplement certificates renewal script with python (d5abc8d, 4e22410, 27f5877).
+  * allow opnsense version 25.* (ad674c1).
+  * add python function catFiles (97e4806).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 30 Mar 2025 22:02:47 +0200
+
 linuxmuster-base7 (7.2.8-0) lmn72; urgency=low
 
   * add certificate renewal script (7a76373, 31a3637).
