@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.3.7-0) lmn73; urgency=low
+
+  * reimplement certificates renewal script with python (d04ff0f, aa1ed4a).
+  * add python function catFiles (56d97c7).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 30 Mar 2025 21:40:29 +0200
+
 linuxmuster-base7 (7.3.6-0) lmn73; urgency=low
 
   * add certificate renewal script (4c4992b).
