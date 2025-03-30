@@ -6,7 +6,7 @@
 #
 
 import datetime
-import environment
+import constants
 import getopt
 import os
 import shutil
