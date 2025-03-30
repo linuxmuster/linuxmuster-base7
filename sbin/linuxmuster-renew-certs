@@ -12,13 +12,13 @@ import os
 import shutil
 import sys
 
-from functions import catFiles, getFwConfig, getSetupValue, replaceInFile, printScript, putFwConfig, readTextfile, sshExec, subProc, tee, writeTextfile
+from functions import catFiles, getFwConfig, getSetupValue, replaceInFile, printScript, putFwConfig, readTextfile, sshExec, subProc, tee
 
 
 def usage():
     print('Usage: linuxmuster-renew-certs [options]')
     print(' [options] may be:')
-    print(' -d <#>, --days=<#> : Set number of days.')
+    print(' -d <#>, --days=<#> : Set number of days (default: 7305).')
     print(' -f,     --force    : Skip security prompt.')
     print(' -r,     --reboot   : Reboot server and firewall finally.')
     print(' -h,     --help     : print this help')
