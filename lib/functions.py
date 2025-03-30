@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20240219
+# 20250330
 #
 
 from subprocess import Popen, PIPE
@@ -409,6 +409,12 @@ def getGrubOstype(osname):
         if ostype in osname:
             return ostype
     return 'unknown'
+
+
+# concenate files
+def catFiles(filelist, outfile):
+    files = " ".join(filelist)
+    subprocess.run(f"cat {files} > {outfile}", shell=True)
 
 
 # return content of text file
