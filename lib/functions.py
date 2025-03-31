@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20250330
+# 20250331
 #
 
 from subprocess import Popen, PIPE
@@ -533,14 +533,14 @@ def firewallApi(request, path, data=''):
 
 
 # creates server cert
-def createServerCert(item, logfile):
+def createServerCert(item, days, logfile):
     domainname = getSetupValue('domainname')
     fqdn = item + '.' + domainname
     csrfile = constants.SSLDIR + '/' + item + '.csr'
     keyfile = constants.SSLDIR + '/' + item + '.key.pem'
     certfile = constants.SSLDIR + '/' + item + '.cert.pem'
     subj = '-subj /CN=' + fqdn + '/'
-    shadays = ' -sha256 -days 3650'
+    shadays = ' -sha256 -days ' + days
     msg = 'Creating private ' + item + ' key & certificate '
     printScript(msg, '', False, False, True)
     try:

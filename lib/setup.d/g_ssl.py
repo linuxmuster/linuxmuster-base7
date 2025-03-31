@@ -85,7 +85,7 @@ for item in [servername, 'firewall']:
     if skipfw and item == 'firewall':
         # no cert for firewall if skipped by setup option
         continue
-    createServerCert(item, logfile)
+    createServerCert(item, days, logfile)
 
 
 # copy cacert.pem to sysvol for clients
