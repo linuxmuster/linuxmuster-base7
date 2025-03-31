@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.10-0) lmn72; urgency=low
+
+  * fix references to environment (3b8d817).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 31 Mar 2025 10:01:59 +0200
+
 linuxmuster-base7 (7.2.9-0) lmn72; urgency=low
 
   * reimplement certificates renewal script with python (d5abc8d, 4e22410, 27f5877).
