@@ -12,7 +12,7 @@ import os
 import shutil
 import sys
 
-from functions import catFiles, checkFwMajorVer, getFwConfig, getSetupValue, replaceInFile, printScript, putFwConfig, readTextfile, sshExec, subProc, tee
+from functions import checkFwMajorVer, getFwConfig, getSetupValue, replaceInFile, printScript, putFwConfig, readTextfile, sshExec, subProc, tee
 
 
 def usage():
@@ -20,7 +20,7 @@ def usage():
     print(' [options] may be:')
     print(' -d <#>, --days=<#> : Set number of days (default: 7305).')
     print(' -f,     --force    : Skip security prompt.')
-    print(' -n,     --dry-run  : Test only, change nothing.')
+    print(' -n,     --dry-run  : Test only if the firewall certs can be renewed.')
     print(' -r,     --reboot   : Reboot server and firewall finally.')
     print(' -h,     --help     : print this help')
 
@@ -44,21 +44,15 @@ now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 days = 7305
 ssldir = constants.SSLDIR
 cacert = constants.CACERT
-cacert_old = cacert + '_old'
 cacertb64 = constants.CACERTB64
-cacertb64_old = cacertb64 + '_old'
 cakey = constants.CAKEY
 srvcert = ssldir + '/server.cert.pem'
-srvcert_old = srvcert + '_old'
 srvkey = ssldir + '/server.key.pem'
-srvbundle = ssldir + '/server.cert.bundle.pem'
-srvfullchain = ssldir + '/server.fullchain.pem'
 fwcert = ssldir + '/firewall.cert.pem'
-fwcert_old = fwcert + '_old'
 fwcertb64 = fwcert + '.b64'
-fwcertb64_old = fwcertb64 + '_old'
 fwkey = ssldir + '/firewall.key.pem'
-fwfullchain = constants.FWFULLCHAIN
+fwkeyb64 = fwkey + '.b64'
+b64_list = [cacertb64, fwcertb64, fwkeyb64]
 fwconftmp = constants.FWCONFLOCAL
 fwconfbak = fwconftmp.replace('.xml', '-' + now + '.xml')
 
@@ -97,7 +91,7 @@ for o, a in opts:
 
 
 # security prompt
-if not force:
+if not force and not dry:
     msg = 'Attention! Please confirm the renewing of the server certificates.'
     printScript(msg)
     answer = input("Answer \"YES\" to proceed: ")
@@ -125,8 +119,10 @@ except Exception as err:
 
 # download config
 if skipfw:
-    msg = 'Skipping firewall.'
-    printScript(msg)
+    if dry:
+        printScript('Dry run makes only sense with standard opnsense firewall.')
+    else:
+        printScript('Skipping firewall.')
 else:
     if not checkFwMajorVer():
         sys.exit(1)
@@ -141,15 +137,16 @@ else:
 
 # test if certs match
     try:
-        msg = 'Testing if current firewall certs match.'
+        msg = 'Testing if current firewall certs can be renewed:'
         printScript(msg)
-        for item in [cacertb64, fwcertb64]:
+        for item in b64_list:
             rc, b64_test = readTextfile(item)
             with open(fwconftmp) as fwconf:
+                item_name = os.path.basename(item).replace('.pem.b64', '').replace('.', ' ')
                 if b64_test in fwconf.read():
-                    printScript('* ' + os.path.basename(item) + ' matches.')
+                    printScript('* ' + item_name + ' matches.')
                 else:
-                    printScript('* ' + os.path.basename(item) + ' does not match with firewall configuration!')
+                    printScript('* ' + item_name + ' does not match!')
                     sys.exit(1)
     except Exception as err:
         printScript('Failed!')
@@ -159,35 +156,20 @@ else:
 
 # dry run
 if dry:
-    printScript('Dry run requested.')
+    if not skipfw:
+        printScript('Dry run executed successfully.')
+    printScript(os.path.basename(__file__), 'end')
     sys.exit(0)
 
 
-# renew ca cert
+# renew certs
 try:
-    msg = 'Renewing ' + os.path.basename(cacert) + ' with ' + str(days) + ' days.'
+    msg = 'Renewing certificates for another ' + str(days) + ' days.'
     printScript(msg)
-    os.replace(cacert, cacert_old)
-    rc, cakeysecret = readTextfile(constants.CAKEYSECRET)
-    subProc('openssl x509 -days ' + str(days) + ' -in ' + cacert_old + ' -signkey ' + cakey + ' -passin pass:' + cakeysecret + ' -out ' + cacert, logfile)
-    os.replace(cacertb64, cacertb64_old)
-    subProc('base64 ' + cacert + ' > ' + cacertb64, logfile)
-    replaceInFile(cacertb64, '\n', '')
-except Exception as err:
-    printScript('Failed!')
-    print(err)
-    sys.exit(1)
-
-
-# renew server cert
-try:
-    msg = 'Renewing ' + os.path.basename(srvcert) + ' with ' + str(days) + ' days.'
-    printScript(msg)
-    os.replace(srvcert, srvcert_old)
-    subProc('openssl x509 -days ' + str(days) + ' -in ' + srvcert_old + ' -signkey ' + srvkey + ' -out ' + srvcert, logfile)
-    catFiles([srvcert, srvkey], srvfullchain)
-    if os.path.isfile(srvbundle):
-        os.unlink(srvbundle)
+    for item in b64_list:
+        item_old = item + '_old'
+        shutil.copyfile(item, item_old)
+    subProc('python3 ' + constants.SETUPDIR + '/g_ssl.py ' + str(days), logfile)
 except Exception as err:
     printScript('Failed!')
     print(err)
@@ -196,30 +178,17 @@ except Exception as err:
 
 # process firewall certs
 
-# renew
 if not skipfw:
-    try:
-        msg = 'Renewing ' + os.path.basename(fwcert) + ' with ' + str(days) + ' days.'
-        printScript(msg)
-        os.replace(fwcert, fwcert_old)
-        subProc('openssl x509 -days ' + str(days) + ' -in ' + fwcert_old + ' -signkey ' + fwkey + ' -out ' + fwcert, logfile)
-        catFiles([fwcert, fwkey], fwfullchain)
-        os.replace(fwcertb64, fwcertb64_old)
-        subProc('base64 ' + fwcert + ' > ' + fwcertb64, logfile)
-        replaceInFile(fwcertb64, '\n', '')
-    except Exception as err:
-        printScript('Failed!')
-        print(err)
-        sys.exit(1)
 
 # patch
     try:
-        msg = 'Patching firewall config with new certs.'
-        printScript(msg)
-        for item in [cacertb64_old, fwcertb64_old]:
-            certfile = item.replace('_old', '')
-            rc, cert_old = readTextfile(item)
-            rc, cert_new = readTextfile(certfile)
+        for item in b64_list:
+            item_old = item + '_old'
+            item_name = os.path.basename(item).replace('.pem.b64', '').replace('.', ' ')
+            rc, cert_old = readTextfile(item_old)
+            rc, cert_new = readTextfile(item)
+            msg = 'Patching firewall config with ' + item_name + '.'
+            printScript(msg)
             replaceInFile(fwconftmp, cert_old, cert_new)
     except Exception as err:
         printScript('Failed!')
@@ -235,10 +204,13 @@ if not skipfw:
         sys.exit(1)
 
 
-# fix permissions
-subProc('chgrp ssl-cert ' + ssldir + '/*')
-subProc('chmod 600 ' + ssldir + '/*key*')
-subProc('chmod 600 ' + ssldir + '/*chain*')
+# remove old files
+for item in b64_list:
+    item_old = item + '_old'
+    try:
+        os.unlink(item_old)
+    except:
+        continue
 
 
 # reboot if requested
