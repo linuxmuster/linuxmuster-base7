@@ -37,15 +37,15 @@ except getopt.GetoptError as err:
 # default values
 force = False
 reboot = False
-logfile = environment.LOGDIR + '/linuxmuster-renew-certs.log'
+logfile = constants.LOGDIR + '/linuxmuster-renew-certs.log'
 now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 days = 7305
-ssldir = environment.SSLDIR
-cacert = environment.CACERT
+ssldir = constants.SSLDIR
+cacert = constants.CACERT
 cacert_old = cacert + '_old'
-cacertb64 = environment.CACERTB64
+cacertb64 = constants.CACERTB64
 cacertb64_old = cacertb64 + '_old'
-cakey = environment.CAKEY
+cakey = constants.CAKEY
 srvcert = ssldir + '/server.cert.pem'
 srvcert_old = srvcert + '_old'
 srvkey = ssldir + '/server.key.pem'
@@ -56,8 +56,8 @@ fwcert_old = fwcert + '_old'
 fwcertb64 = fwcert + '.b64'
 fwcertb64_old = fwcertb64 + '_old'
 fwkey = ssldir + '/firewall.key.pem'
-fwfullchain = environment.FWFULLCHAIN
-fwconftmp = environment.FWCONFLOCAL
+fwfullchain = constants.FWFULLCHAIN
+fwconftmp = constants.FWCONFLOCAL
 fwconfbak = fwconftmp.replace('.xml', '-' + now + '.xml')
 
 
@@ -146,7 +146,7 @@ try:
     msg = 'Renewing ' + os.path.basename(cacert) + ' with ' + str(days) + ' days.'
     printScript(msg)
     os.replace(cacert, cacert_old)
-    rc, cakeysecret = readTextfile(environment.CAKEYSECRET)
+    rc, cakeysecret = readTextfile(constants.CAKEYSECRET)
     subProc('openssl x509 -days ' + str(days) + ' -in ' + cacert_old + ' -signkey ' + cakey + ' -passin pass:' + cakeysecret + ' -out ' + cacert, logfile)
     os.replace(cacertb64, cacertb64_old)
     subProc('base64 ' + cacert + ' > ' + cacertb64, logfile)
