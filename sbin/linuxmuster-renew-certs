@@ -106,7 +106,7 @@ msg = 'Reading setup data.'
 printScript(msg)
 try:
     firewallip = getSetupValue('firewallip')
-    skipfw = getSetupValue('firewallip')
+    skipfw = getSetupValue('skipfw')
 except Exception as err:
     printScript(msg + ' errors detected!')
     print(err)
@@ -126,7 +126,7 @@ except Exception as err:
 
 # test certs
 if skipfw:
-    msg = 'Skipping firewall certs test.'
+    msg = 'Skipping firewall.'
     printScript(msg)
 else:
     try:
@@ -177,11 +177,10 @@ except Exception as err:
     sys.exit(1)
 
 
-# process firewall cert
-if skipfw:
-    msg = 'Skipping firewall certs renewal.'
-    printScript(msg)
-else:
+# process firewall certs
+
+# renew
+if not skipfw:
     try:
         msg = 'Renewing ' + os.path.basename(fwcert) + ' with ' + str(days) + ' days.'
         printScript(msg)
@@ -196,40 +195,33 @@ else:
         print(err)
         sys.exit(1)
 
+# patch
+    try:
+        msg = 'Patching firewall config with new certs.'
+        printScript(msg)
+        for item in [cacertb64_old, fwcertb64_old]:
+            certfile = item.replace('_old', '')
+            rc, cert_old = readTextfile(item)
+            rc, cert_new = readTextfile(certfile)
+            replaceInFile(fwconftmp, cert_old, cert_new)
+    except Exception as err:
+        printScript('Failed!')
+        print(err)
+        sys.exit(1)
 
-# fix permissions
-subProc('chgrp ssl-cert ' + ssldir + '/*')
-subProc('chmod 600 ' + ssldir + '/*key*')
-subProc('chmod 600 ' + ssldir + '/*chain*')
-
-
-# update firewall certs
-
-# patching config
-try:
-    msg = 'Patching firewall config with new certs.'
-    printScript(msg)
-    for item in [cacertb64_old, fwcertb64_old]:
-        certfile = item.replace('_old', '')
-        rc, cert_old = readTextfile(item)
-        rc, cert_new = readTextfile(certfile)
-        replaceInFile(fwconftmp, cert_old, cert_new)
-except Exception as err:
-    printScript('Failed!')
-    print(err)
-    sys.exit(1)
-
-# upload patched config
-if skipfw:
-    msg = 'Skipping firewall certs upload.'
-    printScript(msg)
-else:
+# upload
     try:
         putFwConfig(firewallip)
     except Exception as err:
         printScript('Failed!')
         print(err)
         sys.exit(1)
+
+
+# fix permissions
+subProc('chgrp ssl-cert ' + ssldir + '/*')
+subProc('chmod 600 ' + ssldir + '/*key*')
+subProc('chmod 600 ' + ssldir + '/*chain*')
 
 
 # reboot if requested
