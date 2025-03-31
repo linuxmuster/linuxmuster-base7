@@ -106,29 +106,34 @@ msg = 'Reading setup data.'
 printScript(msg)
 try:
     firewallip = getSetupValue('firewallip')
-    skipfw = getSetupValue('skipfw')
+    skipfw_str = getSetupValue('skipfw')
+    if skipfw_str == 'False':
+        skipfw = False
+    else:
+        skipfw = True
 except Exception as err:
     printScript(msg + ' errors detected!')
     print(err)
     sys.exit(1)
 
 
-# test if current firewall certs match
+# test current firewall certs
 
-# get fw current config
-try:
-    getFwConfig(firewallip)
-    shutil.copyfile(fwconftmp, fwconfbak)
-except Exception as err:
-    printScript('Failed!')
-    print(err)
-    sys.exit(1)
-
-# test certs
+# download config
 if skipfw:
     msg = 'Skipping firewall.'
     printScript(msg)
 else:
+    # get fw current config
+    try:
+        getFwConfig(firewallip)
+        shutil.copyfile(fwconftmp, fwconfbak)
+    except Exception as err:
+        printScript('Failed!')
+        print(err)
+        sys.exit(1)
+
+# test if certs match
     try:
         msg = 'Testing if current firewall certs match.'
         printScript(msg)
@@ -146,7 +151,7 @@ else:
         sys.exit(1)
 
 
-# process ca cert
+# renew ca cert
 try:
     msg = 'Renewing ' + os.path.basename(cacert) + ' with ' + str(days) + ' days.'
     printScript(msg)
@@ -162,7 +167,7 @@ except Exception as err:
     sys.exit(1)
 
 
-# process server cert
+# renew server cert
 try:
     msg = 'Renewing ' + os.path.basename(srvcert) + ' with ' + str(days) + ' days.'
     printScript(msg)
