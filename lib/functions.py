@@ -533,14 +533,14 @@ def firewallApi(request, path, data=''):
 
 
 # creates server cert
-def createServerCert(item, logfile):
+def createServerCert(item, days, logfile):
     domainname = getSetupValue('domainname')
     fqdn = item + '.' + domainname
     csrfile = environment.SSLDIR + '/' + item + '.csr'
     keyfile = environment.SSLDIR + '/' + item + '.key.pem'
     certfile = environment.SSLDIR + '/' + item + '.cert.pem'
     subj = '-subj /CN=' + fqdn + '/'
-    shadays = ' -sha256 -days 3650'
+    shadays = ' -sha256 -days ' + days
     msg = 'Creating private ' + item + ' key & certificate '
     printScript(msg, '', False, False, True)
     try:

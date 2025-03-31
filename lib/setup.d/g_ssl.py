@@ -2,7 +2,7 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20240219
+# 20250331
 #
 
 from __future__ import print_function
@@ -42,7 +42,11 @@ except:
 subjbase = '-subj /O="' + schoolname + '"/OU=' + sambadomain + '/CN='
 
 # substring with sha and validation duration
-shadays = ' -sha256 -days 3650'
+try:
+    days = sys.argv[1]
+except:
+    days = '3650'
+shadays = ' -sha256 -days ' + days
 
 # ca key password & string
 cakeypw = randomPassword(16)
@@ -81,7 +85,7 @@ for item in [servername, 'firewall']:
     if skipfw and item == 'firewall':
         # no cert for firewall if skipped by setup option
         continue
-    createServerCert(item, logfile)
+    createServerCert(item, days, logfile)
 
 
 # copy cacert.pem to sysvol for clients
