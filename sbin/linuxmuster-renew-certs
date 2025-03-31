@@ -12,7 +12,7 @@ import os
 import shutil
 import sys
 
-from functions import catFiles, getFwConfig, getSetupValue, replaceInFile, printScript, putFwConfig, readTextfile, sshExec, subProc, tee
+from functions import catFiles, checkFwMajorVer, getFwConfig, getSetupValue, replaceInFile, printScript, putFwConfig, readTextfile, sshExec, subProc, tee
 
 
 def usage():
@@ -20,13 +20,14 @@ def usage():
     print(' [options] may be:')
     print(' -d <#>, --days=<#> : Set number of days (default: 7305).')
     print(' -f,     --force    : Skip security prompt.')
+    print(' -n,     --dry-run  : Test only, change nothing.')
     print(' -r,     --reboot   : Reboot server and firewall finally.')
     print(' -h,     --help     : print this help')
 
 
 # get cli args
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "d:hfr", ["days=", "help", "force", "reboot"])
+    opts, args = getopt.getopt(sys.argv[1:], "d:fhnr", ["days=", "dry-run", "force", "help", "reboot"])
 except getopt.GetoptError as err:
     # print help information and exit:
     print(err)  # will print something like "option -a not recognized"
@@ -35,6 +36,7 @@ except getopt.GetoptError as err:
 
 
 # default values
+dry = False
 force = False
 reboot = False
 logfile = constants.LOGDIR + '/linuxmuster-renew-certs.log'
@@ -83,6 +85,8 @@ for o, a in opts:
         days = a
     elif o in ("-f", "--force"):
         force = True
+    elif o in ("-n", "--dry-run"):
+        dry = True
     elif o in ("-r", "--reboot"):
         reboot = True
     elif o in ("-h", "--help"):
@@ -124,6 +128,8 @@ if skipfw:
     msg = 'Skipping firewall.'
     printScript(msg)
 else:
+    if not checkFwMajorVer():
+        sys.exit(1)
     # get fw current config
     try:
         getFwConfig(firewallip)
@@ -149,6 +155,12 @@ else:
         printScript('Failed!')
         print(err)
         sys.exit(1)
+
+
+# dry run
+if dry:
+    printScript('Dry run requested.')
+    sys.exit(0)
 
 
 # renew ca cert
