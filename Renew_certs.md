@@ -12,9 +12,9 @@ To renew ca, server and firewall certs invoke `linuxmuster-renew-certs` on the s
   ```
 
 Note:
-- The script checks if the current firewall certificates are originally created by linuxmuster-setup and therefore are renewable. If this is not the case, the script aborts.
-- You may test this with the option `-n` (recommended).
+- It is recommended to check beforehand whether the current firewall certificates were originally created by linuxmuster-setup and are therefore renewable. To do this, use the option `-n`.
 - You need to restart both server and firewall to apply the renewed certificates.
-- After the firewall has rebooted, in the OPNsense Web-UI navigate to
-  - `System: Access: Tester` and test authentication agains the linuxmuster server and to
-  - `Services: Squid Web Proxy: Single Sign-On: Kerberos Authentication` and test the "Kerberos login".
+- After the firewall has rebooted login to the OPNsense Web-UI and navigate to
+  - `System: Trust: Authorities` and `System: Trust: Certificates` to see if the certificates have been renewed correctly,
+  - `System: Access: Tester` to test authentication against the linuxmuster server and
+  - `Services: Squid Web Proxy: Single Sign-On: Kerberos Authentication` to test the "Kerberos login".
