@@ -129,14 +129,6 @@ case "$1" in
   fi
   [ "$ntp_restart" = "yes" ] && systemctl restart ntp.service
 
-  # fix ubuntu version in sophomorix
-  conf="/usr/share/sophomorix/devel/sophomorix.ini"
-  if ! grep -q "$VERSION_ID" "$conf"; then
-    echo "Fixing ubuntu version in sophomorix.ini."
-    cp "$conf" "${conf}-${datestr}"
-    sed -i "s|DISTRIB_UPCOMING = .*|DISTRIB_UPCOMING = $VERSION_ID|" "$conf"
-  fi
-
  ;;
 
  abort-upgrade|abort-remove|abort-deconfigure)
