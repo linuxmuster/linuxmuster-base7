@@ -562,7 +562,7 @@ def createServerCert(item, days, logfile):
             b64certfile = certfile + '.b64'
             subProc('base64 -w0 ' + keyfile + ' > ' + b64keyfile, logfile)
             subProc('base64 -w0 ' + certfile + ' > ' + b64certfile, logfile)
-        else:
+        if item == 'server':
             # cert links for cups on server
             subProc('ln -sf ' + certfile + ' /etc/cups/ssl/server.crt', logfile)
             subProc('ln -sf ' + keyfile + ' /etc/cups/ssl/server.key', logfile)
