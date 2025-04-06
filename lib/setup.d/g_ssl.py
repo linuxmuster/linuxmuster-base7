@@ -2,7 +2,7 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20250331
+# 20250405
 #
 
 from __future__ import print_function
@@ -14,8 +14,8 @@ import os
 import subprocess
 import sys
 
-from functions import createServerCert, mySetupLogfile, randomPassword
-from functions import replaceInFile, printScript, subProc, writeTextfile
+from functions import createServerCert, mySetupLogfile, randomPassword, \
+    printScript, subProc, writeTextfile
 
 logfile = mySetupLogfile(__file__)
 
@@ -70,7 +70,7 @@ try:
             + ' /usr/local/share/ca-certificates/linuxmuster_cacert.crt', logfile)
     subProc('update-ca-certificates', logfile)
     # create base64 encoded version for opnsense's config.xml
-    cacertb64 = subprocess.check_output(['base64', environment.CACERT]).decode('utf-8').replace('\n', '')
+    cacertb64 = subprocess.check_output(['base64', '-w0', environment.CACERT]).decode('utf-8')
     writeTextfile(environment.CACERTB64, cacertb64, 'w')
     if not os.path.isfile(environment.CACERTB64):
         printScript(' Failed!', '', True, True, False, len(msg))
