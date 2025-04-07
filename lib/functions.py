@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20250330
+# 20250407
 #
 
 from subprocess import Popen, PIPE
@@ -194,6 +194,10 @@ def getSetupValue(keyname):
             delimiters=('='), inline_comment_prefixes=('#', ';'))
         setup.read(setupini)
         rc = setup.get('setup', keyname)
+        if rc == 'False':
+            rc = False
+        elif rc == 'True':
+            rc = True
     except Exception as error:
         print(error)
         return ''
