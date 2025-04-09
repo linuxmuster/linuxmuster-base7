@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20250130
+# 20250409
 # GPL v3
 #
 
@@ -106,6 +106,17 @@ case "$1" in
     systemctl start ntp.service
   fi
 
+  # update certificate creation configs
+  for tpl in "$TPLDIR"/*_cert_ext.cnf; do
+    conf="$(head -1 "$tpl" | cut -d' ' -f2)"
+    if [ ! -e "$conf" ] || ! grep -q subjectAltName "$conf"; then
+      echo "Updating $conf."
+      sed -e "s|@@serverip@@|$serverip|
+              s|@@firewallip@@|$firewallip|
+              s|@@servername@@|$servername|g
+              s|@@domainname@@|$domainname|" "$tpl" > "$conf"
+    fi
+  done
  ;;
 
  abort-upgrade|abort-remove|abort-deconfigure)
