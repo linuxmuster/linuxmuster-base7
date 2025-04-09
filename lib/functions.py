@@ -166,7 +166,7 @@ def printScript(msg='', header='', lf=True, noleft=False, noright=False,
         if msg == '':
             return True
         if header == 'begin':
-            headermsg = 'startet'
+            headermsg = 'started'
         else:
             headermsg = 'finished'
         now = datetime.datetime.now()
