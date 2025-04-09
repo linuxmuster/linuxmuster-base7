@@ -1,3 +1,15 @@
+linuxmuster-base7 (7.3.9-0) lmn73; urgency=low
+
+  * remove obsolete sophomorix version patch (f18a205).
+  * optimize base64 certificate conversion (#158, d0dc8c1).
+  * add subjectAltName to certificate creation config (#158, 3be7cc6).
+  * fix return code of boolean setup values (d7bfe07).
+  * postinst fix (#158, 2982cf7).
+  * refactor certificates renewal script to allow ca, server and firewall
+    certs to be renewed separately (#158, fbb08ac).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 09 Apr 2025 17:13:43 +0200
+
 linuxmuster-base7 (7.3.8-0) lmn73; urgency=low
 
   * fix #158: final revision of the certificate renewal script.
