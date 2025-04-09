@@ -543,6 +543,8 @@ def createServerCert(item, days, logfile):
     csrfile = constants.SSLDIR + '/' + item + '.csr'
     keyfile = constants.SSLDIR + '/' + item + '.key.pem'
     certfile = constants.SSLDIR + '/' + item + '.cert.pem'
+    cnffile = constants.SSLDIR + '/' + item + '_cert_ext.cnf'
+    fullchain = constants.SSLDIR + '/' + item + '.fullchain.pem'
     subj = '-subj /CN=' + fqdn + '/'
     shadays = ' -sha256 -days ' + days
     msg = 'Creating private ' + item + ' key & certificate '
@@ -555,22 +557,18 @@ def createServerCert(item, days, logfile):
                 + keyfile + ' -out ' + csrfile, logfile)
         subProc('openssl x509 -req -in ' + csrfile + ' -CA ' + constants.CACERT + passin
                 + ' -CAkey ' + constants.CAKEY + ' -CAcreateserial -out ' + certfile + shadays
-                + ' -extfile ' + constants.SSLCNF, logfile)
+                + ' -extfile ' + cnffile, logfile)
+        # concenate fullchain pem
+        catFiles([certfile, constants.CACERT], fullchain)
         if item == 'firewall':
             # create base64 encoded version for opnsense's config.xml
             b64keyfile = keyfile + '.b64'
             b64certfile = certfile + '.b64'
-            subProc('base64 ' + keyfile + ' > ' + b64keyfile, logfile)
-            subProc('base64 ' + certfile + ' > ' + b64certfile, logfile)
-            rc = replaceInFile(b64keyfile, '\n', '')
-            rc = replaceInFile(b64certfile, '\n', '')
-            # concenate firewall fullchain cert
-            subProc('cat ' + constants.FWFULLCHAIN.replace('.fullchain.', '.cert.')
-                    + ' ' + constants.CACERT + ' > ' + constants.FWFULLCHAIN, logfile)
-        else:
+            subProc('base64 -w0 ' + keyfile + ' > ' + b64keyfile, logfile)
+            subProc('base64 -w0 ' + certfile + ' > ' + b64certfile, logfile)
+        if item == 'server':
             # cert links for cups on server
-            subProc('ln -sf ' + certfile
-                    + ' /etc/cups/ssl/server.crt', logfile)
+            subProc('ln -sf ' + certfile + ' /etc/cups/ssl/server.crt', logfile)y
             subProc('ln -sf ' + keyfile + ' /etc/cups/ssl/server.key', logfile)
             subProc('service cups restart', logfile)
         printScript('Success!', '', True, True, False, len(msg))
