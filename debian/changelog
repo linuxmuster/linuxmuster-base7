@@ -1,3 +1,12 @@
+linuxmuster-base7 (7.2.11-0) lmn72; urgency=low
+
+  * fix return code of boolean setup values (b3f1a67).
+  * optimize base64 certificate conversion (#158, 80effd6).
+  * add subjectAltName to certificate creation config (#158, 0d90f5e).
+  * postinst: update certificate configs (#158, 16a1df9).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 09 Apr 2025 19:50:56 +0200
+
 linuxmuster-base7 (7.2.10-0) lmn72; urgency=low
 
   * fix references to environment (3b8d817).
