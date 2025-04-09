@@ -1,6 +1,9 @@
+# /etc/linuxmuster/ssl/firewall_cert_ext.cnf
+
+subjectAltName = IP:@@firewallip@@, DNS:firewall.@@domainname@@, DNS:firewall
 basicConstraints = CA:FALSE
 nsCertType = server
-nsComment = "OpenSSL Generated Server Certificate"
+nsComment = "OpenSSL Generated Firewall Certificate"
 subjectKeyIdentifier = hash
 authorityKeyIdentifier = keyid,issuer:always
 keyUsage = critical, digitalSignature, keyEncipherment

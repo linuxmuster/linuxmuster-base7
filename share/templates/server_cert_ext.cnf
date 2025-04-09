@@ -1,0 +1,10 @@
+# /etc/linuxmuster/ssl/server_cert_ext.cnf
+
+subjectAltName = IP:@@serverip@@, DNS:@@servername@@.@@domainname@@, DNS:@@servername@@
+basicConstraints = CA:FALSE
+nsCertType = server
+nsComment = "OpenSSL Generated Server Certificate"
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer:always
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
