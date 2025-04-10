@@ -19,7 +19,7 @@ Usage: linuxmuster-renew-certs [options]
 Note:
 - It is recommended to check beforehand whether the current firewall certificates were originally created by linuxmuster-setup and are therefore renewable. To do this, use the option `-n`.
 - You need to restart both server and firewall to apply the renewed certificates.
-- You may renew all certicicates seperately with different validity periods (see option `-c`).
+- You may renew all certificates seperately with different validity periods (see option `-c`).
 - Note: If you renew the ca certificate, you have to renew also all other certificates, which depend on it.
 - After the firewall has rebooted login to the OPNsense Web-UI and navigate to
   - `System: Trust: Authorities` and `System: Trust: Certificates` to see if the certificates have been renewed correctly,
