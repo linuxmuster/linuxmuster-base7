@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.10-0) lmn73; urgency=low
+
+  * remove systemtype from device import (#159, cff010d, e40037c).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 10 Apr 2025 18:04:48 +0200
+
 linuxmuster-base7 (7.3.9-0) lmn73; urgency=low
 
   * remove obsolete sophomorix version patch (f18a205).
