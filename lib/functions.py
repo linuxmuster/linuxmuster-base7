@@ -253,9 +253,7 @@ def getIpBcAddress(ip):
 #   checked, if 'DHCP' is specified all dynamic ip hosts are returned
 # pxeflag filter: comma separated list of flags ('0,1,2,3'), only hosts with
 #   the specified pxeflags were returned
-# stype: True additionally returns SystemType from start.conf as last element
-def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False,
-                    school='default-school'):
+def getDevicesArray(fieldnrs='', subnet='', pxeflag='', school='default-school'):
     devices_array = []
     if school == "default-school":
         infile = open(environment.SOPHOSYSDIR
@@ -305,14 +303,6 @@ def getDevicesArray(fieldnrs='', subnet='', pxeflag='', stype=False,
                 row_res = []
                 for field in fieldnrs.split(','):
                     row_res.append(row[int(field)])
-            # add systemtype from start.conf
-            if stype:
-                startconf = environment.LINBODIR + '/start.conf.' + group
-                systemtype = None
-                if os.path.isfile(startconf):
-                    systemtype = getStartconfOption(
-                        startconf, 'LINBO', 'SystemType')
-                row_res.append(systemtype)
             devices_array.append(row_res)
         except Exception as error:
             print(error)
@@ -351,21 +341,6 @@ def getSubnetArray(fieldnrs=''):
             print(error)
             continue
     return subnet_array
-
-
-# return bootimage
-def getBootImage(systemtype):
-    if systemtype is None or systemtype == '':
-        return None
-    if 'bios' in systemtype:
-        bootimage = 'i386-pc/core.0'
-    elif 'efi32' in systemtype:
-        bootimage = 'i386-efi/core.efi'
-    elif 'efi64' in systemtype:
-        bootimage = 'x86_64-efi/core.efi'
-    else:
-        bootimage = None
-    return bootimage
 
 
 # return grub name of partition's device name

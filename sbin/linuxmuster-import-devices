@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20250316
+# 20250410
 #
 
 import configparser
@@ -12,20 +12,17 @@ import os
 import re
 import subprocess
 import sys
-import time
 import getopt
-import shutil
 import csv
 
 from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 
-from functions import getBootImage, getDevicesArray, getGrubOstype, getGrubPart
-from functions import getStartconfOsValues, getStartconfOption
-from functions import getStartconfPartnr, getStartconfPartlabel, getSubnetArray
-from functions import isValidHostIpv4, getLinboVersion, printScript, readTextfile
-from functions import setGlobalStartconfOption, subProc, writeTextfile
+from functions import getDevicesArray, getGrubOstype, getGrubPart, getStartconfOsValues, \
+    getStartconfOption, getStartconfPartnr, getStartconfPartlabel, getSubnetArray, \
+    isValidHostIpv4, getLinboVersion, printScript, readTextfile, setGlobalStartconfOption, \
+    subProc, writeTextfile
 
 
 def usage():
@@ -110,7 +107,6 @@ def doGrubCfg(startconf, group, kopts):
     # get grub partition name of cache
     cache = getStartconfOption(startconf, 'LINBO', 'Cache')
     partnr = getStartconfPartnr(startconf, cache)
-    systemtype = getStartconfOption(startconf, 'LINBO', 'SystemType')
     cacheroot = getGrubPart(cache)
     cachelabel = getStartconfPartlabel(startconf, partnr)
     # if cache is not defined provide a forced netboot cfg
@@ -248,7 +244,7 @@ def writeDhcpDevicesConfig(school='default-school'):
                 subnet = item[0]
                 # iterate over devices per subnet
                 headline = False
-                for device_array in getDevicesArray(fieldnrs='1,2,3,4,7,8,10', subnet=subnet, stype=True, school=school):
+                for device_array in getDevicesArray(fieldnrs='1,2,3,4,7,8,10', subnet=subnet, school=school):
                     if not headline:
                         # write corresponding subnet as a comment
                         if subnet == 'DHCP':
@@ -258,15 +254,13 @@ def writeDhcpDevicesConfig(school='default-school'):
                             outfile.write('# subnet ' + subnet + '\n')
                             printScript('* in subnet ' + subnet + ':')
                         headline = True
-                    hostname, group, mac, ip, dhcpopts, computertype, pxeflag, systemtype = device_array
-                    if systemtype is None:
-                        systemtype = ''
+                    hostname, group, mac, ip, dhcpopts, computertype, pxeflag = device_array
                     if len(computertype) > 15:
                         computertype = computertype[0:15]
                     # format row in columns for output
-                    row = [hostname, ip, computertype, pxeflag, systemtype]
+                    row = [hostname, ip, computertype, pxeflag]
                     printScript(
-                        "  {: <15} | {: <15} | {: <15} | {: <1} | {: <6}".format(*row))
+                        "  {: <15} | {: <15} | {: <15} | {: <1}".format(*row))
                     # begin host declaration
                     host_decl = host_decl_tpl.replace(
                         '@@mac@@', mac).replace('@@hostname@@', hostname)
@@ -275,12 +269,7 @@ def writeDhcpDevicesConfig(school='default-school'):
                         host_decl = host_decl + '  fixed-address ' + ip + ';\n'
                     # only for pxe clients
                     if int(pxeflag) != 0:
-                        # get grub bootimage dependend to group's systemtype in start.conf
-                        bootimage = getBootImage(systemtype)
-                        # linbo pxe boot
                         host_decl = host_decl + '  option extensions-path "' + group + '";\n  option nis-domain "' + group + '";\n'
-                        if 'filename' not in dhcpopts and bootimage is not None:
-                            host_decl = host_decl + '  filename "boot/grub/' + bootimage + '";\n'
                         # dhcp options have to be 5 chars minimum to get processed
                         if len(dhcpopts) > 4:
                             for opt in dhcpopts.split(','):
