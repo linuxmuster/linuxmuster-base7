@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20250407
+# 20250410
 #
 
 from subprocess import Popen, PIPE
@@ -369,7 +369,7 @@ def getBootImage(systemtype):
 
 
 # return grub name of partition's device name
-def getGrubPart(partition, systemtype):
+def getGrubPart(partition):
     try:
         partition = partition.replace('/dev/', '')
         if re.findall(r'[hsv]d[a-z]', partition):

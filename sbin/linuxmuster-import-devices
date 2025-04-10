@@ -111,7 +111,7 @@ def doGrubCfg(startconf, group, kopts):
     cache = getStartconfOption(startconf, 'LINBO', 'Cache')
     partnr = getStartconfPartnr(startconf, cache)
     systemtype = getStartconfOption(startconf, 'LINBO', 'SystemType')
-    cacheroot = getGrubPart(cache, systemtype)
+    cacheroot = getGrubPart(cache)
     cachelabel = getStartconfPartlabel(startconf, partnr)
     # if cache is not defined provide a forced netboot cfg
     if cacheroot is None:
@@ -141,7 +141,7 @@ def doGrubCfg(startconf, group, kopts):
     ostpl = environment.LINBOTPLDIR + '/grub.cfg.os'
     for oslist in oslists:
         osname, partition, kernel, initrd, kappend, osnr = oslist
-        osroot = getGrubPart(partition, systemtype)
+        osroot = getGrubPart(partition)
         ostype = getGrubOstype(osname)
         partnr = getStartconfPartnr(startconf, partition)
         oslabel = getStartconfPartlabel(startconf, partnr)
