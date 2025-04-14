@@ -1,8 +1,9 @@
 linuxmuster-base7 (7.3.10-0) lmn73; urgency=low
 
   * remove systemtype from device import (#159, cff010d, e40037c).
+  * update getGrubPart() for uniform block device names (30fec9b).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 10 Apr 2025 18:04:48 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 14 Apr 2025 21:50:40 +0200
 
 linuxmuster-base7 (7.3.9-0) lmn73; urgency=low
 
