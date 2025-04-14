@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20250410
+# 20250411
 #
 
 from subprocess import Popen, PIPE
@@ -355,6 +355,9 @@ def getGrubPart(partition):
             partnr = re.sub(r'xvd[a-z]', '', partition)
             hdchar = re.search(r'xvd(.+?)[0-9]', partition).group(1)
             hdnr = str(ord(hdchar) - 97)
+        elif re.findall(r'disk[0-9]p', partition):
+            partnr = re.sub(r'disk[0-9]p', '', partition)
+            hdnr = re.search(r'disk(.+?)p[0-9]', partition).group(1)
         elif re.findall(r'mmcblk[0-9]p', partition):
             partnr = re.sub(r'mmcblk[0-9]p', '', partition)
             hdnr = re.search(r'mmcblk(.+?)p[0-9]', partition).group(1)
