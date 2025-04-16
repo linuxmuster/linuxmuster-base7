@@ -2,7 +2,7 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20250405
+# 20250416
 #
 
 from __future__ import print_function
@@ -42,10 +42,7 @@ except:
 subjbase = '-subj /O="' + schoolname + '"/OU=' + sambadomain + '/CN='
 
 # substring with sha and validation duration
-try:
-    days = sys.argv[1]
-except:
-    days = '3650'
+days = '3650'
 shadays = ' -sha256 -days ' + days
 
 # ca key password & string
