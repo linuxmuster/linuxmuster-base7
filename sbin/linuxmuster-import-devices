@@ -174,44 +174,10 @@ def doLinboStartconf(group):
     else:
         msg1 = 'not yet configured!'
         subProc('cp ' + environment.LINBODIR + '/start.conf ' + startconf)
-    # read values from start.conf
-    group_s = getStartconfOption(startconf, 'LINBO', 'Group')
-    serverip_s = getStartconfOption(startconf, 'LINBO', 'Server')
-    kopts_s = getStartconfOption(startconf, 'LINBO', 'KernelOptions')
-    # get alternative server ip from kernel options
-    try:
-        serverip_k = re.findall(
-            r'server=[^ ]*', kopts_s, re.IGNORECASE)[0].split('=')[1]
-    except Exception:
-        serverip_k = None
-    # determine whether global values from start conf have to changed
-    if serverip_k is not None and isValidHostIpv4(serverip_k):
-        serverip_r = serverip_k
-    else:
-        serverip_r = serverip
-    if kopts_s is None:
-        kopts_r = 'splash quiet'
-    else:
-        kopts_r = kopts_s
-    if group_s != group:
-        group_r = group
-    else:
-        group_r = group
-    # change global startconf options if necessary
-    if serverip_s != serverip_r:
-        rc = setGlobalStartconfOption(startconf, 'Server', serverip_r)
-        if not rc:
-            return rc
-    if kopts_s != kopts_r:
-        rc = setGlobalStartconfOption(startconf, 'KernelOptions', kopts_r)
-        if not rc:
-            return rc
-    if group_s != group_r:
-        rc = setGlobalStartconfOption(startconf, 'Group', group_r)
-        if not rc:
-            return rc
+    # read kernel options from start.conf
+    kopts = getStartconfOption(startconf, 'LINBO', 'KernelOptions')
     # process grub cfgs
-    msg2 = doGrubCfg(startconf, group, kopts_r)
+    msg2 = doGrubCfg(startconf, group, kopts)
     # format row in columns for output
     row = [group, msg1, msg2]
     printScript("  {: <15} | {: <20} | {: <20}".format(*row))
