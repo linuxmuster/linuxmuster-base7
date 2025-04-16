@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.12-0) lmn72; urgency=low
+
+  * fix invalid days variable during ssl setup (#160).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 16 Apr 2025 15:38:39 +0200
+
 linuxmuster-base7 (7.2.11-0) lmn72; urgency=low
 
   * fix return code of boolean setup values (b3f1a67).
