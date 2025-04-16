@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.11-0) lmn72; urgency=low
+
+  * fix invalid days variable during ssl setup (#160).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 16 Apr 2025 15:43:09 +0200
+
 linuxmuster-base7 (7.3.10-0) lmn73; urgency=low
 
   * remove systemtype from device import (#159, cff010d, e40037c).
