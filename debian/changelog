@@ -1,16 +1,16 @@
-linuxmuster-base7 (7.3.13-0) lmn72; urgency=low
+linuxmuster-base7 (7.3.13-0) lmn73; urgency=low
 
   * fix skip firewall setup (6ecd16b).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 17 Apr 2025 10:14:21 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 17 Apr 2025 19:15:01 +0200
 
-linuxmuster-base7 (7.3.12-0) lmn72; urgency=low
+linuxmuster-base7 (7.3.12-0) lmn73; urgency=low
 
   * remove processing of start.conf server option from device import (e178e91).
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 16 Apr 2025 19:39:04 +0200
 
-linuxmuster-base7 (7.3.11-0) lmn72; urgency=low
+linuxmuster-base7 (7.3.11-0) lmn73; urgency=low
 
   * fix invalid days variable during ssl setup (#160).
 
