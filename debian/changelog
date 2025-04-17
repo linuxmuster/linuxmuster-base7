@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.13-0) lmn72; urgency=low
+
+  * fix skip firewall setup (226377b).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 17 Apr 2025 10:00:47 +0200
+
 linuxmuster-base7 (7.2.12-0) lmn72; urgency=low
 
   * fix invalid days variable during ssl setup (#160).
