@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20240131
+# 20250417
 #
 
 import bcrypt
@@ -253,7 +253,7 @@ def main():
 
 # quit if firewall setup shall be skipped
 skipfw = getSetupValue('skipfw')
-if skipfw == 'True':
+if skipfw:
     msg = 'Skipping firewall setup as requested'
     printScript(msg, '', True, False, False)
 else:
