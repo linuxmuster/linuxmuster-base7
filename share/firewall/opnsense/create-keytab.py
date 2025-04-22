@@ -2,7 +2,7 @@
 #
 # create web proxy sso keytab
 # thomas@linuxmuster.net
-# 20240219
+# 20250422
 #
 
 import constants
@@ -11,16 +11,12 @@ import os
 import subprocess
 import sys
 
-from functions import datetime
-from functions import firewallApi
-from functions import getSetupValue
-from functions import printScript
-from functions import readTextfile
+from functions import datetime, firewallApi, getSetupValue, printScript, readTextfile
 
 
 # check first if firewall is skipped by setup
 skipfw = getSetupValue('skipfw')
-if skipfw == 'True':
+if skipfw:
     printScript('Firewall is skipped by setup!')
     sys.exit(0)
 
