@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.14-0) lmn73; urgency=low
+
+  * fix boolean in ast cause subnetting import to fail (#161).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 22 Apr 2025 15:12:44 +0200
+
 linuxmuster-base7 (7.3.13-0) lmn73; urgency=low
 
   * fix skip firewall setup (6ecd16b).

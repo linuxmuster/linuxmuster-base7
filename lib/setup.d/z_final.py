@@ -2,8 +2,7 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20240219
-#
+# 20250422
 
 import configparser
 import environment
@@ -12,8 +11,8 @@ import os
 import re
 import sys
 
-from functions import getSetupValue, mySetupLogfile, printScript, readTextfile
-from functions import subProc, waitForFw, writeTextfile
+from functions import getSetupValue, mySetupLogfile, printScript, readTextfile, \
+    subProc, waitForFw, writeTextfile
 
 logfile = mySetupLogfile(__file__)
 
@@ -72,7 +71,7 @@ except Exception as error:
 
 # wait for fw
 skipfw = getSetupValue('skipfw')
-if skipfw == 'False':
+if not skipfw:
     try:
         waitForFw(wait=30)
     except Exception as error:

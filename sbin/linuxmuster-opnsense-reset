@@ -2,7 +2,7 @@
 #
 # reset opnsense configuration to setup state
 # thomas@linuxmuster.net
-# 20220601
+# 20250422
 #
 
 import environment
@@ -12,13 +12,12 @@ import sys
 import time
 
 from functions import createServerCert, datetime, enterPassword, firewallApi, \
-    getSetupValue, printScript, randomPassword, sshExec, subProc, writeTextfile, \
-    waitForFw
+    getSetupValue, printScript, sshExec, subProc, writeTextfile, waitForFw
 
 
 # check first if firewall is skipped by setup
 skipfw = getSetupValue('skipfw')
-if skipfw == 'True':
+if skipfw:
     printScript('Firewall is skipped by setup!')
     sys.exit(0)
 
