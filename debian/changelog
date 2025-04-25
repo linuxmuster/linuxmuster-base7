@@ -1,8 +1,8 @@
 linuxmuster-base7 (7.2.15-0) lmn72; urgency=low
 
-  * fix cert bundle renewal (#158).
+  * fix cert bundle renewal & empty cert list (#158).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 25 Apr 2025 11:39:41 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 25 Apr 2025 12:12:45 +0200
 
 linuxmuster-base7 (7.2.14-0) lmn72; urgency=low
 
