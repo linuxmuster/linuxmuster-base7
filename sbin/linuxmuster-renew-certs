@@ -2,7 +2,7 @@
 #
 # renew self-signed server certs
 # thomas@linuxmuster.net
-# 20250409
+# 20250425
 #
 
 import datetime
@@ -214,10 +214,12 @@ def renewCert(item):
     if item == 'ca':
         pem = cacert
     else:
+        key = ssldir + '/' + name + '.key.pem'
         pem = ssldir + '/' + name + '.cert.pem'
         csr = ssldir + '/' + name + '.csr'
         cnf = ssldir + '/' + name + '_cert_ext.cnf'
         chn = ssldir + '/' + name + '.fullchain.pem'
+        bdl = ssldir + '/' + name + '.cert.bundle.pem'
     b64 = pem + '.b64'
     b64_old = b64 + '_old'
     if name == 'firewall' or name == 'ca':
@@ -235,6 +237,7 @@ def renewCert(item):
             subProc('openssl x509 -req -in ' + csr + ' -CA ' + cacert + ' ' + cakey_passin + ' -CAkey '
                 + cakey + ' -CAcreateserial -out ' + pem + ' -days ' + days + ' -sha256 -extfile ' + cnf, logfile)
             catFiles([pem, cacert], chn)
+            catFiles([key, pem], bdl)
         if name == 'firewall' or name == 'ca':
             shutil.copyfile(b64, b64_old)
             subProc('base64 -w0 ' + pem + ' > ' + b64, logfile)
