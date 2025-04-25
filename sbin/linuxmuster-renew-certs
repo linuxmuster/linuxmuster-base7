@@ -21,7 +21,7 @@ def usage():
     print('Usage: linuxmuster-renew-certs [options]')
     print(' [options] may be:')
     print(' -c <list>, --certs=<list> : Comma separated list of certificates to be renewed')
-    print('                             ("ca", "server" and/or "firewall" or "all").')
+    print('                             ("ca", "server" and/or "firewall" or "all"). Mandatory.')
     print(' -d <#>,    --days=<#>     : Set number of days (default: 7305).')
     print(' -f,        --force        : Skip security prompt.')
     print(' -n,        --dry-run      : Test only if the firewall certs can be renewed.')
@@ -45,6 +45,7 @@ force = False
 reboot = False
 days = '7305'
 all_list = ['ca', 'server', 'firewall']
+cert_list = []
 
 
 # open logfile
@@ -86,6 +87,10 @@ for o, a in opts:
         assert False, "unhandled option"
         usage()
         sys.exit(1)
+if len(cert_list) == 0:
+    printScript('No certs to renew given (-c)!')
+    usage()
+    sys.exit(1)
 
 
 # get setup values
