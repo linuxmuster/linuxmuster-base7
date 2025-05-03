@@ -1,8 +1,9 @@
 linuxmuster-base7 (7.3.16-0) lmn73; urgency=low
 
   * remove obsolete references to functions (0fc4236).
+  * implement liveboot from isofile (834a8d2).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 25 Apr 2025 12:28:26 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 03 May 2025 13:39:40 +0200
 
 linuxmuster-base7 (7.3.15-0) lmn73; urgency=low
 
