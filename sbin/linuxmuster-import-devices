@@ -132,26 +132,35 @@ def doGrubCfg(startconf, group, kopts):
     if oslists is None:
         return 'error!'
     # write os parts to grub cfg
-    ostpl = environment.LINBOTPLDIR + '/grub.cfg.os'
+    ostpl_pre = environment.LINBOTPLDIR + '/grub.cfg.os'
     for oslist in oslists:
-        osname, partition, kernel, initrd, kappend, osnr = oslist
+        osname, baseimage, partition, kernel, initrd, kappend, osnr = oslist
         osroot = getGrubPart(partition)
         ostype = getGrubOstype(osname)
         partnr = getStartconfPartnr(startconf, partition)
         oslabel = getStartconfPartlabel(startconf, partnr)
+        # different grub.cfg template for os. which is booted from live iso
+        imagename, ext = os.path.splitext(baseimage)
+        if ext == '.iso':
+            ostpl = ostpl_pre + '-iso'
+        else:
+            ostpl = ostpl_pre
         # add root to kernel append
-        if 'root=' not in kappend:
-            kappend = kappend + ' root=' + partition
+        if 'root=' not in kappend and ext != '.iso':
+            try:
+                kappend = kappend + ' root=LABEL=' + oslabel
+            except:
+                kappend = kappend + ' root=' + partition
         rc, content = readTextfile(ostpl)
         if not rc:
             return 'error!'
         replace_list = [('@@group@@', group), ('@@cachelabel@@', cachelabel),
-                        ('@@cacheroot@@', cacheroot), ('@@osname@@', osname),
-                        ('@@osnr@@', osnr), ('@@ostype@@',
-                                             ostype), ('@@oslabel@@', oslabel),
-                        ('@@osroot@@', osroot), ('@@partnr@@',
-                                                 partnr), ('@@kernel@@', kernel),
-                        ('@@initrd@@', initrd), ('@@kopts@@', kopts), ('@@append@@', kappend)]
+                        ('@@baseimage@@', baseimage), ('@@cacheroot@@', cacheroot),
+                        ('@@osname@@', osname), ('@@osnr@@', osnr),
+                        ('@@ostype@@', ostype), ('@@oslabel@@', oslabel),
+                        ('@@osroot@@', osroot), ('@@partnr@@', partnr),
+                        ('@@kernel@@', kernel), ('@@initrd@@', initrd),
+                        ('@@kopts@@', kopts), ('@@append@@', kappend)]
         for item in replace_list:
             content = content.replace(item[0], str(item[1]))
         rc = writeTextfile(grubcfg, content, 'a')

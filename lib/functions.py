@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20250411
+# 20250503
 #
 
 from subprocess import Popen, PIPE
@@ -810,6 +810,10 @@ def getStartconfOsValues(startconf):
                 if name != '':
                     name = name.strip()
                 oslists[count].append(name)
+                baseimage = s.get('OS' + str(count), 'baseimage').split('#')[0]
+                if baseimage != '':
+                    baseimage = baseimage.strip()
+                oslists[count].append(baseimage)
                 root = s.get('OS' + str(count), 'root').split('#')[0]
                 if root != '':
                     root = root.strip()
