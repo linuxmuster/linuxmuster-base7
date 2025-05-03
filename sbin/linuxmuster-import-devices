@@ -2,14 +2,13 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20250410
+# 20250503
 #
 
 import configparser
 import environment
 import fnmatch
 import os
-import re
 import subprocess
 import sys
 import getopt
@@ -21,8 +20,7 @@ from pathlib import Path
 
 from functions import getDevicesArray, getGrubOstype, getGrubPart, getStartconfOsValues, \
     getStartconfOption, getStartconfPartnr, getStartconfPartlabel, getSubnetArray, \
-    isValidHostIpv4, getLinboVersion, printScript, readTextfile, setGlobalStartconfOption, \
-    subProc, writeTextfile
+    getLinboVersion, printScript, readTextfile, subProc, writeTextfile
 
 
 def usage():
