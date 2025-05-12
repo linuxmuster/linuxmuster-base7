@@ -40,8 +40,8 @@ Usage: linuxmuster-renew-certs [options]
 
 ### Links
 
-- <https://github.com/linuxmuster/linuxmuster-base7/issues/158>
-- <https://github.com/linuxmuster/linuxmuster-base7/blob/master/Renew_certs.md>
+- https://github.com/linuxmuster/linuxmuster-base7/issues/158
+- https://github.com/linuxmuster/linuxmuster-base7/blob/master/Renew_certs.md
 
 ## Automatisches Image seeding
 
@@ -49,7 +49,7 @@ Während des Linbo-Bootvorganges werden automatisch Torrent-Seeder-Prozesse für
 
 ### Links
 
-- <https://github.com/linuxmuster/linuxmuster-linbo7/issues/127>
+- https://github.com/linuxmuster/linuxmuster-linbo7/issues/127
 
 ## Linbo-Konfiguration (start.conf)
 
@@ -150,7 +150,7 @@ Namensschema:
 
 ### Links
 
-- <https://github.com/linuxmuster/linuxmuster-linbo7/issues/126>
+- https://github.com/linuxmuster/linuxmuster-linbo7/issues/126
 
 ## VNC-Server
 
@@ -160,8 +160,8 @@ Namensschema:
 
 ### Links
 
-- <https://github.com/linuxmuster/linuxmuster-linbo7/issues/104>
-- <https://github.com/linuxmuster/linuxmuster-linbo7#linbo-kernel-parameters>
+- https://github.com/linuxmuster/linuxmuster-linbo7/issues/104
+- https://github.com/linuxmuster/linuxmuster-linbo7#linbo-kernel-parameters
 
 ## Live-System von ISO booten
 
@@ -210,17 +210,15 @@ Stellt man eine ISO-Datei von einem Linux-Live-System als Imagedatei bereit, kan
 
 ### Firmware
 
-Firmware ist in Ubuntu 24.04 zst-komprimiert. Firmware-Dateien können in
-`/etc/linuxmuster/linbo/firmware` aber wie bisher ohne .zst-Extension
-angegeben werden.
+Firmware ist in Ubuntu 24.04 zst-komprimiert. Firmware-Dateien können in `/etc/linuxmuster/linbo/firmware` aber wie bisher ohne .zst-Extension angegeben werden.
 
 ### Kernel
 
-Aktuelle Linbo-Kernelversionen:
+Verwendete Linbo-Kernelversionen:
 
-- legacy: 6.1.*
-- longterm: 6.12.*
-- stable: 6.14.*
+- legacy: 6.1.* (aktuell 6.1.138)
+- longterm: 6.12.* (aktuell 6.12.28)
+- stable: 6.14.* (aktuell 6.14.6)
 
 ### OPNsense-Firewall
 
