@@ -1,70 +1,59 @@
-Neuerungen in linuxmuster.net 7.3
+# Neuerungen in linuxmuster.net 7.3
 
-# Zertifikatserneuerung
+## Zertifikatserneuerung
 
-Zur Erneuerung der beim Setup erstellten selbstsignierten Zertifikate
-gibt es das Skript  
-*linuxmuster-renew-certs*:
+Zur Erneuerung der beim Setup erstellten selbstsignierten Zertifikate gibt es das Skript
+`linuxmuster-renew-certs`:
 
-* Usage: linuxmuster-renew-certs \[options\]*
+```
+Usage: linuxmuster-renew-certs [options]
 
-* \[options\] may be:*
+[options] may be:
 
-* -c \<list\>, --certs=\<list\> : Comma separated list of certificates
-to be renewed*
+-c <list>, --certs=<list> : Comma separated list of certificates to be renewed ("ca", "server" and/or "firewall" or "all").
+-d <#>,    --days=<#>     : Set number of days (default: 7305).
+-f,        --force        : Skip security prompt.
+-n,        --dry-run      : Test only if the firewall certs can be renewed.
+-r,        --reboot       : Reboot server and firewall finally.
+-h,        --help         : Print this help.
+```
 
-* ("ca", "server" and/or "firewall" or "all").*
-
-* -d \<#\>, --days=\<#\> : Set number of days (default: 7305).*
-
-* -f, --force : Skip security prompt.*
-
-* -n, --dry-run : Test only if the firewall certs can be renewed.*
-
-* -r, --reboot : Reboot server and firewall finally.*
-
-* -h, --help : Print this help.*
-
-**Es wird empfohlen, vor der Erneuerung des Firewallzertifikats zu
+Es wird empfohlen, vor der Erneuerung des Firewallzertifikats zu
 überprüfen, ob die ursprünglich beim Setup erzeugte Zertifikatskette
-noch gültig ist und das Zertifikat erneuert werden kann (Option *-n*).**
+noch gültig ist und das Zertifikat erneuert werden kann (Option `-n`).
 
-**Nach erfolgter Zertifikatserneuerung müssen Server und/oder Firewall
-neu gestartet werden, damit Änderungen wirksam werden.**
+Nach erfolgter Zertifikatserneuerung müssen Server und/oder Firewall
+neu gestartet werden, damit Änderungen wirksam werden.
 
-**CA-, Server- und Firewallzertifikate könne unabhängig voneinander mit
-unterschiedlicher Gültigkeitsdauer erneuert werden (Option** *-c*).**
+CA-, Server- und Firewallzertifikate könne unabhängig voneinander mit
+unterschiedlicher Gültigkeitsdauer erneuert werden (Option** `-c`).
 
-**Wenn das CA-Zertifikat erneuert wird, müssen zwingend auch Server- und
-Firewallzertifikat**e** erneuert werden, da diese auf der CA basieren.**
+Wenn das CA-Zertifikat erneuert wird, müssen zwingend auch Server- und
+Firewallzertifikat**e** erneuert werden, da diese auf der CA basieren.
 
-**Gültigkeitsdauer überprüfen:**
+### Gültigkeitsdauer überprüfen
 
-- **auf dem Server:**
+- auf dem Server:
 
-* openssl x509 -in \<pem-Datei\> -noout -text*
+  - `openssl x509 -in <pem-Datei> -noout -text`
 
-* *
-
-- **auf **der** Firewall:**
+- auf der Firewall:
 
   - System: Sicherheit: Zertifikate
-
   - System: Zugang: Tester
-
-    Dienste: Squid: Einmalige Anmeldung: Kerberos-Authentifizierung
+  - Dienste: Squid: Einmalige Anmeldung: Kerberos-Authentifizierung
 
 - <https://github.com/linuxmuster/linuxmuster-base7/issues/158>
 - <https://github.com/linuxmuster/linuxmuster-base7/blob/master/Renew_certs.md>
 
-# Automatisches Image seeding
+## Automatisches Image seeding
 
 Während des Linbo-Bootvorganges werden automatisch
 Torrent-Seeder-Prozesse für alle im Cache liegenden Images gestartet.
 
 - <https://github.com/linuxmuster/linuxmuster-linbo7/issues/127>
 
-# Linbo-Konfiguration (start.conf)
+## Linbo-Konfiguration (start.conf)
 
 Syntax der Linbo-start.conf wurde konsolidiert und obsolete Optionen
 entfernt:
