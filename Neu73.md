@@ -48,6 +48,7 @@ Usage: linuxmuster-renew-certs [options]
 Während des Linbo-Bootvorganges werden automatisch Torrent-Seeder-Prozesse für alle im Cache liegenden Images gestartet.
 
 ### Links
+
 - <https://github.com/linuxmuster/linuxmuster-linbo7/issues/127>
 
 ## Linbo-Konfiguration (start.conf)
@@ -110,6 +111,7 @@ AutostartTimeout = 5
 DefaultAction = sync
 
 ### Links
+
 - <https://github.com/linuxmuster/linuxmuster-linbo7/issues/132>
 - <https://github.com/linuxmuster/linuxmuster-linbo7/issues/131>
 
@@ -120,6 +122,7 @@ Mit dem Tool *hwinfo* kann die Hardware-Information des Clients ausgelesen werde
 Die Konsolen-Ausgaben des Linbo-Clients werden jetzt übersichtlicher in eine Datei geloggt: `/srv/linbo/log/<hostname>_linbo.log`.
 
 ### Links
+
 - <https://github.com/linuxmuster/linuxmuster-linbo7/issues/117>
 - <https://github.com/linuxmuster/linuxmuster-linbo7/issues/123>
 
@@ -146,6 +149,7 @@ Devices an.
 - Aktuelles start.conf-Beispiel siehe oben.
 
 ### Links
+
 - <https://github.com/linuxmuster/linuxmuster-linbo7/issues/126>
 
 ## VNC-Server
@@ -155,6 +159,7 @@ Devices an.
 - Legt man von seinem PC ausgehend einen SSH-Tunnel über den Server an `ssh -L 9999:<Client-IP>:9999 root@<Server-IP>` kann man danach direkt per `vncviewer localhost:9999` auf die Linbo-Clientoberfläche zugreifen.
 
 ### Links
+
 - <https://github.com/linuxmuster/linuxmuster-linbo7/issues/104>
 - <https://github.com/linuxmuster/linuxmuster-linbo7#linbo-kernel-parameters>
 
