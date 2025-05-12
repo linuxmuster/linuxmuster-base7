@@ -109,11 +109,12 @@ NewEnabled = yes
 Autostart = no
 AutostartTimeout = 5
 DefaultAction = sync
+```
 
 ### Links
 
-- <https://github.com/linuxmuster/linuxmuster-linbo7/issues/132>
-- <https://github.com/linuxmuster/linuxmuster-linbo7/issues/131>
+- https://github.com/linuxmuster/linuxmuster-linbo7/issues/132
+- https://github.com/linuxmuster/linuxmuster-linbo7/issues/131
 
 ## Hardware-Info / verbessertes Logging
 
@@ -123,8 +124,8 @@ Die Konsolen-Ausgaben des Linbo-Clients werden jetzt übersichtlicher in eine Da
 
 ### Links
 
-- <https://github.com/linuxmuster/linuxmuster-linbo7/issues/117>
-- <https://github.com/linuxmuster/linuxmuster-linbo7/issues/123>
+- https://github.com/linuxmuster/linuxmuster-linbo7/issues/117
+- https://github.com/linuxmuster/linuxmuster-linbo7/issues/123
 
 ## Einheitliche Partitionsnamen
 
@@ -132,17 +133,16 @@ Unabhängig vom verbauten Festplattentyp (SATA, NVME etc.) können die Partition
 
 Namensschema:
 
-- 1\. Platte: */dev/disk0*
-- 2\. Platte: */dev/disk1*
+- 1. Platte: `/dev/disk0`
+- 2. Platte: `/dev/disk1`
 - ...
-- 1\. Partition: */dev/disk0p1*
-- 2\. Partition: */dev/disk0p2*
+- 1. Partition: `/dev/disk0p1`
+- 2. Partition: `/dev/disk0p2`
 - …
 
-- Linbo legt beim Bootvorgang entsprechende Symlinks zu den tatsächlichen
-Devices an.
+- Linbo legt beim Bootvorgang entsprechende Symlinks zu den tatsächlichen Devices an.
 
-- Eine NVME-Disk wird immer als erste Platte (*disk0*) definiert.
+- Eine NVME-Disk wird immer als erste Platte (`disk0`) definiert.
 
 - Eine USB-Platte wird immer als letzte Platte definiert.
 
@@ -167,28 +167,24 @@ Devices an.
 
 Stellt man eine ISO-Datei von einem Linux-Live-System als Imagedatei bereit, kann diese bei entsprechender Konfiguration von derLinbo-Clientoberfläche aus gestartet werden.
 
-### Vorgehensweise:
+### Vorgehensweise
 
-- ISO-Datei unter */srv/linbo/images* bereitstellen.
+- ISO-Datei unter `/srv/linbo/images` bereitstellen.
 
-  - Beispiel: *ubuntu-24.04.2-desktop-amd64.iso*
+  - Beispiel: `ubuntu-24.04.2-desktop-amd64.iso`
   - auf dem Server unter  
-    */srv/linbo/images/ubuntu-24.04.2-desktop-amd64/ubuntu-24.04.2-desktop-amd64.iso  
-    *ablegen.
-  - Torrent- und Info-Datei erzeugen mit  
-    *linbo-torrent create ubuntu-24.04.2-desktop-amd64.iso*
+    `/srv/linbo/images/ubuntu-24.04.2-desktop-amd64/ubuntu-24.04.2-desktop-amd64.iso`
+    ablegen.
+  - Torrent- und Info-Datei erzeugen mit
+    `linbo-torrent create ubuntu-24.04.2-desktop-amd64.iso`
 
 - ISO-Datei auf dem PC mounten und
 
   - Pfade von Kernel und Initrd herausfinden (liegen in der obigen
-    Beispiel-ISO im Verzeichnis *casper)*.
-  - Kernel-Append-Parameter herausfinden (unter *boot/grub/grub.cfg*
-    oder *isolinux.cfg*). Die Parameter *splash*, *quiet*, *findiso* und
-    *iso-scan* können weggelassen werden, da sie automatisch erzeugt
-    werden.
+    Beispiel-ISO im Verzeichnis `casper`).
+  - Kernel-Append-Parameter herausfinden (unter `boot/grub/grub.cfg` oder `isolinux.cfg`). Die Parameter `splash`, `quiet`, `findiso` und     `iso-scan` können weggelassen werden, da sie automatisch erzeugt werden.
 
-- OS-Abschnitt in die start.conf eintragen, bei *Root* die
-  Cachepartition verwenden:
+- OS-Abschnitt in die start.conf eintragen, bei `Root` die Cachepartition verwenden:
 
   ```
   [OS]
@@ -208,23 +204,23 @@ Stellt man eine ISO-Datei von einem Linux-Live-System als Imagedatei bereit, kan
   DefaultAction = start
   ```
 
-- Abschließend auf dem Server *linuxmuster-import-devices* aufrufen.
+- Abschließend auf dem Server `linuxmuster-import-devices` aufrufen.
 
 ## Sonstiges
 
 ### Firmware
 
 Firmware ist in Ubuntu 24.04 zst-komprimiert. Firmware-Dateien können in
-*/etc/linuxmuster/linbo/firmware* aber wie bisher ohne .zst-Extension
+`/etc/linuxmuster/linbo/firmware` aber wie bisher ohne .zst-Extension
 angegeben werden.
 
 ### Kernel
 
 Aktuelle Linbo-Kernelversionen:
 
-- legacy: 6.1.\*
-- longterm: 6.12.\*
-- stable: 6.14.\*
+- legacy: 6.1.*
+- longterm: 6.12.*
+- stable: 6.14.*
 
 ### OPNsense-Firewall
 
