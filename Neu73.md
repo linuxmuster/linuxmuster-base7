@@ -133,11 +133,11 @@ Unabhängig vom verbauten Festplattentyp (SATA, NVME etc.) können die Partition
 
 Namensschema:
 
-- 1. Platte: `/dev/disk0`
-- 2. Platte: `/dev/disk1`
+- \1. Platte: `/dev/disk0`
+- \2. Platte: `/dev/disk1`
 - ...
-- 1. Partition: `/dev/disk0p1`
-- 2. Partition: `/dev/disk0p2`
+- \1. Partition: `/dev/disk0p1`
+- \2. Partition: `/dev/disk0p2`
 - …
 
 - Linbo legt beim Bootvorgang entsprechende Symlinks zu den tatsächlichen Devices an.
