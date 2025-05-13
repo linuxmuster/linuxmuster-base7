@@ -1,5 +1,23 @@
 # Neuerungen in linuxmuster.net 7.3
 
+## Upgrade 7.2 -> 7.3
+
+Wird in einem Schritt von dem Skript
+`linuxmuster-release-upgrade`
+erledigt. Es muss eine Sicherheitsabfrage bestätigt werden. Anschließend ist ein Reboot fällig.
+
+Die Skript-Parameter
+`--force --reboot`
+überspringen die Sicherheitsabfrage und führen den abschließenden Reboot automatisch aus.
+
+### Links
+
+- https://ask.linuxmuster.net/t/testing-lmn-7-3/11547
+
+## Installation vom Scratch
+
+Erfolgt analog zu linuxmuster.net 7.2 (siehe https://github.com/linuxmuster/linuxmuster-prepare#linuxmuster-prepare).
+
 ## Zertifikatserneuerung
 
 Zur Erneuerung der beim Setup erstellten selbstsignierten Zertifikate gibt es das Skript
