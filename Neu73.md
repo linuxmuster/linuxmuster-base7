@@ -50,7 +50,7 @@ Usage: linuxmuster-renew-certs [options]
 
   - `openssl x509 -in <pem-Datei> -noout -text`
 
-- auf der Firewall:
+- auf der OPNsense-Firewall:
 
   - System: Sicherheit: Zertifikate
   - System: Zugang: Tester
