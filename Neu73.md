@@ -240,4 +240,5 @@ Verwendete Linbo-Kernelversionen:
 
 ### OPNsense-Firewall
 
-Version 25 ist jetzt Installationsvoraussetzung.
+- Version 25 ist jetzt Installationsvoraussetzung.
+- Nach dem Setup sind auf der OPNsense unter `Dienste: Unbound DNS: Query Forwarding` die Quad9-DNS-Server eingetragen (9.9.9.9 und 9.9.9.10). Das kann geändert werden, falls andere DNS-Server als Forwarder verwendet werden sollen.
