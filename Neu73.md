@@ -40,7 +40,7 @@ Usage: linuxmuster-renew-certs [options]
 
 - Nach erfolgter Zertifikatserneuerung müssen Server und/oder Firewall neu gestartet werden, damit Änderungen wirksam werden.
 
-- CA-, Server- und Firewallzertifikate könne unabhängig voneinander mit unterschiedlicher Gültigkeitsdauer erneuert werden (Option** `-c`).
+- CA-, Server- und Firewallzertifikate können unabhängig voneinander mit unterschiedlicher Gültigkeitsdauer erneuert werden (Option `-c`).
 
 - Wenn das CA-Zertifikat erneuert wird, müssen zwingend auch Server- und Firewallzertifikate erneuert werden, da diese auf der CA basieren.
 
