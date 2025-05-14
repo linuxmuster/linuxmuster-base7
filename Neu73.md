@@ -63,7 +63,7 @@ Usage: linuxmuster-renew-certs [options]
 
 ## Automatisches Image seeding
 
-Während des Linbo-Bootvorganges werden automatisch Torrent-Seeder-Prozesse für alle im Cache liegenden Images gestartet.
+Während des Linbo-Bootvorganges werden automatisch Torrent-Seeder-Prozesse für alle im Cache abgelegten Images gestartet.
 
 ### Links
 
