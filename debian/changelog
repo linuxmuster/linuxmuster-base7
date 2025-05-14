@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.17-0) lmn73; urgency=low
+
+  * fix default dns configuration for opnsense (#163).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 14 May 2025 09:39:55 +0200
+
 linuxmuster-base7 (7.3.16-0) lmn73; urgency=low
 
   * remove obsolete references to functions (0fc4236).
