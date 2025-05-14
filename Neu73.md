@@ -136,7 +136,7 @@ DefaultAction = sync
 
 ## Hardware-Info / verbessertes Logging
 
-Mit dem Tool *hwinfo* kann die Hardware-Information des Clients ausgelesen werden. Linbo erstellt pro Client einmalig eine gzipptehwinfo-Datei und lädt sie nach `/srv/linbo/log/<hostname>_hwinfo.gz` auf den Server.
+Mit dem Tool *hwinfo* kann die Hardware-Information des Clients ausgelesen werden. Linbo erstellt pro Client einmalig eine gzippte hwinfo-Datei und lädt sie nach `/srv/linbo/log/<hostname>_hwinfo.gz` auf den Server.
 
 Die Konsolen-Ausgaben des Linbo-Clients werden jetzt übersichtlicher in eine Datei geloggt: `/srv/linbo/log/<hostname>_linbo.log`.
 
@@ -183,7 +183,7 @@ Namensschema:
 
 ## Live-System von ISO booten
 
-Stellt man eine ISO-Datei von einem Linux-Live-System als Imagedatei bereit, kann diese bei entsprechender Konfiguration von derLinbo-Clientoberfläche aus gestartet werden.
+Stellt man eine ISO-Datei von einem Linux-Live-System als Imagedatei bereit, kann diese bei entsprechender Konfiguration von der Linbo-Clientoberfläche aus gestartet werden.
 
 ### Vorgehensweise
 
