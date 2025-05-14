@@ -172,7 +172,7 @@ Namensschema:
 
 ## VNC-Server
 
-- Bei Verwendung des Linbo-Kernel-Parameters* vncserver *wird während des Bootvorgangs ein VNC-Server gestartet. Der Dienst akzeptiert nur Verbindungen von der Server-IP ausgehend auf Port 9999.
+- Bei Verwendung des Linbo-Kernel-Parameters `vncserver` wird während des Bootvorgangs ein xvnc-Dienst gestartet. Der Dienst akzeptiert nur Verbindungen von der Server-IP eingehend auf Port 9999.
 
 - Legt man von seinem PC ausgehend einen SSH-Tunnel über den Server an `ssh -L 9999:<Client-IP>:9999 root@<Server-IP>` kann man danach direkt per `vncviewer localhost:9999` auf die Linbo-Clientoberfläche zugreifen.
 
