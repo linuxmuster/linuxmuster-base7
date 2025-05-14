@@ -193,7 +193,7 @@ Stellt man eine ISO-Datei von einem Linux-Live-System als Imagedatei bereit, kan
   - auf dem Server unter  
     `/srv/linbo/images/ubuntu-24.04.2-desktop-amd64/ubuntu-24.04.2-desktop-amd64.iso`
     ablegen.
-  - Torrent- und Info-Datei erzeugen mit
+  - Torrent- und Info-Datei erzeugen mit  
     `linbo-torrent create ubuntu-24.04.2-desktop-amd64.iso`
 
 - ISO-Datei auf dem PC mounten und
