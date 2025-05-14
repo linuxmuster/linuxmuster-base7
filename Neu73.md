@@ -14,7 +14,7 @@ Die Skript-Parameter
 
 - https://ask.linuxmuster.net/t/testing-lmn-7-3/11547
 
-## Installation vom Scratch
+## Installation "from scratch"
 
 Erfolgt analog zu linuxmuster.net 7.2 (siehe https://github.com/linuxmuster/linuxmuster-prepare#linuxmuster-prepare).
 
