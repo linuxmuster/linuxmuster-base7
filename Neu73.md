@@ -147,9 +147,9 @@ Die Konsolen-Ausgaben des Linbo-Clients werden jetzt übersichtlicher in eine Da
 
 ## Einheitliche Partitionsnamen
 
-Unabhängig vom verbauten Festplattentyp (SATA, NVME etc.) können die Partitionen jetzt mit einheitlichen Namen angesprochen werden.
+Unabhängig vom verbauten Festplattentyp (SATA, NVME etc.) können Partitionen jetzt mit einheitlichen Namen angesprochen werden.
 
-Namensschema:
+### Namensschema:
 
 - Platte 1: `/dev/disk0`
 - Platte 2: `/dev/disk1`
@@ -157,6 +157,8 @@ Namensschema:
 - Partition 1: `/dev/disk0p1`
 - Partition 2: `/dev/disk0p2`
 - …
+
+### Vorgaben
 
 - Linbo legt beim Bootvorgang entsprechende Symlinks zu den tatsächlichen Devices an.
 
