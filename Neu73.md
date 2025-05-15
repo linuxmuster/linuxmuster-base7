@@ -166,7 +166,7 @@ Unabhängig vom verbauten Festplattentyp (SATA, NVME etc.) können Partitionen j
 
 - Eine USB-Platte wird immer als letzte Platte definiert.
 
-- Aktuelles start.conf-Beispiel siehe oben.
+- Aktuelles start.conf-Beispiel siehe [oben](https://github.com/linuxmuster/linuxmuster-base7/blob/master/Neu73.md#linbo-konfiguration-startconf).
 
 ### Links
 
