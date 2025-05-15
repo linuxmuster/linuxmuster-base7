@@ -237,6 +237,7 @@ Verwendete Linbo-Kernelversionen:
 - legacy: 6.1.* (aktuell 6.1.138)
 - longterm: 6.12.* (aktuell 6.12.28)
 - stable: 6.14.* (aktuell 6.14.6)
+- https://github.com/linuxmuster/linuxmuster-linbo7/issues/134
 
 ### OPNsense-Firewall
 
