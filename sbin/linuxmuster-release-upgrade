@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # thomas@linuxmuster.net
-# 20250317
+# 20250519
 #
 
 # options
@@ -21,7 +21,7 @@ else
     echo "#                                                          #"
     echo "#                        ATTENTION!                        #"
     echo "#                                                          #"
-    echo "# This Skript upgrades your system to linuxmuster.net 7.3! #"
+    echo "# This script upgrades your system to linuxmuster.net 7.3! #"
     echo "# Make sure you have created a snapshot before.            #"
     echo "#                                                          #"
     echo "############################################################"
@@ -43,9 +43,11 @@ do-release-upgrade -m server -f DistUpgradeViewNonInteractive
 rm -f /etc/resolv.conf
 mv /etc/resolv.conf.release-upgrade /etc/resolv.conf
 
-# disable systemd resolver if activated by upgrade
-for i in stop disable mask; do
-    systemctl $i systemd-resolved
+# disable obsolete services
+for s in isc-dhcp-server6 systemd-resolved; do
+    for c in stop disable mask; do
+        systemctl $c $s
+    done
 done
 
 # create repo list
