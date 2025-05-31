@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20250503
+# 20250531
 #
 
 from subprocess import Popen, PIPE
@@ -521,7 +521,10 @@ def createServerCert(item, days, logfile):
     csrfile = environment.SSLDIR + '/' + item + '.csr'
     keyfile = environment.SSLDIR + '/' + item + '.key.pem'
     certfile = environment.SSLDIR + '/' + item + '.cert.pem'
-    cnffile = environment.SSLDIR + '/' + item + '_cert_ext.cnf'
+    if item == 'firewall':
+        cnffile = environment.SSLDIR + '/' + item + '_cert_ext.cnf'
+    else:
+        cnffile = environment.SSLDIR + '/server_cert_ext.cnf'
     fullchain = environment.SSLDIR + '/' + item + '.fullchain.pem'
     subj = '-subj /CN=' + fqdn + '/'
     shadays = ' -sha256 -days ' + days

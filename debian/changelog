@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.18-0) lmn73; urgency=low
+
+  * fix #164: server cert is not created, if servername is not server.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 31 May 2025 15:14:32 +0200
+
 linuxmuster-base7 (7.3.17-0) lmn73; urgency=low
 
   * fix default dns configuration for opnsense (#163).
