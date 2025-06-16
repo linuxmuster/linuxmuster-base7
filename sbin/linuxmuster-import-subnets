@@ -2,10 +2,9 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20230801
+# 20250616
 #
 
-import ast
 import environment
 import datetime
 import os
@@ -15,10 +14,7 @@ import time
 import yaml
 
 from bs4 import BeautifulSoup
-from functions import firewallApi, getFwConfig, getSetupValue, getSftp
-from functions import getSubnetArray, ipMatchSubnet, isValidHostIpv4
-from functions import printScript, putFwConfig, putSftp, readTextfile
-from functions import sshExec, writeTextfile
+from functions import firewallApi, getFwConfig, getSetupValue, getSubnetArray, isValidHostIpv4, printScript, putFwConfig, readTextfile, writeTextfile
 from IPy import IP
 
 # read necessary values from setup.ini and other sources
@@ -27,7 +23,7 @@ domainname = getSetupValue('domainname')
 gateway = getSetupValue('gateway')
 firewallip = getSetupValue('firewallip')
 # get boolean value
-skipfw = ast.literal_eval(getSetupValue('skipfw'))
+skipfw = getSetupValue('skipfw')
 bitmask_setup = getSetupValue('bitmask')
 network_setup = getSetupValue('network')
 ipnet_setup = network_setup + '/' + bitmask_setup

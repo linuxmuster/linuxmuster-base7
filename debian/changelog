@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.19-0) lmn73; urgency=low
+
+  * fix #166: linuxmuster-import-subnets - problem with skipfw setup value.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 16 Jun 2025 09:22:33 +0200
+
 linuxmuster-base7 (7.3.18-0) lmn73; urgency=low
 
   * fix #164: server cert is not created, if servername is not server.
