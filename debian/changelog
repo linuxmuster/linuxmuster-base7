@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.18-0) lmn72; urgency=low
+
+  * fix #167: Fix SSLDIR var.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 25 Jun 2025 10:29:21 +0200
+
 linuxmuster-base7 (7.2.17-0) lmn72; urgency=low
 
   * fix #164: server cert is not created, if servername is not server.
