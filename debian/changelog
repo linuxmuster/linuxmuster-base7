@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.20-0) lmn73; urgency=low
+
+  * ntpsec fix for ntp.conf ().
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 26 Jun 2025 09:06:06 +0200
+
 linuxmuster-base7 (7.3.19-0) lmn73; urgency=low
 
   * fix #166: linuxmuster-import-subnets - problem with skipfw setup value.
