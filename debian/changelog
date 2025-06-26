@@ -1,8 +1,8 @@
 linuxmuster-base7 (7.3.20-0) lmn73; urgency=low
 
-  * ntpsec fix for ntp.conf ().
+  * ntpsec fix for ntp.conf (5bc35bf).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 26 Jun 2025 09:06:06 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 26 Jun 2025 10:06:38 +0200
 
 linuxmuster-base7 (7.3.19-0) lmn73; urgency=low
 
