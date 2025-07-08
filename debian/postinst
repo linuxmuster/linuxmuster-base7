@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20250407
+# 20250707
 # GPL v3
 #
 
@@ -137,9 +137,19 @@ case "$1" in
     echo "Enabling & starting ntp service."
     systemctl enable ntp.service
     systemctl start ntp.service
-    ntp_restart="no"
   fi
-  [ "$ntp_restart" = "yes" ] && systemctl restart ntp.service
+  # update ntp.conf
+  tpl="$TPLDIR/ntp.conf"
+  tpl_ver="$(grep -P '(?<!\d)\d{8}(?!\d)' "$tpl" | grep ^# | head -1 | cut -d' ' -f2)"
+  conf="$(head -1 "$tpl" | cut -d' ' -f2)"
+  conf_ver="$(grep -P '(?<!\d)\d{8}(?!\d)' "$conf" | grep ^# | head -1 | cut -d' ' -f2)"
+  if [[ $conf_ver -ne $tpl_ver ]]; then
+    echo "Updating $(basename "$conf"), creating backup $(basename "${conf}.${conf_ver}")."
+    cp "$conf" "${conf}.${conf_ver}"
+    sed -e "s|@@firewallip@@|$firewallip|g" -e "s|@@ntpsockdir@@|$NTPSOCKDIR|g" "$tpl" > "$conf"
+    ntp_restart="yes"
+  fi
+  [ "$ntp_restart" = "yes" ] && systemctl restart ntpsec.service
 
  ;;
 
