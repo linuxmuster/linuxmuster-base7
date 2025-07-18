@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.22-0) lmn73; urgency=low
+
+  * remove all restrict lines from ntp.conf (967764a).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 18 Jul 2025 14:00:49 +0200
+
 linuxmuster-base7 (7.3.21-0) lmn73; urgency=low
 
   * restrict fix for ntp.conf (16fe601).
