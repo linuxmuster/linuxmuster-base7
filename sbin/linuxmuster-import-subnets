@@ -2,12 +2,11 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20250616
+# 20250721
 #
 
 import environment
 import datetime
-import os
 import re
 import subprocess
 import time
@@ -364,17 +363,17 @@ subnetconf.close()
 service = 'isc-dhcp-server'
 msg = 'Restarting ' + service + ' '
 printScript(msg, '', False, False, True)
-os.system('service ' + service + ' stop')
-os.system('service ' + service + ' start')
+subprocess.call('service ' + service + ' stop', shell=True)
+subprocess.call('service ' + service + ' start', shell=True)
 # wait one second before service check
 time.sleep(1)
-rc = os.system('systemctl is-active --quiet ' + service)
+rc = subprocess.call('systemctl is-active --quiet ' + service, shell=True)
 if rc == 0:
     printScript(' OK!', '', True, True, False, len(msg))
 else:
     printScript(' Failed!', '', True, True, False, len(msg))
 
-os.system('systemctl restart isc-dhcp-server.service')
+subprocess.call('systemctl restart isc-dhcp-server.service', shell=True)
 
 # update netplan config with new routes for server (localhost)
 changed = updateNetplan(subnets)
