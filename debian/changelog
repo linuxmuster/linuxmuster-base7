@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.20-0) lmn72; urgency=low
+
+  * intercept release upgrade failures (0dc9855).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 21 Jul 2025 19:07:41 +0200
+
 linuxmuster-base7 (7.2.19-0) lmn72; urgency=low
 
   * ensure ntpsec packages are installed after release upgrade (5676599).
