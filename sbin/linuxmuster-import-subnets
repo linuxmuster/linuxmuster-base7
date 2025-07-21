@@ -378,6 +378,9 @@ subprocess.call('systemctl restart isc-dhcp-server.service', shell=True)
 # update netplan config with new routes for server (localhost)
 changed = updateNetplan(subnets)
 
+# update ntp.conf
+subprocess.call('linuxmuster-update-ntpconf', shell=True)
+
 # update firewall
 if not skipfw:
     changed = updateFw(subnets, firewallip, ipnet_setup,

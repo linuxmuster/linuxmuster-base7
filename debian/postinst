@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20250707
+# 20250721
 # GPL v3
 #
 
@@ -144,10 +144,8 @@ case "$1" in
   conf="$(head -1 "$tpl" | cut -d' ' -f2)"
   conf_ver="$(grep -P '(?<!\d)\d{8}(?!\d)' "$conf" | grep ^# | head -1 | cut -d' ' -f2)"
   if [[ $conf_ver -ne $tpl_ver ]]; then
-    echo "Updating $(basename "$conf"), creating backup $(basename "${conf}.${conf_ver}")."
-    cp "$conf" "${conf}.${conf_ver}"
-    sed -e "s|@@firewallip@@|$firewallip|g" -e "s|@@ntpsockdir@@|$NTPSOCKDIR|g" "$tpl" > "$conf"
-    ntp_restart="yes"
+    linuxmuster-update-ntpconf
+    ntp_restart="no"
   fi
   [ "$ntp_restart" = "yes" ] && systemctl restart ntpsec.service
 
