@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # thomas@linuxmuster.net
-# 20250519
+# 20250721
 #
 
 # options
@@ -49,6 +49,9 @@ for s in isc-dhcp-server6 systemd-resolved; do
         systemctl $c $s
     done
 done
+
+# ensure ntpsec pkgs are installed
+DEBIAN_FRONTEND=noninteractive apt-get -y install ntpsec ntpsec-ntpdate ntpsec-ntpdig
 
 # create repo list
 echo "deb https://deb.linuxmuster.net/ lmn73 main" >> /etc/apt/sources.list.d/lmn.list
