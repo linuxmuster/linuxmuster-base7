@@ -37,7 +37,18 @@ cp /etc/resolv.conf /etc/resolv.conf.release-upgrade
 # start release upgrade noninteractively
 echo DPkg::options \{ \"--force-confdef\"\; \"--force-confold\"\; \} > /etc/apt/apt.conf.d/local
 apt-get -y install --reinstall python3-debian  # repair possibly broken package
-do-release-upgrade -m server -f DistUpgradeViewNonInteractive
+if ! do-release-upgrade -m server -f DistUpgradeViewNonInteractive; then
+    rm -f /etc/apt/apt.conf.d/local
+    echo "An error ocurred!"
+    exit 1
+fi
+
+# test release number
+if grep -q "22.04" /etc/issue; then
+    rm -f /etc/apt/apt.conf.d/local
+    echo "Upgrade failed!"
+    exit 1
+fi
 
 # restore resolv.conf
 rm -f /etc/resolv.conf
