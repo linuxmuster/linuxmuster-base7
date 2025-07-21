@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.24-0) lmn73; urgency=low
+
+  * fix script header in linuxmuster-update-ntpconf (6426325).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 21 Jul 2025 19:59:00 +0200
+
 linuxmuster-base7 (7.3.23-0) lmn73; urgency=low
 
   * linuxmuster-import-subnets: Prefer subprocess over os.system (#121).
