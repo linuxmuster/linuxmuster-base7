@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.3.23-0) lmn73; urgency=low
+
+  * linuxmuster-import-subnets: Prefer subprocess over os.system (#121).
+  * add subnet restrictions to ntp.conf (#168).
+  * add ntpsec to package depends (#168).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 21 Jul 2025 15:58:25 +0200
+
 linuxmuster-base7 (7.3.22-0) lmn73; urgency=low
 
   * remove all restrict lines from ntp.conf (967764a).
