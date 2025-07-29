@@ -1,14 +1,9 @@
-linuxmuster-base7 (7.3.25-0) lmn73; urgency=low
-
-  * fix "#" and allow "@" in passwords (ccc14a3).
-
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 29 Jul 2025 22:04:55 +0200
-
 linuxmuster-base7 (7.3.24-0) lmn73; urgency=low
 
   * fix script header in linuxmuster-update-ntpconf (6426325).
+  * fix "#" and allow "@" in passwords (ccc14a3).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 21 Jul 2025 19:59:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 29 Jul 2025 22:08:13 +0200
 
 linuxmuster-base7 (7.3.23-0) lmn73; urgency=low
 
