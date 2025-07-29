@@ -103,8 +103,7 @@ msg = 'Removing admin password from setup.ini '
 printScript(msg, '', False, False, True)
 setupini = environment.SETUPINI
 try:
-    setup = configparser.RawConfigParser(
-        delimiters=('='), inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(delimiters=('='))
     setup.read(setupini)
     setup.set('setup', 'adminpw', '')
     with open(setupini, 'w') as INIFILE:

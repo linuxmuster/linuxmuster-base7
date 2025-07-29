@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20220920
+# 20250729
 #
 
 import configparser
@@ -11,7 +11,7 @@ import datetime
 import os
 import sys
 
-from functions import backupCfg, mySetupLogfile, printScript, readTextfile
+from functions import backupCfg, getSetupValue, mySetupLogfile, printScript, readTextfile
 from functions import replaceInFile, setupComment, subProc
 
 logfile = mySetupLogfile(__file__)
@@ -19,32 +19,27 @@ logfile = mySetupLogfile(__file__)
 # read setup data
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
-setupini = environment.SETUPINI
 try:
-    # setupdefaults.ini
-    defaults = configparser.ConfigParser(
-        delimiters=('='), inline_comment_prefixes=('#', ';'))
+    # read default values
+    defaults = configparser.ConfigParser(delimiters=('='))
     defaults.read(environment.DEFAULTSINI)
-    # setup.ini
-    setup = configparser.RawConfigParser(
-        delimiters=('='), inline_comment_prefixes=('#', ';'))
-    setup.read(setupini)
-    adminpw = setup.get('setup', 'adminpw')
-    bitmask = setup.get('setup', 'bitmask')
-    broadcast = setup.get('setup', 'broadcast')
-    dhcprange = setup.get('setup', 'dhcprange')
+    # read setup values
+    adminpw = getSetupValue('adminpw')
+    bitmask = getSetupValue('bitmask')
+    broadcast = getSetupValue('broadcast')
+    dhcprange = getSetupValue('dhcprange')
     dhcprange1 = dhcprange.split(' ')[0]
     dhcprange2 = dhcprange.split(' ')[1]
-    domainname = setup.get('setup', 'domainname')
-    firewallip = setup.get('setup', 'firewallip')
+    domainname = getSetupValue('domainname')
+    firewallip = getSetupValue('firewallip')
     linbodir = environment.LINBODIR
-    netbiosname = setup.get('setup', 'netbiosname')
-    netmask = setup.get('setup', 'netmask')
-    network = setup.get('setup', 'network')
-    realm = setup.get('setup', 'realm')
-    sambadomain = setup.get('setup', 'sambadomain')
-    servername = setup.get('setup', 'servername')
-    serverip = setup.get('setup', 'serverip')
+    netbiosname = getSetupValue('netbiosname')
+    netmask = getSetupValue('netmask')
+    network = getSetupValue('network')
+    realm = getSetupValue('realm')
+    sambadomain = getSetupValue('sambadomain')
+    servername = getSetupValue('servername')
+    serverip = getSetupValue('serverip')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

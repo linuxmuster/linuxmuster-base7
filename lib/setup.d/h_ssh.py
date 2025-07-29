@@ -2,7 +2,7 @@
 #
 # setup ssh host keys
 # thomas@linuxmuster.net
-# 20240219
+# 20250729
 #
 
 import configparser
@@ -13,22 +13,17 @@ import re
 import subprocess
 import sys
 
-from functions import backupCfg, checkSocket, isValidHostIpv4, modIni
-from functions import mySetupLogfile, printScript, replaceInFile
-from functions import setupComment, subProc, writeTextfile
+from functions import backupCfg, checkSocket, getSetupValue, isValidHostIpv4, modIni, \
+    mySetupLogfile, printScript, replaceInFile, setupComment, subProc, writeTextfile
 
 logfile = mySetupLogfile(__file__)
 
 # read setup ini
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
-setupini = environment.SETUPINI
 try:
-    setup = configparser.RawConfigParser(
-        delimiters=('='), inline_comment_prefixes=('#', ';'))
-    setup.read(setupini)
     # get ip addresses
-    serverip = setup.get('setup', 'serverip')
+    serverip = getSetupValue('serverip')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))

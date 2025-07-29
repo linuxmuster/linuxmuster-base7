@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20220622
+# 20250729
 #
 
 import configparser
@@ -10,8 +10,8 @@ import environment
 import datetime
 import os
 import sys
-from functions import mySetupLogfile, printScript, randomPassword
-from functions import readTextfile, subProc, writeTextfile
+from functions import getSetupValue, mySetupLogfile, printScript, randomPassword, \
+    readTextfile, subProc, writeTextfile
 
 logfile = mySetupLogfile(__file__)
 
@@ -35,16 +35,13 @@ except Exception as error:
 # read setup ini
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
-setupini = environment.SETUPINI
 try:
-    setup = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
-    setup.read(setupini)
-    realm = setup.get('setup', 'domainname').upper()
-    sambadomain = setup.get('setup', 'sambadomain')
-    serverip = setup.get('setup', 'serverip')
-    servername = setup.get('setup', 'servername')
-    domainname = setup.get('setup', 'domainname')
-    basedn = setup.get('setup', 'basedn')
+    realm = getSetupValue('domainname').upper()
+    sambadomain = getSetupValue('sambadomain')
+    serverip = getSetupValue('serverip')
+    servername = getSetupValue('servername')
+    domainname = getSetupValue('domainname')
+    basedn = getSetupValue('basedn')
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))

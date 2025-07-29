@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20250531
+# 20250729
 #
 
 from subprocess import Popen, PIPE
@@ -190,8 +190,7 @@ def printScript(msg='', header='', lf=True, noleft=False, noright=False,
 def getSetupValue(keyname):
     setupini = environment.SETUPINI
     try:
-        setup = configparser.RawConfigParser(
-            delimiters=('='), inline_comment_prefixes=('#', ';'))
+        setup = configparser.RawConfigParser(delimiters=('='))
         setup.read(setupini)
         rc = setup.get('setup', keyname)
         if rc == 'False':
@@ -445,8 +444,7 @@ def replaceInFile(tfile, search, replace):
 # modify and write ini file
 def modIni(inifile, section, option, value):
     try:
-        i = configparser.RawConfigParser(delimiters=(
-            '='), inline_comment_prefixes=('#', ';'))
+        i = configparser.RawConfigParser(delimiters=('='))
         if not os.path.isfile(inifile):
             # create inifile
             writeTextfile(inifile, '[' + section + ']\n', 'w')
@@ -488,8 +486,7 @@ def waitForFw(timeout=300, wait=0):
 # firewall api get request
 def firewallApi(request, path, data=''):
     domainname = getSetupValue('domainname')
-    fwapi = configparser.RawConfigParser(
-        delimiters=('='), inline_comment_prefixes=('#', ';'))
+    fwapi = configparser.RawConfigParser(delimiters=('='))
     fwapi.read(environment.FWAPIKEYS)
     apikey = fwapi.get('api', 'key')
     apisecret = fwapi.get('api', 'secret')
@@ -734,8 +731,7 @@ def getStartconfOption(startconf, section, option):
         return None
     try:
         # read in to configparser
-        s = configparser.RawConfigParser(delimiters=(
-            '='), inline_comment_prefixes=('#', ';'))
+        s = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
         s.read_string(content)
         return s.get(section, option)
     except Exception as error:
@@ -801,8 +797,7 @@ def getStartconfOsValues(startconf):
         return None
     try:
         # read in to configparser
-        s = configparser.RawConfigParser(delimiters=(
-            '='), inline_comment_prefixes=('#', ';'))
+        s = configparser.RawConfigParser(delimiters=('='), inline_comment_prefixes=('#', ';'))
         s.read_string(content)
         count = 1
         oslists = {}
@@ -981,7 +976,7 @@ def isValidPassword(password):
     # searching for symbols
     if digit_error is True:
         digit_error = False
-        symbol_error = re.search(r"[!#%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None
+        symbol_error = re.search(r"[@!#%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None
     else:
         symbol_error = False
     # overall result

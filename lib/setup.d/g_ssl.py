@@ -2,7 +2,7 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20250416
+# 20250729
 #
 
 from __future__ import print_function
@@ -24,8 +24,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = environment.SETUPINI
 try:
-    setup = configparser.RawConfigParser(
-        delimiters=('='), inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(delimiters=('='))
     setup.read(setupini)
     schoolname = setup.get('setup', 'schoolname')
     servername = setup.get('setup', 'servername')

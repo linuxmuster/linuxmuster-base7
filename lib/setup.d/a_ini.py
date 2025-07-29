@@ -2,7 +2,7 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20220105
+# 20250729
 #
 
 import configparser
@@ -17,8 +17,7 @@ from IPy import IP
 logfile = mySetupLogfile(__file__)
 
 # read ini files
-setup = configparser.RawConfigParser(
-    delimiters=('='), inline_comment_prefixes=('#', ';'))
+setup = configparser.RawConfigParser(delimiters=('='))
 for item in [environment.DEFAULTSINI, environment.PREPINI, environment.SETUPINI, environment.CUSTOMINI]:
     # skip non existant file
     if not os.path.isfile(item):

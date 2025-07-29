@@ -2,7 +2,7 @@
 #
 # add additional servers to devices.csv
 # thomas@linuxmuster.net
-# 20220105
+# 20250729
 #
 
 import configparser
@@ -12,8 +12,8 @@ import random
 import re
 import sys
 
-from functions import isValidHostIpv4, isValidMac, mySetupLogfile, printScript
-from functions import readTextfile, subProc, writeTextfile
+from functions import getSetupValue, isValidHostIpv4, isValidMac, mySetupLogfile, \
+    printScript, readTextfile, subProc, writeTextfile
 from subprocess import Popen, PIPE
 from uuid import getnode
 
@@ -22,14 +22,10 @@ logfile = mySetupLogfile(__file__)
 # read setup.ini
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
-setupini = environment.SETUPINI
 try:
-    setup = configparser.RawConfigParser(
-        delimiters=('='), inline_comment_prefixes=('#', ';'))
-    setup.read(setupini)
-    firewallip = setup.get('setup', 'firewallip')
-    servername = setup.get('setup', 'servername')
-    serverip = setup.get('setup', 'serverip')
+    firewallip = getSetupValue('firewallip')
+    servername = getSetupValue('servername')
+    serverip = getSetupValue('serverip')
     rc, devices = readTextfile(environment.WIMPORTDATA)
     printScript(' Success!', '', True, True, False, len(msg))
 except:

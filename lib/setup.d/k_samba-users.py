@@ -2,7 +2,7 @@
 #
 # create samba users & shares
 # thomas@linuxmuster.net
-# 20220105
+# 20250729
 #
 
 import configparser
@@ -20,8 +20,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = environment.SETUPINI
 try:
-    setup = configparser.RawConfigParser(
-        delimiters=('='), inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(delimiters=('='))
     setup.read(setupini)
     adminpw = setup.get('setup', 'adminpw')
     domainname = setup.get('setup', 'domainname')

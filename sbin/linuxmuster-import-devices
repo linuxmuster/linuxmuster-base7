@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20250503
+# 20250729
 #
 
 import configparser
@@ -18,7 +18,7 @@ from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 
-from functions import getDevicesArray, getGrubOstype, getGrubPart, getStartconfOsValues, \
+from functions import getDevicesArray, getGrubOstype, getGrubPart, getSetupValue, getStartconfOsValues, \
     getStartconfOption, getStartconfPartnr, getStartconfPartlabel, getSubnetArray, \
     getLinboVersion, printScript, readTextfile, subProc, writeTextfile
 
@@ -50,12 +50,9 @@ for o, a in opts:
 # default school's devices.csv
 devices = environment.WIMPORTDATA
 
-# read INIFILE
-setup = configparser.ConfigParser(delimiters=(
-    '='), inline_comment_prefixes=('#', ';'))
-setup.read(environment.SETUPINI)
-serverip = setup.get('setup', 'serverip')
-domainname = setup.get('setup', 'domainname')
+# read setup values
+serverip = getSetupValue('serverip')
+domainname = getSetupValue('domainname')
 
 # start message
 printScript(os.path.basename(__file__), 'begin')

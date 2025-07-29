@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20240515
+# 20250729
 #
 
 import environment
@@ -23,8 +23,7 @@ msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 setupini = environment.SETUPINI
 try:
-    setup = configparser.RawConfigParser(
-        delimiters=('='), inline_comment_prefixes=('#', ';'))
+    setup = configparser.RawConfigParser(delimiters=('='))
     setup.read(setupini)
     serverip = setup.get('setup', 'serverip')
     servername = setup.get('setup', 'servername')
