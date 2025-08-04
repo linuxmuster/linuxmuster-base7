@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.2.21-0) lmn72; urgency=low
+
+  * rebuild.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 04 Aug 2025 14:08:39 +0200
+
 linuxmuster-base7 (7.2.20-0) lmn72; urgency=low
 
   * intercept release upgrade failures (0dc9855).
