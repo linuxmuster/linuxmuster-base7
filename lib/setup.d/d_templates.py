@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20250729
+# 20250910
 #
 
 import configparser
@@ -38,6 +38,7 @@ try:
     network = getSetupValue('network')
     realm = getSetupValue('realm')
     sambadomain = getSetupValue('sambadomain')
+    schoolname = getSetupValue('schoolname')
     servername = getSetupValue('servername')
     serverip = getSetupValue('serverip')
     printScript(' Success!', '', True, True, False, len(msg))
@@ -73,6 +74,7 @@ for f in os.listdir(environment.TPLDIR):
         filedata = filedata.replace('@@network@@', network)
         filedata = filedata.replace('@@realm@@', realm)
         filedata = filedata.replace('@@sambadomain@@', sambadomain)
+        filedata = filedata.replace('@@schoolname@@', schoolname)
         filedata = filedata.replace('@@servername@@', servername)
         filedata = filedata.replace('@@serverip@@', serverip)
         filedata = filedata.replace('@@ntpsockdir@@', environment.NTPSOCKDIR)

@@ -2,7 +2,7 @@
 #
 # renew self-signed server certs
 # thomas@linuxmuster.net
-# 20250425
+# 20250910
 #
 
 import datetime
@@ -104,6 +104,7 @@ try:
     skipfw = getSetupValue('skipfw')
     realm = getSetupValue('realm')
     firewallip = getSetupValue('firewallip')
+    serverip = getSetupValue('serverip')
 except Exception as err:
     printScript(msg + ' errors detected!')
     print(err)
@@ -210,6 +211,27 @@ def applyFw():
         sys.exit(1)
 
 
+# create the cnf from template
+def createCnf(cnf_tpl):
+    # read template file
+    rc, filedata = readTextfile(cnf_tpl)
+    # replace placeholders with values
+    filedata = filedata.replace('@@domainname@@', domainname)
+    filedata = filedata.replace('@@firewallip@@', firewallip)
+    filedata = filedata.replace('@@realm@@', realm)
+    filedata = filedata.replace('@@sambadomain@@', sambadomain)
+    filedata = filedata.replace('@@schoolname@@', schoolname)
+    filedata = filedata.replace('@@servername@@', servername)
+    filedata = filedata.replace('@@serverip@@', serverip)
+    # get cnf path
+    firstline = filedata.split('\n')[0]
+    cnf = firstline.partition(' ')[2]
+    # write cnf
+    with open(cnf, 'w') as outfile:
+        outfile.write(filedata)
+    return cnf
+
+
 # renew certificate
 def renewCert(item):
     if item == servername and servername != 'server':
@@ -222,9 +244,9 @@ def renewCert(item):
         key = ssldir + '/' + name + '.key.pem'
         pem = ssldir + '/' + name + '.cert.pem'
         csr = ssldir + '/' + name + '.csr'
-        cnf = ssldir + '/' + name + '_cert_ext.cnf'
         chn = ssldir + '/' + name + '.fullchain.pem'
         bdl = ssldir + '/' + name + '.cert.bundle.pem'
+        cnf_tpl = environment.TPLDIR + '/' + name + '_cert_ext.cnf'
     b64 = pem + '.b64'
     b64_old = b64 + '_old'
     if name == 'firewall' or name == 'ca':
@@ -234,11 +256,12 @@ def renewCert(item):
     printScript(msg)
     try:
         if name == 'ca':
-            printScript('Note that you have to renew also all certs which depend on cacert.')
+            printScript('Note that you have to renew and deploy also all certs which depend on cacert.')
             subProc('openssl req -batch -x509 ' + cacert_subject + ' -new -nodes ' + cakey_passin
                 + ' -key ' + cakey + ' -sha256 -days ' + days + ' -out ' + cacert, logfile)
             subProc('openssl x509 -in ' + cacert + ' -inform PEM -out ' + cacert_crt, logfile)
         else:
+            cnf = createCnf(cnf_tpl)
             subProc('openssl x509 -req -in ' + csr + ' -CA ' + cacert + ' ' + cakey_passin + ' -CAkey '
                 + cakey + ' -CAcreateserial -out ' + pem + ' -days ' + days + ' -sha256 -extfile ' + cnf, logfile)
             catFiles([pem, cacert], chn)
