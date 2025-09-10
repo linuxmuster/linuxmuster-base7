@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.3.26-0) lmn73; urgency=low
+
+  * change codename to "production" (43a80f1).
+  * fix #169: Add Subject Alternative Name (SAN) in default linuxmuster server certificate.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 10 Sep 2025 14:57:42 +0200
+
 linuxmuster-base7 (7.3.25-0) lmn73; urgency=low
 
   * change codename to release candidate.
