@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20250721
+# 20251006
 # GPL v3
 #
 
@@ -77,7 +77,13 @@ case "$1" in
   mkdir -p "$NTPSOCKDIR"
   chgrp "$ntpgrp" "$NTPSOCKDIR"
   chmod 750 "$NTPSOCKDIR"
-
+  # samba spool directory
+  smbspool="/var/spool/samba"
+  if [ ! -d "$smbspool" ]; then
+    rm -f "$smbspool"
+    mkdir -p "$smbspool"
+    chmod 1777 "$smbspool"
+  fi
 
   # skip subsequent actions on configured systems
   [ -s "$SETUPINI" ] || exit 0
