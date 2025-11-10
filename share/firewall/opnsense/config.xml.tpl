@@ -1075,32 +1075,7 @@
       <Instances/>
       <StaticKeys/>
     </OpenVPN>
-    <Gateways version="1.0.0">
-      <gateway_item>
-        <disabled>0</disabled>
-        <name>GW_LAN</name>
-        <descr>Interface LAN Gateway</descr>
-        <interface>lan</interface>
-        <ipprotocol>inet</ipprotocol>
-        <gateway>@@firewallip@@</gateway>
-        <defaultgw>0</defaultgw>
-        <fargw>0</fargw>
-        <monitor_disable>1</monitor_disable>
-        <monitor_noroute>0</monitor_noroute>
-        <monitor/>
-        <force_down>0</force_down>
-        <priority>255</priority>
-        <weight>1</weight>
-        <latencylow/>
-        <latencyhigh/>
-        <losslow/>
-        <losshigh/>
-        <interval/>
-        <time_period/>
-        <loss_interval/>
-        <data_length/>
-      </gateway_item>
-    </Gateways>
+    @@gwconfig@@
     <Syslog version="1.0.2">
       <general>
         <enabled>1</enabled>
@@ -1268,22 +1243,7 @@
   <ntpd>
     <interface>lan</interface>
   </ntpd>
-  <gateways>
-    @@gwconfig@@
-    <gateway_item>
-      <interface>lan</interface>
-      <gateway>@@firewallip@@</gateway>
-      <name>@@gw_lan@@</name>
-      <weight>1</weight>
-      <ipprotocol>inet</ipprotocol>
-      <interval/>
-      <descr>Interface LAN Gateway</descr>
-      <avg_delay_samples/>
-      <avg_loss_samples/>
-      <avg_loss_delay_samples/>
-      <monitor_disable>1</monitor_disable>
-    </gateway_item>
-  </gateways>
+  @@gateways@@
   <staticroutes version="1.0.0"/>
   <hasync version="1.0.2">
     <disablepreempt>0</disablepreempt>

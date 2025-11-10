@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20250417
+# 20251110
 #
 
 import bcrypt
@@ -103,9 +103,10 @@ def main():
         firmware = str(soup.find('firmware'))
         sysctl = str(soup.find('sysctl'))
         # get already configured interfaces
-        for item in soup.findAll('interfaces'):
-            if '<lan>' in str(item):
-                interfaces = str(item)
+        interfaces = ''
+        interfaces_element = soup.find('interfaces')
+        if interfaces_element and '<lan>' in str(interfaces_element):
+            interfaces = str(interfaces_element)
         # save language information
         try:
             language = str(soup.findAll('language')[0])
@@ -118,11 +119,15 @@ def main():
             except:
                 lang = 'en_US'
             language = '<language>' + lang + '</language>'
-        # save gateway configuration
-        try:
-            gwconfig = str(soup.find('gateways').content)
-        except:
-            gwconfig = ''
+        # save gateways configuration
+        gateways = ''
+        gateways_element = soup.find('gateways')
+        if gateways_element:
+            gateways = str(gateways_element)
+        gwconfig = ''
+        gwconfig_element = soup.find('Gateways')
+        if gwconfig_element:
+            gwconfig = str(gwconfig_element)
         # save opt1 configuration if present
         try:
             opt1config = str(soup.findAll('opt1')[0])
@@ -184,13 +189,13 @@ def main():
         content = content.replace('@@domainname@@', domainname)
         content = content.replace('@@basedn@@', basedn)
         content = content.replace('@@interfaces@@', interfaces)
+        content = content.replace('@@gateways@@', gateways)
         content = content.replace('@@gwconfig@@', gwconfig)
         content = content.replace('@@serverip@@', serverip)
         content = content.replace('@@firewallip@@', firewallip)
         content = content.replace('@@network@@', network)
         content = content.replace('@@bitmask@@', bitmask)
         content = content.replace('@@aliascontent@@', aliascontent)
-        content = content.replace('@@gw_lan@@', environment.GW_LAN)
         content = content.replace('@@fwrootpw_hashed@@', fwrootpw_hashed)
         content = content.replace('@@authorizedkey@@', authorizedkey)
         content = content.replace('@@apikey@@', apikey)
