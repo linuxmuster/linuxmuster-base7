@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash -n:*)",
+      "Bash(shellcheck:*)"
+    ],
+    "ask": []
+  }
+}
