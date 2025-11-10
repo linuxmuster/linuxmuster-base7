@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.28-0) lmn73; urgency=low
+
+  * fix missing missing wan gateway in opnsense after setup if static wan interface was configured (1bd2359).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 10 Nov 2025 15:07:24 +0100
+
 linuxmuster-base7 (7.3.27-0) lmn73; urgency=low
 
   * fix missing samba spool directory /var/spool/samba (f1117db).
