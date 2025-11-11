@@ -607,49 +607,117 @@ interactive_mode() {
 
         case $choice in
             1)
+                echo ""
+                echo -e "${BLUE}=== Create Snapshot ===${NC}"
                 echo -n "Snapshot name (or press Enter for auto-name): "
                 read -r name
                 name=${name:-"manual-$(date +%Y%m%d-%H%M%S)"}
                 create_snapshot "$name"
+                echo ""
+                echo -n "Press Enter to continue..."
+                read
                 ;;
             2)
-                echo "Available tests:"
-                echo "  1. Basic setup"
-                echo "  2. Full setup"
-                echo "  3. Config file setup"
-                echo -n "Select test: "
-                read -r test_choice
-                case $test_choice in
-                    1) run_test_with_snapshot "Basic Setup" test_basic_setup ;;
-                    2) run_test_with_snapshot "Full Setup" test_full_setup ;;
-                    3) run_test_with_snapshot "Config File Setup" test_config_file_setup ;;
-                    *) echo "Invalid choice" ;;
-                esac
+                while true; do
+                    echo ""
+                    echo -e "${BLUE}=== Run Single Test ===${NC}"
+                    echo "Available tests:"
+                    echo "  1. Basic setup"
+                    echo "  2. Full setup"
+                    echo "  3. Config file setup"
+                    echo "  4. Create test users"
+                    echo "  0. Back to main menu"
+                    echo -n "Select test: "
+                    read -r test_choice
+                    case $test_choice in
+                        1) run_test_with_snapshot "Basic Setup" test_basic_setup ;;
+                        2) run_test_with_snapshot "Full Setup" test_full_setup ;;
+                        3) run_test_with_snapshot "Config File Setup" test_config_file_setup ;;
+                        4) run_test_with_snapshot "Create Test Users" test_create_testusers ;;
+                        0) break ;;
+                        *) echo "Invalid choice" ;;
+                    esac
+                    if [ "$test_choice" != "0" ]; then
+                        echo ""
+                        echo -n "Press Enter to continue..."
+                        read
+                    fi
+                done
                 ;;
             3)
                 run_all_tests
+                echo ""
+                echo -n "Press Enter to continue..."
+                read
                 ;;
             4)
                 list_snapshots
+                echo ""
+                echo -n "Press Enter to continue..."
+                read
                 ;;
             5)
-                echo -n "Snapshot name to restore: "
-                read -r name
-                restore_snapshot "$name"
+                while true; do
+                    echo ""
+                    echo -e "${BLUE}=== Restore Snapshot ===${NC}"
+                    list_snapshots
+                    echo ""
+                    echo -n "Snapshot name to restore (or 0 to go back): "
+                    read -r name
+                    if [ "$name" = "0" ]; then
+                        break
+                    fi
+                    if [ -n "$name" ]; then
+                        restore_snapshot "$name"
+                        echo ""
+                        echo -n "Press Enter to continue..."
+                        read
+                        break
+                    else
+                        echo "Please enter a snapshot name or 0 to go back"
+                    fi
+                done
                 ;;
             6)
-                echo -n "Snapshot name to delete: "
-                read -r name
-                delete_snapshot "$name"
+                while true; do
+                    echo ""
+                    echo -e "${BLUE}=== Delete Snapshot ===${NC}"
+                    list_snapshots
+                    echo ""
+                    echo -n "Snapshot name to delete (or 0 to go back): "
+                    read -r name
+                    if [ "$name" = "0" ]; then
+                        break
+                    fi
+                    if [ -n "$name" ]; then
+                        delete_snapshot "$name"
+                        echo ""
+                        echo -n "Press Enter to continue..."
+                        read
+                        break
+                    else
+                        echo "Please enter a snapshot name or 0 to go back"
+                    fi
+                done
                 ;;
             7)
                 delete_all_snapshots
+                echo ""
+                echo -n "Press Enter to continue..."
+                read
                 ;;
             8)
+                echo ""
+                echo -e "${BLUE}=== Cleanup Old Snapshots ===${NC}"
+                list_snapshots
+                echo ""
                 echo -n "Keep how many recent snapshots? [5]: "
                 read -r keep
                 keep=${keep:-5}
                 cleanup_snapshots "$keep"
+                echo ""
+                echo -n "Press Enter to continue..."
+                read
                 ;;
             9)
                 echo "Exiting..."
