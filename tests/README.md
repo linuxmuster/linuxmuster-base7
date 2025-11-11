@@ -11,11 +11,6 @@ This directory contains test scripts for validating the refactored linuxmuster-b
 Comprehensive **non-destructive** test suite for `linuxmuster-setup` command-line interface.
 Tests parameter parsing and basic functionality without modifying the system significantly.
 
-### test_setup_integration.sh
-
-**Integration test suite** with system snapshot/restore capability.
-Tests full setup execution with automatic rollback between tests.
-
 **Tests included:**
 1. Help message display (`--help`, `-h`)
 2. Invalid option handling
@@ -41,6 +36,19 @@ Tests full setup execution with automatic rollback between tests.
 14. Error handling (invalid config files)
 
 **Total:** 20 automated tests
+
+### test_setup_integration.sh
+
+**Integration test suite** with system snapshot/restore capability.
+Tests full setup execution with automatic rollback between tests.
+
+**Tests included:**
+1. Basic setup with minimal parameters
+2. Full parameter setup (all CLI options)
+3. Config file based setup
+4. Create test users (validates user management functionality)
+
+**Total:** 4 integration tests
 
 ## Usage
 
