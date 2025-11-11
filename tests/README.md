@@ -8,7 +8,13 @@ This directory contains test scripts for validating the refactored linuxmuster-b
 
 ### test_setup_cli.sh
 
-Comprehensive test suite for `linuxmuster-setup` command-line interface.
+Comprehensive **non-destructive** test suite for `linuxmuster-setup` command-line interface.
+Tests parameter parsing and basic functionality without modifying the system significantly.
+
+### test_setup_integration.sh
+
+**Integration test suite** with system snapshot/restore capability.
+Tests full setup execution with automatic rollback between tests.
 
 **Tests included:**
 1. Help message display (`--help`, `-h`)
@@ -38,15 +44,53 @@ Comprehensive test suite for `linuxmuster-setup` command-line interface.
 
 ## Usage
 
-### Run all tests:
+### test_setup_cli.sh (Non-destructive tests)
+
+Run all CLI tests:
 ```bash
 sudo ./tests/test_setup_cli.sh
 ```
 
-### Requirements:
+**Requirements:**
 - linuxmuster-base7 package installed
 - linuxmuster-common package installed
 - Root privileges (for writing to /var/cache/linuxmuster/)
+
+### test_setup_integration.sh (Integration tests with snapshots)
+
+**Automatic mode** - Run all tests with snapshots:
+```bash
+sudo ./tests/test_setup_integration.sh
+```
+
+**Interactive mode** - Menu-driven testing:
+```bash
+sudo ./tests/test_setup_integration.sh --interactive
+```
+
+**Manual snapshot management:**
+```bash
+# Create snapshot
+sudo ./tests/test_setup_integration.sh --create-snapshot baseline
+
+# List snapshots
+sudo ./tests/test_setup_integration.sh --list
+
+# Restore snapshot
+sudo ./tests/test_setup_integration.sh --restore baseline
+
+# Cleanup old snapshots (keep last 5)
+sudo ./tests/test_setup_integration.sh --cleanup 5
+```
+
+**Requirements:**
+- linuxmuster-base7 package installed
+- linuxmuster-common package installed
+- Root privileges (required for system modifications)
+- At least 500MB free space in /tmp (for snapshots)
+
+**Warning:** Integration tests will modify system configuration!
+Only run in test environments, not on production systems.
 
 ## Test Output
 
