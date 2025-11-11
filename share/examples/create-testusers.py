@@ -11,10 +11,10 @@ import getopt
 import os
 import sys
 
-from functions import printScript
-from functions import sambaTool
-from functions import subProc
-from functions import replaceInFile
+from linuxmuster_base7.functions import printScript
+from linuxmuster_base7.functions import sambaTool
+from linuxmuster_base7.functions import subProc
+from linuxmuster_base7.functions import replaceInFile
 from shutil import copyfile
 from subprocess import Popen, PIPE, STDOUT
 

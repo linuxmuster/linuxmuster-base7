@@ -11,7 +11,7 @@ import os
 import subprocess
 import sys
 
-from functions import datetime, firewallApi, getSetupValue, printScript, readTextfile
+from linuxmuster_base7.functions import datetime, firewallApi, getSetupValue, printScript, readTextfile
 
 
 # check first if firewall is skipped by setup

@@ -9,11 +9,11 @@ import environment
 import os
 import sys
 
-from functions import datetime
-from functions import getSetupValue
-from functions import printScript
-from functions import readTextfile
-from functions import writeTextfile
+from linuxmuster_base7.functions import datetime
+from linuxmuster_base7.functions import getSetupValue
+from linuxmuster_base7.functions import printScript
+from linuxmuster_base7.functions import readTextfile
+from linuxmuster_base7.functions import writeTextfile
 
 
 now = str(datetime.datetime.now()).split('.')[0]
