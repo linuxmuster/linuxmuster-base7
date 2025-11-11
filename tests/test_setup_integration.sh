@@ -434,7 +434,7 @@ test_full_setup() {
         -l "Test City" \
         -z "Germany" \
         -v "Test State" \
-        -r "10.0.0.100-10.0.0.200" \
+        -r "10.0.255.1-10.0.255.254" \
         -u \
         -s 2>&1 | tee "$temp_output" || true
     exit_code=${PIPESTATUS[0]}
@@ -477,7 +477,7 @@ schoolname = Test School
 location = Test City
 country = Germany
 state = Test State
-dhcprange = 10.0.0.100-10.0.0.200
+dhcprange = 10.0.255.1-10.0.255.254
 EOF
 
     local output
@@ -674,30 +674,42 @@ run_all_tests() {
     print_info "Starting test execution..."
     echo ""
 
-    # Run tests - these should actually execute now
-    echo "DEBUG: About to start Test 1/4" >&2
-    print_info "Test 1/4: Basic Setup Test"
+    # Run tests - create test users after each setup test
+    echo "DEBUG: About to start Test 1/6" >&2
+    print_info "Test 1/6: Basic Setup Test"
     echo "DEBUG: Calling run_test_with_snapshot for test 1" >&2
     run_test_with_snapshot "Basic Setup Test" test_basic_setup
     echo "DEBUG: Test 1 completed" >&2
 
-    echo "DEBUG: About to start Test 2/4" >&2
-    print_info "Test 2/4: Full Setup Test"
+    echo "DEBUG: About to start Test 2/6" >&2
+    print_info "Test 2/6: Create Test Users (after basic setup)"
     echo "DEBUG: Calling run_test_with_snapshot for test 2" >&2
-    run_test_with_snapshot "Full Setup Test" test_full_setup
+    run_test_with_snapshot "Create Test Users (after basic setup)" test_create_testusers
     echo "DEBUG: Test 2 completed" >&2
 
-    echo "DEBUG: About to start Test 3/4" >&2
-    print_info "Test 3/4: Config File Setup Test"
+    echo "DEBUG: About to start Test 3/6" >&2
+    print_info "Test 3/6: Full Setup Test"
     echo "DEBUG: Calling run_test_with_snapshot for test 3" >&2
-    run_test_with_snapshot "Config File Setup Test" test_config_file_setup
+    run_test_with_snapshot "Full Setup Test" test_full_setup
     echo "DEBUG: Test 3 completed" >&2
 
-    echo "DEBUG: About to start Test 4/4" >&2
-    print_info "Test 4/4: Create Test Users"
+    echo "DEBUG: About to start Test 4/6" >&2
+    print_info "Test 4/6: Create Test Users (after full setup)"
     echo "DEBUG: Calling run_test_with_snapshot for test 4" >&2
-    run_test_with_snapshot "Create Test Users" test_create_testusers
+    run_test_with_snapshot "Create Test Users (after full setup)" test_create_testusers
     echo "DEBUG: Test 4 completed" >&2
+
+    echo "DEBUG: About to start Test 5/6" >&2
+    print_info "Test 5/6: Config File Setup Test"
+    echo "DEBUG: Calling run_test_with_snapshot for test 5" >&2
+    run_test_with_snapshot "Config File Setup Test" test_config_file_setup
+    echo "DEBUG: Test 5 completed" >&2
+
+    echo "DEBUG: About to start Test 6/6" >&2
+    print_info "Test 6/6: Create Test Users (after config file setup)"
+    echo "DEBUG: Calling run_test_with_snapshot for test 6" >&2
+    run_test_with_snapshot "Create Test Users (after config file setup)" test_create_testusers
+    echo "DEBUG: Test 6 completed" >&2
 
     # Print summary
     print_summary
