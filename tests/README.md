@@ -2,14 +2,35 @@
 
 ## Overview
 
-This directory contains test scripts for validating the refactored linuxmuster-base7 Python package structure and CLI tools.
+This directory contains two complementary test scripts for validating the refactored linuxmuster-base7 Python package structure and CLI tools. The scripts serve different purposes and should both be used in the development and release workflow.
+
+## Comparison of Test Scripts
+
+| Feature | test_setup_cli.sh | test_setup_integration.sh |
+|---------|-------------------|---------------------------|
+| **Purpose** | CLI parameter validation & unit tests | Full system integration tests |
+| **Execution Time** | Fast (seconds) | Slow (minutes per test) |
+| **System Impact** | Non-destructive | Modifies system configuration |
+| **Test Count** | 20 tests | 6 tests |
+| **When to Use** | During development, every commit | Before releases, major merges |
+| **Environment** | Any system with package installed | Dedicated test VM only |
+| **Snapshot/Restore** | No | Yes (automatic rollback) |
+| **Interactive Mode** | No | Yes (menu-driven) |
+| **CI/CD Integration** | Suitable for every build | Suitable for nightly/release builds |
 
 ## Test Scripts
 
-### test_setup_cli.sh
+### test_setup_cli.sh (Unit/CLI Tests)
 
-Comprehensive **non-destructive** test suite for `linuxmuster-setup` command-line interface.
+**Fast, non-destructive test suite** for `linuxmuster-setup` command-line interface.
 Tests parameter parsing and basic functionality without modifying the system significantly.
+
+**Purpose:**
+- Verify CLI parameter parsing works correctly
+- Validate Python package structure and imports
+- Test error handling for invalid inputs
+- Ensure entry points are properly installed
+- Quick feedback during development
 
 **Tests included:**
 1. Help message display (`--help`, `-h`)
@@ -37,18 +58,38 @@ Tests parameter parsing and basic functionality without modifying the system sig
 
 **Total:** 20 automated tests
 
-### test_setup_integration.sh
+**Execution time:** ~30 seconds
 
-**Integration test suite** with system snapshot/restore capability.
+### test_setup_integration.sh (Integration Tests)
+
+**Comprehensive integration test suite** with system snapshot/restore capability.
 Tests full setup execution with automatic rollback between tests.
+
+**Purpose:**
+- Validate complete setup workflows end-to-end
+- Test user management integration (Sophomorix)
+- Verify system configuration changes
+- Ensure rollback capability works correctly
+- Comprehensive pre-release validation
 
 **Tests included:**
 1. Basic setup with minimal parameters
-2. Full parameter setup (all CLI options)
-3. Config file based setup
-4. Create test users (validates user management functionality)
+2. Create test users (after basic setup)
+3. Full parameter setup (all CLI options)
+4. Create test users (after full setup)
+5. Config file based setup
+6. Create test users (after config file setup)
 
-**Total:** 4 integration tests
+**Total:** 6 integration tests (3 setup tests + 3 user creation tests)
+
+**Execution time:** ~15-30 minutes (depending on system)
+
+**Features:**
+- **Automatic snapshot/restore**: Each test runs in isolation
+- **Interactive mode**: Menu-driven testing interface
+- **Manual snapshot management**: Create, restore, delete snapshots
+- **Live output**: See setup progress in real-time
+- **Graceful error handling**: Tests continue even if prerequisites are missing
 
 ## Usage
 
@@ -66,17 +107,54 @@ sudo ./tests/test_setup_cli.sh
 
 ### test_setup_integration.sh (Integration tests with snapshots)
 
-**Automatic mode** - Run all tests with snapshots:
+#### Automatic mode
+Run all 6 tests sequentially with automatic snapshot/restore:
 ```bash
 sudo ./tests/test_setup_integration.sh
 ```
 
-**Interactive mode** - Menu-driven testing:
+This will:
+1. Create a baseline snapshot
+2. Run all 6 tests (each test creates its own snapshot before execution)
+3. Restore system state after each test
+4. Clean up old snapshots (keep last 5)
+5. Restore baseline state at the end
+
+#### Interactive mode
+Menu-driven interface for selective testing and snapshot management:
 ```bash
 sudo ./tests/test_setup_integration.sh --interactive
 ```
 
-**Manual snapshot management:**
+**Interactive menu options:**
+1. **Create baseline snapshot** - Create a named snapshot of current system state
+2. **Run single test with snapshot** - Choose from:
+   - Basic setup
+   - Full setup
+   - Config file setup
+   - Create test users
+   - *Option 0: Back to main menu*
+3. **Run all tests** - Execute all 6 tests sequentially
+4. **List snapshots** - Show all available snapshots with creation dates
+5. **Restore specific snapshot** - Select and restore a snapshot by name
+   - *Shows snapshot list before prompting*
+   - *Enter 0 to go back*
+6. **Delete specific snapshot** - Remove a snapshot by name
+   - *Shows snapshot list before prompting*
+   - *Enter 0 to go back*
+7. **Delete all snapshots** - Remove all snapshots (requires confirmation)
+8. **Cleanup old snapshots** - Keep only N most recent snapshots
+9. **Exit** - Quit interactive mode
+
+**Features:**
+- Submenus include "Back" options (press 0)
+- "Press Enter to continue" prompts after operations
+- Colored section headers for better navigation
+- Snapshot list shown before restore/delete operations
+
+#### Command-line snapshot management
+For scripting and automation:
+
 ```bash
 # Create snapshot
 sudo ./tests/test_setup_integration.sh --create-snapshot baseline
@@ -97,14 +175,16 @@ sudo ./tests/test_setup_integration.sh --delete-all
 sudo ./tests/test_setup_integration.sh --cleanup 5
 ```
 
-**Requirements:**
+#### Requirements
 - linuxmuster-base7 package installed
 - linuxmuster-common package installed
 - Root privileges (required for system modifications)
 - At least 500MB free space in /tmp (for snapshots)
+- For user creation tests: Sophomorix and Samba setup
 
-**Warning:** Integration tests will modify system configuration!
-Only run in test environments, not on production systems.
+#### Warning
+**Integration tests will modify system configuration!**
+Only run in dedicated test environments, **never on production systems**.
 
 ## Test Output
 
@@ -168,14 +248,59 @@ test_new_feature() {
 
 3. Update this README with test description
 
-## Integration with CI/CD
+## Recommended Testing Workflow
 
-The test script can be integrated into CI/CD pipelines:
-
+### During Development
+Run the fast CLI tests after code changes:
 ```bash
-# In your CI/CD script
+sudo ./tests/test_setup_cli.sh
+```
+This provides immediate feedback (30 seconds) without system modifications.
+
+### Before Committing
+Ensure all CLI tests pass:
+```bash
+sudo ./tests/test_setup_cli.sh || exit 1
+```
+
+### Before Release / Major Merge
+Run full integration tests in a test VM:
+```bash
+# Option 1: Run all tests automatically
+sudo ./tests/test_setup_integration.sh
+
+# Option 2: Interactive testing for troubleshooting
+sudo ./tests/test_setup_integration.sh --interactive
+```
+
+### Integration with CI/CD
+
+**For every commit/PR** (fast feedback):
+```bash
+# In your CI/CD pipeline
 cd /path/to/linuxmuster-base7
 sudo ./tests/test_setup_cli.sh || exit 1
+```
+
+**For nightly builds / release candidates** (comprehensive validation):
+```bash
+# In your CI/CD pipeline (requires dedicated test VM)
+cd /path/to/linuxmuster-base7
+sudo ./tests/test_setup_integration.sh || exit 1
+```
+
+**Combined approach**:
+```bash
+#!/bin/bash
+# Run fast tests first
+echo "Running CLI tests..."
+sudo ./tests/test_setup_cli.sh || exit 1
+
+# Run integration tests only for release branches
+if [[ "$BRANCH_NAME" == "master" || "$BRANCH_NAME" == "release/"* ]]; then
+    echo "Running integration tests..."
+    sudo ./tests/test_setup_integration.sh || exit 1
+fi
 ```
 
 ## Notes
@@ -187,23 +312,74 @@ sudo ./tests/test_setup_cli.sh || exit 1
 
 ## Troubleshooting
 
-### Test fails with "command not found"
+### CLI Tests (test_setup_cli.sh)
+
+#### Test fails with "command not found"
 Ensure linuxmuster-base7 package is properly installed:
 ```bash
 which linuxmuster-setup
 python3 -c "import linuxmuster_base7"
 ```
 
-### Permission denied errors
+#### Permission denied errors
 Run with sudo:
 ```bash
 sudo ./tests/test_setup_cli.sh
 ```
 
-### Module import errors
+#### Module import errors
 Verify Python package installation:
 ```bash
 python3 -c "import linuxmuster_base7; print(linuxmuster_base7.__version__)"
+```
+
+### Integration Tests (test_setup_integration.sh)
+
+#### Test hangs or times out
+- Tests have a 300-second (5-minute) timeout per operation
+- Check system resources (CPU, memory, disk space)
+- Review live output to see where it's hanging
+- Run in interactive mode to test individual components
+
+#### "Snapshot not found" errors
+List available snapshots:
+```bash
+sudo ./tests/test_setup_integration.sh --list
+```
+Or clean up and start fresh:
+```bash
+sudo ./tests/test_setup_integration.sh --delete-all
+```
+
+#### "Not enough disk space" for snapshots
+Check available space in /tmp:
+```bash
+df -h /tmp
+```
+Cleanup old snapshots:
+```bash
+sudo ./tests/test_setup_integration.sh --cleanup 1
+```
+
+#### User creation test fails
+This is expected if:
+- Samba/LDAP is not fully configured
+- Sophomorix is not installed
+- No domain controller is available
+
+The test will gracefully skip with a note if prerequisites are missing.
+
+#### Test fails but system state is corrupted
+Restore from a previous snapshot:
+```bash
+sudo ./tests/test_setup_integration.sh --list
+sudo ./tests/test_setup_integration.sh --restore <snapshot-name>
+```
+
+Or restore from backup if available:
+```bash
+# The test automatically backs up before each test
+# Check /tmp/linuxmuster-snapshots/ for available snapshots
 ```
 
 ## Future Enhancements
