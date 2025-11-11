@@ -17,6 +17,7 @@ Build-Depends: debhelper (>= 10),
  python3-dialog,
  python3-ldap3,
  python3-netaddr,
+ python3-paramiko,
  python3-requests
 Standards-Version: 5.0.0
 
