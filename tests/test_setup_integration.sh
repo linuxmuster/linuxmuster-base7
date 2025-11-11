@@ -293,19 +293,27 @@ run_test_with_snapshot() {
 
     # Create pre-test snapshot
     local pre_snapshot="pretest-$TESTS_RUN-$(date +%s)"
-    print_info "Creating pre-test snapshot..."
+    print_info "Creating pre-test snapshot: $pre_snapshot"
 
     # Create snapshot directory
-    mkdir -p "$SNAPSHOT_DIR/$pre_snapshot"
+    mkdir -p "$SNAPSHOT_DIR/$pre_snapshot" 2>/dev/null || true
+    echo "DEBUG: Snapshot dir created: $SNAPSHOT_DIR/$pre_snapshot" >&2
 
-    # Simplified snapshot - just copy essential dirs
+    # Simplified snapshot - just copy essential dirs that exist
+    print_info "Backing up configuration directories..."
     for path in /var/cache/linuxmuster /var/lib/linuxmuster; do
+        echo "DEBUG: Checking path: $path" >&2
         if [ -d "$path" ]; then
+            echo "DEBUG: Path exists, copying..." >&2
             parent=$(dirname "$path")
-            mkdir -p "$SNAPSHOT_DIR/$pre_snapshot$parent"
+            mkdir -p "$SNAPSHOT_DIR/$pre_snapshot$parent" 2>/dev/null || true
             cp -a "$path" "$SNAPSHOT_DIR/$pre_snapshot$parent/" 2>/dev/null || true
+            echo "DEBUG: Copied $path" >&2
+        else
+            echo "DEBUG: Path does not exist: $path" >&2
         fi
     done
+    print_info "Snapshot created"
 
     # Run test - invoke the test function directly
     print_info "Executing test function: $test_function"
@@ -328,18 +336,27 @@ run_test_with_snapshot() {
 
     # Restore snapshot (simplified)
     print_info "Restoring system state..."
+    echo "DEBUG: Starting restore from: $SNAPSHOT_DIR/$pre_snapshot" >&2
     for path in /var/cache/linuxmuster /var/lib/linuxmuster; do
         snapshot_source="$SNAPSHOT_DIR/$pre_snapshot$path"
+        echo "DEBUG: Checking restore source: $snapshot_source" >&2
         if [ -d "$snapshot_source" ]; then
+            echo "DEBUG: Restoring $path" >&2
             rm -rf "$path" 2>/dev/null || true
-            mkdir -p "$(dirname $path)"
+            mkdir -p "$(dirname $path)" 2>/dev/null || true
             cp -a "$snapshot_source" "$(dirname $path)/" 2>/dev/null || true
+            echo "DEBUG: Restored $path" >&2
+        else
+            echo "DEBUG: No snapshot for $path" >&2
         fi
     done
+    print_info "System state restored"
 
     # Cleanup test snapshot
     print_info "Cleaning up test snapshot..."
-    rm -rf "$SNAPSHOT_DIR/$pre_snapshot"
+    echo "DEBUG: Removing snapshot: $SNAPSHOT_DIR/$pre_snapshot" >&2
+    rm -rf "$SNAPSHOT_DIR/$pre_snapshot" 2>/dev/null || true
+    echo "DEBUG: Snapshot cleaned up" >&2
 }
 
 # Example test: Basic setup with minimal parameters
@@ -573,14 +590,23 @@ run_all_tests() {
     echo ""
 
     # Run tests - these should actually execute now
+    echo "DEBUG: About to start Test 1/3" >&2
     print_info "Test 1/3: Basic Setup Test"
+    echo "DEBUG: Calling run_test_with_snapshot for test 1" >&2
     run_test_with_snapshot "Basic Setup Test" test_basic_setup
+    echo "DEBUG: Test 1 completed" >&2
 
+    echo "DEBUG: About to start Test 2/3" >&2
     print_info "Test 2/3: Full Setup Test"
+    echo "DEBUG: Calling run_test_with_snapshot for test 2" >&2
     run_test_with_snapshot "Full Setup Test" test_full_setup
+    echo "DEBUG: Test 2 completed" >&2
 
+    echo "DEBUG: About to start Test 3/3" >&2
     print_info "Test 3/3: Config File Setup Test"
+    echo "DEBUG: Calling run_test_with_snapshot for test 3" >&2
     run_test_with_snapshot "Config File Setup Test" test_config_file_setup
+    echo "DEBUG: Test 3 completed" >&2
 
     # Print summary
     print_summary
