@@ -6,11 +6,21 @@ linuxmuster-base7 (7.3.29-0) lmn73-testing; urgency=low
   * Convert all CLI tools to use entry points.
   * Modernize Debian packaging with dh-python and pybuild.
   * Remove pip usage and .pth file manipulation from postinst.
-  * Add python3-paramiko as proper Debian dependency.
-  * Update all imports to use new package namespace.
+  * Add python3-paramiko, python3-urllib3 as proper Debian dependencies.
+  * Update all imports to use new package namespace (linuxmuster_base7).
+  * Migrate functions.py (1073 lines) to src/linuxmuster_base7/functions.py.
+  * Migrate 12 setup modules to src/linuxmuster_base7/setup/.
+  * Migrate CLI wrappers to src/linuxmuster_base7/cli/.
+  * Migrate firewall tools to src/linuxmuster_base7/firewall/.
+  * Update all 7 sbin scripts to use new imports.
+  * Update share/examples and share/firewall scripts.
+  * Add comprehensive test suite (tests/test_setup_cli.sh: 20 tests).
+  * Add integration test suite with snapshot/restore (tests/test_setup_integration.sh: 6 tests).
+  * Increase debian/compat level to 10.
+  * Remove deprecated README files.
   * See docs/refactoring-phase-1.md for detailed changes.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Di, 11 Nov 2025 11:03:40 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 11 Nov 2025 17:14:03 +0100
 
 linuxmuster-base7 (7.3.28-0) lmn73; urgency=low
 
