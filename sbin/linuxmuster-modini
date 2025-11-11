@@ -8,8 +8,8 @@
 import getopt
 import os
 import sys
-from functions import modIni
-from functions import printLf
+from linuxmuster_base7.functions import modIni
+from linuxmuster_base7.functions import printLf
 
 
 def usage():

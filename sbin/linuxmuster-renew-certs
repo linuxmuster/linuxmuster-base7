@@ -12,7 +12,7 @@ import os
 import shutil
 import sys
 
-from functions import catFiles, checkFwMajorVer, getFwConfig, getSetupValue, printScript, putFwConfig, \
+from linuxmuster_base7.functions import catFiles, checkFwMajorVer, getFwConfig, getSetupValue, printScript, putFwConfig, \
     readTextfile, replaceInFile, sshExec, subProc, tee
 
 

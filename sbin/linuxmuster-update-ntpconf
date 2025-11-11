@@ -9,7 +9,7 @@ import environment
 import datetime
 import subprocess
 import sys
-from functions import getSetupValue, getSubnetArray, isValidHostIpv4, printScript, readTextfile, writeTextfile
+from linuxmuster_base7.functions import getSetupValue, getSubnetArray, isValidHostIpv4, printScript, readTextfile, writeTextfile
 
 
 printScript('Updating ntpsec configuration:')

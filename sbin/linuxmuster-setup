@@ -10,7 +10,7 @@ import getopt
 import importlib
 import os
 import sys
-from functions import checkFwMajorVer, modIni, printScript, subProc, tee
+from linuxmuster_base7.functions import checkFwMajorVer, modIni, printScript, subProc, tee
 
 
 def usage():

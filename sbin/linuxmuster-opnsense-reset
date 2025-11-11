@@ -11,7 +11,7 @@ import os
 import sys
 import time
 
-from functions import createServerCert, datetime, enterPassword, firewallApi, \
+from linuxmuster_base7.functions import createServerCert, datetime, enterPassword, firewallApi, \
     getSetupValue, printScript, sshExec, subProc, writeTextfile, waitForFw
 
 
