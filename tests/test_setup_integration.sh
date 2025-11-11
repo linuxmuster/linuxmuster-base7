@@ -156,7 +156,6 @@ OS: $(lsb_release -d | cut -f2)
 EOF
 
     print_info "Snapshot created successfully: $snapshot_path"
-    echo "$snapshot_path"
 }
 
 # Restore system snapshot
@@ -294,10 +293,12 @@ run_test_with_snapshot() {
 
     # Create pre-test snapshot
     local pre_snapshot="pretest-$TESTS_RUN-$(date +%s)"
-    create_snapshot "$pre_snapshot" > /dev/null
+    print_info "Creating pre-test snapshot..."
+    create_snapshot "$pre_snapshot" > /dev/null 2>&1
 
-    # Run test
-    if $test_function; then
+    # Run test - invoke the test function
+    print_info "Executing test function: $test_function"
+    if eval "$test_function"; then
         print_pass "$test_name completed successfully"
     else
         print_fail "$test_name failed"
@@ -305,9 +306,10 @@ run_test_with_snapshot() {
 
     # Restore snapshot
     print_info "Restoring system state..."
-    restore_snapshot "$pre_snapshot"
+    restore_snapshot "$pre_snapshot" > /dev/null 2>&1
 
     # Cleanup test snapshot
+    print_info "Cleaning up test snapshot..."
     rm -rf "$SNAPSHOT_DIR/$pre_snapshot"
 }
 
@@ -482,14 +484,19 @@ run_all_tests() {
     # Create baseline snapshot
     local baseline="baseline-$(date +%Y%m%d-%H%M%S)"
     print_info "Creating baseline snapshot: $baseline"
-    create_snapshot "$baseline"
+    create_snapshot "$baseline" > /dev/null 2>&1
 
     print_info "Starting test execution..."
     echo ""
 
-    # Run tests
+    # Run tests - these should actually execute now
+    print_info "Test 1/3: Basic Setup Test"
     run_test_with_snapshot "Basic Setup Test" test_basic_setup
+
+    print_info "Test 2/3: Full Setup Test"
     run_test_with_snapshot "Full Setup Test" test_full_setup
+
+    print_info "Test 3/3: Config File Setup Test"
     run_test_with_snapshot "Config File Setup Test" test_config_file_setup
 
     # Print summary
