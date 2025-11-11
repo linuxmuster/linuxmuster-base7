@@ -79,6 +79,12 @@ sudo ./tests/test_setup_integration.sh --list
 # Restore snapshot
 sudo ./tests/test_setup_integration.sh --restore baseline
 
+# Delete specific snapshot
+sudo ./tests/test_setup_integration.sh --delete baseline
+
+# Delete all snapshots (with confirmation)
+sudo ./tests/test_setup_integration.sh --delete-all
+
 # Cleanup old snapshots (keep last 5)
 sudo ./tests/test_setup_integration.sh --cleanup 5
 ```

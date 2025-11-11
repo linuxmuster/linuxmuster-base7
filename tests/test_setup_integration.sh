@@ -244,6 +244,46 @@ cleanup_snapshots() {
     fi
 }
 
+# Delete specific snapshot
+delete_snapshot() {
+    local snapshot_name="$1"
+    local snapshot_path="$SNAPSHOT_DIR/$snapshot_name"
+
+    if [ -z "$snapshot_name" ]; then
+        echo -e "${RED}ERROR: Snapshot name required${NC}"
+        return 1
+    fi
+
+    if [ ! -d "$snapshot_path" ]; then
+        echo -e "${RED}ERROR: Snapshot not found: $snapshot_name${NC}"
+        return 1
+    fi
+
+    print_info "Deleting snapshot: $snapshot_name"
+    rm -rf "$snapshot_path"
+    print_info "Snapshot deleted successfully"
+}
+
+# Delete all snapshots
+delete_all_snapshots() {
+    if [ ! -d "$SNAPSHOT_DIR" ]; then
+        print_info "No snapshots to delete"
+        return
+    fi
+
+    echo -e "${YELLOW}WARNING: This will delete ALL snapshots!${NC}"
+    echo -n "Are you sure? (yes/no): "
+    read -r confirm
+
+    if [ "$confirm" = "yes" ]; then
+        print_info "Deleting all snapshots..."
+        rm -rf "$SNAPSHOT_DIR"
+        print_info "All snapshots deleted"
+    else
+        print_info "Deletion cancelled"
+    fi
+}
+
 # Test function template with snapshot/restore
 run_test_with_snapshot() {
     local test_name="$1"
@@ -340,8 +380,10 @@ interactive_mode() {
         echo "3. Run all tests"
         echo "4. List snapshots"
         echo "5. Restore specific snapshot"
-        echo "6. Cleanup old snapshots"
-        echo "7. Exit"
+        echo "6. Delete specific snapshot"
+        echo "7. Delete all snapshots"
+        echo "8. Cleanup old snapshots"
+        echo "9. Exit"
         echo -n "Select option: "
         read -r choice
 
@@ -378,12 +420,20 @@ interactive_mode() {
                 restore_snapshot "$name"
                 ;;
             6)
+                echo -n "Snapshot name to delete: "
+                read -r name
+                delete_snapshot "$name"
+                ;;
+            7)
+                delete_all_snapshots
+                ;;
+            8)
                 echo -n "Keep how many recent snapshots? [5]: "
                 read -r keep
                 keep=${keep:-5}
                 cleanup_snapshots "$keep"
                 ;;
-            7)
+            9)
                 echo "Exiting..."
                 exit 0
                 ;;
@@ -447,6 +497,16 @@ main() {
         --list|-l)
             list_snapshots
             ;;
+        --delete|-d)
+            if [ -z "$2" ]; then
+                echo "Usage: $0 --delete <snapshot-name>"
+                exit 1
+            fi
+            delete_snapshot "$2"
+            ;;
+        --delete-all)
+            delete_all_snapshots
+            ;;
         --cleanup)
             cleanup_snapshots "${2:-5}"
             ;;
@@ -462,6 +522,8 @@ Options:
   -c, --create-snapshot [name]  Create system snapshot
   -r, --restore <name>  Restore snapshot
   -l, --list            List available snapshots
+  -d, --delete <name>   Delete specific snapshot
+  --delete-all          Delete all snapshots (with confirmation)
   --cleanup [count]     Cleanup old snapshots (keep last N, default: 5)
   -h, --help            Show this help
 
@@ -471,6 +533,8 @@ Examples:
   $0 -c baseline        # Create snapshot named 'baseline'
   $0 -r baseline        # Restore snapshot 'baseline'
   $0 -l                 # List all snapshots
+  $0 -d baseline        # Delete snapshot 'baseline'
+  $0 --delete-all       # Delete all snapshots
 
 EOF
             exit 0
