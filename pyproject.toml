@@ -1,0 +1,119 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "linuxmuster-base7"
+version = "7.3.29"
+description = "Core Python library and tools for linuxmuster.net 7.x"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "GPL-3.0-or-later"}
+authors = [
+    {name = "Thomas Schmitt", email = "thomas@linuxmuster.net"}
+]
+maintainers = [
+    {name = "Thomas Schmitt", email = "thomas@linuxmuster.net"}
+]
+keywords = ["linuxmuster", "education", "school", "network", "management"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Systems Administration",
+]
+
+dependencies = [
+    "paramiko",
+    "bcrypt",
+    "beautifulsoup4",
+    "lxml",
+    "IPy",
+    "python-apt",
+    "netifaces",
+    "pythondialog",
+    "ldap3",
+    "netaddr",
+    "requests",
+    "urllib3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "black",
+    "flake8",
+    "mypy",
+]
+
+[project.urls]
+Homepage = "https://www.linuxmuster.net"
+Documentation = "https://docs.linuxmuster.net"
+Repository = "https://github.com/linuxmuster/linuxmuster-base7"
+Issues = "https://github.com/linuxmuster/linuxmuster-base7/issues"
+
+[project.scripts]
+linuxmuster-setup = "linuxmuster_base7.cli.setup:main"
+linuxmuster-import-devices = "linuxmuster_base7.cli.import_devices:main"
+linuxmuster-import-subnets = "linuxmuster_base7.cli.import_subnets:main"
+linuxmuster-modini = "linuxmuster_base7.cli.modini:main"
+linuxmuster-opnsense-reset = "linuxmuster_base7.cli.opnsense_reset:main"
+linuxmuster-renew-certs = "linuxmuster_base7.cli.renew_certs:main"
+linuxmuster-update-ntpconf = "linuxmuster_base7.cli.update_ntpconf:main"
+linuxmuster-holiday = "linuxmuster_base7.cli.holiday:main"
+linuxmuster-holiday-generate = "linuxmuster_base7.cli.holiday_generate:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["linuxmuster_base7*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+linuxmuster_base7 = [
+    "*.conf",
+    "*.ini",
+    "*.json",
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=linuxmuster_base7 --cov-report=term-missing"
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true

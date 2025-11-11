@@ -39,20 +39,9 @@ case "$1" in
 
  configure)
 
-  # ensure python3 paramiko and reconfigure are installed
-  /usr/bin/python3 -m pip install paramiko reconfigure --break-system-packages
-
-  # add lmn paths to python environment
-  usersite="$(python3 -c 'import site; site._script()' --user-site)"
-  userpth="$usersite/lmn.pth"
-  mkdir -p "$usersite"
-  echo "$LIBDIR" > "$userpth"
-  echo "$SETUPDIR" >> "$userpth"
-
-  # clean and bytecompile modules
-  find "$LIBDIR" -name \*.pyc -exec rm '{}' \;
-  find "$LIBDIR" -type d -name __pycache__ -exec rm -r '{}' \; 2> /dev/null || true
-  python3 -m compileall "$LIBDIR"
+  # Note: Python package installation is now handled by dh_python3
+  # paramiko is now a proper Debian dependency (python3-paramiko)
+  # Bytecode compilation is handled automatically by dh_python3
 
   # create ssl-cert group
   groupadd --force --system ssl-cert

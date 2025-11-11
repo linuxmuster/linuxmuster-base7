@@ -1,111 +1,25 @@
 #!/usr/bin/make -f
-# Sample debian/rules that uses debhelper.
-# GNU copyright 1997 by Joey Hess.
-#
-# This version is for a hypothetical package that builds an
-# architecture-dependant package, as well as an architecture-independent
-# package.
+# debian/rules for linuxmuster-base7
+# Modernized to use pybuild and dh-python for Debian Python Policy compliance
+# 20251111
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-# This is the debhelper compatibility version to use.
-export DH_COMPAT=10
+# Use pybuild for Python package building
+export PYBUILD_NAME=linuxmuster-base7
 
-#ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
-#	CFLAGS += -g
-#endif
-#ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
-#	INSTALL_PROGRAM += -s
-#endif
+%:
+	dh $@ --with python3 --buildsystem=pybuild
 
-configure: configure-stamp
-configure-stamp:
-	dh_testdir
-	# Add here commands to configure the package.
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf build
+	rm -rf src/*.egg-info
+	find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null || true
+	find . -name "*.pyc" -delete
 
-	touch configure-stamp
-
-
-build-arch: configure-stamp  build-arch-stamp
-build-arch-stamp:
-	dh_testdir
-
-	# Add here command to compile/build the package.
-	#$(MAKE)
-
-	touch build-arch-stamp
-
-build-indep:  configure-stamp build-indep-stamp
-build-indep-stamp:
-	dh_testdir
-
-	# Add here command to compile/build the arch indep package.
-	# It's ok not to do anything here, if you don't need to build
-	#  anything for this package.
-
-	touch build-indep-stamp
-
-build: build-arch build-indep
-
-clean: clean1
-clean1:
-	dh_testdir
-	dh_testroot
-	rm -f build-indep-stamp build-arch-stamp configure-stamp
-
-	# Add here commands to clean up after the build process.
-	#-$(MAKE) clean
-
-	dh_clean
-
-
-install: DH_OPTIONS=
-install: build
-	dh_testdir
-	dh_testroot
-	dh_prep
-	dh_installdirs
-
-	# Add here commands to install the package.
-	dh_install
-	# remove unnecessary dirs
-	rm -rf `find debian/linuxmuster-base7 -name .svn`
-	rm -f `find debian/linuxmuster-base7 -name .directory`
-
-# Build architecture-independent files here.
-# Pass -i to all debhelper commands in this target to reduce clutter.
-binary-indep: build install
-	dh_testdir
-	dh_testroot
-	dh_installdirs
-	dh_installdebconf
-	dh_installdocs
-#	dh_installexamples -i
-#	dh_installmenu -i
-	dh_installlogrotate -i
-#	dh_installemacsen -i
-#	dh_installpam -i
-#	dh_installmime -i
-	dh_installinit -i --no-start
-	dh_installcron -i
-	dh_installman -i debian/devices.csv.5
-#	dh_installinfo -i
-#	dh_undocumented -i
-	dh_installchangelogs
-	dh_link
-	dh_compress
-	dh_fixperms
-	dh_installdeb
-#	dh_perl -i
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-# Build architecture-dependent files here.
-binary-arch: install
-# We have nothing to do by default.
-
-
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install configure clean1
+override_dh_auto_install:
+	dh_auto_install
+	# pybuild handles Python package installation automatically
+	# Non-Python files (share/, etc/) are handled by debian/install

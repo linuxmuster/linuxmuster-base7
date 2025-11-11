@@ -1,4 +1,4 @@
 etc/*		etc/
-lib/*     	usr/lib/linuxmuster/
-sbin/*		usr/sbin/
 share/*		usr/share/linuxmuster/
+# Note: Python package and CLI entry points are installed via setup.py/pybuild
+# lib/ and sbin/ are replaced by src/ structure managed by setuptools

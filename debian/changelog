@@ -1,3 +1,17 @@
+linuxmuster-base7 (7.3.29-0) lmn73-testing; urgency=low
+
+  * Refactor Python code to comply with Debian Python Policy (Phase 1).
+  * Create proper Python package structure under src/linuxmuster_base7/.
+  * Add pyproject.toml with complete package metadata (PEP 621).
+  * Convert all CLI tools to use entry points.
+  * Modernize Debian packaging with dh-python and pybuild.
+  * Remove pip usage and .pth file manipulation from postinst.
+  * Add python3-paramiko as proper Debian dependency.
+  * Update all imports to use new package namespace.
+  * See docs/refactoring-phase-1.md for detailed changes.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Di, 11 Nov 2025 11:03:40 +0100
+
 linuxmuster-base7 (7.3.28-0) lmn73; urgency=low
 
   * fix missing missing wan gateway in opnsense after setup if static wan interface was configured (1bd2359).

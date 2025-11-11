@@ -1,0 +1,19 @@
+# MANIFEST.in for linuxmuster-base7
+# Include non-Python files in the distribution
+
+# Include documentation
+include README.md
+include LICENSE
+
+# Include configuration files
+recursive-include etc *
+
+# Include share directory (templates, examples, firewall configs)
+recursive-include share *
+
+# Exclude version control and build artifacts
+global-exclude .git*
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *~
+global-exclude .DS_Store
