@@ -323,10 +323,8 @@ run_test_with_snapshot() {
 
     # Call the function and capture result
     local test_result=0
-    set +e
     $test_function
     test_result=$?
-    set -e
 
     echo "DEBUG: Function returned with exit code: $test_result" >&2
 
@@ -378,17 +376,15 @@ test_basic_setup() {
     # Use timeout to prevent hanging (300 seconds = 5 minutes for full setup)
     # Use tee to show output live while also capturing it
     local temp_output="/tmp/test-setup-output-$$.txt"
-    set +e
     timeout 300 linuxmuster-setup \
         -n testserver \
         -d test.local \
         -a "TestPass123!" \
         -u \
-        -s 2>&1 | tee "$temp_output"
+        -s 2>&1 | tee "$temp_output" || true
     exit_code=${PIPESTATUS[0]}
-    output=$(cat "$temp_output")
+    output=$(cat "$temp_output" 2>/dev/null || echo "")
     rm -f "$temp_output"
-    set -e
 
     echo ""
     print_info "Command completed with exit code: $exit_code"
@@ -430,7 +426,6 @@ test_full_setup() {
 
     # Use timeout to prevent hanging (300 seconds = 5 minutes for full setup)
     local temp_output="/tmp/test-setup-output-$$.txt"
-    set +e
     timeout 300 linuxmuster-setup \
         -n testserver \
         -d test.local \
@@ -441,11 +436,10 @@ test_full_setup() {
         -v "Test State" \
         -r "10.0.0.100-10.0.0.200" \
         -u \
-        -s 2>&1 | tee "$temp_output"
+        -s 2>&1 | tee "$temp_output" || true
     exit_code=${PIPESTATUS[0]}
-    output=$(cat "$temp_output")
+    output=$(cat "$temp_output" 2>/dev/null || echo "")
     rm -f "$temp_output"
-    set -e
 
     echo ""
     print_info "Command completed with exit code: $exit_code"
@@ -495,12 +489,10 @@ EOF
 
     # Use timeout to prevent hanging (300 seconds = 5 minutes for full setup)
     local temp_output="/tmp/test-setup-output-$$.txt"
-    set +e
-    timeout 300 linuxmuster-setup -c /tmp/test-setup-full.ini -u -s 2>&1 | tee "$temp_output"
+    timeout 300 linuxmuster-setup -c /tmp/test-setup-full.ini -u -s 2>&1 | tee "$temp_output" || true
     exit_code=${PIPESTATUS[0]}
-    output=$(cat "$temp_output")
+    output=$(cat "$temp_output" 2>/dev/null || echo "")
     rm -f "$temp_output"
-    set -e
 
     rm -f /tmp/test-setup-full.ini
 
