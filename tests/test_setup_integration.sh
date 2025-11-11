@@ -313,17 +313,29 @@ run_test_with_snapshot() {
 
 # Example test: Basic setup with minimal parameters
 test_basic_setup() {
-    linuxmuster-setup \
+    print_info "Running basic setup test..."
+
+    local output=$(linuxmuster-setup \
         -n testserver \
         -d test.local \
         -a "TestPass123!" \
         -u \
-        -s 2>&1 | grep -q "Processing commandline arguments"
+        -s 2>&1)
+
+    if echo "$output" | grep -q "Processing commandline arguments"; then
+        print_info "Basic setup test executed"
+        return 0
+    else
+        print_fail "Basic setup test failed"
+        return 1
+    fi
 }
 
 # Example test: Full parameter setup
 test_full_setup() {
-    linuxmuster-setup \
+    print_info "Running full parameter setup test..."
+
+    local output=$(linuxmuster-setup \
         -n testserver \
         -d test.local \
         -a "TestPass123!" \
@@ -333,11 +345,21 @@ test_full_setup() {
         -v "Test State" \
         -r "10.0.0.100-10.0.0.200" \
         -u \
-        -s 2>&1 | grep -q "Processing commandline arguments"
+        -s 2>&1)
+
+    if echo "$output" | grep -q "Processing commandline arguments"; then
+        print_info "Full setup test executed"
+        return 0
+    else
+        print_fail "Full setup test failed"
+        return 1
+    fi
 }
 
 # Example test: Config file based setup
 test_config_file_setup() {
+    print_info "Running config file setup test..."
+
     cat > /tmp/test-setup-full.ini << 'EOF'
 [setup]
 servername = testserver
@@ -350,8 +372,17 @@ state = Test State
 dhcprange = 10.0.0.100-10.0.0.200
 EOF
 
-    linuxmuster-setup -c /tmp/test-setup-full.ini -u -s 2>&1 | grep -q "Custom inifile"
-    local result=$?
+    local output=$(linuxmuster-setup -c /tmp/test-setup-full.ini -u -s 2>&1)
+    local result=0
+
+    if echo "$output" | grep -q "Custom inifile"; then
+        print_info "Config file setup test executed"
+        result=0
+    else
+        print_fail "Config file setup test failed"
+        result=1
+    fi
+
     rm -f /tmp/test-setup-full.ini
     return $result
 }
@@ -451,7 +482,10 @@ run_all_tests() {
     # Create baseline snapshot
     local baseline="baseline-$(date +%Y%m%d-%H%M%S)"
     print_info "Creating baseline snapshot: $baseline"
-    create_snapshot "$baseline" > /dev/null
+    create_snapshot "$baseline"
+
+    print_info "Starting test execution..."
+    echo ""
 
     # Run tests
     run_test_with_snapshot "Basic Setup Test" test_basic_setup
@@ -461,12 +495,19 @@ run_all_tests() {
     # Print summary
     print_summary
 
-    # Cleanup
+    # Cleanup old snapshots
+    print_info "Cleaning up old snapshots..."
     cleanup_snapshots 5
 
     # Return to baseline
-    print_info "Restoring baseline state"
+    print_info "Restoring baseline state..."
     restore_snapshot "$baseline"
+
+    # Remove baseline snapshot as it's no longer needed
+    print_info "Removing baseline snapshot..."
+    rm -rf "$SNAPSHOT_DIR/$baseline"
+
+    print_info "All tests completed!"
 }
 
 # Main function
