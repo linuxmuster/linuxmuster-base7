@@ -138,24 +138,33 @@ def main():
             rc = modIni(environment.CUSTOMINI, 'setup', 'state', state)
         rc = modIni(environment.CUSTOMINI, 'setup', 'skipfw', str(skipfw))
 
-    # work off setup modules
-    setup_modules = os.listdir(environment.SETUPDIR)
-    setup_modules.remove('__pycache__')
+    # work off setup modules from the Python package
+    import pkgutil
+    import linuxmuster_base7.setup as setup_package
+
+    # Get all modules from linuxmuster_base7.setup package
+    setup_modules = []
+    for importer, modname, ispkg in pkgutil.iter_modules(setup_package.__path__):
+        if not ispkg and modname != '__init__':
+            setup_modules.append(modname)
+
     setup_modules.sort()
-    for module_file in setup_modules:
+
+    for module_name in setup_modules:
         # skip dialog in unattended mode
-        if (unattended and 'dialog.py' in module_file):
+        if (unattended and 'dialog' in module_name):
             continue
         # check firewall major version
-        if (not skipfw and 'templates.py' in module_file):
+        if (not skipfw and 'templates' in module_name):
             if not checkFwMajorVer():
                 sys.exit(1)
-        # print module name
-        module_name = os.path.basename(os.path.splitext(module_file)[0]).split('_')[1]
+        # print module name (extract display name from module name)
+        # module names are like: a_ini, c_general-dialog, etc.
+        display_name = module_name.split('_', 1)[1] if '_' in module_name else module_name
         printScript('', 'begin')
-        printScript(module_name)
+        printScript(display_name)
         # execute module
-        importlib.import_module(module_file.replace('.py', ''))
+        importlib.import_module(f'linuxmuster_base7.setup.{module_name}')
 
     printScript(os.path.basename(__file__), 'end')
 
