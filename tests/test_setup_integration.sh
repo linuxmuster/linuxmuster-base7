@@ -337,6 +337,7 @@ run_test_with_snapshot() {
     fi
 
     # Restore snapshot (simplified)
+    echo "DEBUG: ===== STARTING RESTORE =====" >&2
     print_info "Restoring system state..."
     echo "DEBUG: Starting restore from: $SNAPSHOT_DIR/$pre_snapshot" >&2
     for path in /var/cache/linuxmuster /var/lib/linuxmuster; do
@@ -352,6 +353,7 @@ run_test_with_snapshot() {
             echo "DEBUG: No snapshot for $path" >&2
         fi
     done
+    echo "DEBUG: ===== RESTORE COMPLETE =====" >&2
     print_info "System state restored"
 
     # Cleanup test snapshot
@@ -370,18 +372,25 @@ test_basic_setup() {
     local exit_code
 
     print_info "Executing: linuxmuster-setup -n testserver -d test.local -a '***' -u -s"
+    print_info "(This may take several minutes, output will be shown live...)"
+    echo ""
 
     # Use timeout to prevent hanging (300 seconds = 5 minutes for full setup)
+    # Use tee to show output live while also capturing it
+    local temp_output="/tmp/test-setup-output-$$.txt"
     set +e
-    output=$(timeout 300 linuxmuster-setup \
+    timeout 300 linuxmuster-setup \
         -n testserver \
         -d test.local \
         -a "TestPass123!" \
         -u \
-        -s 2>&1)
-    exit_code=$?
+        -s 2>&1 | tee "$temp_output"
+    exit_code=${PIPESTATUS[0]}
+    output=$(cat "$temp_output")
+    rm -f "$temp_output"
     set -e
 
+    echo ""
     print_info "Command completed with exit code: $exit_code"
 
     # Check for timeout (exit code 124)
@@ -416,10 +425,13 @@ test_full_setup() {
     local exit_code
 
     print_info "Executing: linuxmuster-setup with full parameters"
+    print_info "(This may take several minutes, output will be shown live...)"
+    echo ""
 
     # Use timeout to prevent hanging (300 seconds = 5 minutes for full setup)
+    local temp_output="/tmp/test-setup-output-$$.txt"
     set +e
-    output=$(timeout 300 linuxmuster-setup \
+    timeout 300 linuxmuster-setup \
         -n testserver \
         -d test.local \
         -a "TestPass123!" \
@@ -429,10 +441,13 @@ test_full_setup() {
         -v "Test State" \
         -r "10.0.0.100-10.0.0.200" \
         -u \
-        -s 2>&1)
-    exit_code=$?
+        -s 2>&1 | tee "$temp_output"
+    exit_code=${PIPESTATUS[0]}
+    output=$(cat "$temp_output")
+    rm -f "$temp_output"
     set -e
 
+    echo ""
     print_info "Command completed with exit code: $exit_code"
 
     # Check for timeout
@@ -475,15 +490,21 @@ EOF
     local exit_code
 
     print_info "Executing: linuxmuster-setup -c /tmp/test-setup-full.ini -u -s"
+    print_info "(This may take several minutes, output will be shown live...)"
+    echo ""
 
     # Use timeout to prevent hanging (300 seconds = 5 minutes for full setup)
+    local temp_output="/tmp/test-setup-output-$$.txt"
     set +e
-    output=$(timeout 300 linuxmuster-setup -c /tmp/test-setup-full.ini -u -s 2>&1)
-    exit_code=$?
+    timeout 300 linuxmuster-setup -c /tmp/test-setup-full.ini -u -s 2>&1 | tee "$temp_output"
+    exit_code=${PIPESTATUS[0]}
+    output=$(cat "$temp_output")
+    rm -f "$temp_output"
     set -e
 
     rm -f /tmp/test-setup-full.ini
 
+    echo ""
     print_info "Command completed with exit code: $exit_code"
 
     # Check for timeout
