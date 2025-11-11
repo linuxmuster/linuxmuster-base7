@@ -6,7 +6,9 @@
 # 20251111
 #
 
-set -e
+# Don't use set -e as it can interfere with test execution
+# We handle errors explicitly in each function
+set +e
 
 # Colors for output
 RED='\033[0;31m'
