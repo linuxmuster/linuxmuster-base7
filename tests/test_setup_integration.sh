@@ -294,19 +294,48 @@ run_test_with_snapshot() {
     # Create pre-test snapshot
     local pre_snapshot="pretest-$TESTS_RUN-$(date +%s)"
     print_info "Creating pre-test snapshot..."
-    create_snapshot "$pre_snapshot" > /dev/null 2>&1
 
-    # Run test - invoke the test function
+    # Create snapshot directory
+    mkdir -p "$SNAPSHOT_DIR/$pre_snapshot"
+
+    # Simplified snapshot - just copy essential dirs
+    for path in /var/cache/linuxmuster /var/lib/linuxmuster; do
+        if [ -d "$path" ]; then
+            parent=$(dirname "$path")
+            mkdir -p "$SNAPSHOT_DIR/$pre_snapshot$parent"
+            cp -a "$path" "$SNAPSHOT_DIR/$pre_snapshot$parent/" 2>/dev/null || true
+        fi
+    done
+
+    # Run test - invoke the test function directly
     print_info "Executing test function: $test_function"
-    if eval "$test_function"; then
+    echo "DEBUG: About to call function: $test_function" >&2
+
+    # Call the function and capture result
+    local test_result=0
+    set +e
+    $test_function
+    test_result=$?
+    set -e
+
+    echo "DEBUG: Function returned with exit code: $test_result" >&2
+
+    if [ $test_result -eq 0 ]; then
         print_pass "$test_name completed successfully"
     else
-        print_fail "$test_name failed"
+        print_fail "$test_name failed (exit code: $test_result)"
     fi
 
-    # Restore snapshot
+    # Restore snapshot (simplified)
     print_info "Restoring system state..."
-    restore_snapshot "$pre_snapshot" > /dev/null 2>&1
+    for path in /var/cache/linuxmuster /var/lib/linuxmuster; do
+        snapshot_source="$SNAPSHOT_DIR/$pre_snapshot$path"
+        if [ -d "$snapshot_source" ]; then
+            rm -rf "$path" 2>/dev/null || true
+            mkdir -p "$(dirname $path)"
+            cp -a "$snapshot_source" "$(dirname $path)/" 2>/dev/null || true
+        fi
+    done
 
     # Cleanup test snapshot
     print_info "Cleaning up test snapshot..."
@@ -317,18 +346,38 @@ run_test_with_snapshot() {
 test_basic_setup() {
     print_info "Running basic setup test..."
 
-    local output=$(linuxmuster-setup \
+    # Add timeout and verbose output
+    local output
+    local exit_code
+
+    print_info "Executing: linuxmuster-setup -n testserver -d test.local -a '***' -u -s"
+
+    # Use timeout to prevent hanging (60 seconds should be enough)
+    set +e
+    output=$(timeout 60 linuxmuster-setup \
         -n testserver \
         -d test.local \
         -a "TestPass123!" \
         -u \
         -s 2>&1)
+    exit_code=$?
+    set -e
 
+    print_info "Command completed with exit code: $exit_code"
+
+    # Check for timeout (exit code 124)
+    if [ $exit_code -eq 124 ]; then
+        print_fail "Basic setup test timed out after 60 seconds"
+        return 1
+    fi
+
+    # Check if setup ran (even if it failed, it should process arguments)
     if echo "$output" | grep -q "Processing commandline arguments"; then
         print_info "Basic setup test executed"
         return 0
     else
-        print_fail "Basic setup test failed"
+        print_fail "Basic setup test failed - output:"
+        echo "$output" | head -20
         return 1
     fi
 }
@@ -337,7 +386,14 @@ test_basic_setup() {
 test_full_setup() {
     print_info "Running full parameter setup test..."
 
-    local output=$(linuxmuster-setup \
+    local output
+    local exit_code
+
+    print_info "Executing: linuxmuster-setup with full parameters"
+
+    # Use timeout to prevent hanging
+    set +e
+    output=$(timeout 60 linuxmuster-setup \
         -n testserver \
         -d test.local \
         -a "TestPass123!" \
@@ -348,12 +404,23 @@ test_full_setup() {
         -r "10.0.0.100-10.0.0.200" \
         -u \
         -s 2>&1)
+    exit_code=$?
+    set -e
+
+    print_info "Command completed with exit code: $exit_code"
+
+    # Check for timeout
+    if [ $exit_code -eq 124 ]; then
+        print_fail "Full setup test timed out after 60 seconds"
+        return 1
+    fi
 
     if echo "$output" | grep -q "Processing commandline arguments"; then
         print_info "Full setup test executed"
         return 0
     else
-        print_fail "Full setup test failed"
+        print_fail "Full setup test failed - output:"
+        echo "$output" | head -20
         return 1
     fi
 }
@@ -374,19 +441,35 @@ state = Test State
 dhcprange = 10.0.0.100-10.0.0.200
 EOF
 
-    local output=$(linuxmuster-setup -c /tmp/test-setup-full.ini -u -s 2>&1)
-    local result=0
+    local output
+    local exit_code
+
+    print_info "Executing: linuxmuster-setup -c /tmp/test-setup-full.ini -u -s"
+
+    # Use timeout to prevent hanging
+    set +e
+    output=$(timeout 60 linuxmuster-setup -c /tmp/test-setup-full.ini -u -s 2>&1)
+    exit_code=$?
+    set -e
+
+    rm -f /tmp/test-setup-full.ini
+
+    print_info "Command completed with exit code: $exit_code"
+
+    # Check for timeout
+    if [ $exit_code -eq 124 ]; then
+        print_fail "Config file setup test timed out after 60 seconds"
+        return 1
+    fi
 
     if echo "$output" | grep -q "Custom inifile"; then
         print_info "Config file setup test executed"
-        result=0
+        return 0
     else
-        print_fail "Config file setup test failed"
-        result=1
+        print_fail "Config file setup test failed - output:"
+        echo "$output" | head -20
+        return 1
     fi
-
-    rm -f /tmp/test-setup-full.ini
-    return $result
 }
 
 # Verify system state after test
