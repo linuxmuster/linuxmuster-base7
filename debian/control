@@ -2,6 +2,7 @@ Source: linuxmuster-base7
 Section: linuxmuster
 Priority: optional
 Maintainer: Thomas Schmitt <thomas@linuxmuster.net>
+Uploaders: Thomas Schmitt <thomas@linuxmuster.net>
 Build-Depends: debhelper (>= 10),
  dh-python,
  python3-all,
