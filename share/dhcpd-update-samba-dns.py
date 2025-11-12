@@ -6,6 +6,9 @@
 #
 # usage: dhcpd-update-samba-dns.py <add|delete> <ip address> <hostname> <yes|no>
 #
+# Note: This script is called by DHCP events (see /etc/dhcp/events.conf)
+# and is installed to /usr/share/linuxmuster/ (not as a package module).
+#
 
 import socket
 import sys
@@ -15,12 +18,11 @@ from linuxmuster_base7.functions import isValidHostname
 from linuxmuster_base7.functions import isValidHostIpv4
 from linuxmuster_base7.functions import sambaTool
 
-cmd = ''
-ip = ''
-hostname = ''
-skipad = ''
-
 # get arguments
+if len(sys.argv) != 5:
+    print("Usage: dhcpd-update-samba-dns.py <add|delete> <ip address> <hostname> <yes|no>")
+    sys.exit(1)
+
 cmd, ip, hostname, skipad = sys.argv[1:]
 
 # check arguments
