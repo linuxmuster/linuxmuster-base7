@@ -6,6 +6,7 @@
 #
 
 import configparser
+import datetime
 import environment
 import getopt
 import os
@@ -19,6 +20,7 @@ from shutil import copyfile
 
 starget = environment.DEFAULTSCHOOL + '/students.csv'
 ttarget = environment.DEFAULTSCHOOL + '/teachers.csv'
+logfile = environment.LOGDIR + '/create-testusers.log'
 
 
 def usage():
@@ -26,6 +28,17 @@ def usage():
     print(' [options] may be:')
     print(' -f, --force   : Ignore existing users.')
     print(' -h, --help    : Print this help.')
+
+
+def run_with_log(cmd_list, cmd_desc):
+    """Run command and log output to logfile"""
+    with open(logfile, 'a') as log:
+        log.write('-' * 78 + '\n')
+        log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+        log.write('#### ' + cmd_desc + ' ####\n')
+        log.flush()
+        result = subprocess.run(cmd_list, stdout=log, stderr=subprocess.STDOUT, check=True)
+    return result
 
 
 # get cli args
@@ -66,6 +79,13 @@ title = 'Creating test users for default-school'
 printScript('', 'begin')
 printScript(title)
 
+# initialize logfile
+with open(logfile, 'w') as log:
+    log.write('-' * 78 + '\n')
+    log.write('#### ' + os.path.basename(__file__) + ' started at '
+              + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+    log.write('-' * 78 + '\n')
+
 # set password policy
 msg = 'Password policy setup '
 printScript(msg, '', False, False, True)
@@ -80,7 +100,7 @@ except:
 msg = 'Running sophomorix-check '
 printScript(msg, '', False, False, True)
 try:
-    subprocess.run(['sophomorix-check'], check=True)
+    run_with_log(['sophomorix-check'], 'sophomorix-check')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -90,7 +110,7 @@ except:
 msg = 'Running sophomorix-add '
 printScript(msg, '', False, False, True)
 try:
-    subprocess.run(['sophomorix-add'], check=True)
+    run_with_log(['sophomorix-add'], 'sophomorix-add')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -100,7 +120,7 @@ except:
 msg = 'Running sophomorix-quota '
 printScript(msg, '', False, False, True)
 try:
-    subprocess.run(['sophomorix-quota'], check=True)
+    run_with_log(['sophomorix-quota'], 'sophomorix-quota')
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -110,15 +130,31 @@ except:
 msg = 'Get usernames '
 printScript(msg, '', False, False, True)
 try:
-    result = subprocess.run(
-        ['sophomorix-query', '--schoolbase', 'default-school', '--student', '--user-minimal'],
-        capture_output=True, text=True, check=True)
+    with open(logfile, 'a') as log:
+        log.write('-' * 78 + '\n')
+        log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+        log.write('#### sophomorix-query --student ####\n')
+        result = subprocess.run(
+            ['sophomorix-query', '--schoolbase', 'default-school', '--student', '--user-minimal'],
+            capture_output=True, text=True, check=True)
+        log.write(result.stdout)
+        if result.stderr:
+            log.write(result.stderr)
+        log.write('-' * 78 + '\n')
     students = [line.split()[1] for line in result.stdout.split('\n')
                 if line and any(c.isdigit() for c in line) and ':' in line]
 
-    result = subprocess.run(
-        ['sophomorix-query', '--schoolbase', 'default-school', '--teacher', '--user-minimal'],
-        capture_output=True, text=True, check=True)
+    with open(logfile, 'a') as log:
+        log.write('-' * 78 + '\n')
+        log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+        log.write('#### sophomorix-query --teacher ####\n')
+        result = subprocess.run(
+            ['sophomorix-query', '--schoolbase', 'default-school', '--teacher', '--user-minimal'],
+            capture_output=True, text=True, check=True)
+        log.write(result.stdout)
+        if result.stderr:
+            log.write(result.stderr)
+        log.write('-' * 78 + '\n')
     teachers = [line.split()[1] for line in result.stdout.split('\n')
                 if line and any(c.isdigit() for c in line) and ':' in line]
     printScript(' Success!', '', True, True, False, len(msg))
@@ -136,7 +172,8 @@ for user in students + teachers:
     msg = ' * ' + user + ' '
     printScript(msg, '', False, False, True)
     try:
-        subprocess.run(['sophomorix-passwd', '--user', user, '--pass', pw], check=True)
+        run_with_log(['sophomorix-passwd', '--user', user, '--pass', pw],
+                     'sophomorix-passwd --user ' + user)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
