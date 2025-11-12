@@ -13,8 +13,10 @@ import os
 import sys
 
 from linuxmuster_base7.functions import isValidHostname, isValidDomainname, isValidHostIpv4
-from linuxmuster_base7.functions import mySetupLogfile, printScript, randomPassword, subProc
+from linuxmuster_base7.functions import mySetupLogfile, printScript, randomPassword
 from IPy import IP
+import subprocess
+import datetime
 
 logfile = mySetupLogfile(__file__)
 
@@ -165,8 +167,28 @@ try:
     binduserpw = randomPassword(16)
     with open(environment.BINDUSERSECRET, 'w') as secret:
         secret.write(binduserpw)
-    subProc('chmod 440 ' + environment.BINDUSERSECRET, logfile)
-    subProc('chgrp dhcpd ' + environment.BINDUSERSECRET, logfile)
+    result = subprocess.run(['chmod', '440', environment.BINDUSERSECRET], capture_output=True, text=True, check=False)
+    if logfile and (result.stdout or result.stderr):
+        with open(logfile, 'a') as log:
+            log.write('-' * 78 + '\n')
+            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+            log.write('#### chmod 440 ' + environment.BINDUSERSECRET + ' ####\n')
+            if result.stdout:
+                log.write(result.stdout)
+            if result.stderr:
+                log.write(result.stderr)
+            log.write('-' * 78 + '\n')
+    result = subprocess.run(['chgrp', 'dhcpd', environment.BINDUSERSECRET], capture_output=True, text=True, check=False)
+    if logfile and (result.stdout or result.stderr):
+        with open(logfile, 'a') as log:
+            log.write('-' * 78 + '\n')
+            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+            log.write('#### chgrp dhcpd ' + environment.BINDUSERSECRET + ' ####\n')
+            if result.stdout:
+                log.write(result.stdout)
+            if result.stderr:
+                log.write(result.stderr)
+            log.write('-' * 78 + '\n')
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -178,13 +200,33 @@ printScript(msg, '', False, False, True)
 try:
     with open(environment.SETUPINI, 'w') as outfile:
         setup.write(outfile)
-    subProc('chmod 600 ' + environment.SETUPINI, logfile)
+    result = subprocess.run(['chmod', '600', environment.SETUPINI], capture_output=True, text=True, check=False)
+    if logfile and (result.stdout or result.stderr):
+        with open(logfile, 'a') as log:
+            log.write('-' * 78 + '\n')
+            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+            log.write('#### chmod 600 ' + environment.SETUPINI + ' ####\n')
+            if result.stdout:
+                log.write(result.stdout)
+            if result.stderr:
+                log.write(result.stderr)
+            log.write('-' * 78 + '\n')
     # temporary setup.ini for transfering it later to additional vms
     setup.set('setup', 'binduserpw', binduserpw)
     setup.set('setup', 'adminpw', '')
     with open('/tmp/setup.ini', 'w') as outfile:
         setup.write(outfile)
-    subProc('chmod 600 /tmp/setup.ini', logfile)
+    result = subprocess.run(['chmod', '600', '/tmp/setup.ini'], capture_output=True, text=True, check=False)
+    if logfile and (result.stdout or result.stderr):
+        with open(logfile, 'a') as log:
+            log.write('-' * 78 + '\n')
+            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+            log.write('#### chmod 600 /tmp/setup.ini ####\n')
+            if result.stdout:
+                log.write(result.stdout)
+            if result.stderr:
+                log.write(result.stderr)
+            log.write('-' * 78 + '\n')
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))

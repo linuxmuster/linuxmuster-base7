@@ -55,33 +55,9 @@ class tee(object):
             f.flush()
 
 
-# invoke system commands
-def subProc(cmd, logfile=None, hideopts=False):
-    try:
-        rc = True
-        p = Popen(cmd, shell=True, universal_newlines=True,
-                  stdout=PIPE, stderr=PIPE)
-        output, errors = p.communicate()
-        if p.returncode or errors:
-            rc = False
-        if logfile is not None:
-            log = open(logfile, 'a')
-            log.write('-' * 78 + '\n')
-            now = str(datetime.datetime.now()).split('.')[0]
-            log.write('#### ' + now + ' ' * (68 - len(now)) + ' ####\n')
-            if hideopts:
-                cmd = cmd.split()[0]
-            log.write('#### ' + cmd + ' ' * (68 - len(cmd)) + ' ####\n')
-            log.write(output)
-            if not rc:
-                log.write(errors)
-            log.write('-' * 78 + '\n')
-            log.close()
-        return rc
-    except Exception as error:
-        if logfile is not None:
-            writeTextfile(logfile, error, 'a')
-        return False
+# REMOVED: subProc() function - replaced with secure subprocess.run() calls throughout codebase
+# This function was using shell=True which is vulnerable to command injection
+# All calls have been converted to use subprocess.run() with array-based arguments
 
 
 # get basedn from domainname
@@ -137,13 +113,24 @@ def sambaTool(options, logfile=None):
         rc, adminpw = readTextfile(environment.ADADMINSECRET)
     if not rc:
         return rc
-    cmd = 'samba-tool ' + options + ' --username=' + \
-        adminuser + ' --password=' + adminpw
+    # Build command as list for secure execution
+    cmd_list = ['samba-tool'] + options.split() + ['--username=' + adminuser, '--password=' + adminpw]
     # for debugging
-    # printScript(cmd)
-    rc = subProc(cmd, logfile)
-    # mask password in logfile
-    if logfile is not None and os.path.isfile(logfile):
+    # printScript(' '.join(cmd_list))
+    result = subprocess.run(cmd_list, capture_output=True, text=True, check=False)
+    rc = result.returncode == 0 and not result.stderr
+    # Log output if logfile provided
+    if logfile is not None:
+        with open(logfile, 'a') as log:
+            log.write('-' * 78 + '\n')
+            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+            log.write('#### samba-tool ' + options + ' --username=' + adminuser + ' --password=****** ####\n')
+            if result.stdout:
+                log.write(result.stdout)
+            if result.stderr:
+                log.write(result.stderr)
+            log.write('-' * 78 + '\n')
+        # mask password in logfile
         replaceInFile(logfile, adminpw, '******')
     return rc
 
@@ -531,26 +518,69 @@ def createServerCert(item, days, logfile):
     printScript(msg, '', False, False, True)
     try:
         rc, cakeypw = readTextfile(environment.CAKEYSECRET)
-        passin = ' -passin pass:' + cakeypw
-        subProc('openssl genrsa -out ' + keyfile + ' 2048', logfile)
-        subProc('openssl req -batch ' + subj + ' -new -key '
-                + keyfile + ' -out ' + csrfile, logfile)
-        subProc('openssl x509 -req -in ' + csrfile + ' -CA ' + environment.CACERT + passin
-                + ' -CAkey ' + environment.CAKEY + ' -CAcreateserial -out ' + certfile + shadays
-                + ' -extfile ' + cnffile, logfile)
+        # Generate RSA key
+        result = subprocess.run(['openssl', 'genrsa', '-out', keyfile, '2048'],
+                               capture_output=True, text=True, check=False)
+        if logfile and (result.stdout or result.stderr):
+            with open(logfile, 'a') as log:
+                log.write('-' * 78 + '\n')
+                log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+                log.write('#### openssl genrsa -out ' + keyfile + ' 2048 ####\n')
+                if result.stdout:
+                    log.write(result.stdout)
+                if result.stderr:
+                    log.write(result.stderr)
+                log.write('-' * 78 + '\n')
+
+        # Generate CSR
+        result = subprocess.run(['openssl', 'req', '-batch', '-subj', '/CN=' + fqdn + '/',
+                                '-new', '-key', keyfile, '-out', csrfile],
+                               capture_output=True, text=True, check=False)
+        if logfile and (result.stdout or result.stderr):
+            with open(logfile, 'a') as log:
+                log.write('-' * 78 + '\n')
+                log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+                log.write('#### openssl req -batch ... ####\n')
+                if result.stdout:
+                    log.write(result.stdout)
+                if result.stderr:
+                    log.write(result.stderr)
+                log.write('-' * 78 + '\n')
+
+        # Sign certificate
+        result = subprocess.run(['openssl', 'x509', '-req', '-in', csrfile,
+                                '-CA', environment.CACERT, '-passin', 'pass:' + cakeypw,
+                                '-CAkey', environment.CAKEY, '-CAcreateserial',
+                                '-out', certfile, '-sha256', '-days', days,
+                                '-extfile', cnffile],
+                               capture_output=True, text=True, check=False)
+        if logfile and (result.stdout or result.stderr):
+            with open(logfile, 'a') as log:
+                log.write('-' * 78 + '\n')
+                log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+                log.write('#### openssl x509 -req ... ####\n')
+                if result.stdout:
+                    log.write(result.stdout)
+                if result.stderr:
+                    log.write(result.stderr)
+                log.write('-' * 78 + '\n')
+
         # concenate fullchain pem
         catFiles([certfile, environment.CACERT], fullchain)
         if item == 'firewall':
             # create base64 encoded version for opnsense's config.xml
             b64keyfile = keyfile + '.b64'
             b64certfile = certfile + '.b64'
-            subProc('base64 -w0 ' + keyfile + ' > ' + b64keyfile, logfile)
-            subProc('base64 -w0 ' + certfile + ' > ' + b64certfile, logfile)
+            # Use subprocess to redirect output to file
+            with open(b64keyfile, 'wb') as f:
+                subprocess.run(['base64', '-w0', keyfile], stdout=f, check=False)
+            with open(b64certfile, 'wb') as f:
+                subprocess.run(['base64', '-w0', certfile], stdout=f, check=False)
         if item == 'server':
             # cert links for cups on server
-            subProc('ln -sf ' + certfile + ' /etc/cups/ssl/server.crt', logfile)
-            subProc('ln -sf ' + keyfile + ' /etc/cups/ssl/server.key', logfile)
-            subProc('service cups restart', logfile)
+            subprocess.run(['ln', '-sf', certfile, '/etc/cups/ssl/server.crt'], check=False)
+            subprocess.run(['ln', '-sf', keyfile, '/etc/cups/ssl/server.key'], check=False)
+            subprocess.run(['service', 'cups', 'restart'], check=False)
         printScript('Success!', '', True, True, False, len(msg))
         return True
     except Exception as error:

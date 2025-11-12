@@ -15,7 +15,7 @@ import subprocess
 import sys
 
 from linuxmuster_base7.functions import backupCfg, getSetupValue, mySetupLogfile, printScript, readTextfile
-from linuxmuster_base7.functions import replaceInFile, setupComment, subProc
+from linuxmuster_base7.functions import replaceInFile, setupComment
 
 logfile = mySetupLogfile(__file__)
 
@@ -97,7 +97,19 @@ for f in os.listdir(environment.TPLDIR):
             printScript(' Success!', '', True, True, False, len(msg))
             continue
         # create target directory
-        subProc('mkdir -p ' + os.path.dirname(target), logfile)
+        targetdir = os.path.dirname(target)
+        if targetdir:
+            result = subprocess.run(['mkdir', '-p', targetdir], capture_output=True, text=True, check=False)
+            if logfile and (result.stdout or result.stderr):
+                with open(logfile, 'a') as log:
+                    log.write('-' * 78 + '\n')
+                    log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+                    log.write('#### mkdir -p ' + targetdir + ' ####\n')
+                    if result.stdout:
+                        log.write(result.stdout)
+                    if result.stderr:
+                        log.write(result.stderr)
+                    log.write('-' * 78 + '\n')
         # backup file
         if f not in do_not_backup:
             backupCfg(target)
@@ -114,10 +126,21 @@ for f in os.listdir(environment.TPLDIR):
 msg = 'Server prepare update '
 printScript(msg, '', False, False, True)
 try:
-    subProc('/usr/sbin/lmn-prepare -x -s -u -p server -f ' + firewallip
-            + ' -n ' + serverip + '/'
-            + bitmask + ' -d ' + domainname + ' -t ' + servername + ' -r '
-            + serverip + ' -a "' + adminpw + '"', logfile)
+    result = subprocess.run(['/usr/sbin/lmn-prepare', '-x', '-s', '-u', '-p', 'server',
+                            '-f', firewallip, '-n', serverip + '/' + bitmask,
+                            '-d', domainname, '-t', servername, '-r', serverip,
+                            '-a', adminpw],
+                           capture_output=True, text=True, check=False)
+    if logfile:
+        with open(logfile, 'a') as log:
+            log.write('-' * 78 + '\n')
+            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+            log.write('#### /usr/sbin/lmn-prepare -x -s -u -p server ... ####\n')
+            if result.stdout:
+                log.write(result.stdout)
+            if result.stderr:
+                log.write(result.stderr)
+            log.write('-' * 78 + '\n')
     # remove adminpw from logfile
     replaceInFile(logfile, adminpw, '******')
     printScript(' Success!', '', True, True, False, len(msg))
@@ -128,13 +151,28 @@ except Exception as error:
 # set server time
 msg = 'Adjusting server time '
 printScript(msg, '', False, False, True)
-subProc('mkdir -p ' + environment.NTPSOCKDIR, logfile)
-subProc('chgrp ntp ' + environment.NTPSOCKDIR, logfile)
-subProc('chmod 750 ' + environment.NTPSOCKDIR, logfile)
-subProc('timedatectl set-ntp false', logfile)
-subProc('systemctl stop ntp', logfile)
-subProc('ntpdate pool.ntp.org', logfile)
-subProc('systemctl enable ntp', logfile)
-subProc('systemctl start ntp', logfile)
+# Helper function to run command with logging
+def run_with_log(cmd_list, cmd_desc):
+    result = subprocess.run(cmd_list, capture_output=True, text=True, check=False)
+    if logfile and (result.stdout or result.stderr):
+        with open(logfile, 'a') as log:
+            log.write('-' * 78 + '\n')
+            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+            log.write('#### ' + cmd_desc + ' ####\n')
+            if result.stdout:
+                log.write(result.stdout)
+            if result.stderr:
+                log.write(result.stderr)
+            log.write('-' * 78 + '\n')
+    return result
+
+run_with_log(['mkdir', '-p', environment.NTPSOCKDIR], 'mkdir -p ' + environment.NTPSOCKDIR)
+run_with_log(['chgrp', 'ntp', environment.NTPSOCKDIR], 'chgrp ntp ' + environment.NTPSOCKDIR)
+run_with_log(['chmod', '750', environment.NTPSOCKDIR], 'chmod 750 ' + environment.NTPSOCKDIR)
+run_with_log(['timedatectl', 'set-ntp', 'false'], 'timedatectl set-ntp false')
+run_with_log(['systemctl', 'stop', 'ntp'], 'systemctl stop ntp')
+run_with_log(['ntpdate', 'pool.ntp.org'], 'ntpdate pool.ntp.org')
+run_with_log(['systemctl', 'enable', 'ntp'], 'systemctl enable ntp')
+run_with_log(['systemctl', 'start', 'ntp'], 'systemctl start ntp')
 now = str(datetime.datetime.now()).split('.')[0]
 printScript(' ' + now, '', True, True, False, len(msg))

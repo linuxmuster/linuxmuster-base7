@@ -14,12 +14,29 @@ import environment
 import glob
 import os
 import subprocess
+import datetime
 import sys
 
 from linuxmuster_base7.functions import createServerCert, mySetupLogfile, randomPassword, \
-    printScript, subProc, writeTextfile
+    printScript, writeTextfile
 
 logfile = mySetupLogfile(__file__)
+
+# Helper function to run command with logging
+def run_with_log(cmd_list, cmd_desc, logfile):
+    result = subprocess.run(cmd_list, capture_output=True, text=True, check=False)
+    if logfile and (result.stdout or result.stderr):
+        with open(logfile, 'a') as log:
+            log.write('-' * 78 + '\n')
+            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+            log.write('#### ' + cmd_desc + ' ####\n')
+            if result.stdout:
+                log.write(result.stdout)
+            if result.stderr:
+                log.write(result.stderr)
+            log.write('-' * 78 + '\n')
+    return result
+
 
 # read setup ini
 msg = 'Reading setup data '
@@ -57,16 +74,27 @@ printScript(msg, '', False, False, True)
 try:
     writeTextfile(environment.CAKEYSECRET, cakeypw, 'w')
     os.chmod(environment.CAKEYSECRET, 0o400)
-    subProc('openssl genrsa -out ' + environment.CAKEY
-            + ' -aes128 -passout pass:' + cakeypw + ' 2048', logfile)
-    subProc('openssl req -batch -x509 ' + subj + ' -new -nodes ' + passin
-            + ' -key ' + environment.CAKEY + shadays + ' -out ' + environment.CACERT, logfile)
-    subProc('openssl x509 -in ' + environment.CACERT
-            + ' -inform PEM -out ' + environment.CACERTCRT, logfile)
+    run_with_log(['openssl', 'genrsa', '-out', environment.CAKEY, '-aes128',
+                  '-passout', 'pass:' + cakeypw, '2048'],
+                 'openssl genrsa -out ' + environment.CAKEY + ' -aes128 -passout pass:****** 2048',
+                 logfile)
+    # Parse subj for openssl req
+    subj_parts = ['-subj', subj]
+    run_with_log(['openssl', 'req', '-batch', '-x509'] + subj_parts + ['-new', '-nodes',
+                  '-passin', 'pass:' + cakeypw, '-key', environment.CAKEY,
+                  '-sha256', '-days', days, '-out', environment.CACERT],
+                 'openssl req -batch -x509 ... -out ' + environment.CACERT,
+                 logfile)
+    run_with_log(['openssl', 'x509', '-in', environment.CACERT, '-inform', 'PEM',
+                  '-out', environment.CACERTCRT],
+                 'openssl x509 -in ' + environment.CACERT + ' -inform PEM -out ' + environment.CACERTCRT,
+                 logfile)
     # install crt
-    subProc('ln -sf ' + environment.CACERTCRT
-            + ' /usr/local/share/ca-certificates/linuxmuster_cacert.crt', logfile)
-    subProc('update-ca-certificates', logfile)
+    run_with_log(['ln', '-sf', environment.CACERTCRT,
+                  '/usr/local/share/ca-certificates/linuxmuster_cacert.crt'],
+                 'ln -sf ' + environment.CACERTCRT + ' /usr/local/share/ca-certificates/linuxmuster_cacert.crt',
+                 logfile)
+    run_with_log(['update-ca-certificates'], 'update-ca-certificates', logfile)
     # create base64 encoded version for opnsense's config.xml
     cacertb64 = subprocess.check_output(['base64', '-w0', environment.CACERT]).decode('utf-8')
     writeTextfile(environment.CACERTB64, cacertb64, 'w')
@@ -89,14 +117,15 @@ for item in [servername, 'firewall']:
 # copy cacert.pem to sysvol for clients
 sysvoltlsdir = environment.SYSVOLTLSDIR.replace('@@domainname@@', domainname)
 sysvolpemfile = sysvoltlsdir + '/' + os.path.basename(environment.CACERT)
-subProc('mkdir -p ' + sysvoltlsdir, logfile)
-subProc('cp ' + environment.CACERT + ' ' + sysvolpemfile, logfile)
+run_with_log(['mkdir', '-p', sysvoltlsdir], 'mkdir -p ' + str(sysvoltlsdir), logfile)
+run_with_log(['cp', environment.CACERT, sysvolpemfile], 'cp ' + str(environment.CACERT) + ' ' + str(sysvolpemfile), logfile)
 
 # permissions
 msg = 'Ensure key and certificate permissions '
 printScript(msg, '', False, False, True)
 try:
-    subProc('chgrp -R ssl-cert ' + environment.SSLDIR, logfile)
+    run_with_log(['chgrp', '-R', 'ssl-cert', environment.SSLDIR],
+                 'chgrp -R ssl-cert ' + environment.SSLDIR, logfile)
     os.chmod(environment.SSLDIR, 0o750)
     for file in glob.glob(environment.SSLDIR + '/*'):
         os.chmod(file, 0o640)

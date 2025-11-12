@@ -6,15 +6,18 @@
 #
 
 import sys
+import subprocess
+import datetime
 import os
 import getopt
 import importlib
+import shutil
 
 # Add linuxmuster-common to path for environment module
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from linuxmuster_base7.functions import checkFwMajorVer, modIni, printScript, subProc, tee
+from linuxmuster_base7.functions import checkFwMajorVer, modIni, printScript, tee
 
 
 def usage():
@@ -63,8 +66,8 @@ def main():
     # open logfile
     global logfile
     logfile = environment.SETUPLOG
-    subProc('touch ' + logfile)
-    subProc('chmod 600 ' + logfile)
+    subprocess.run(['touch', logfile], check=False)
+    subprocess.run(['chmod', '600', logfile], check=True)
     try:
         l = open(logfile, 'w')
         orig_out = sys.stdout
@@ -115,8 +118,8 @@ def main():
     if cli_customini != '':
         print('Custom inifile ' + cli_customini
               + ' given on cli, ignoring other arguments!')
-        subProc('cp ' + cli_customini + ' ' + environment.CUSTOMINI)
-        subProc('chmod 600 ' + environment.CUSTOMINI)
+        shutil.copy2(cli_customini, environment.CUSTOMINI)
+        subprocess.run(['chmod', '600', environment.CUSTOMINI], check=True)
     else:
         # check params
         print('Processing commandline arguments.')

@@ -13,12 +13,33 @@ import glob
 import os
 import re
 import subprocess
+import datetime
 import sys
 
 from linuxmuster_base7.functions import backupCfg, checkSocket, getSetupValue, isValidHostIpv4, modIni, \
-    mySetupLogfile, printScript, replaceInFile, setupComment, subProc, writeTextfile
+    mySetupLogfile, printScript, replaceInFile, setupComment, writeTextfile
 
 logfile = mySetupLogfile(__file__)
+
+# Helper function to run command with logging
+def run_with_log(cmd_list, cmd_desc, logfile):
+    result = subprocess.run(cmd_list, capture_output=True, text=True, check=False)
+    if logfile and (result.stdout or result.stderr):
+        with open(logfile, 'a') as log:
+            log.write('-' * 78 + '\n
+')
+            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####
+')
+            log.write('#### ' + cmd_desc + ' ####
+')
+            if result.stdout:
+                log.write(result.stdout)
+            if result.stderr:
+                log.write(result.stderr)
+            log.write('-' * 78 + '\n
+')
+    return result
+
 
 # read setup ini
 msg = 'Reading setup data '
@@ -42,7 +63,7 @@ known_hosts = sshdir + '/known_hosts'
 msg = 'Stopping ssh service '
 printScript(msg, '', False, False, True)
 try:
-    subProc('service ssh stop', logfile)
+    run_with_log(['service', 'ssh', 'stop'], 'service ssh stop', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -58,7 +79,7 @@ for file in glob.glob(sshdir + '/id*'):
 msg = "Creating ssh host keys "
 printScript(msg, '', False, False, True)
 try:
-    subProc('ssh-keygen -A', logfile)
+    run_with_log(['ssh-keygen', '-A'], 'ssh-keygen -A', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -68,8 +89,7 @@ for a in crypto_list:
     msg = '* ' + a + ' key '
     printScript(msg, '', False, False, True)
     try:
-        subProc('ssh-keygen -t ' + a + ' -f '
-                + rootkey_prefix + a + ' -N ""', logfile)
+        run_with_log(['ssh-keygen', '-t', a, '-f', environment.SSHDIR + '/ssh_host_' + a + '_key', '-N', ''], 'ssh-keygen -t ' + a + ' -f ...', logfile)
         if a == 'rsa':
             keyfile = rootkey_prefix + a + '.pub'
             b64sshkey = subprocess.check_output(['base64', keyfile]).decode('utf-8').replace('\n', '')
@@ -83,7 +103,7 @@ for a in crypto_list:
 msg = 'starting ssh service '
 printScript(msg, '', False, False, True)
 try:
-    subProc('service ssh start', logfile)
+    run_with_log(['service', 'ssh', 'start'], 'service ssh start', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))

@@ -7,19 +7,43 @@
 
 import configparser
 import sys
+import subprocess
+import datetime
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 import os
 import random
 import re
 import sys
+import subprocess
+import datetime
 
 from linuxmuster_base7.functions import getSetupValue, isValidHostIpv4, isValidMac, mySetupLogfile, \
-    printScript, readTextfile, subProc, writeTextfile
+    printScript, readTextfile, writeTextfile
 from subprocess import Popen, PIPE
 from uuid import getnode
 
 logfile = mySetupLogfile(__file__)
+
+# Helper function to run command with logging
+def run_with_log(cmd_list, cmd_desc, logfile):
+    result = subprocess.run(cmd_list, capture_output=True, text=True, check=False)
+    if logfile and (result.stdout or result.stderr):
+        with open(logfile, 'a') as log:
+            log.write('-' * 78 + '\n
+')
+            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####
+')
+            log.write('#### ' + cmd_desc + ' ####
+')
+            if result.stdout:
+                log.write(result.stdout)
+            if result.stderr:
+                log.write(result.stderr)
+            log.write('-' * 78 + '\n
+')
+    return result
+
 
 # read setup.ini
 msg = 'Reading setup data '
@@ -59,7 +83,7 @@ def getMacFromArp(ip):
         if c > 0:
             import time
             time.sleep(15)
-        subProc('ping -c2 ' + ip, logfile)
+        run_with_log(['ping', '-c2', ip], 'ping -c2 ' + str(ip), logfile)
         pid = Popen(["arp", "-n", ip], stdout=PIPE)
         arpout = pid.communicate()[0]
         try:

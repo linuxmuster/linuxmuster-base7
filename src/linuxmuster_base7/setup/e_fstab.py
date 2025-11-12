@@ -12,9 +12,11 @@ import os
 import reconfigure
 import sys
 
-from linuxmuster_base7.functions import mySetupLogfile, printScript, subProc
+from linuxmuster_base7.functions import mySetupLogfile, printScript
 from reconfigure.configs import FSTabConfig
 from reconfigure.items.fstab import FilesystemData
+import subprocess
+import datetime
 
 logfile = mySetupLogfile(__file__)
 
@@ -44,7 +46,17 @@ while True:
                 printScript(msg, '', False, False, True)
                 # try to remount filesystem with new options
                 try:
-                    subProc('mount -o remount ' + i, logfile)
+                    result = subprocess.run(['mount', '-o', 'remount', i], capture_output=True, text=True, check=False)
+                    if logfile and (result.stdout or result.stderr):
+                        with open(logfile, 'a') as log:
+                            log.write('-' * 78 + '\n')
+                            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+                            log.write('#### mount -o remount ' + i + ' ####\n')
+                            if result.stdout:
+                                log.write(result.stdout)
+                            if result.stderr:
+                                log.write(result.stderr)
+                            log.write('-' * 78 + '\n')
                     printScript(' Success!', '', True, True, False, len(msg))
                 except Exception as error:
                     printScript(f' Failed: {error}', '', True, True, False, len(msg))

@@ -6,14 +6,16 @@
 #
 
 import configparser
+import csv
+import datetime
+import fnmatch
+import getopt
+import os
+import shutil
+import subprocess
 import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
-import fnmatch
-import os
-import subprocess
-import getopt
-import csv
 
 from os import listdir
 from os.path import isfile, join
@@ -21,7 +23,7 @@ from pathlib import Path
 
 from linuxmuster_base7.functions import getDevicesArray, getGrubOstype, getGrubPart, getSetupValue, getStartconfOsValues, \
     getStartconfOption, getStartconfPartnr, getStartconfPartlabel, getSubnetArray, \
-    getLinboVersion, printScript, readTextfile, subProc, writeTextfile
+    getLinboVersion, printScript, readTextfile, writeTextfile
 
 
 def usage():
@@ -63,7 +65,7 @@ msg = 'Starting sophomorix-device syntax check:'
 printScript(msg)
 try:
     msg = 'sophomorix-device finished '
-    subProc('sophomorix-device --sync')
+    subprocess.run(['sophomorix-device --sync'], shell=False, check=False)
     printScript(msg + ' OK!')
 except Exception as err:
     printScript(msg + ' errors detected!')
@@ -108,7 +110,7 @@ def doGrubCfg(startconf, group, kopts):
     # if cache is not defined provide a forced netboot cfg
     if cacheroot is None:
         netboottpl = environment.LINBOTPLDIR + '/grub.cfg.forced_netboot'
-        subProc('cp ' + netboottpl + ' ' + grubcfg)
+        shutil.copy2(netboottpl, grubcfg)
         return 'not yet configured!'
     # create return message
     if os.path.isfile(grubcfg):
@@ -178,7 +180,7 @@ def doLinboStartconf(group):
             msg1 = 'present'
     else:
         msg1 = 'not yet configured!'
-        subProc('cp ' + environment.LINBODIR + '/start.conf ' + startconf)
+        shutil.copy2(environment.LINBODIR + '/start.conf', startconf)
     # read kernel options from start.conf
     kopts = getStartconfOption(startconf, 'LINBO', 'KernelOptions')
     # process grub cfgs
@@ -364,7 +366,7 @@ if len(hookscripts) > 0:
 # restart services
 printScript('', 'begin')
 printScript('Finally restarting dhcp service.')
-subProc('service isc-dhcp-server restart')
+subprocess.run(['service isc-dhcp-server restart'], shell=False, check=False)
 
 # end message
 printScript(os.path.basename(__file__), 'end')

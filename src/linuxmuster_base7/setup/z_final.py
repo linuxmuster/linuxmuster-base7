@@ -5,18 +5,40 @@
 # 20250422
 
 import configparser
-import sys
-sys.path.insert(0, '/usr/lib/linuxmuster')
-import environment
+import datetime
 import glob
 import os
 import re
+import shlex
+import subprocess
 import sys
+sys.path.insert(0, '/usr/lib/linuxmuster')
+import environment
 
 from linuxmuster_base7.functions import getSetupValue, mySetupLogfile, printScript, readTextfile, \
-    subProc, waitForFw, writeTextfile
+    waitForFw, writeTextfile
 
 logfile = mySetupLogfile(__file__)
+
+# Helper function to run command with logging
+def run_with_log(cmd_string, logfile, check_errors=False):
+    """Execute command with output captured to logfile."""
+    cmd_args = shlex.split(cmd_string) if isinstance(cmd_string, str) else cmd_string
+    result = subprocess.run(cmd_args, capture_output=True, text=True, check=False, shell=False)
+    if logfile and (result.stdout or result.stderr):
+        with open(logfile, 'a') as log:
+            log.write('-' * 78 + '\n')
+            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+            log.write('#### ' + (cmd_string if isinstance(cmd_string, str) else ' '.join(cmd_args)) + ' ####\n')
+            if result.stdout:
+                log.write(result.stdout)
+            if result.stderr:
+                log.write(result.stderr)
+            log.write('-' * 78 + '\n')
+    if check_errors and result.returncode != 0:
+        raise subprocess.CalledProcessError(result.returncode, cmd_args, result.stdout, result.stderr)
+    return result
+
 
 # remove temporary files
 if os.path.isfile('/tmp/setup.ini'):
@@ -40,10 +62,10 @@ for file in glob.glob('/etc/netplan/*.yaml*'):
 msg = 'Restarting apparmor service '
 printScript(msg, '', False, False, True)
 try:
-    subProc('systemctl restart apparmor.service', logfile)
+    run_with_log(['systemctl', 'restart', 'apparmor.service'], logfile, check_errors=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # write schoolname to sophomorix school.conf
@@ -65,10 +87,10 @@ except Exception as error:
 msg = 'Starting device import '
 printScript(msg, '', False, False, True)
 try:
-    subProc('linuxmuster-import-devices', logfile)
+    run_with_log('linuxmuster-import-devices', logfile, check_errors=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # wait for fw
@@ -84,20 +106,20 @@ if not skipfw:
 msg = 'Starting subnets import '
 printScript(msg, '', False, False, True)
 try:
-    subProc('linuxmuster-import-subnets', logfile)
+    run_with_log('linuxmuster-import-subnets', logfile, check_errors=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # create web proxy sso keytab
 msg = 'Creating web proxy sso keytab '
 printScript(msg, '', False, False, True)
 try:
-    subProc(environment.FWSHAREDIR + "/create-keytab.py -v -a '" + adminpw + "'", logfile, True)
+    run_with_log(environment.FWSHAREDIR + "/create-keytab.py -v -a '" + adminpw + "'", logfile, check_errors=False)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # admin password not more needed in setup.ini

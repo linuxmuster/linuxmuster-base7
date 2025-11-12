@@ -6,16 +6,37 @@
 #
 
 import configparser
+import datetime
+import os
+import shlex
+import subprocess
 import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
-import datetime
-import os
-import sys
 from linuxmuster_base7.functions import getSetupValue, mySetupLogfile, printScript, randomPassword, \
-    readTextfile, subProc, writeTextfile
+    readTextfile, writeTextfile
 
 logfile = mySetupLogfile(__file__)
+
+# Helper function to run command with logging
+def run_with_log(cmd_string, logfile):
+    """Execute command with output captured to logfile."""
+    cmd_args = shlex.split(cmd_string) if isinstance(cmd_string, str) else cmd_string
+    result = subprocess.run(cmd_args, capture_output=True, text=True, check=False, shell=False)
+    if logfile and (result.stdout or result.stderr):
+        with open(logfile, 'a') as log:
+            log.write('-' * 78 + '\n')
+            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+            log.write('#### ' + (cmd_string if isinstance(cmd_string, str) else ' '.join(cmd_args)) + ' ####\n')
+            if result.stdout:
+                log.write(result.stdout)
+            if result.stderr:
+                log.write(result.stderr)
+            log.write('-' * 78 + '\n')
+    if result.returncode != 0:
+        raise subprocess.CalledProcessError(result.returncode, cmd_args, result.stdout, result.stderr)
+    return result
+
 
 # stop services
 msg = 'Stopping samba services '
@@ -24,14 +45,14 @@ printScript(msg, '', False, False, True)
 services = ['winbind', 'samba-ad-dc', 'smbd', 'nmbd', 'systemd-resolved', 'samba-ad-dc']
 try:
     for service in services:
-        subProc('systemctl stop ' + service + '.service', logfile)
+        run_with_log('systemctl stop ' + service + '.service', logfile)
         if service == 'samba-ad-dc':
             continue
         # disabling not needed samba services
-        subProc('systemctl disable ' + service + '.service', logfile)
+        run_with_log('systemctl disable ' + service + '.service', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # read setup ini
@@ -56,9 +77,9 @@ try:
     adadminpw = randomPassword(16)
     with open(environment.ADADMINSECRET, 'w') as secret:
         secret.write(adadminpw)
-    subProc('chmod 400 ' + environment.ADADMINSECRET, logfile)
+    run_with_log(['chmod', '400', environment.ADADMINSECRET], logfile)
     # symlink for sophomorix
-    subProc('ln -sf ' + environment.ADADMINSECRET + ' ' + environment.SOPHOSYSDIR + '/sophomorix-samba.secret', logfile)
+    run_with_log(['ln', '-sf', environment.ADADMINSECRET, environment.SOPHOSYSDIR + '/sophomorix-samba.secret'], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))
@@ -73,10 +94,10 @@ if os.path.isfile(smbconf):
 msg = 'Provisioning samba '
 printScript(msg, '', False, False, True)
 try:
-    subProc('samba-tool domain provision --use-rfc2307 --server-role=dc --domain=' + sambadomain + ' --realm=' + realm + ' --adminpass=' + adadminpw, logfile)
+    run_with_log('samba-tool domain provision --use-rfc2307 --server-role=dc --domain=' + sambadomain + ' --realm=' + realm + ' --adminpass=' + adadminpw, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # create krb5.conf symlink
@@ -101,34 +122,34 @@ if os.path.isfile(krb5conf_src):
 msg = 'Enabling samba services '
 printScript(msg, '', False, False, True)
 try:
-    subProc('systemctl daemon-reload', logfile)
+    run_with_log('systemctl daemon-reload', logfile)
     for service in services:
-        subProc('systemctl stop ' + service, logfile)
-    subProc('systemctl mask smbd.service', logfile)
-    subProc('systemctl mask nmbd.service', logfile)
+        run_with_log('systemctl stop ' + service, logfile)
+    run_with_log(['systemctl', 'mask', 'smbd.service'], logfile)
+    run_with_log(['systemctl', 'mask', 'nmbd.service'], logfile)
     # start only samba-ad-dc service
-    subProc('systemctl unmask samba-ad-dc.service', logfile)
-    subProc('systemctl enable samba-ad-dc.service', logfile)
+    run_with_log(['systemctl', 'unmask', 'samba-ad-dc.service'], logfile)
+    run_with_log(['systemctl', 'enable', 'samba-ad-dc.service'], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # backup samba before sophomorix modifies anything
 msg = 'Backing up samba '
 printScript(msg, '', False, False, True)
 try:
-    subProc('sophomorix-samba --backup-samba without-sophomorix-schema', logfile)
+    run_with_log('sophomorix-samba --backup-samba without-sophomorix-schema', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # loading sophomorix samba schema
 msg = 'Provisioning sophomorix samba schema '
 printScript(msg, '', False, False, True)
 try:
-    subProc('cd /usr/share/sophomorix/schema ; ./sophomorix_schema_add.sh ' + basedn + ' . -H /var/lib/samba/private/sam.ldb -writechanges', logfile)
+    subprocess.run(['sh', '-c', 'cd /usr/share/sophomorix/schema && ./sophomorix_schema_add.sh ' + basedn + ' . -H /var/lib/samba/private/sam.ldb -writechanges'], capture_output=True, text=True, check=False)  # Complex shell command requiring cd
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))
@@ -167,9 +188,10 @@ except Exception as error:
 msg = 'Starting samba ad dc service '
 printScript(msg, '', False, False, True)
 try:
-    subProc('systemctl start samba-ad-dc.service', logfile)
-    subProc('sleep 5', logfile)
+    run_with_log(['systemctl', 'start', 'samba-ad-dc.service'], logfile)
+    import time
+    time.sleep(5)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
