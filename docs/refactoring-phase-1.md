@@ -13,7 +13,7 @@ src/
     ├── dhcpd_update_samba_dns.py
     ├── setup/
     │   ├── __init__.py
-    │   └── [11 setup modules: a_ini.py through z_final.py]
+    │   └── [12 setup modules: a_ini.py through z_final.py]
     ├── cli/
     │   ├── __init__.py
     │   ├── setup.py
@@ -78,6 +78,15 @@ All Python files have been adapted:
 - **setup.py**: Minimal compatibility file
 - **MANIFEST.in**: For non-Python files
 
+### 6. Old Structure Removed ✓
+
+- **lib/**: Removed (replaced by src/linuxmuster_base7/)
+  - lib/functions.py → src/linuxmuster_base7/functions.py
+  - lib/dhcpd-update-samba-dns.py → src/linuxmuster_base7/dhcpd_update_samba_dns.py
+  - lib/setup.d/*.py → src/linuxmuster_base7/setup/*.py
+- **sbin/**: Removed (replaced by entry points in pyproject.toml)
+  - All 9 CLI wrapper scripts replaced by src/linuxmuster_base7/cli/*.py modules
+
 ## Advantages of the New Structure
 
 ### Debian Python Policy Compliance:
@@ -128,7 +137,7 @@ sudo dpkg -i ../linuxmuster-base7_*.deb
 ## Important Notes
 
 1. **environment module**: Remains in linuxmuster-common as it's used by multiple packages
-2. **Compatibility**: Old lib/ and sbin/ directories can be removed after successful testing
+2. **Old structure removed**: lib/ and sbin/ directories have been removed (replaced by src/ structure)
 3. **Migration**: Existing installations are cleanly migrated through postinst
 4. **CLI tools**: Work via entry points, installed to /usr/bin
 
@@ -146,11 +155,11 @@ sudo dpkg -i ../linuxmuster-base7_*.deb
 
 ## Next Steps
 
-1. Code review
+1. ✅ Code review
 2. Test installation
-3. On success: Remove old structure (lib/, sbin/)
+3. ✅ Remove old structure (lib/, sbin/)
 4. Update documentation
-5. Create changelog entry
+5. ✅ Create changelog entry
 6. Consider packaging reconfigure for Debian or finding alternative
 
 ## Technical Details
