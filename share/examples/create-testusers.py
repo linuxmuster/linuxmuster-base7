@@ -2,21 +2,20 @@
 #
 # create a bunch of testusers
 # thomas@linuxmuster.net
-# 20211218
+# 20251112
 #
 
 import configparser
 import environment
 import getopt
 import os
+import subprocess
 import sys
 
 from linuxmuster_base7.functions import printScript
 from linuxmuster_base7.functions import sambaTool
-from linuxmuster_base7.functions import subProc
 from linuxmuster_base7.functions import replaceInFile
 from shutil import copyfile
-from subprocess import Popen, PIPE, STDOUT
 
 starget = environment.DEFAULTSCHOOL + '/students.csv'
 ttarget = environment.DEFAULTSCHOOL + '/teachers.csv'
@@ -62,14 +61,10 @@ copyfile(tsource, ttarget)
 
 # script header
 filename = os.path.basename(__file__).replace('.py', '')
-logfile = environment.LOGDIR + '/' + filename + '.log'
 
 title = 'Creating test users for default-school'
 printScript('', 'begin')
 printScript(title)
-
-msg = 'Logging to ' + logfile
-printScript(msg)
 
 # set password policy
 msg = 'Password policy setup '
@@ -85,7 +80,7 @@ except:
 msg = 'Running sophomorix-check '
 printScript(msg, '', False, False, True)
 try:
-    subProc('sophomorix-check', logfile)
+    subprocess.run('sophomorix-check', check=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -95,7 +90,7 @@ except:
 msg = 'Running sophomorix-add '
 printScript(msg, '', False, False, True)
 try:
-    subProc('sophomorix-add', logfile)
+    subprocess.run('sophomorix-add', check=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -105,7 +100,7 @@ except:
 msg = 'Running sophomorix-quota '
 printScript(msg, '', False, False, True)
 try:
-    subProc('sophomorix-quota', logfile)
+    subprocess.run('sophomorix-quota', check=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -134,8 +129,8 @@ for user in students + teachers:
     msg = ' * ' + user + ' '
     printScript(msg, '', False, False, True)
     try:
-        subProc('sophomorix-passwd --user ' + user
-                + ' --pass "' + pw + '"', logfile)
+        subprocess.run('sophomorix-passwd --user ' + user
+                + ' --pass "' + pw + '"', check=True)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
