@@ -13,7 +13,6 @@ __author__ = "thomas@linuxmuster.net"
 
 # Make commonly used functions available at package level
 from .functions import (
-    subProc,
     sambaTool,
     adSearch,
     readTextfile,
@@ -24,7 +23,6 @@ from .functions import (
 )
 
 __all__ = [
-    'subProc',
     'sambaTool',
     'adSearch',
     'readTextfile',
