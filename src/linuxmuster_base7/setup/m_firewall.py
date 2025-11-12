@@ -12,6 +12,7 @@ import environment
 import datetime
 import os
 import shutil
+import subprocess
 import sys
 
 from bs4 import BeautifulSoup
@@ -37,8 +38,8 @@ def main():
         network = getSetupValue('network')
         adminpw = getSetupValue('adminpw')
         printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(f' Failed: {error}', '', True, True, False, len(msg))
         sys.exit(1)
 
     # get timezone
@@ -70,8 +71,8 @@ def main():
             secret.write(radiussecret)
         subProc('chmod 400 ' + environment.RADIUSSECRET, logfile)
         printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(f' Failed: {error}', '', True, True, False, len(msg))
         sys.exit(1)
 
     # firewall config files
@@ -91,8 +92,8 @@ def main():
     try:
         shutil.copy(fwconftmp, fwconfbak)
         printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(f' Failed: {error}', '', True, True, False, len(msg))
         sys.exit(1)
 
     # get root password hash
@@ -112,13 +113,13 @@ def main():
         # save language information
         try:
             language = str(soup.findAll('language')[0])
-        except:
+        except Exception as error:
             language = ''
         # second try get language from locale settings
         if language == '':
             try:
                 lang = os.environ['LANG'].split('.')[0]
-            except:
+            except Exception as error:
                 lang = 'en_US'
             language = '<language>' + lang + '</language>'
         # save gateways configuration
@@ -133,11 +134,11 @@ def main():
         # save opt1 configuration if present
         try:
             opt1config = str(soup.findAll('opt1')[0])
-        except:
+        except Exception as error:
             opt1config = ''
         printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(f' Failed: {error}', '', True, True, False, len(msg))
         sys.exit(1)
 
     # get base64 encoded certs
@@ -150,8 +151,8 @@ def main():
         rc, fwkeyb64 = readTextfile(environment.SSLDIR + '/firewall.key.pem.b64')
         rc, authorizedkey = readTextfile(environment.SSHPUBKEYB64)
         printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(f' Failed: {error}', '', True, True, False, len(msg))
         sys.exit(1)
 
     # create list of first ten network ips for aliascontent (NoProxy group in firewall)
@@ -212,8 +213,8 @@ def main():
         # write new configfile
         rc = writeTextfile(fwconftmp, content, 'w')
         printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(f' Failed: {error}', '', True, True, False, len(msg))
         sys.exit(1)
 
     # create api credentials ini file
@@ -222,10 +223,10 @@ def main():
     try:
         rc = modIni(environment.FWAPIKEYS, 'api', 'key', apikey)
         rc = modIni(environment.FWAPIKEYS, 'api', 'secret', apisecret)
-        os.system('chmod 400 ' + environment.FWAPIKEYS)
+        subprocess.run(['chmod', '400', environment.FWAPIKEYS], check=True)
         printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(f' Failed: {error}', '', True, True, False, len(msg))
         sys.exit(1)
 
     # upload config files

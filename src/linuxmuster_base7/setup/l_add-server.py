@@ -30,8 +30,8 @@ try:
     serverip = getSetupValue('serverip')
     rc, devices = readTextfile(environment.WIMPORTDATA)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # get random mac address
@@ -57,7 +57,8 @@ def getMacFromArp(ip):
     max = 10
     while not isValidMac(mac):
         if c > 0:
-            os.system('sleep 15')
+            import time
+            time.sleep(15)
         subProc('ping -c2 ' + ip, logfile)
         pid = Popen(["arp", "-n", ip], stdout=PIPE)
         arpout = pid.communicate()[0]
@@ -66,7 +67,7 @@ def getMacFromArp(ip):
                 r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})", str(arpout)).groups()[0]
             if isValidMac(mac):
                 return mac.upper()
-        except:
+        except Exception as error:
             mac = ''
         c = c + 1
         if c > max:

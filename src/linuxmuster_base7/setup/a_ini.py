@@ -30,8 +30,8 @@ for item in [environment.DEFAULTSINI, environment.PREPINI, environment.SETUPINI,
     try:
         setup.read(item)
         printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(f' Failed: {error}', '', True, True, False, len(msg))
         sys.exit(1)
 
 # compute missing values
@@ -45,8 +45,8 @@ try:
                     '', True, True, False, len(msg))
         sys.exit(1)
     printScript(' ' + domainname, '', True, True, False, len(msg))
-except:
-    printScript(' not set!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' not set: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # derive values from domainname
@@ -89,8 +89,8 @@ try:
                     '', True, True, False, len(msg))
         sys.exit(1)
     printScript(' ' + serverip, '', True, True, False, len(msg))
-except:
-    printScript(' not set!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' not set: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # netmask
@@ -99,8 +99,8 @@ printScript(msg, '', False, False, True)
 try:
     bitmask = setup.get('setup', 'bitmask')
     ip = IP(serverip + '/' + bitmask, make_net=True)
-except:
-    printScript(' ' + bitmask + ' is not valid!',
+except Exception as error:
+    printScript(f' {bitmask} is not valid: {error}',
                 '', True, True, False, len(msg))
     sys.exit(1)
 printScript(' ' + bitmask, '', True, True, False, len(msg))
@@ -122,7 +122,7 @@ try:
     dhcprange2 = dhcprange.split(' ')[1]
     if not isValidHostIpv4(dhcprange1) and not isValidHostIpv4(dhcprange2):
         dhcprange = ''
-except:
+except Exception as error:
     dhcprange = ''
 if dhcprange == '':
     try:
@@ -138,8 +138,8 @@ if dhcprange == '':
                                         0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '250'
         dhcprange = dhcprange1 + ' ' + dhcprange2
         setup.set('setup', 'dhcprange', dhcprange)
-    except:
-        printScript(' failed to set!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(f' failed to set: {error}', '', True, True, False, len(msg))
         sys.exit(1)
 printScript(' ' + dhcprange1 + '-' + dhcprange2,
             '', True, True, False, len(msg))
@@ -154,8 +154,8 @@ try:
                     '', True, True, False, len(msg))
         sys.exit(1)
     printScript(' ' + firewallip, '', True, True, False, len(msg))
-except:
-    printScript(' not set!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' not set: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # create global binduser password
@@ -168,8 +168,8 @@ try:
     subProc('chmod 440 ' + environment.BINDUSERSECRET, logfile)
     subProc('chgrp dhcpd ' + environment.BINDUSERSECRET, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # write setup.ini finally
@@ -186,8 +186,8 @@ try:
         setup.write(outfile)
     subProc('chmod 600 /tmp/setup.ini', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # delete obsolete ini files

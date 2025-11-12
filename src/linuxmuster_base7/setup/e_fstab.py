@@ -37,8 +37,8 @@ while True:
                     # save fstab
                     config.save()
                     printScript(' Success!', '', True, True, False, len(msg))
-                except:
-                    printScript(' Failed!', '', True, True, False, len(msg))
+                except Exception as error:
+                    printScript(f' Failed: {error}', '', True, True, False, len(msg))
                     sys.exit(1)
                 msg = 'Remounting ' + i + ' '
                 printScript(msg, '', False, False, True)
@@ -46,11 +46,11 @@ while True:
                 try:
                     subProc('mount -o remount ' + i, logfile)
                     printScript(' Success!', '', True, True, False, len(msg))
-                except:
-                    printScript(' Failed!', '', True, True, False, len(msg))
+                except Exception as error:
+                    printScript(f' Failed: {error}', '', True, True, False, len(msg))
                     sys.exit(1)
         # next entry
         c += 1
     # break if entries ran out
-    except:
+    except Exception as error:
         break

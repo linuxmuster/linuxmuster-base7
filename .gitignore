@@ -2,3 +2,5 @@
 share/firewall/opnsense/opnsense*
 mkpkg
 /syncToTestServer.sh
+__pycache__/
+*.pyc

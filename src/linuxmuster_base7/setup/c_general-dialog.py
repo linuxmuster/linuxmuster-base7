@@ -32,8 +32,8 @@ try:
     domainname = setup.get('setup', 'domainname')
     dhcprange = setup.get('setup', 'dhcprange')
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # get network interfaces
@@ -144,8 +144,8 @@ try:
     with open(setupini, 'w') as INIFILE:
         setup.write(INIFILE)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 
@@ -157,6 +157,6 @@ try:
     if os.path.isdir('/home/linuxmuster'):
         subProc('echo "linuxmuster:' + adminpw + '" | chpasswd', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)

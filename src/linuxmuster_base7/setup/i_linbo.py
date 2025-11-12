@@ -25,14 +25,14 @@ printScript(msg, '', False, False, True)
 try:
     serverip = getSetupValue('serverip')
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # test adminpw
 try:
     adminpw = getSetupValue('adminpw')
-except:
+except Exception as error:
     adminpw = ''
 if not isValidPassword(adminpw):
     printScript('There is no admin password!')
@@ -66,8 +66,8 @@ try:
     subProc('service rsync stop', logfile)
     subProc('service rsync start', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # set serverip in default start.conf
@@ -86,8 +86,8 @@ try:
         rc = writeTextfile(startconf, content.replace(
             '10.16.1.1', serverip), 'w')
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # linbo-torrent service
@@ -97,8 +97,8 @@ try:
     subprocess.call('systemctl -q enable opentracker 2>&1', shell=True)
     subprocess.call('systemctl -q enable linbo-torrent 2>&1', shell=True)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # linbofs update
@@ -109,6 +109,6 @@ try:
     subprocess.call('dpkg-reconfigure linuxmuster-linbo7 >> '
                     + logfile + ' 2>&1 &', shell=True)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)

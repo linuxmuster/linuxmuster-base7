@@ -147,7 +147,7 @@ def doGrubCfg(startconf, group, kopts):
         if 'root=' not in kappend and ext != '.iso':
             try:
                 kappend = kappend + ' root=LABEL=' + oslabel
-            except:
+            except Exception as error:
                 kappend = kappend + ' root=' + partition
         rc, content = readTextfile(ostpl)
         if not rc:

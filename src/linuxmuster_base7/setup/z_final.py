@@ -28,8 +28,8 @@ printScript(msg, '', False, False, True)
 try:
     adminpw = getSetupValue('adminpw')
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # fix netplan file permissions
@@ -111,6 +111,6 @@ try:
     with open(setupini, 'w') as INIFILE:
         setup.write(INIFILE)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)

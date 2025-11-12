@@ -35,8 +35,8 @@ try:
     skipfw = setup.getboolean('setup', 'skipfw')
     realm = setup.get('setup', 'realm')
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # basic subject string
@@ -74,8 +74,8 @@ try:
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # create server and firewall certificates
@@ -103,6 +103,6 @@ try:
     for file in glob.glob(environment.SSLDIR + '/*key*'):
         os.chmod(file, 0o600)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)

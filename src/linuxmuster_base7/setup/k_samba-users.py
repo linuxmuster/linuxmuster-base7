@@ -46,8 +46,11 @@ except Exception as error:
     sys.exit(1)
 
 # renew sophomorix configs
-os.system('rm -f ' + environment.SCHOOLCONF)
-os.system('rm -f ' + environment.SOPHOSYSDIR + '/sophomorix.conf')
+import os.path
+if os.path.isfile(environment.SCHOOLCONF):
+    os.unlink(environment.SCHOOLCONF)
+if os.path.isfile(environment.SOPHOSYSDIR + '/sophomorix.conf'):
+    os.unlink(environment.SOPHOSYSDIR + '/sophomorix.conf')
 subProc('sophomorix-postinst', logfile)
 
 # create default-school share
@@ -141,8 +144,9 @@ try:
     sambaTool('user setexpiry dns-admin --noexpiry', logfile)
     sambaTool('group addmembers DnsAdmins dns-admin', logfile)
     rc, writeTextfile(environment.DNSADMINSECRET, dnspw, 'w')
-    os.system('chgrp dhcpd ' + environment.DNSADMINSECRET)
-    os.system('chmod 440 ' + environment.DNSADMINSECRET)
+    import subprocess
+    subprocess.run(['chgrp', 'dhcpd', environment.DNSADMINSECRET], check=True)
+    subprocess.run(['chmod', '440', environment.DNSADMINSECRET], check=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))

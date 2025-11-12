@@ -70,8 +70,8 @@ def main():
         orig_out = sys.stdout
         sys.stdout = tee(sys.stdout, l)
         sys.stderr = tee(sys.stderr, l)
-    except:
-        print('Cannot open logfile ' + logfile + ' !')
+    except Exception as error:
+        print(f'Cannot open logfile {logfile}: {error}')
         sys.exit()
 
     # evaluate options

@@ -155,8 +155,9 @@ except Exception as error:
 msg = 'Exchanging smb.conf '
 printScript(msg, '', False, False, True)
 try:
-    os.system('mv ' + smbconf + ' ' + smbconf + '.orig')
-    os.system('mv ' + smbconf + '.setup ' + smbconf)
+    import shutil
+    shutil.move(smbconf, smbconf + '.orig')
+    shutil.move(smbconf + '.setup', smbconf)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))

@@ -27,8 +27,8 @@ try:
     # get ip addresses
     serverip = getSetupValue('serverip')
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # variables
@@ -44,8 +44,8 @@ printScript(msg, '', False, False, True)
 try:
     subProc('service ssh stop', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # delete old ssh keys
@@ -60,8 +60,8 @@ printScript(msg, '', False, False, True)
 try:
     subProc('ssh-keygen -A', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 printScript('Creating ssh root keys:')
 for a in crypto_list:
@@ -75,8 +75,8 @@ for a in crypto_list:
             b64sshkey = subprocess.check_output(['base64', keyfile]).decode('utf-8').replace('\n', '')
             writeTextfile(environment.SSHPUBKEYB64, b64sshkey, 'w')
         printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(f' Failed: {error}', '', True, True, False, len(msg))
         sys.exit(1)
 
 # start ssh service
@@ -85,6 +85,6 @@ printScript(msg, '', False, False, True)
 try:
     subProc('service ssh start', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)

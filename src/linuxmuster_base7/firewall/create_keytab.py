@@ -77,12 +77,11 @@ if not check:
         adminlogin = 'administrator'
 
     # reload relevant services
-    sshconnect = 'ssh -q -oBatchmode=yes -oStrictHostKeyChecking=accept-new ' + firewallip
     for item in ['unbound', 'squid']:
         printScript('Restarting ' + item)
-        sshcmd = sshconnect + ' pluginctl -s ' + item + ' restart'
-        rc = os.system(sshcmd)
-        if rc != 0:
+        result = subprocess.run(['ssh', '-q', '-oBatchmode=yes', '-oStrictHostKeyChecking=accept-new',
+                                firewallip, 'pluginctl', '-s', item, 'restart'])
+        if result.returncode != 0:
             sys.exit(1)
 
     # create keytab

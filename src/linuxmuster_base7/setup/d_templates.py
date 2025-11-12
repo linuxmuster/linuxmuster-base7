@@ -11,6 +11,7 @@ sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 import datetime
 import os
+import subprocess
 import sys
 
 from linuxmuster_base7.functions import backupCfg, getSetupValue, mySetupLogfile, printScript, readTextfile
@@ -44,8 +45,8 @@ try:
     servername = getSetupValue('servername')
     serverip = getSetupValue('serverip')
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # templates, whose corresponding configfiles must not be overwritten
@@ -103,10 +104,10 @@ for f in os.listdir(environment.TPLDIR):
         with open(target, 'w') as outfile:
             outfile.write(setupComment())
             outfile.write(filedata)
-        os.system('chmod ' + operms + ' ' + target)
+        subprocess.run(['chmod', operms, target], check=True)
         printScript(' Success!', '', True, True, False, len(msg))
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(f' Failed: {error}', '', True, True, False, len(msg))
         sys.exit(1)
 
 # server prepare update
@@ -120,8 +121,8 @@ try:
     # remove adminpw from logfile
     replaceInFile(logfile, adminpw, '******')
     printScript(' Success!', '', True, True, False, len(msg))
-except:
-    printScript(' Failed!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
 # set server time

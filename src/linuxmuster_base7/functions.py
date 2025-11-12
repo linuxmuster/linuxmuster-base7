@@ -553,8 +553,8 @@ def createServerCert(item, days, logfile):
             subProc('service cups restart', logfile)
         printScript('Success!', '', True, True, False, len(msg))
         return True
-    except:
-        printScript(' Failed!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(f' Failed: {error}', '', True, True, False, len(msg))
         return False
 
 

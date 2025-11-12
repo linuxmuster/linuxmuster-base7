@@ -103,13 +103,13 @@ def updateNetplan(subnets):
     try:
         del ifcfg['gateway4']
         printScript('* Removed deprecated gateway4 statement.')
-    except:
+    except Exception as error:
         None
     # first delete the old routes if there are any
     try:
         del ifcfg['routes']
         printScript('* Removed old routes.')
-    except:
+    except Exception as error:
         None
     # set default route
     ifcfg['routes'] = []
@@ -232,8 +232,8 @@ def addFwRoute(subnet):
         res = firewallApi('post', '/routes/routes/addroute', payload)
         printScript('* Added route for subnet ' + subnet + '.')
         return True
-    except:
-        printScript('* Unable to add route for subnet ' + subnet + '!')
+    except Exception as error:
+        printScript(f'* Unable to add route for subnet {subnet}: {error}')
         return False
 
 
@@ -243,8 +243,8 @@ def delFwRoute(uuid, subnet):
         rc = firewallApi('post', '/routes/routes/delroute/' + uuid)
         printScript('* Route ' + uuid + ' - ' + subnet + ' deleted.')
         return True
-    except:
-        printScript('* Unable to delete route ' + uuid + ' - ' + subnet + '!')
+    except Exception as error:
+        printScript(f'* Unable to delete route {uuid} - {subnet}: {error}')
         return False
 
 
@@ -255,8 +255,8 @@ def updateFwRoutes(subnets, ipnet_setup, servernet_router):
         routes = firewallApi('get', '/routes/routes/searchroute')
         staticroutes_nr = len(routes['rows'])
         printScript('* Got ' + str(staticroutes_nr) + ' routes.')
-    except:
-        printScript('* Unable to get routes.')
+    except Exception as error:
+        printScript(f'* Unable to get routes: {error}')
         return False
     # iterate through firewall routes and delete them if necessary
     changed = False
@@ -309,11 +309,11 @@ for row in getSubnetArray():
         range1 = row[2]
         range2 = row[3]
         nameserver = row[4]
-    except:
+    except Exception as error:
         continue
     try:
         nextserver = row[5]
-    except:
+    except Exception as error:
         nextserver = ''
     if ipnet[:1] == '#' or ipnet[:1] == ';' or not isValidHostIpv4(router):
         continue
@@ -331,7 +331,7 @@ for row in getSubnetArray():
         network = IP(n).strNormal(0)
         netmask = IP(n).strNormal(2).split('/')[1]
         broadcast = IP(n).strNormal(3).split('-')[1]
-    except:
+    except Exception as error:
         continue
     # save servernet router address for later use
     if ipnet == ipnet_setup:
