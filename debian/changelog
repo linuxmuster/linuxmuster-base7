@@ -14,6 +14,7 @@ linuxmuster-base7 (7.3.29-0) lmn73-testing; urgency=low
   * Migrate firewall tools to src/linuxmuster_base7/firewall/.
   * Update all 7 sbin scripts to use new imports.
   * Update share/examples and share/firewall scripts.
+  * Fix shebangs: Replace #!/usr/bin/env python3 with #!/usr/bin/python3.
   * Add comprehensive test suite (tests/test_setup_cli.sh: 20 tests).
   * Add integration test suite with snapshot/restore (tests/test_setup_integration.sh: 6 tests).
   * Increase debian/compat level to 10.
