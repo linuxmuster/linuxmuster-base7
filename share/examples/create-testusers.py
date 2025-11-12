@@ -80,7 +80,7 @@ except:
 msg = 'Running sophomorix-check '
 printScript(msg, '', False, False, True)
 try:
-    subprocess.run('sophomorix-check', check=True)
+    subprocess.run(['sophomorix-check'], check=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -90,7 +90,7 @@ except:
 msg = 'Running sophomorix-add '
 printScript(msg, '', False, False, True)
 try:
-    subprocess.run('sophomorix-add', check=True)
+    subprocess.run(['sophomorix-add'], check=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -100,7 +100,7 @@ except:
 msg = 'Running sophomorix-quota '
 printScript(msg, '', False, False, True)
 try:
-    subprocess.run('sophomorix-quota', check=True)
+    subprocess.run(['sophomorix-quota'], check=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -110,10 +110,17 @@ except:
 msg = 'Get usernames '
 printScript(msg, '', False, False, True)
 try:
-    students = os.popen(
-        "sophomorix-query --schoolbase default-school --student --user-minimal | grep [1-9]: | awk '{ print $2 }'").read().split('\n')
-    teachers = os.popen(
-        "sophomorix-query --schoolbase default-school --teacher --user-minimal | grep [1-9]: | awk '{ print $2 }'").read().split('\n')
+    result = subprocess.run(
+        ['sophomorix-query', '--schoolbase', 'default-school', '--student', '--user-minimal'],
+        capture_output=True, text=True, check=True)
+    students = [line.split()[1] for line in result.stdout.split('\n')
+                if line and any(c.isdigit() for c in line) and ':' in line]
+
+    result = subprocess.run(
+        ['sophomorix-query', '--schoolbase', 'default-school', '--teacher', '--user-minimal'],
+        capture_output=True, text=True, check=True)
+    teachers = [line.split()[1] for line in result.stdout.split('\n')
+                if line and any(c.isdigit() for c in line) and ':' in line]
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -129,8 +136,7 @@ for user in students + teachers:
     msg = ' * ' + user + ' '
     printScript(msg, '', False, False, True)
     try:
-        subprocess.run('sophomorix-passwd --user ' + user
-                + ' --pass "' + pw + '"', check=True)
+        subprocess.run(['sophomorix-passwd', '--user', user, '--pass', pw], check=True)
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
