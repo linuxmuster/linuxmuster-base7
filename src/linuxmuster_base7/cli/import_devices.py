@@ -65,7 +65,7 @@ msg = 'Starting sophomorix-device syntax check:'
 printScript(msg)
 try:
     msg = 'sophomorix-device finished '
-    subprocess.run(['sophomorix-device --sync'], shell=False, check=False)
+    subprocess.run(['sophomorix-device', '--sync'], shell=False, check=False)
     printScript(msg + ' OK!')
 except Exception as err:
     printScript(msg + ' errors detected!')
@@ -366,7 +366,7 @@ if len(hookscripts) > 0:
 # restart services
 printScript('', 'begin')
 printScript('Finally restarting dhcp service.')
-subprocess.run(['service isc-dhcp-server restart'], shell=False, check=False)
+subprocess.run(['service', 'isc-dhcp-server', 'restart'], shell=False, check=False)
 
 # end message
 printScript(os.path.basename(__file__), 'end')
