@@ -89,7 +89,7 @@ def main():
         radiussecret = randomPassword(16)
         with open(environment.RADIUSSECRET, 'w') as secret:
             secret.write(radiussecret)
-        run_with_log(['chmod', '400', environment.RADIUSSECRET], 'chmod 400 ' + str(environment.RADIUSSECRET), logfile)
+        run_with_log(['chmod', '400', environment.RADIUSSECRET], logfile)
         printScript(' Success!', '', True, True, False, len(msg))
     except Exception as error:
         printScript(f' Failed: {error}', '', True, True, False, len(msg))
