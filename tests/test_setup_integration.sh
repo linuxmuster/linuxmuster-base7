@@ -30,6 +30,7 @@ SNAPSHOT_NAME="baseline-$(date +%Y%m%d-%H%M%S)"
 declare -a SNAPSHOT_PATHS=(
     "/etc/linuxmuster"
     "/var/lib/linuxmuster"
+    "/var/lib/samba"
     "/var/cache/linuxmuster"
     "/etc/samba/smb.conf"
     "/etc/dhcp"
@@ -173,7 +174,7 @@ restore_snapshot() {
     print_info "Restoring system snapshot: $snapshot_name"
 
     # Stop potentially affected services
-    systemctl stop samba smbd nmbd winbind isc-dhcp-server 2>/dev/null || true
+    systemctl stop samba-ad-dc samba smbd nmbd winbind isc-dhcp-server 2>/dev/null || true
 
     # Restore each path
     for path in "${SNAPSHOT_PATHS[@]}"; do
@@ -198,6 +199,7 @@ restore_snapshot() {
 
     # Restart services that were running
     # (In production, you'd want to restore the exact service state)
+    systemctl restart samba-ad-dc 2>/dev/null || true
     systemctl restart samba 2>/dev/null || true
     systemctl restart isc-dhcp-server 2>/dev/null || true
 
@@ -303,7 +305,7 @@ run_test_with_snapshot() {
 
     # Simplified snapshot - just copy essential dirs that exist
     print_info "Backing up configuration directories..."
-    for path in /var/cache/linuxmuster /var/lib/linuxmuster; do
+    for path in /var/cache/linuxmuster /var/lib/linuxmuster /var/lib/samba; do
         echo "DEBUG: Checking path: $path" >&2
         if [ -d "$path" ]; then
             echo "DEBUG: Path exists, copying..." >&2
@@ -338,7 +340,7 @@ run_test_with_snapshot() {
     echo "DEBUG: ===== STARTING RESTORE =====" >&2
     print_info "Restoring system state..."
     echo "DEBUG: Starting restore from: $SNAPSHOT_DIR/$pre_snapshot" >&2
-    for path in /var/cache/linuxmuster /var/lib/linuxmuster; do
+    for path in /var/cache/linuxmuster /var/lib/linuxmuster /var/lib/samba; do
         snapshot_source="$SNAPSHOT_DIR/$pre_snapshot$path"
         echo "DEBUG: Checking restore source: $snapshot_source" >&2
         if [ -d "$snapshot_source" ]; then
