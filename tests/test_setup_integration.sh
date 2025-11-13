@@ -873,6 +873,53 @@ run_single_test() {
     print_summary
 }
 
+# Run multiple tests
+run_multiple_tests() {
+    local test_list="$1"
+    local skip_restore="${2:-no}"
+
+    print_header "Running Multiple Tests"
+
+    # Convert comma-separated list to array
+    IFS=',' read -ra tests <<< "$test_list"
+
+    # Validate all test numbers first
+    for test_num in "${tests[@]}"; do
+        # Trim whitespace
+        test_num=$(echo "$test_num" | xargs)
+        if [[ ! "$test_num" =~ ^[1-4]$ ]]; then
+            echo -e "${RED}ERROR: Invalid test number: $test_num${NC}"
+            echo "Valid test numbers: 1-4"
+            exit 1
+        fi
+    done
+
+    # Run each test
+    for test_num in "${tests[@]}"; do
+        test_num=$(echo "$test_num" | xargs)
+        echo ""
+        print_info "Starting test $test_num..."
+        echo ""
+
+        case "$test_num" in
+            1)
+                run_test_with_snapshot "Basic Setup Test" test_basic_setup "$skip_restore"
+                ;;
+            2)
+                run_test_with_snapshot "Full Setup Test" test_full_setup "$skip_restore"
+                ;;
+            3)
+                run_test_with_snapshot "Config File Setup Test" test_config_file_setup "$skip_restore"
+                ;;
+            4)
+                run_test_with_snapshot "Create Test Users" test_create_testusers "skip"
+                ;;
+        esac
+    done
+
+    print_summary
+}
+
 # Main function
 main() {
     print_header "linuxmuster-setup Integration Test Suite"
@@ -895,10 +942,15 @@ main() {
                 ;;
             --test|-t)
                 if [ -z "$2" ]; then
-                    echo "Usage: $0 --test <number> [--no-restore]"
+                    echo "Usage: $0 --test <number[,number,...]> [--no-restore]"
                     exit 1
                 fi
-                run_single_test "$2" "$skip_restore"
+                # Check if it's a comma-separated list or single number
+                if [[ "$2" == *","* ]]; then
+                    run_multiple_tests "$2" "$skip_restore"
+                else
+                    run_single_test "$2" "$skip_restore"
+                fi
                 exit $?
                 ;;
             --interactive|-i)
@@ -944,17 +996,17 @@ Usage: $0 [OPTIONS]
 Integration test suite for linuxmuster-setup with snapshot management.
 
 Options:
-  (no options)              Run all tests automatically
-  -t, --test <number>       Run single test (1-4) [--no-restore optional]
-  -n, --no-restore          Skip restore after test (for -t option)
-  -i, --interactive         Interactive mode
-  -c, --create-snapshot [name]  Create system snapshot
-  -r, --restore <name>      Restore snapshot
-  -l, --list                List available snapshots
-  -d, --delete <name>       Delete specific snapshot
-  --delete-all              Delete all snapshots (with confirmation)
-  --cleanup [count]         Cleanup old snapshots (keep last N, default: 5)
-  -h, --help                Show this help
+  (no options)                   Run all tests automatically
+  -t, --test <number[,...]>      Run single or multiple tests (1-4)
+  -n, --no-restore               Skip restore after test (for -t option)
+  -i, --interactive              Interactive mode
+  -c, --create-snapshot [name]   Create system snapshot
+  -r, --restore <name>           Restore snapshot
+  -l, --list                     List available snapshots
+  -d, --delete <name>            Delete specific snapshot
+  --delete-all                   Delete all snapshots (with confirmation)
+  --cleanup [count]              Cleanup old snapshots (keep last N, default: 5)
+  -h, --help                     Show this help
 
 Test Numbers:
   1 = Basic Setup
@@ -965,6 +1017,8 @@ Test Numbers:
 Examples:
   $0                        # Run all tests
   $0 -t 1                   # Run test 1 (Basic Setup) with restore
+  $0 -t 1,2,4               # Run tests 1, 2, and 4 in sequence
+  $0 -t 1,3 -n              # Run tests 1 and 3 without restore
   $0 -t 1 -n                # Run test 1 without restore
   $0 -t 4                   # Run test 4 (Create Users, never restores)
   $0 -i                     # Interactive mode
