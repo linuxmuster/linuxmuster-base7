@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # debian/rules for linuxmuster-base7
 # Modernized to use pybuild and dh-python for Debian Python Policy compliance
-# 20251111
+# 20251113
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
@@ -23,3 +23,12 @@ override_dh_auto_install:
 	dh_auto_install
 	# pybuild handles Python package installation automatically
 	# Non-Python files (share/, etc/) are handled by debian/install
+	# Move linuxmuster-* scripts from /usr/bin to /usr/sbin (root-only tools)
+	mkdir -p debian/linuxmuster-base7/usr/sbin
+	if [ -d debian/linuxmuster-base7/usr/bin ]; then \
+		for script in debian/linuxmuster-base7/usr/bin/linuxmuster-*; do \
+			if [ -f "$$script" ]; then \
+				mv "$$script" debian/linuxmuster-base7/usr/sbin/; \
+			fi \
+		done \
+	fi
