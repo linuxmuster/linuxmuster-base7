@@ -2,7 +2,7 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20250729
+# 20251112
 #
 
 from __future__ import print_function
@@ -57,7 +57,7 @@ except Exception as error:
     sys.exit(1)
 
 # basic subject string
-subjbase = '-subj /O="' + schoolname + '"/OU=' + sambadomain + '/CN='
+subjbase = '/O="' + schoolname + '"/OU=' + sambadomain + '/CN='
 
 # substring with sha and validation duration
 days = '3650'
@@ -79,8 +79,7 @@ try:
                  'openssl genrsa -out ' + environment.CAKEY + ' -aes128 -passout pass:****** 2048',
                  logfile)
     # Parse subj for openssl req
-    subj_parts = ['-subj', subj]
-    run_with_log(['openssl', 'req', '-batch', '-x509'] + subj_parts + ['-new', '-nodes',
+    run_with_log(['openssl', 'req', '-batch', '-x509', '-subj', subj, '-new', '-nodes',
                   '-passin', 'pass:' + cakeypw, '-key', environment.CAKEY,
                   '-sha256', '-days', days, '-out', environment.CACERT],
                  'openssl req -batch -x509 ... -out ' + environment.CACERT,

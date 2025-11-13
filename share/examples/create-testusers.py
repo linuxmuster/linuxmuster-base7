@@ -2,7 +2,7 @@
 #
 # create a bunch of testusers
 # thomas@linuxmuster.net
-# 20251112
+# 20251113
 #
 
 import configparser
@@ -133,30 +133,19 @@ try:
     with open(logfile, 'a') as log:
         log.write('-' * 78 + '\n')
         log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
-        log.write('#### sophomorix-query --student ####\n')
+        log.write('#### sophomorix-query --student --teacher ####\n')
         result = subprocess.run(
-            ['sophomorix-query', '--schoolbase', 'default-school', '--student', '--user-minimal'],
+            ['sophomorix-query', '--schoolbase', 'default-school', '--student', '--teacher', '--user-minimal'],
             capture_output=True, text=True, check=True)
         log.write(result.stdout)
         if result.stderr:
             log.write(result.stderr)
         log.write('-' * 78 + '\n')
-    students = [line.split()[1] for line in result.stdout.split('\n')
-                if line and any(c.isdigit() for c in line) and ':' in line]
+    users = [line.split()[1] for line in result.stdout.split('\n')
+                if line and any(c.isdigit() for c in line) and ':' in line
+                and 'SophomorixSchemaVersion' not in line
+                and 'USERS' not in line]
 
-    with open(logfile, 'a') as log:
-        log.write('-' * 78 + '\n')
-        log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
-        log.write('#### sophomorix-query --teacher ####\n')
-        result = subprocess.run(
-            ['sophomorix-query', '--schoolbase', 'default-school', '--teacher', '--user-minimal'],
-            capture_output=True, text=True, check=True)
-        log.write(result.stdout)
-        if result.stderr:
-            log.write(result.stderr)
-        log.write('-' * 78 + '\n')
-    teachers = [line.split()[1] for line in result.stdout.split('\n')
-                if line and any(c.isdigit() for c in line) and ':' in line]
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -166,7 +155,7 @@ except:
 pw = environment.ROOTPW
 msg = 'Setting user passwords to "' + pw + '" '
 printScript(msg)
-for user in students + teachers:
+for user in users:
     if user == '':
         continue
     msg = ' * ' + user + ' '
@@ -180,4 +169,12 @@ for user in students + teachers:
 
 msg = 'done! '
 printScript(msg)
+
+# finalize logfile
+with open(logfile, 'a') as log:
+    log.write('-' * 78 + '\n')
+    log.write('#### ' + os.path.basename(__file__) + ' finished at '
+              + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
+    log.write('-' * 78 + '\n')
+
 printScript('', 'end')

@@ -2,7 +2,7 @@
 #
 # linbo setup
 # thomas@linuxmuster.net
-# 20250729
+# 20251112
 #
 
 import configparser

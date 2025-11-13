@@ -2,7 +2,7 @@
 #
 # add additional servers to devices.csv
 # thomas@linuxmuster.net
-# 20250729
+# 20251112
 #
 
 import configparser
@@ -30,18 +30,14 @@ def run_with_log(cmd_list, cmd_desc, logfile):
     result = subprocess.run(cmd_list, capture_output=True, text=True, check=False)
     if logfile and (result.stdout or result.stderr):
         with open(logfile, 'a') as log:
-            log.write('-' * 78 + '\n
-')
-            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####
-')
-            log.write('#### ' + cmd_desc + ' ####
-')
+            log.write('-' * 78 + '\n')
+            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####')
+            log.write('#### ' + cmd_desc + ' ####')
             if result.stdout:
                 log.write(result.stdout)
             if result.stderr:
                 log.write(result.stderr)
-            log.write('-' * 78 + '\n
-')
+            log.write('-' * 78 + '\n')
     return result
 
 

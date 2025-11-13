@@ -2,7 +2,7 @@
 #
 # create samba users & shares
 # thomas@linuxmuster.net
-# 20250729
+# 20251113
 #
 
 import configparser
@@ -15,7 +15,7 @@ sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
 from linuxmuster_base7.functions import mySetupLogfile, printScript, randomPassword, readTextfile
-from linuxmuster_base7.functions import replaceInFile, sambaTool, writeTextfile
+from linuxmuster_base7.functions import replaceInFile, writeTextfile
 
 logfile = mySetupLogfile(__file__)
 
@@ -124,8 +124,9 @@ except Exception as error:
 msg = 'No expiry for administrative passwords '
 printScript(msg, '', False, False, True)
 try:
-    for i in ['Administrator', 'global-admin', 'sophomorix-admin', 'global-binduser']:
-        sambaTool('user setexpiry ' + i + ' --noexpiry', logfile)
+    for item in ['Administrator', 'global-admin', 'global-binduser']:
+        run_with_log('samba-tool user setexpiry ' + item + ' --noexpiry --username=global-admin --password="'
+            + adminpw + '"', logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))
@@ -161,10 +162,10 @@ printScript(msg, '', False, False, True)
 try:
     dnspw = randomPassword(16)
     desc = 'Unprivileged user for DNS updates via DHCP server'
-    sambaTool('user create dns-admin ' + dnspw
-              + ' --description="' + desc + '"', logfile)
-    sambaTool('user setexpiry dns-admin --noexpiry', logfile)
-    sambaTool('group addmembers DnsAdmins dns-admin', logfile)
+    run_with_log('samba-tool user create dns-admin "' + dnspw + '" --description="'
+        + desc + '" --username=global-admin --password="' + adminpw + '"', logfile)
+    run_with_log('samba-tool user setexpiry dns-admin --noexpiry --username=global-admin --password="' + adminpw + '"', logfile)
+    run_with_log('samba-tool group addmembers DnsAdmins dns-admin --username=global-admin --password="' + adminpw + '"', logfile)
     rc, writeTextfile(environment.DNSADMINSECRET, dnspw, 'w')
     subprocess.run(['chgrp', 'dhcpd', environment.DNSADMINSECRET], check=True)
     subprocess.run(['chmod', '440', environment.DNSADMINSECRET], check=True)
