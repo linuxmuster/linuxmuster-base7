@@ -120,6 +120,35 @@ This will:
 4. Clean up old snapshots (keep last 5)
 5. Restore baseline state at the end
 
+#### Run specific tests
+Run single or multiple tests by number:
+```bash
+# Run single test (no restore after)
+sudo ./tests/test_setup_integration.sh -t 1
+
+# Run multiple tests (no restore after)
+sudo ./tests/test_setup_integration.sh -t 1,2,4
+
+# Run test(s) with restore after
+sudo ./tests/test_setup_integration.sh -t 2,4 -r baseline
+```
+
+**Test numbers:**
+- 1 = Basic Setup
+- 2 = Full Setup
+- 3 = Config File Setup
+- 4 = Create Test Users
+
+**Behavior:**
+- Before test(s): Automatic snapshot is created (`auto-test-N-TIMESTAMP` or `auto-tests-TIMESTAMP`)
+- During tests: Tests run consecutively without restore between them
+- After test(s): No restore by default (changes remain), unless `-r <snapshot>` is specified
+
+This allows you to:
+- Examine system state after tests complete
+- Run specific test combinations
+- Control when/if cleanup happens
+
 #### Interactive mode
 Menu-driven interface for selective testing and snapshot management:
 ```bash
@@ -158,21 +187,72 @@ For scripting and automation:
 ```bash
 # Create snapshot
 sudo ./tests/test_setup_integration.sh --create-snapshot baseline
+sudo ./tests/test_setup_integration.sh -c baseline
 
 # List snapshots
 sudo ./tests/test_setup_integration.sh --list
+sudo ./tests/test_setup_integration.sh -l
 
-# Restore snapshot
+# Restore snapshot (standalone, no tests)
 sudo ./tests/test_setup_integration.sh --restore baseline
+sudo ./tests/test_setup_integration.sh -r baseline
 
 # Delete specific snapshot
 sudo ./tests/test_setup_integration.sh --delete baseline
+sudo ./tests/test_setup_integration.sh -d baseline
 
 # Delete all snapshots (with confirmation)
 sudo ./tests/test_setup_integration.sh --delete-all
 
 # Cleanup old snapshots (keep last 5)
 sudo ./tests/test_setup_integration.sh --cleanup 5
+```
+
+**Note:** The `-r` option can be used:
+- **Standalone**: `-r baseline` - Only restores the snapshot, runs no tests
+- **With tests**: `-t 1,2 -r baseline` - Runs tests 1 and 2, then restores the snapshot
+
+#### Common usage scenarios
+
+**Testing without cleanup (examine results):**
+```bash
+# Run tests and keep changes for inspection
+sudo ./tests/test_setup_integration.sh -t 2,4
+# Inspect system state...
+# Later restore to clean state
+sudo ./tests/test_setup_integration.sh -r baseline
+```
+
+**Quick test with automatic cleanup:**
+```bash
+# Create baseline first
+sudo ./tests/test_setup_integration.sh -c baseline
+# Run tests, then auto-restore
+sudo ./tests/test_setup_integration.sh -t 1,2 -r baseline
+```
+
+**Iterative testing workflow:**
+```bash
+# 1. Create initial clean state
+sudo ./tests/test_setup_integration.sh -c clean-start
+
+# 2. Run tests, examine results
+sudo ./tests/test_setup_integration.sh -t 1,2
+
+# 3. If tests look good, run more tests
+sudo ./tests/test_setup_integration.sh -t 3,4
+
+# 4. When done, restore clean state
+sudo ./tests/test_setup_integration.sh -r clean-start
+```
+
+**Testing changes to specific setup module:**
+```bash
+# Test only config file setup after code changes
+sudo ./tests/test_setup_integration.sh -t 3
+# Check results, fix code if needed, restore and repeat
+sudo ./tests/test_setup_integration.sh -r baseline
+sudo ./tests/test_setup_integration.sh -t 3
 ```
 
 #### Requirements
