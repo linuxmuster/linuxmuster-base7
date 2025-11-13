@@ -109,6 +109,13 @@ check_system() {
         exit 1
     fi
 
+    # Check if system is configured
+    . /usr/share/linuxmuster/environment.sh || exit 1
+    if [ -e "$SETUPINI" ]; then
+        echo -e "${RED}ERROR: linuxmuster-setup has already been run. Is this a production system?${NC}"
+        exit 1
+    fi
+
     # Check available disk space (need at least 500MB for snapshots)
     available=$(df /tmp | awk 'NR==2 {print $4}')
     if [ "$available" -lt 512000 ]; then
