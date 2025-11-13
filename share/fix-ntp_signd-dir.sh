@@ -4,16 +4,15 @@
 # use this at your own risk
 # 
 # thomas@linuxmuster.net
-# 20250326
-#
+# 20251113
 
 # get environment
 source /usr/share/linuxmuster/environment.sh
 
 # additional variables
 NTPSOCKDIR_OLD="${NTPSOCKDIR/\/var\/lib\//\/run\/}"
-conffiles="/etc/ntp.conf /etc/samba/smb.conf"
-services="apparmor ntp samba-ad-dc"
+conffiles="/etc/ntpsec/ntp.conf /etc/samba/smb.conf"
+services="apparmor ntpsec samba-ad-dc"
 timestamp="$(date +%Y%m%d%H%M)"
 
 # provide ntpd apparmor override file
@@ -30,7 +29,7 @@ cp "$ntpd_template" "$ntpd_target"
 # create socket directory
 echo "Creating $NTPSOCKDIR ..."
 mkdir -p "$NTPSOCKDIR"
-chgrp ntp "$NTPSOCKDIR"
+chgrp ntpsec "$NTPSOCKDIR"
 chmod 750 "$NTPSOCKDIR"
 
 # patch config files
