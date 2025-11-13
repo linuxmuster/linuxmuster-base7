@@ -1,31 +1,70 @@
 #!/usr/bin/python3
 #
-# CLI entry point wrapper for linuxmuster-update-ntpconf
-# Auto-generated for Debian Python Policy compliance
-# 20251111
+# linuxmuster-update-ntpconf
+# thomas@linuxmuster.net
+# 20251113
 #
 
+import datetime
+import environment
+import shutil
+import subprocess
 import sys
-import os
 
-# Add linuxmuster-common to path for environment module
-sys.path.insert(0, '/usr/lib/linuxmuster')
+from linuxmuster_base7.functions import getSetupValue, getSubnetArray, isValidHostIpv4, \
+    printScript, readTextfile, writeTextfile
+
 
 def main():
-    """Main entry point wrapper."""
-    # Import and execute the original script logic
-    original_script = os.path.join('/usr/sbin', 'linuxmuster-update-ntpconf')
-    
-    # For now, we'll import the functions and re-execute
-    # This will be properly refactored in a later step
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("cli_module", original_script)
-    if spec and spec.loader:
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-    else:
-        print(f"Error: Could not load {original_script}", file=sys.stderr)
+    """Update ntpsec configuration with current network settings."""
+    printScript('Updating ntpsec configuration:')
+
+    # read necessary values from setup.ini and other sources
+    firewallip = getSetupValue('firewallip')
+    timestamp = str(datetime.datetime.now()).replace('-', '').replace(' ', '').replace(':', '').split('.')[0]
+
+    # read template
+    cfgtemplate = environment.TPLDIR + '/ntp.conf'
+    rc, content = readTextfile(cfgtemplate)
+    cfgfile = content.split('\n')[0].replace('# ', '')
+    # create backup of current configuration
+    bakfile = cfgfile + '-' + timestamp
+    printScript('* Creating backup ' + bakfile + '.')
+    try:
+        shutil.copy2(cfgfile, bakfile)
+    except Exception as e:
+        printScript('* Failed to backup ' + cfgfile + ': ' + str(e))
         sys.exit(1)
+
+    # get subnets
+    printScript('* Processing subnets')
+    subnets = []
+    for row in getSubnetArray():
+        try:
+            isValidHostIpv4(row[0])
+            subnets.append(row[0])
+        except:
+            continue
+
+    # create config lines for restricted subnets
+    restricted_subnets = None
+    # iterate over subnets
+    for subnet in subnets:
+        printScript('  -  ' + subnet)
+        if restricted_subnets is None:
+            restricted_subnets = 'restrict ' + subnet
+        else:
+            restricted_subnets = restricted_subnets + '\nrestrict ' + subnet
+    # replace placeholders with values
+    content = content.replace('@@firewallip@@', firewallip).replace('@@restricted_subnets@@', restricted_subnets).replace('@@ntpsockdir@@', environment.NTPSOCKDIR)
+    # write content to cfgfile
+    printScript('* Writing ' + cfgfile + '.')
+    writeTextfile(cfgfile, content, 'w')
+
+    # restart ntp service
+    printScript('* Restarting ntpsec service.')
+    subprocess.run(['systemctl', 'restart', 'ntpsec.service'], check=False)
+
 
 if __name__ == '__main__':
     main()
