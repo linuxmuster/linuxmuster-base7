@@ -304,6 +304,7 @@ delete_all_snapshots() {
 run_test_with_snapshot() {
     local test_name="$1"
     local test_function="$2"
+    local skip_restore="${3:-no}"  # Optional 3rd parameter: "skip" to skip restore
 
     ((TESTS_RUN++))
     print_test "$test_name"
@@ -349,11 +350,15 @@ run_test_with_snapshot() {
         print_fail "$test_name failed (exit code: $test_result)"
     fi
 
-    # Restore snapshot (simplified)
-    echo "DEBUG: ===== STARTING RESTORE =====" >&2
-    print_info "Restoring system state..."
-    echo "DEBUG: Starting restore from: $SNAPSHOT_DIR/$pre_snapshot" >&2
-    for path in /var/cache/linuxmuster /var/lib/linuxmuster /var/lib/samba; do
+    # Restore snapshot (simplified) - skip if requested
+    if [ "$skip_restore" = "skip" ]; then
+        print_info "Skipping restore (changes will persist)"
+        echo "DEBUG: Restore skipped as requested" >&2
+    else
+        echo "DEBUG: ===== STARTING RESTORE =====" >&2
+        print_info "Restoring system state..."
+        echo "DEBUG: Starting restore from: $SNAPSHOT_DIR/$pre_snapshot" >&2
+        for path in /var/cache/linuxmuster /var/lib/linuxmuster /var/lib/samba; do
         snapshot_source="$SNAPSHOT_DIR/$pre_snapshot$path"
         echo "DEBUG: Checking restore source: $snapshot_source" >&2
         if [ -d "$snapshot_source" ]; then
@@ -381,9 +386,10 @@ run_test_with_snapshot() {
     systemctl restart cups 2>/dev/null || true
     systemctl restart linuxmuster-webui 2>/dev/null || true
     systemctl restart tftpd-hpa 2>/dev/null || true
-    echo "DEBUG: Services restarted" >&2
+        echo "DEBUG: Services restarted" >&2
 
-    print_info "System state restored"
+        print_info "System state restored"
+    fi  # End of restore conditional
 
     # Cleanup test snapshot
     print_info "Cleaning up test snapshot..."
@@ -664,7 +670,7 @@ interactive_mode() {
                         1) run_test_with_snapshot "Basic Setup" test_basic_setup ;;
                         2) run_test_with_snapshot "Full Setup" test_full_setup ;;
                         3) run_test_with_snapshot "Config File Setup" test_config_file_setup ;;
-                        4) run_test_with_snapshot "Create Test Users" test_create_testusers ;;
+                        4) run_test_with_snapshot "Create Test Users" test_create_testusers "skip" ;;
                         0) break ;;
                         *) echo "Invalid choice" ;;
                     esac
@@ -783,7 +789,7 @@ run_all_tests() {
     echo "DEBUG: About to start Test 2/6" >&2
     print_info "Test 2/6: Create Test Users (after basic setup)"
     echo "DEBUG: Calling run_test_with_snapshot for test 2" >&2
-    run_test_with_snapshot "Create Test Users (after basic setup)" test_create_testusers
+    run_test_with_snapshot "Create Test Users (after basic setup)" test_create_testusers "skip"
     echo "DEBUG: Test 2 completed" >&2
 
     echo "DEBUG: About to start Test 3/6" >&2
@@ -795,7 +801,7 @@ run_all_tests() {
     echo "DEBUG: About to start Test 4/6" >&2
     print_info "Test 4/6: Create Test Users (after full setup)"
     echo "DEBUG: Calling run_test_with_snapshot for test 4" >&2
-    run_test_with_snapshot "Create Test Users (after full setup)" test_create_testusers
+    run_test_with_snapshot "Create Test Users (after full setup)" test_create_testusers "skip"
     echo "DEBUG: Test 4 completed" >&2
 
     echo "DEBUG: About to start Test 5/6" >&2
@@ -807,7 +813,7 @@ run_all_tests() {
     echo "DEBUG: About to start Test 6/6" >&2
     print_info "Test 6/6: Create Test Users (after config file setup)"
     echo "DEBUG: Calling run_test_with_snapshot for test 6" >&2
-    run_test_with_snapshot "Create Test Users (after config file setup)" test_create_testusers
+    run_test_with_snapshot "Create Test Users (after config file setup)" test_create_testusers "skip"
     echo "DEBUG: Test 6 completed" >&2
 
     # Print summary
