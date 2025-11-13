@@ -141,7 +141,7 @@ def updateNetplan(subnets):
 
 # update vlan gateway on firewall
 def updateFwGw(servernet_router, content):
-    soup = BeautifulSoup(content, 'lxml')
+    soup = BeautifulSoup(content, features='xml')
     # get all gateways
     gateways = soup.findAll('gateways')[0]
     soup = BeautifulSoup(str(gateways), 'lxml')
@@ -165,7 +165,7 @@ def updateFwGw(servernet_router, content):
 # update subnet nat rules on firewall
 def updateFwNat(subnets, ipnet_setup, serverip, content):
     # create array with all nat rules
-    soup = BeautifulSoup(content, 'lxml')
+    soup = BeautifulSoup(content, features='xml')
     out_nat = soup.findAll('outbound')[0]
     soup = BeautifulSoup(str(out_nat), 'lxml')
     # remove old subnet rules from array
