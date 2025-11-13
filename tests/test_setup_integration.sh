@@ -841,6 +841,44 @@ run_all_tests() {
     print_info "All tests completed!"
 }
 
+# Run single test
+run_single_test() {
+    local test_number="$1"
+    local skip_restore="${2:-no}"
+
+    print_header "Running Single Test"
+
+    case "$test_number" in
+        1)
+            print_info "Test 1: Basic Setup"
+            run_test_with_snapshot "Basic Setup Test" test_basic_setup "$skip_restore"
+            ;;
+        2)
+            print_info "Test 2: Full Setup"
+            run_test_with_snapshot "Full Setup Test" test_full_setup "$skip_restore"
+            ;;
+        3)
+            print_info "Test 3: Config File Setup"
+            run_test_with_snapshot "Config File Setup Test" test_config_file_setup "$skip_restore"
+            ;;
+        4)
+            print_info "Test 4: Create Test Users"
+            run_test_with_snapshot "Create Test Users" test_create_testusers "skip"
+            ;;
+        *)
+            echo -e "${RED}ERROR: Invalid test number: $test_number${NC}"
+            echo "Valid test numbers: 1-4"
+            echo "  1 = Basic Setup"
+            echo "  2 = Full Setup"
+            echo "  3 = Config File Setup"
+            echo "  4 = Create Test Users"
+            exit 1
+            ;;
+    esac
+
+    print_summary
+}
+
 # Main function
 main() {
     print_header "linuxmuster-setup Integration Test Suite"
@@ -851,75 +889,114 @@ main() {
     check_root
     check_system
 
-    # Parse arguments
-    case "${1:-}" in
-        --interactive|-i)
-            interactive_mode
-            ;;
-        --create-snapshot|-c)
-            create_snapshot "${2:-manual-$(date +%Y%m%d-%H%M%S)}"
-            ;;
-        --restore|-r)
-            if [ -z "$2" ]; then
-                echo "Usage: $0 --restore <snapshot-name>"
-                exit 1
-            fi
-            restore_snapshot "$2"
-            ;;
-        --list|-l)
-            list_snapshots
-            ;;
-        --delete|-d)
-            if [ -z "$2" ]; then
-                echo "Usage: $0 --delete <snapshot-name>"
-                exit 1
-            fi
-            delete_snapshot "$2"
-            ;;
-        --delete-all)
-            delete_all_snapshots
-            ;;
-        --cleanup)
-            cleanup_snapshots "${2:-5}"
-            ;;
-        --help|-h)
-            cat << EOF
+    # Global options
+    local skip_restore="no"
+
+    # Parse options
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --no-restore|-n)
+                skip_restore="skip"
+                shift
+                ;;
+            --test|-t)
+                if [ -z "$2" ]; then
+                    echo "Usage: $0 --test <number> [--no-restore]"
+                    exit 1
+                fi
+                run_single_test "$2" "$skip_restore"
+                exit $?
+                ;;
+            --interactive|-i)
+                interactive_mode
+                exit $?
+                ;;
+            --create-snapshot|-c)
+                create_snapshot "${2:-manual-$(date +%Y%m%d-%H%M%S)}"
+                exit $?
+                ;;
+            --restore|-r)
+                if [ -z "$2" ]; then
+                    echo "Usage: $0 --restore <snapshot-name>"
+                    exit 1
+                fi
+                restore_snapshot "$2"
+                exit $?
+                ;;
+            --list|-l)
+                list_snapshots
+                exit $?
+                ;;
+            --delete|-d)
+                if [ -z "$2" ]; then
+                    echo "Usage: $0 --delete <snapshot-name>"
+                    exit 1
+                fi
+                delete_snapshot "$2"
+                exit $?
+                ;;
+            --delete-all)
+                delete_all_snapshots
+                exit $?
+                ;;
+            --cleanup)
+                cleanup_snapshots "${2:-5}"
+                exit $?
+                ;;
+            --help|-h)
+                cat << EOF
 Usage: $0 [OPTIONS]
 
 Integration test suite for linuxmuster-setup with snapshot management.
 
 Options:
-  (no options)          Run all tests automatically
-  -i, --interactive     Interactive mode
+  (no options)              Run all tests automatically
+  -t, --test <number>       Run single test (1-4) [--no-restore optional]
+  -n, --no-restore          Skip restore after test (for -t option)
+  -i, --interactive         Interactive mode
   -c, --create-snapshot [name]  Create system snapshot
-  -r, --restore <name>  Restore snapshot
-  -l, --list            List available snapshots
-  -d, --delete <name>   Delete specific snapshot
-  --delete-all          Delete all snapshots (with confirmation)
-  --cleanup [count]     Cleanup old snapshots (keep last N, default: 5)
-  -h, --help            Show this help
+  -r, --restore <name>      Restore snapshot
+  -l, --list                List available snapshots
+  -d, --delete <name>       Delete specific snapshot
+  --delete-all              Delete all snapshots (with confirmation)
+  --cleanup [count]         Cleanup old snapshots (keep last N, default: 5)
+  -h, --help                Show this help
+
+Test Numbers:
+  1 = Basic Setup
+  2 = Full Setup
+  3 = Config File Setup
+  4 = Create Test Users
 
 Examples:
-  $0                    # Run all tests
-  $0 -i                 # Interactive mode
-  $0 -c baseline        # Create snapshot named 'baseline'
-  $0 -r baseline        # Restore snapshot 'baseline'
-  $0 -l                 # List all snapshots
-  $0 -d baseline        # Delete snapshot 'baseline'
-  $0 --delete-all       # Delete all snapshots
+  $0                        # Run all tests
+  $0 -t 1                   # Run test 1 (Basic Setup) with restore
+  $0 -t 1 -n                # Run test 1 without restore
+  $0 -t 4                   # Run test 4 (Create Users, never restores)
+  $0 -i                     # Interactive mode
+  $0 -c baseline            # Create snapshot named 'baseline'
+  $0 -r baseline            # Restore snapshot 'baseline'
+  $0 -l                     # List all snapshots
+  $0 -d baseline            # Delete snapshot 'baseline'
+  $0 --delete-all           # Delete all snapshots
 
 EOF
-            exit 0
-            ;;
-        "")
-            run_all_tests
-            ;;
-        *)
-            echo "Unknown option: $1"
-            echo "Use --help for usage information"
-            exit 1
-            ;;
-    esac
+                exit 0
+                ;;
+            "")
+                run_all_tests
+                exit $?
+                ;;
+            *)
+                echo "Unknown option: $1"
+                echo "Use --help for usage information"
+                exit 1
+                ;;
+        esac
+    done
+
+    # If we get here without exiting, run all tests
+    run_all_tests
 
     # Exit with appropriate code
     if [ $TESTS_FAILED -eq 0 ]; then
