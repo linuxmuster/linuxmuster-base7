@@ -10,10 +10,11 @@ import environment
 import getopt
 import os
 import shutil
+import subprocess
 import sys
 
 from linuxmuster_base7.functions import catFiles, checkFwMajorVer, getFwConfig, getSetupValue, printScript, putFwConfig, \
-    readTextfile, replaceInFile, sshExec, subProc, tee
+    readTextfile, replaceInFile, sshExec, tee
 
 
 # print usage info
@@ -261,18 +262,27 @@ def main():
         try:
             if name == 'ca':
                 printScript('Note that you have to renew and deploy also all certs which depend on cacert.')
-                subProc('openssl req -batch -x509 ' + cacert_subject + ' -new -nodes ' + cakey_passin
-                    + ' -key ' + cakey + ' -sha256 -days ' + days + ' -out ' + cacert, logfile)
-                subProc('openssl x509 -in ' + cacert + ' -inform PEM -out ' + cacert_crt, logfile)
+                with open(logfile, 'a') as log:
+                    subprocess.run(['openssl', 'req', '-batch', '-x509', cacert_subject, '-new', '-nodes',
+                                  cakey_passin, '-key', cakey, '-sha256', '-days', days, '-out', cacert],
+                                 stdout=log, stderr=subprocess.STDOUT, check=True)
+                with open(logfile, 'a') as log:
+                    subprocess.run(['openssl', 'x509', '-in', cacert, '-inform', 'PEM', '-out', cacert_crt],
+                                 stdout=log, stderr=subprocess.STDOUT, check=True)
             else:
                 cnf = createCnf(cnf_tpl)
-                subProc('openssl x509 -req -in ' + csr + ' -CA ' + cacert + ' ' + cakey_passin + ' -CAkey '
-                    + cakey + ' -CAcreateserial -out ' + pem + ' -days ' + days + ' -sha256 -extfile ' + cnf, logfile)
+                with open(logfile, 'a') as log:
+                    subprocess.run(['openssl', 'x509', '-req', '-in', csr, '-CA', cacert, cakey_passin,
+                                  '-CAkey', cakey, '-CAcreateserial', '-out', pem, '-days', days,
+                                  '-sha256', '-extfile', cnf],
+                                 stdout=log, stderr=subprocess.STDOUT, check=True)
                 catFiles([pem, cacert], chn)
                 catFiles([key, pem], bdl)
             if name == 'firewall' or name == 'ca':
                 shutil.copyfile(b64, b64_old)
-                subProc('base64 -w0 ' + pem + ' > ' + b64, logfile)
+                with open(logfile, 'a') as log:
+                    with open(b64, 'w') as outfile:
+                        subprocess.run(['base64', '-w0', pem], stdout=outfile, stderr=log, check=True)
                 patchFwCert(b64, b64_old)
         except Exception as err:
             printScript('Failed!')
@@ -322,7 +332,8 @@ def main():
         # reboot server if requested
         if reboot:
             printScript("Rebooting server.")
-            subProc('/sbin/reboot', logfile)
+            with open(logfile, 'a') as log:
+                subprocess.run(['/sbin/reboot'], stdout=log, stderr=subprocess.STDOUT, check=False)
 
 
     # end message
