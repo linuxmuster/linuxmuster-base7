@@ -7,6 +7,7 @@
 
 import environment
 import getopt
+import importlib
 import os
 import subprocess
 import sys
@@ -96,11 +97,14 @@ def main():
         if not createServerCert('firewall', logfile):
             sys.exit(1)
 
-    # invoke setup script
-    with open(logfile, 'a') as log:
-        result = subprocess.run(['python3', environment.SETUPDIR + '/m_firewall.py'],
-                              stdout=log, stderr=subprocess.STDOUT, check=False)
-    rc = 0 if result.returncode == 0 else 1
+    # invoke firewall setup module
+    try:
+        importlib.import_module('linuxmuster_base7.setup.m_firewall')
+        rc = 0
+    except Exception as error:
+        with open(logfile, 'a') as log:
+            log.write(str(error) + '\n')
+        rc = 1
 
     # wait for firewall
     try:
