@@ -523,6 +523,43 @@ None. All changes maintain 100% functional compatibility while improving securit
 
 ---
 
+## 12. Fixed Module Import Path in opnsense_reset.py
+
+**Issue**: After packaging refactoring, `opnsense_reset.py` was trying to execute `m_firewall.py` using the old path `/usr/lib/linuxmuster/setup.d/m_firewall.py` which no longer exists.
+
+**Root cause**: The setup modules were moved from `/usr/lib/linuxmuster/setup.d/` to the Python package structure `linuxmuster_base7.setup.*` during Phase 1 refactoring.
+
+**Solution**: Replace subprocess call with `importlib.import_module()` to load the module from the package:
+
+```python
+# Before:
+with open(logfile, 'a') as log:
+    result = subprocess.run(['python3', environment.SETUPDIR + '/m_firewall.py'],
+                          stdout=log, stderr=subprocess.STDOUT, check=False)
+rc = 0 if result.returncode == 0 else 1
+
+# After:
+try:
+    importlib.import_module('linuxmuster_base7.setup.m_firewall')
+    rc = 0
+except Exception as error:
+    with open(logfile, 'a') as log:
+        log.write(str(error) + '\n')
+    rc = 1
+```
+
+**Benefits**:
+- Correctly uses new package structure
+- Better error handling with try/except
+- Consistent with how `linuxmuster-setup` loads setup modules
+- No dependency on filesystem paths
+
+**File changed**: [src/linuxmuster_base7/cli/opnsense_reset.py](../src/linuxmuster_base7/cli/opnsense_reset.py)
+
+**Commit**: `841c9b3` - "Fix opnsense_reset.py: Use importlib instead of subprocess for m_firewall"
+
+---
+
 ## Conclusion
 
 Phase 2 successfully addressed critical security vulnerabilities and code quality issues:
