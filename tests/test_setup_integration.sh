@@ -3,7 +3,7 @@
 # Integration test script for linuxmuster-setup with system state management
 # Creates snapshots and restores system state between tests
 # thomas@linuxmuster.net
-# 20251111
+# 20251113
 #
 
 # Don't use set -e as it can interfere with test execution
@@ -32,12 +32,17 @@ declare -a SNAPSHOT_PATHS=(
     "/var/lib/linuxmuster"
     "/var/lib/samba"
     "/var/cache/linuxmuster"
-    "/etc/samba/smb.conf"
+    "/etc/samba"
     "/etc/dhcp"
     "/etc/hosts"
     "/etc/hostname"
     "/etc/resolv.conf"
     "/etc/netplan"
+    "/etc/sudoers.d"
+    "/etc/apparmor.d/local"
+    "/etc/ntpsec"
+    "/etc/nsswitch.conf"
+    "/etc/cups/cupsd.conf"
 )
 
 # Test helper functions
@@ -201,7 +206,15 @@ restore_snapshot() {
     # (In production, you'd want to restore the exact service state)
     systemctl restart samba-ad-dc 2>/dev/null || true
     systemctl restart samba 2>/dev/null || true
+    systemctl restart smbd 2>/dev/null || true
+    systemctl restart nmbd 2>/dev/null || true
+    systemctl restart winbind 2>/dev/null || true
     systemctl restart isc-dhcp-server 2>/dev/null || true
+    systemctl restart ntp 2>/dev/null || true
+    systemctl restart apparmor 2>/dev/null || true
+    systemctl restart cups 2>/dev/null || true
+    systemctl restart linuxmuster-webui 2>/dev/null || true
+    systemctl restart tftpd-hpa 2>/dev/null || true
 
     print_info "Snapshot restored successfully"
 }
@@ -354,6 +367,22 @@ run_test_with_snapshot() {
         fi
     done
     echo "DEBUG: ===== RESTORE COMPLETE =====" >&2
+
+    # Restart affected services
+    echo "DEBUG: Restarting services..." >&2
+    systemctl restart samba-ad-dc 2>/dev/null || true
+    systemctl restart samba 2>/dev/null || true
+    systemctl restart smbd 2>/dev/null || true
+    systemctl restart nmbd 2>/dev/null || true
+    systemctl restart winbind 2>/dev/null || true
+    systemctl restart isc-dhcp-server 2>/dev/null || true
+    systemctl restart ntp 2>/dev/null || true
+    systemctl restart apparmor 2>/dev/null || true
+    systemctl restart cups 2>/dev/null || true
+    systemctl restart linuxmuster-webui 2>/dev/null || true
+    systemctl restart tftpd-hpa 2>/dev/null || true
+    echo "DEBUG: Services restarted" >&2
+
     print_info "System state restored"
 
     # Cleanup test snapshot
