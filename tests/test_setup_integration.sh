@@ -173,6 +173,23 @@ EOF
     print_info "Snapshot created successfully: $snapshot_path"
 }
 
+# Restart affected services after snapshot restore
+restart_services() {
+    echo "DEBUG: Restarting services..." >&2
+    systemctl restart samba-ad-dc 2>/dev/null || true
+    systemctl restart samba 2>/dev/null || true
+    systemctl restart smbd 2>/dev/null || true
+    systemctl restart nmbd 2>/dev/null || true
+    systemctl restart winbind 2>/dev/null || true
+    systemctl restart isc-dhcp-server 2>/dev/null || true
+    systemctl restart ntp 2>/dev/null || true
+    systemctl restart apparmor 2>/dev/null || true
+    systemctl restart cups 2>/dev/null || true
+    systemctl restart linuxmuster-webui 2>/dev/null || true
+    systemctl restart tftpd-hpa 2>/dev/null || true
+    echo "DEBUG: Services restarted" >&2
+}
+
 # Restore system snapshot
 restore_snapshot() {
     local snapshot_name="${1:-$SNAPSHOT_NAME}"
@@ -210,18 +227,7 @@ restore_snapshot() {
     done
 
     # Restart services that were running
-    # (In production, you'd want to restore the exact service state)
-    systemctl restart samba-ad-dc 2>/dev/null || true
-    systemctl restart samba 2>/dev/null || true
-    systemctl restart smbd 2>/dev/null || true
-    systemctl restart nmbd 2>/dev/null || true
-    systemctl restart winbind 2>/dev/null || true
-    systemctl restart isc-dhcp-server 2>/dev/null || true
-    systemctl restart ntp 2>/dev/null || true
-    systemctl restart apparmor 2>/dev/null || true
-    systemctl restart cups 2>/dev/null || true
-    systemctl restart linuxmuster-webui 2>/dev/null || true
-    systemctl restart tftpd-hpa 2>/dev/null || true
+    restart_services
 
     print_info "Snapshot restored successfully"
 }
@@ -378,22 +384,10 @@ run_test_with_snapshot() {
             echo "DEBUG: No snapshot for $path" >&2
         fi
     done
-    echo "DEBUG: ===== RESTORE COMPLETE =====" >&2
+        echo "DEBUG: ===== RESTORE COMPLETE =====" >&2
 
-    # Restart affected services
-    echo "DEBUG: Restarting services..." >&2
-    systemctl restart samba-ad-dc 2>/dev/null || true
-    systemctl restart samba 2>/dev/null || true
-    systemctl restart smbd 2>/dev/null || true
-    systemctl restart nmbd 2>/dev/null || true
-    systemctl restart winbind 2>/dev/null || true
-    systemctl restart isc-dhcp-server 2>/dev/null || true
-    systemctl restart ntp 2>/dev/null || true
-    systemctl restart apparmor 2>/dev/null || true
-    systemctl restart cups 2>/dev/null || true
-    systemctl restart linuxmuster-webui 2>/dev/null || true
-    systemctl restart tftpd-hpa 2>/dev/null || true
-        echo "DEBUG: Services restarted" >&2
+        # Restart affected services
+        restart_services
 
         print_info "System state restored"
     fi  # End of restore conditional
