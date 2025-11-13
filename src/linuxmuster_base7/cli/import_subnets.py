@@ -144,7 +144,7 @@ def updateFwGw(servernet_router, content):
     soup = BeautifulSoup(content, features='xml')
     # get all gateways
     gateways = soup.findAll('gateways')[0]
-    soup = BeautifulSoup(str(gateways), 'lxml')
+    soup = BeautifulSoup(str(gateways), features='xml')
     # remove old lan gateway from gateways
     gw_array = []
     for gw_item in soup.findAll('gateway_item'):
@@ -167,7 +167,7 @@ def updateFwNat(subnets, ipnet_setup, serverip, content):
     # create array with all nat rules
     soup = BeautifulSoup(content, features='xml')
     out_nat = soup.findAll('outbound')[0]
-    soup = BeautifulSoup(str(out_nat), 'lxml')
+    soup = BeautifulSoup(str(out_nat), features='xml')
     # remove old subnet rules from array
     nat_rules = []
     for item in soup.findAll('rule'):

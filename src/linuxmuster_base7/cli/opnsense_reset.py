@@ -13,7 +13,7 @@ import sys
 import time
 
 from linuxmuster_base7.functions import createServerCert, datetime, enterPassword, firewallApi, \
-    getSetupValue, printScript, sshExec, subProc, writeTextfile, waitForFw
+    getSetupValue, printScript, sshExec, writeTextfile, waitForFw
 
 
 infotxt = 'Sets the firewall to the state after setup.\n\
@@ -97,7 +97,10 @@ def main():
             sys.exit(1)
 
     # invoke setup script
-    rc = subProc('python3 ' + environment.SETUPDIR + '/m_firewall.py', logfile)
+    with open(logfile, 'a') as log:
+        result = subprocess.run(['python3', environment.SETUPDIR + '/m_firewall.py'],
+                              stdout=log, stderr=subprocess.STDOUT, check=False)
+    rc = 0 if result.returncode == 0 else 1
 
     # wait for firewall
     try:
@@ -110,7 +113,10 @@ def main():
     time.sleep(sleep)
 
     # delete old keytable
-    rc = subProc(environment.FWSHAREDIR + '/create-keytab.py -c', logfile)
+    with open(logfile, 'a') as log:
+        result = subprocess.run([environment.FWSHAREDIR + '/create-keytab.py', '-c'],
+                              stdout=log, stderr=subprocess.STDOUT, check=False)
+    rc = 0 if result.returncode == 0 else 1
     if rc:
         printScript('Deleting old keytab.')
         apipath = '/proxysso/service/deletekeytab'
@@ -121,7 +127,10 @@ def main():
         time.sleep(sleep)
 
     # create new keytab
-    rc = subProc(environment.FWSHAREDIR + '/create-keytab.py', logfile)
+    with open(logfile, 'a') as log:
+        result = subprocess.run([environment.FWSHAREDIR + '/create-keytab.py'],
+                              stdout=log, stderr=subprocess.STDOUT, check=False)
+    rc = 0 if result.returncode == 0 else 1
     if rc:
         printScript('New kerberos key table has been successfully created.')
     else:
