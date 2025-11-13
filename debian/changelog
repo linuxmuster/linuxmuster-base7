@@ -21,7 +21,7 @@ linuxmuster-base7 (7.3.29-0) lmn73-testing; urgency=low
   * Remove deprecated README files.
   * See docs/refactoring-phase-1.md for detailed changes.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 13 Nov 2025 20:51:06 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 13 Nov 2025 21:10:31 +0100
 
 linuxmuster-base7 (7.3.28-0) lmn73; urgency=low
 

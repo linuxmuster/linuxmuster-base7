@@ -119,9 +119,9 @@ def main():
     # delete old keytable
     with open(logfile, 'a') as log:
         result = subprocess.run([environment.FWSHAREDIR + '/create-keytab.py', '-c'],
-                              stdout=log, stderr=subprocess.STDOUT, check=False)
+            stdout=log, stderr=subprocess.STDOUT, check=False)
     rc = 0 if result.returncode == 0 else 1
-    if rc:
+    if rc == 0:
         printScript('Deleting old keytab.')
         apipath = '/proxysso/service/deletekeytab'
         res = firewallApi('get', apipath)
@@ -133,9 +133,9 @@ def main():
     # create new keytab
     with open(logfile, 'a') as log:
         result = subprocess.run([environment.FWSHAREDIR + '/create-keytab.py'],
-                              stdout=log, stderr=subprocess.STDOUT, check=False)
+            stdout=log, stderr=subprocess.STDOUT, check=False)
     rc = 0 if result.returncode == 0 else 1
-    if rc:
+    if rc == 0:
         printScript('New kerberos key table has been successfully created.')
     else:
         printScript('Failed to create new kerberos key table. See opnsense-reset.log for details.')
