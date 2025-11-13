@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20250729
+# 20251113
 #
 
 import configparser
@@ -24,6 +24,19 @@ from pathlib import Path
 from linuxmuster_base7.functions import getDevicesArray, getGrubOstype, getGrubPart, getSetupValue, getStartconfOsValues, \
     getStartconfOption, getStartconfPartnr, getStartconfPartlabel, getSubnetArray, \
     getLinboVersion, printScript, readTextfile, writeTextfile
+
+# Setup logging
+logfile = environment.LOGDIR + '/import-devices.log'
+
+
+def log_to_file(message):
+    """Write message to logfile with timestamp."""
+    try:
+        with open(logfile, 'a') as f:
+            timestamp = str(datetime.datetime.now()).split('.')[0]
+            f.write(f'[{timestamp}] {message}\n')
+    except Exception:
+        pass
 
 
 def usage():
@@ -59,16 +72,37 @@ domainname = getSetupValue('domainname')
 
 # start message
 printScript(os.path.basename(__file__), 'begin')
+log_to_file('=' * 78)
+log_to_file('linuxmuster-import-devices started')
+log_to_file('School: ' + school)
 
 # do sophomorix-devices first
 msg = 'Starting sophomorix-device syntax check:'
 printScript(msg)
+log_to_file(msg)
 try:
-    msg = 'sophomorix-device finished '
-    subprocess.run(['sophomorix-device', '--sync'], shell=False, check=False)
-    printScript(msg + ' OK!')
+    # Run sophomorix-device and log output to file only
+    with open(logfile, 'a') as log:
+        log.write('-' * 78 + '\n')
+        log.write('sophomorix-device --sync output:\n')
+        log.write('-' * 78 + '\n')
+        log.flush()
+        result = subprocess.run(['sophomorix-device', '--sync'],
+                              stdout=log, stderr=subprocess.STDOUT,
+                              shell=False, check=False)
+
+    if result.returncode == 0:
+        msg = 'sophomorix-device finished OK!'
+        printScript(msg)
+        log_to_file(msg)
+    else:
+        msg = f'sophomorix-device finished with return code {result.returncode}'
+        printScript(msg)
+        log_to_file(msg)
 except Exception as err:
-    printScript(msg + ' errors detected!')
+    msg = 'sophomorix-device errors detected!'
+    printScript(msg)
+    log_to_file(msg + ' ' + str(err))
     print(err)
     sys.exit(1)
 
@@ -193,7 +227,9 @@ def doLinboStartconf(group):
 # write dhcp subnet devices config
 def writeDhcpDevicesConfig(school='default-school'):
     printScript('', 'begin')
-    printScript('Working on dhcp configuration for devices')
+    msg = 'Working on dhcp configuration for devices'
+    printScript(msg)
+    log_to_file(msg)
     host_decl_tpl = """host @@hostname@@ {
   option host-name "@@hostname@@";
   hardware ethernet @@mac@@;
@@ -331,7 +367,9 @@ writeDhcpDevicesConfig(school=school)
 # linbo stuff
 linbo_version = int(getLinboVersion().split('.')[0])
 printScript('', 'begin')
-printScript('Working on linbo/grub configuration for devices:')
+msg = 'Working on linbo/grub configuration for devices:'
+printScript(msg)
+log_to_file(msg)
 
 pxe_groups = doSchoolSpecificGroupLinksAndGetPxeGroups(school=school)
 
@@ -340,7 +378,9 @@ doAllGroupLinks()
 
 # write pxe configs for collected groups
 printScript('', 'begin')
-printScript('Working on linbo/grub configuration for groups:')
+msg = 'Working on linbo/grub configuration for groups:'
+printScript(msg)
+log_to_file(msg)
 printScript("  {: <15} | {: <20} | {: <20}".format(
     *[' ', 'linbo start.conf', 'grub cfg']))
 printScript("  {: <15}+{: <20}+{: <20}".format(*['-'*16, '-'*22, '-'*21]))
@@ -354,22 +394,32 @@ hookscripts = [f for f in listdir(hookpath) if isfile(
     join(hookpath, f)) and os.access(join(hookpath, f), os.X_OK)]
 if len(hookscripts) > 0:
     printScript('', 'begin')
-    printScript('Executing post hooks:')
+    msg = 'Executing post hooks:'
+    printScript(msg)
+    log_to_file(msg)
     for h in hookscripts:
         hookscript = hookpath + '/' + h
         msg = '* ' + h + ' '
         printScript(msg, '', False, False, True)
+        log_to_file('Executing hook: ' + h)
         output = subprocess.check_output([hookscript, "-s", school]).decode('utf-8')
         if output != '':
             print(output)
+            log_to_file('Hook output: ' + output.strip())
 
 # restart services
 printScript('', 'begin')
-printScript('Finally restarting dhcp service.')
-subprocess.run(['service', 'isc-dhcp-server', 'restart'], shell=False, check=False)
+msg = 'Finally restarting dhcp service.'
+printScript(msg)
+log_to_file(msg)
+result = subprocess.run(['service', 'isc-dhcp-server', 'restart'],
+                       shell=False, check=False)
+log_to_file(f'DHCP service restart: return code {result.returncode}')
 
 # end message
 printScript(os.path.basename(__file__), 'end')
+log_to_file('linuxmuster-import-devices completed')
+log_to_file('=' * 78)
 
 
 
