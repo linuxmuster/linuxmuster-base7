@@ -1,31 +1,75 @@
 #!/usr/bin/python3
 #
-# CLI entry point wrapper for linuxmuster-holiday-generate
-# Auto-generated for Debian Python Policy compliance
-# 20251111
+# linuxmuster-holiday-generate
+# thomas@linuxmuster.net
+# 20251113
 #
 
-import sys
-import os
+"""
+Simple script to generate yaml file for holidays based on ferien-api.de
 
-# Add linuxmuster-common to path for environment module
-sys.path.insert(0, '/usr/lib/linuxmuster')
+The user has to take care of the output, maybe pipe it into /etc/linuxmuster/sophomorix/SCHOOL/holidays.yml
+
+Structure of the configuration file (YAML):
+holiday_name1:
+  start: "dd.mm.yyyy"
+  end: "dd.mm.yyyy"
+holiday_name2:
+  start: "dd.mm.yyyy"
+  end: "dd.mm.yyyy"
+"""
+
+import argparse
+import sys
+import yaml
+
+from datetime import datetime, date
+from requests.structures import CaseInsensitiveDict
+
+import requests
+
+
+def get_holidays(year, state) -> list:
+    url = "https://ferien-api.de/api/v1/holidays/" + state
+    headers = CaseInsensitiveDict()
+    headers["Content-Type"] = "application/json"
+    resp = requests.get(url, headers=headers)
+    content = resp.json()
+    holidays = []
+
+    for entry in content:
+        if entry['year'] == int(year) or entry['year'] == int(year) + 1:
+            start = datetime.strptime(entry['start'], '%Y-%m-%dT%H:%MZ')
+            end = datetime.strptime(entry['end'], '%Y-%m-%dT%H:%MZ')
+            holidays.append({entry['name']: {'start': start.strftime('%d.%m.%Y'), 'end': end.strftime('%d.%m.%Y')}})
+    return holidays
+
+
+def print_holiday_yaml(holidays):
+    for holiday in holidays:
+        yaml.dump(holiday, sys.stdout, default_flow_style=False)
+
 
 def main():
-    """Main entry point wrapper."""
-    # Import and execute the original script logic
-    original_script = os.path.join('/usr/sbin', 'linuxmuster-holiday-generate')
-    
-    # For now, we'll import the functions and re-execute
-    # This will be properly refactored in a later step
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("cli_module", original_script)
-    if spec and spec.loader:
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-    else:
-        print(f"Error: Could not load {original_script}", file=sys.stderr)
-        sys.exit(1)
+    """Generate holiday YAML configuration from ferien-api.de."""
+    possible_states = ["BW", "BY", "BE", "BB", "HB", "HH", "HE", "MV", "NI", "NW", "RP", "SL", "SN", "ST", "SH", "TH"]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-y", "--year", required=False, help="Define which year too look for")
+    parser.add_argument("-s", "--state", required=True, help="Define state, possible values are: " + ','.join(possible_states))
 
-if __name__ == '__main__':
+    args = parser.parse_args()
+
+    args.state = args.state.upper()
+    if args.state not in possible_states:
+        print("Provided state is not supported.\nSupported states are: " + ','.join(possible_states))
+        quit(1)
+
+    if not args.year:
+        args.year = date.today().year
+
+    holidays = get_holidays(args.year, args.state)
+    print_holiday_yaml(holidays)
+
+
+if __name__ == "__main__":
     main()

@@ -1,31 +1,98 @@
 #!/usr/bin/python3
 #
-# CLI entry point wrapper for linuxmuster-modini
-# Auto-generated for Debian Python Policy compliance
-# 20251111
+# linuxmuster-modini
+# thomas@linuxmuster.net
+# 20251113
 #
 
-import sys
+import getopt
 import os
+import subprocess
+import sys
 
-# Add linuxmuster-common to path for environment module
-sys.path.insert(0, '/usr/lib/linuxmuster')
+from linuxmuster_base7.functions import modIni, printLf
+
+
+def usage():
+    print('Modify ini files on command line. Usage: linuxmuster-modini [options]')
+    print(' [options] may be:')
+    print(' -i <path/to/inifile>, --inifile=<path/to/inifile> : Path to inifile (mandatory).')
+    print(' -s <sectionname>,     --section=<sectionname>     : Name of section to work on (mandatory).')
+    print(' -o <optionname>,      --option=<optionname>       : Name of option (mandatory).')
+    print(' -v <value>,           --value=<value>             : value of option (mandatory).')
+    print(' -r <servicename>,     --service=<servicename>     : Name of service to restart (optional).')
+    print(' -h,                   --help                      : print this help')
+    print("Example: linuxmuster-modini -i /etc/samba/smb.conf -s global -o 'time server' -v Yes -r samba-ad-dc")
+
 
 def main():
-    """Main entry point wrapper."""
-    # Import and execute the original script logic
-    original_script = os.path.join('/usr/sbin', 'linuxmuster-modini')
-    
-    # For now, we'll import the functions and re-execute
-    # This will be properly refactored in a later step
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("cli_module", original_script)
-    if spec and spec.loader:
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+    """Modify ini files on command line."""
+    # get cli args
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hi:o:r:s:v:", ["help", "inifile=", "section=", "option=", "value=", "service="])
+    except getopt.GetoptError as err:
+        # print help information and exit:
+        print(err)  # will print something like "option -a not recognized"
+        usage()
+        sys.exit(2)
+
+    # evaluate options
+    inifile = None
+    section = None
+    option = None
+    value = None
+    service = None
+    for o, a in opts:
+        if o in ("-i", "--inifile"):
+            inifile = a
+        elif o in ("-s", "--section"):
+            section = a
+        elif o in ("-o", "--option"):
+            option = a
+        elif o in ("-v", "--value"):
+            value = a
+        elif o in ("-r", "--service"):
+            service = a
+        elif o in ("-h", "--help"):
+            usage()
+            sys.exit()
+        else:
+            assert False, "unhandled option"
+
+    # is inifile there?
+    if inifile is not None and not os.path.isfile(inifile):
+        print('File not found!')
+        usage()
+        sys.exit()
+
+    # check parameter values
+    if section is None or option is None or value is None:
+        print('Parameter error!')
+        usage()
+        sys.exit()
+
+    # modify inifile
+    printLf('Modifying ' + inifile + ' ... ', False)
+    rc = modIni(inifile, section, option, value)
+    if rc is True:
+        rc = 0
+        print('OK!')
     else:
-        print(f"Error: Could not load {original_script}", file=sys.stderr)
-        sys.exit(1)
+        rc = 1
+        print('Failed!')
+
+    # restart service
+    if service is not None and rc == 0:
+        printLf('Restarting ' + service + ' ... ', False)
+        result = subprocess.run(['service', service, 'restart'], check=False)
+        rc = result.returncode
+        if rc == 0:
+            print('OK!')
+        else:
+            print('Failed!')
+
+    sys.exit(rc)
+
 
 if __name__ == '__main__':
     main()
