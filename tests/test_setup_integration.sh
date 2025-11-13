@@ -835,40 +835,76 @@ run_all_tests() {
     print_info "All tests completed!"
 }
 
-# Run single test
-run_single_test() {
+# Run single test without snapshot wrapper
+run_test_only() {
     local test_number="$1"
-    local skip_restore="${2:-no}"
-
-    print_header "Running Single Test"
+    local test_name=""
+    local test_func=""
 
     case "$test_number" in
         1)
-            print_info "Test 1: Basic Setup"
-            run_test_with_snapshot "Basic Setup Test" test_basic_setup "$skip_restore"
+            test_name="Basic Setup Test"
+            test_func="test_basic_setup"
             ;;
         2)
-            print_info "Test 2: Full Setup"
-            run_test_with_snapshot "Full Setup Test" test_full_setup "$skip_restore"
+            test_name="Full Setup Test"
+            test_func="test_full_setup"
             ;;
         3)
-            print_info "Test 3: Config File Setup"
-            run_test_with_snapshot "Config File Setup Test" test_config_file_setup "$skip_restore"
+            test_name="Config File Setup Test"
+            test_func="test_config_file_setup"
             ;;
         4)
-            print_info "Test 4: Create Test Users"
-            run_test_with_snapshot "Create Test Users" test_create_testusers "skip"
+            test_name="Create Test Users"
+            test_func="test_create_testusers"
             ;;
         *)
             echo -e "${RED}ERROR: Invalid test number: $test_number${NC}"
             echo "Valid test numbers: 1-4"
-            echo "  1 = Basic Setup"
-            echo "  2 = Full Setup"
-            echo "  3 = Config File Setup"
-            echo "  4 = Create Test Users"
             exit 1
             ;;
     esac
+
+    print_header "$test_name"
+
+    echo -e "${BLUE}Starting test: $test_name${NC}"
+    START_TIME=$(date +%s)
+
+    if $test_func; then
+        END_TIME=$(date +%s)
+        DURATION=$((END_TIME - START_TIME))
+        echo -e "${GREEN}✓ Test passed${NC} (${DURATION}s)"
+        PASSED=$((PASSED + 1))
+    else
+        END_TIME=$(date +%s)
+        DURATION=$((END_TIME - START_TIME))
+        echo -e "${RED}✗ Test failed${NC} (${DURATION}s)"
+        FAILED=$((FAILED + 1))
+    fi
+
+    TOTAL=$((TOTAL + 1))
+}
+
+# Run single test
+run_single_test() {
+    local test_number="$1"
+    local restore_snapshot_name="$2"
+
+    print_header "Running Single Test"
+
+    # Create automatic snapshot before test
+    local auto_snapshot="auto-test-${test_number}-$(date +%Y%m%d-%H%M%S)"
+    print_info "Creating snapshot before test: $auto_snapshot"
+    create_snapshot "$auto_snapshot"
+
+    # Run the test without restore
+    run_test_only "$test_number"
+
+    # Restore snapshot if requested
+    if [ -n "$restore_snapshot_name" ]; then
+        print_info "Restoring snapshot: $restore_snapshot_name"
+        restore_snapshot "$restore_snapshot_name"
+    fi
 
     print_summary
 }
@@ -876,7 +912,7 @@ run_single_test() {
 # Run multiple tests
 run_multiple_tests() {
     local test_list="$1"
-    local skip_restore="${2:-no}"
+    local restore_snapshot_name="$2"
 
     print_header "Running Multiple Tests"
 
@@ -894,28 +930,26 @@ run_multiple_tests() {
         fi
     done
 
-    # Run each test
+    # Create automatic snapshot before tests
+    local auto_snapshot="auto-tests-$(date +%Y%m%d-%H%M%S)"
+    print_info "Creating snapshot before tests: $auto_snapshot"
+    create_snapshot "$auto_snapshot"
+
+    # Run each test without restore
     for test_num in "${tests[@]}"; do
         test_num=$(echo "$test_num" | xargs)
         echo ""
         print_info "Starting test $test_num..."
         echo ""
 
-        case "$test_num" in
-            1)
-                run_test_with_snapshot "Basic Setup Test" test_basic_setup "$skip_restore"
-                ;;
-            2)
-                run_test_with_snapshot "Full Setup Test" test_full_setup "$skip_restore"
-                ;;
-            3)
-                run_test_with_snapshot "Config File Setup Test" test_config_file_setup "$skip_restore"
-                ;;
-            4)
-                run_test_with_snapshot "Create Test Users" test_create_testusers "skip"
-                ;;
-        esac
+        run_test_only "$test_num"
     done
+
+    # Restore snapshot if requested
+    if [ -n "$restore_snapshot_name" ]; then
+        print_info "Restoring snapshot: $restore_snapshot_name"
+        restore_snapshot "$restore_snapshot_name"
+    fi
 
     print_summary
 }
@@ -931,25 +965,30 @@ main() {
     check_system
 
     # Global options
-    local skip_restore="no"
+    local restore_snapshot=""
 
     # Parse options
     while [ $# -gt 0 ]; do
         case "$1" in
-            --no-restore|-n)
-                skip_restore="skip"
-                shift
-                ;;
             --test|-t)
                 if [ -z "$2" ]; then
-                    echo "Usage: $0 --test <number[,number,...]> [--no-restore]"
+                    echo "Usage: $0 --test <number[,number,...]> [-r <snapshot>]"
                     exit 1
                 fi
+                local test_spec="$2"
+                shift 2
+
+                # Check for -r option after -t
+                if [ "$1" = "-r" ] && [ -n "$2" ]; then
+                    restore_snapshot="$2"
+                    shift 2
+                fi
+
                 # Check if it's a comma-separated list or single number
-                if [[ "$2" == *","* ]]; then
-                    run_multiple_tests "$2" "$skip_restore"
+                if [[ "$test_spec" == *","* ]]; then
+                    run_multiple_tests "$test_spec" "$restore_snapshot"
                 else
-                    run_single_test "$2" "$skip_restore"
+                    run_single_test "$test_spec" "$restore_snapshot"
                 fi
                 exit $?
                 ;;
@@ -961,7 +1000,7 @@ main() {
                 create_snapshot "${2:-manual-$(date +%Y%m%d-%H%M%S)}"
                 exit $?
                 ;;
-            --restore|-r)
+            --restore)
                 if [ -z "$2" ]; then
                     echo "Usage: $0 --restore <snapshot-name>"
                     exit 1
@@ -998,10 +1037,10 @@ Integration test suite for linuxmuster-setup with snapshot management.
 Options:
   (no options)                   Run all tests automatically
   -t, --test <number[,...]>      Run single or multiple tests (1-4)
-  -n, --no-restore               Skip restore after test (for -t option)
+                                 Optionally followed by: -r <snapshot> to restore after tests
   -i, --interactive              Interactive mode
   -c, --create-snapshot [name]   Create system snapshot
-  -r, --restore <name>           Restore snapshot
+  --restore <name>               Restore snapshot (standalone)
   -l, --list                     List available snapshots
   -d, --delete <name>            Delete specific snapshot
   --delete-all                   Delete all snapshots (with confirmation)
@@ -1014,16 +1053,20 @@ Test Numbers:
   3 = Config File Setup
   4 = Create Test Users
 
+Behavior:
+  - Before test(s): Automatic snapshot is created
+  - Between tests: No restore (tests run consecutively)
+  - After test(s): No restore by default, unless -r <snapshot> is specified
+
 Examples:
   $0                        # Run all tests
-  $0 -t 1                   # Run test 1 (Basic Setup) with restore
-  $0 -t 1,2,4               # Run tests 1, 2, and 4 in sequence
-  $0 -t 1,3 -n              # Run tests 1 and 3 without restore
-  $0 -t 1 -n                # Run test 1 without restore
-  $0 -t 4                   # Run test 4 (Create Users, never restores)
+  $0 -t 1                   # Run test 1, no restore after
+  $0 -t 1,2,4               # Run tests 1, 2, and 4, no restore after
+  $0 -t 1,3 -r baseline     # Run tests 1 and 3, then restore 'baseline'
+  $0 -t 2 -r baseline       # Run test 2, then restore 'baseline'
   $0 -i                     # Interactive mode
   $0 -c baseline            # Create snapshot named 'baseline'
-  $0 -r baseline            # Restore snapshot 'baseline'
+  $0 --restore baseline     # Restore snapshot 'baseline'
   $0 -l                     # List all snapshots
   $0 -d baseline            # Delete snapshot 'baseline'
   $0 --delete-all           # Delete all snapshots
