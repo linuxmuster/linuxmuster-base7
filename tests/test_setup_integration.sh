@@ -968,6 +968,7 @@ main() {
     local restore_snapshot=""
 
     # Parse options
+    local test_spec=""
     while [ $# -gt 0 ]; do
         case "$1" in
             --test|-t)
@@ -975,22 +976,16 @@ main() {
                     echo "Usage: $0 --test <number[,number,...]> [-r <snapshot>]"
                     exit 1
                 fi
-                local test_spec="$2"
+                test_spec="$2"
                 shift 2
-
-                # Check for -r option after -t
-                if [ "$1" = "-r" ] && [ -n "$2" ]; then
-                    restore_snapshot="$2"
-                    shift 2
+                ;;
+            -r)
+                if [ -z "$2" ]; then
+                    echo "Usage: $0 -r <snapshot-name> [-t <tests>]"
+                    exit 1
                 fi
-
-                # Check if it's a comma-separated list or single number
-                if [[ "$test_spec" == *","* ]]; then
-                    run_multiple_tests "$test_spec" "$restore_snapshot"
-                else
-                    run_single_test "$test_spec" "$restore_snapshot"
-                fi
-                exit $?
+                restore_snapshot="$2"
+                shift 2
                 ;;
             --interactive|-i)
                 interactive_mode
@@ -1037,10 +1032,10 @@ Integration test suite for linuxmuster-setup with snapshot management.
 Options:
   (no options)                   Run all tests automatically
   -t, --test <number[,...]>      Run single or multiple tests (1-4)
-                                 Optionally followed by: -r <snapshot> to restore after tests
+  -r <snapshot>                  Restore snapshot (standalone or after -t tests)
   -i, --interactive              Interactive mode
   -c, --create-snapshot [name]   Create system snapshot
-  --restore <name>               Restore snapshot (standalone)
+  --restore <name>               Restore snapshot (alternative to -r)
   -l, --list                     List available snapshots
   -d, --delete <name>            Delete specific snapshot
   --delete-all                   Delete all snapshots (with confirmation)
@@ -1064,9 +1059,10 @@ Examples:
   $0 -t 1,2,4               # Run tests 1, 2, and 4, no restore after
   $0 -t 1,3 -r baseline     # Run tests 1 and 3, then restore 'baseline'
   $0 -t 2 -r baseline       # Run test 2, then restore 'baseline'
+  $0 -r baseline            # Only restore 'baseline' snapshot (no tests)
   $0 -i                     # Interactive mode
   $0 -c baseline            # Create snapshot named 'baseline'
-  $0 --restore baseline     # Restore snapshot 'baseline'
+  $0 --restore baseline     # Restore snapshot 'baseline' (alternative)
   $0 -l                     # List all snapshots
   $0 -d baseline            # Delete snapshot 'baseline'
   $0 --delete-all           # Delete all snapshots
@@ -1085,6 +1081,22 @@ EOF
                 ;;
         esac
     done
+
+    # Handle combined -t and -r options, or standalone -r
+    if [ -n "$test_spec" ]; then
+        # Run tests with optional restore after
+        if [[ "$test_spec" == *","* ]]; then
+            run_multiple_tests "$test_spec" "$restore_snapshot"
+        else
+            run_single_test "$test_spec" "$restore_snapshot"
+        fi
+        exit $?
+    elif [ -n "$restore_snapshot" ]; then
+        # Only restore, no tests
+        print_info "Restoring snapshot: $restore_snapshot"
+        restore_snapshot "$restore_snapshot"
+        exit $?
+    fi
 
     # If we get here without exiting, run all tests
     run_all_tests
