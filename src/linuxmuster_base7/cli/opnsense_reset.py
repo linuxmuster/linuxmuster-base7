@@ -88,8 +88,16 @@ def main():
     if not sshExec(firewallip, 'exit', adminpw):
         sys.exit(1)
 
-    # write password to temporary file
-    if not writeTextfile('/tmp/linuxmuster-opnsense-reset', adminpw, 'w'):
+    # write password to temporary file with secure permissions (0o600 - owner read/write only)
+    # this file is read by m_firewall.py to determine the current firewall password
+    tmpfile = '/tmp/linuxmuster-opnsense-reset'
+    try:
+        # create file with restrictive permissions before writing sensitive data
+        fd = os.open(tmpfile, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        os.write(fd, adminpw.encode('utf-8'))
+        os.close(fd)
+    except Exception as error:
+        printScript(f'Failed to write password file: {error}')
         sys.exit(1)
 
     # create firewall cert if not there
