@@ -6,16 +6,17 @@
 #
 
 import configparser
-import sys
-sys.path.insert(0, '/usr/lib/linuxmuster')
-import environment
 import datetime
 import os
 import subprocess
 import sys
+sys.path.insert(0, '/usr/lib/linuxmuster')
+import environment
 
 from linuxmuster_base7.functions import backupCfg, getSetupValue, mySetupLogfile, printScript, readTextfile
 from linuxmuster_base7.functions import replaceInFile, setupComment
+from linuxmuster_base7.setup.helpers import runWithLog, replaceTemplateVars
+from linuxmuster_base7.setup.helpers import DO_NOT_OVERWRITE_FILES, DO_NOT_BACKUP_FILES
 
 logfile = mySetupLogfile(__file__)
 
@@ -49,11 +50,7 @@ except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# templates, whose corresponding configfiles must not be overwritten
-do_not_overwrite = 'dhcpd.custom.conf'
-# templates, whose corresponding configfiles must not be backed up
-do_not_backup = ['interfaces.linuxmuster',
-                 'dovecot.linuxmuster.conf', 'smb.conf']
+# Note: do_not_overwrite and do_not_backup constants are imported from helpers.py
 
 printScript('Processing config templates:')
 for f in os.listdir(environment.TPLDIR):
@@ -64,23 +61,26 @@ for f in os.listdir(environment.TPLDIR):
         # read template file
         rc, filedata = readTextfile(source)
         # replace placeholders with values
-        filedata = filedata.replace('@@bitmask@@', bitmask)
-        filedata = filedata.replace('@@broadcast@@', broadcast)
-        filedata = filedata.replace('@@dhcprange@@', dhcprange)
-        filedata = filedata.replace('@@dhcprange1@@', dhcprange1)
-        filedata = filedata.replace('@@dhcprange2@@', dhcprange2)
-        filedata = filedata.replace('@@domainname@@', domainname)
-        filedata = filedata.replace('@@firewallip@@', firewallip)
-        filedata = filedata.replace('@@linbodir@@', linbodir)
-        filedata = filedata.replace('@@netbiosname@@', netbiosname)
-        filedata = filedata.replace('@@netmask@@', netmask)
-        filedata = filedata.replace('@@network@@', network)
-        filedata = filedata.replace('@@realm@@', realm)
-        filedata = filedata.replace('@@sambadomain@@', sambadomain)
-        filedata = filedata.replace('@@schoolname@@', schoolname)
-        filedata = filedata.replace('@@servername@@', servername)
-        filedata = filedata.replace('@@serverip@@', serverip)
-        filedata = filedata.replace('@@ntpsockdir@@', environment.NTPSOCKDIR)
+        variables = {
+            '@@bitmask@@': bitmask,
+            '@@broadcast@@': broadcast,
+            '@@dhcprange@@': dhcprange,
+            '@@dhcprange1@@': dhcprange1,
+            '@@dhcprange2@@': dhcprange2,
+            '@@domainname@@': domainname,
+            '@@firewallip@@': firewallip,
+            '@@linbodir@@': linbodir,
+            '@@netbiosname@@': netbiosname,
+            '@@netmask@@': netmask,
+            '@@network@@': network,
+            '@@realm@@': realm,
+            '@@sambadomain@@': sambadomain,
+            '@@schoolname@@': schoolname,
+            '@@servername@@': servername,
+            '@@serverip@@': serverip,
+            '@@ntpsockdir@@': environment.NTPSOCKDIR
+        }
+        filedata = replaceTemplateVars(filedata, variables)
         # get target path
         firstline = filedata.split('\n')[0]
         target = firstline.partition(' ')[2]
@@ -93,25 +93,15 @@ for f in os.listdir(environment.TPLDIR):
         else:
             operms = '644'
         # do not overwrite specified configfiles if they exist
-        if (f in do_not_overwrite and os.path.isfile(target)):
+        if (f in DO_NOT_OVERWRITE_FILES and os.path.isfile(target)):
             printScript(' Success!', '', True, True, False, len(msg))
             continue
         # create target directory
         targetdir = os.path.dirname(target)
         if targetdir:
-            result = subprocess.run(['mkdir', '-p', targetdir], capture_output=True, text=True, check=False)
-            if logfile and (result.stdout or result.stderr):
-                with open(logfile, 'a') as log:
-                    log.write('-' * 78 + '\n')
-                    log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
-                    log.write('#### mkdir -p ' + targetdir + ' ####\n')
-                    if result.stdout:
-                        log.write(result.stdout)
-                    if result.stderr:
-                        log.write(result.stderr)
-                    log.write('-' * 78 + '\n')
+            runWithLog(['mkdir', '-p', targetdir], logfile, checkErrors=False)
         # backup file
-        if f not in do_not_backup:
+        if f not in DO_NOT_BACKUP_FILES:
             backupCfg(target)
         with open(target, 'w') as outfile:
             outfile.write(setupComment())
@@ -126,23 +116,11 @@ for f in os.listdir(environment.TPLDIR):
 msg = 'Server prepare update '
 printScript(msg, '', False, False, True)
 try:
-    result = subprocess.run(['/usr/sbin/lmn-prepare', '-x', '-s', '-u', '-p', 'server',
-                            '-f', firewallip, '-n', serverip + '/' + bitmask,
-                            '-d', domainname, '-t', servername, '-r', serverip,
-                            '-a', adminpw],
-                           capture_output=True, text=True, check=False)
-    if logfile:
-        with open(logfile, 'a') as log:
-            log.write('-' * 78 + '\n')
-            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
-            log.write('#### /usr/sbin/lmn-prepare -x -s -u -p server ... ####\n')
-            if result.stdout:
-                log.write(result.stdout)
-            if result.stderr:
-                log.write(result.stderr)
-            log.write('-' * 78 + '\n')
-    # remove adminpw from logfile
-    replaceInFile(logfile, adminpw, '******')
+    runWithLog(['/usr/sbin/lmn-prepare', '-x', '-s', '-u', '-p', 'server',
+                '-f', firewallip, '-n', serverip + '/' + bitmask,
+                '-d', domainname, '-t', servername, '-r', serverip,
+                '-a', adminpw],
+               logfile, checkErrors=False, maskSecrets=[adminpw])
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -151,28 +129,13 @@ except Exception as error:
 # set server time
 msg = 'Adjusting server time '
 printScript(msg, '', False, False, True)
-# Helper function to run command with logging
-def run_with_log(cmd_list, cmd_desc):
-    result = subprocess.run(cmd_list, capture_output=True, text=True, check=False)
-    if logfile and (result.stdout or result.stderr):
-        with open(logfile, 'a') as log:
-            log.write('-' * 78 + '\n')
-            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
-            log.write('#### ' + cmd_desc + ' ####\n')
-            if result.stdout:
-                log.write(result.stdout)
-            if result.stderr:
-                log.write(result.stderr)
-            log.write('-' * 78 + '\n')
-    return result
-
-run_with_log(['mkdir', '-p', environment.NTPSOCKDIR], 'mkdir -p ' + environment.NTPSOCKDIR)
-run_with_log(['chgrp', 'ntp', environment.NTPSOCKDIR], 'chgrp ntp ' + environment.NTPSOCKDIR)
-run_with_log(['chmod', '750', environment.NTPSOCKDIR], 'chmod 750 ' + environment.NTPSOCKDIR)
-run_with_log(['timedatectl', 'set-ntp', 'false'], 'timedatectl set-ntp false')
-run_with_log(['systemctl', 'stop', 'ntp'], 'systemctl stop ntp')
-run_with_log(['ntpdate', 'pool.ntp.org'], 'ntpdate pool.ntp.org')
-run_with_log(['systemctl', 'enable', 'ntp'], 'systemctl enable ntp')
-run_with_log(['systemctl', 'start', 'ntp'], 'systemctl start ntp')
+runWithLog(['mkdir', '-p', environment.NTPSOCKDIR], logfile, checkErrors=False)
+runWithLog(['chgrp', 'ntp', environment.NTPSOCKDIR], logfile, checkErrors=False)
+runWithLog(['chmod', '750', environment.NTPSOCKDIR], logfile, checkErrors=False)
+runWithLog(['timedatectl', 'set-ntp', 'false'], logfile, checkErrors=False)
+runWithLog(['systemctl', 'stop', 'ntp'], logfile, checkErrors=False)
+runWithLog(['ntpdate', 'pool.ntp.org'], logfile, checkErrors=False)
+runWithLog(['systemctl', 'enable', 'ntp'], logfile, checkErrors=False)
+runWithLog(['systemctl', 'start', 'ntp'], logfile, checkErrors=False)
 now = str(datetime.datetime.now()).split('.')[0]
 printScript(' ' + now, '', True, True, False, len(msg))
