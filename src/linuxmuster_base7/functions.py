@@ -603,30 +603,45 @@ def createServerCert(item, days, logfile):
 
 # file transfer per scp
 def scpTransfer(ip, mode, sourcefile, targetfile, secret='', sshuser='root'):
+    """
+    Transfer files via SCP (Secure Copy Protocol).
+
+    Args:
+        ip: Remote host IP address
+        mode: 'get' (download) or 'put' (upload)
+        sourcefile: Source file path
+        targetfile: Target file path
+        secret: SSH password (empty string for key-based auth)
+        sshuser: SSH username (default: 'root')
+
+    Returns:
+        True on success, False on failure
+    """
     if mode == 'get' or mode == 'put':
         printScript(mode + ' ' + ip + ' ' + sourcefile + ' ' + targetfile)
     else:
         print('Usage: scpTransfer(ip, mode, sourcefile, targetfile, secret, sshuser)')
         return 1
-    # passwordless transfer
+    # passwordless transfer using ssh keys
     if secret == '':
-        sshopts = "-q -oNumberOfPasswordPrompts=0 -oStrictHostkeyChecking=no"
-        sshcmd = 'ssh ' + sshopts + ' -l ' + sshuser + ' ' + ip
-        if mode == 'put':
-            targetfile = sshuser + '@' + ip + ':' + targetfile
-        if mode == 'get':
-            sourcefile = sshuser + '@' + ip + ':' + sourcefile
-        scpcmd = 'scp ' + sshopts + ' ' + sourcefile + ' ' + targetfile
-        # test ssh connection
+        # build ssh/scp command arguments as list (no shell injection risk)
+        sshopts = ['-q', '-oNumberOfPasswordPrompts=0', '-oStrictHostkeyChecking=no']
+        # test ssh connection first
         try:
-            subprocess.call(sshcmd + ' exit', shell=True)
-        except Exception as error:
+            subprocess.run(['ssh'] + sshopts + ['-l', sshuser, ip, 'exit'],
+                          check=True, capture_output=True)
+        except subprocess.CalledProcessError as error:
             print(error)
             return False
-        # file transfer
+        # file transfer with scp
         try:
-            subprocess.call(scpcmd, shell=True)
-        except Exception as error:
+            if mode == 'put':
+                targetfile = sshuser + '@' + ip + ':' + targetfile
+            if mode == 'get':
+                sourcefile = sshuser + '@' + ip + ':' + sourcefile
+            subprocess.run(['scp'] + sshopts + [sourcefile, targetfile],
+                          check=True, capture_output=True)
+        except subprocess.CalledProcessError as error:
             print(error)
             return False
     # transfer with password
@@ -716,34 +731,52 @@ def checkFwMajorVer():
 # note: paramiko key based connection is obviously broken in 18.04, so we use
 #   ssh shell command
 def sshExec(ip, cmd, secret=''):
+    """
+    Execute command on remote host via SSH.
+
+    Args:
+        ip: Remote host IP address
+        cmd: Command to execute remotely
+        secret: SSH password (empty string for key-based auth)
+
+    Returns:
+        True on success, False on failure
+    """
     printScript('Executing ssh command on ' + ip + ':')
     printScript('* -> "' + cmd + '"')
-    sshcmd = 'ssh -q -oNumberOfPasswordPrompts=0 -oStrictHostkeyChecking=no -l root ' + ip
+    sshopts = ['-q', '-oNumberOfPasswordPrompts=0', '-oStrictHostkeyChecking=no']
     # first test connection
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         if secret == '':
-            subprocess.call(sshcmd + ' exit', shell=True)
+            # key-based auth: test connection with subprocess (no shell=True)
+            subprocess.run(['ssh'] + sshopts + ['-l', 'root', ip, 'exit'],
+                          check=True, capture_output=True)
         else:
+            # password auth: test connection with paramiko
             ssh.connect(ip, port=22, username='root', password=secret)
         printScript('* SSH connection successfully established.')
         if cmd == 'exit':
             return True
-    except Exception as error:
+    except (subprocess.CalledProcessError, Exception) as error:
         print(error)
         return False
     # second execute command
     try:
         if secret != '':
+            # password auth: use paramiko for command execution
             stdin, stdout, stderr = ssh.exec_command(cmd)
         else:
-            subprocess.call(sshcmd + ' ' + cmd, shell=True)
+            # key-based auth: use subprocess with command as separate argument
+            subprocess.run(['ssh'] + sshopts + ['-l', 'root', ip, cmd],
+                          check=True, capture_output=True)
         printScript('* SSH command execution finished successfully.')
-    except Exception as error:
+    except (subprocess.CalledProcessError, Exception) as error:
         print(error)
         return False
-    ssh.close()
+    if secret != '':
+        ssh.close()
     return True
 
 
