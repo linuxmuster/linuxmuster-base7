@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20250910
+# 20251114
 #
 
 """
@@ -159,12 +159,12 @@ except Exception as error:
 msg = 'Adjusting server time '
 printScript(msg, '', False, False, True)
 runWithLog(['mkdir', '-p', environment.NTPSOCKDIR], logfile, checkErrors=False)
-runWithLog(['chgrp', 'ntp', environment.NTPSOCKDIR], logfile, checkErrors=False)
+runWithLog(['chgrp', 'ntpsec', environment.NTPSOCKDIR], logfile, checkErrors=False)
 runWithLog(['chmod', '750', environment.NTPSOCKDIR], logfile, checkErrors=False)
 runWithLog(['timedatectl', 'set-ntp', 'false'], logfile, checkErrors=False)
-runWithLog(['systemctl', 'stop', 'ntp'], logfile, checkErrors=False)
+runWithLog(['systemctl', 'stop', 'ntpsec'], logfile, checkErrors=False)
 runWithLog(['ntpdate', 'pool.ntp.org'], logfile, checkErrors=False)  # One-time sync
-runWithLog(['systemctl', 'enable', 'ntp'], logfile, checkErrors=False)
-runWithLog(['systemctl', 'start', 'ntp'], logfile, checkErrors=False)  # Start continuous sync
+runWithLog(['systemctl', 'enable', 'ntpsec'], logfile, checkErrors=False)
+runWithLog(['systemctl', 'start', 'ntpsec'], logfile, checkErrors=False)  # Start continuous sync
 now = str(datetime.datetime.now()).split('.')[0]
 printScript(' ' + now, '', True, True, False, len(msg))
