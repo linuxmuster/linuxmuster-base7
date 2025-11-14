@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 #
 # Common helper functions for setup scripts
 # thomas@linuxmuster.net

@@ -148,7 +148,7 @@ def main():
     # Get all modules from linuxmuster_base7.setup package
     setup_modules = []
     for importer, modname, ispkg in pkgutil.iter_modules(setup_package.__path__):
-        if not ispkg and modname != '__init__':
+        if not ispkg and modname not in ['__init__', 'helpers']:
             setup_modules.append(modname)
 
     setup_modules.sort()
