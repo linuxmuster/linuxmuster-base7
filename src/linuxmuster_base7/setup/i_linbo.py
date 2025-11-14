@@ -2,7 +2,7 @@
 #
 # linbo setup
 # thomas@linuxmuster.net
-# 20251112
+# 20251114
 #
 
 import configparser
@@ -13,11 +13,13 @@ import re
 import shlex
 import subprocess
 import sys
+
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
 from linuxmuster_base7.functions import backupCfg, enterPassword, getSetupValue, isValidPassword, \
     mySetupLogfile, modIni, printScript, readTextfile, setupComment, writeTextfile
+from linuxmuster_base7.setup.helpers import DEFAULT_LINBO_IP
 
 logfile = mySetupLogfile(__file__)
 
@@ -86,7 +88,7 @@ try:
     for startconf in conffiles:
         rc, content = readTextfile(startconf)
         rc = writeTextfile(startconf, content.replace(
-            '10.16.1.1', serverip), 'w')
+            DEFAULT_LINBO_IP, serverip), 'w')
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))

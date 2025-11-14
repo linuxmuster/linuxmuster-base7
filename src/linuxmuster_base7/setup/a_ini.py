@@ -2,21 +2,24 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20250729
+# 20251114
 #
 
 import configparser
-import sys
-sys.path.insert(0, '/usr/lib/linuxmuster')
-import environment
+import datetime
 import os
+import subprocess
 import sys
 
+sys.path.insert(0, '/usr/lib/linuxmuster')
+import environment
+
+from IPy import IP
 from linuxmuster_base7.functions import isValidHostname, isValidDomainname, isValidHostIpv4
 from linuxmuster_base7.functions import mySetupLogfile, printScript, randomPassword
-from IPy import IP
-import subprocess
-import datetime
+from linuxmuster_base7.setup.helpers import runWithLog, buildIp, getNetworkPrefix, splitIpOctets
+from linuxmuster_base7.setup.helpers import DHCP_RANGE_START_SUFFIX, DHCP_RANGE_END_SUFFIX
+from linuxmuster_base7.setup.helpers import DHCP_RANGE_START_LARGE_NET, DHCP_RANGE_END_LARGE_NET
 
 logfile = mySetupLogfile(__file__)
 
@@ -128,16 +131,14 @@ except Exception as error:
     dhcprange = ''
 if dhcprange == '':
     try:
+        octets = splitIpOctets(serverip)
         if int(bitmask) <= 16:
-            dhcprange1 = serverip.split(
-                '.')[0] + '.' + serverip.split('.')[1] + '.255.1'
-            dhcprange2 = serverip.split(
-                '.')[0] + '.' + serverip.split('.')[1] + '.255.254'
+            dhcprange1 = buildIp([octets[0], octets[1], *DHCP_RANGE_START_LARGE_NET.split('.')])
+            dhcprange2 = buildIp([octets[0], octets[1], *DHCP_RANGE_END_LARGE_NET.split('.')])
         else:
-            dhcprange1 = serverip.split('.')[
-                                        0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '201'
-            dhcprange2 = serverip.split('.')[
-                                        0] + '.' + serverip.split('.')[1] + '.' + serverip.split('.')[2] + '.' + '250'
+            prefix = getNetworkPrefix(serverip)
+            dhcprange1 = buildIp([*prefix.split('.'), str(DHCP_RANGE_START_SUFFIX)])
+            dhcprange2 = buildIp([*prefix.split('.'), str(DHCP_RANGE_END_SUFFIX)])
         dhcprange = dhcprange1 + ' ' + dhcprange2
         setup.set('setup', 'dhcprange', dhcprange)
     except Exception as error:
@@ -167,28 +168,8 @@ try:
     binduserpw = randomPassword(16)
     with open(environment.BINDUSERSECRET, 'w') as secret:
         secret.write(binduserpw)
-    result = subprocess.run(['chmod', '440', environment.BINDUSERSECRET], capture_output=True, text=True, check=False)
-    if logfile and (result.stdout or result.stderr):
-        with open(logfile, 'a') as log:
-            log.write('-' * 78 + '\n')
-            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
-            log.write('#### chmod 440 ' + environment.BINDUSERSECRET + ' ####\n')
-            if result.stdout:
-                log.write(result.stdout)
-            if result.stderr:
-                log.write(result.stderr)
-            log.write('-' * 78 + '\n')
-    result = subprocess.run(['chgrp', 'dhcpd', environment.BINDUSERSECRET], capture_output=True, text=True, check=False)
-    if logfile and (result.stdout or result.stderr):
-        with open(logfile, 'a') as log:
-            log.write('-' * 78 + '\n')
-            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
-            log.write('#### chgrp dhcpd ' + environment.BINDUSERSECRET + ' ####\n')
-            if result.stdout:
-                log.write(result.stdout)
-            if result.stderr:
-                log.write(result.stderr)
-            log.write('-' * 78 + '\n')
+    runWithLog(['chmod', '440', environment.BINDUSERSECRET], logfile, checkErrors=False)
+    runWithLog(['chgrp', 'dhcpd', environment.BINDUSERSECRET], logfile, checkErrors=False)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -200,33 +181,13 @@ printScript(msg, '', False, False, True)
 try:
     with open(environment.SETUPINI, 'w') as outfile:
         setup.write(outfile)
-    result = subprocess.run(['chmod', '600', environment.SETUPINI], capture_output=True, text=True, check=False)
-    if logfile and (result.stdout or result.stderr):
-        with open(logfile, 'a') as log:
-            log.write('-' * 78 + '\n')
-            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
-            log.write('#### chmod 600 ' + environment.SETUPINI + ' ####\n')
-            if result.stdout:
-                log.write(result.stdout)
-            if result.stderr:
-                log.write(result.stderr)
-            log.write('-' * 78 + '\n')
+    runWithLog(['chmod', '600', environment.SETUPINI], logfile, checkErrors=False)
     # temporary setup.ini for transfering it later to additional vms
     setup.set('setup', 'binduserpw', binduserpw)
     setup.set('setup', 'adminpw', '')
     with open('/tmp/setup.ini', 'w') as outfile:
         setup.write(outfile)
-    result = subprocess.run(['chmod', '600', '/tmp/setup.ini'], capture_output=True, text=True, check=False)
-    if logfile and (result.stdout or result.stderr):
-        with open(logfile, 'a') as log:
-            log.write('-' * 78 + '\n')
-            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
-            log.write('#### chmod 600 /tmp/setup.ini ####\n')
-            if result.stdout:
-                log.write(result.stdout)
-            if result.stderr:
-                log.write(result.stderr)
-            log.write('-' * 78 + '\n')
+    runWithLog(['chmod', '600', '/tmp/setup.ini'], logfile, checkErrors=False)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))

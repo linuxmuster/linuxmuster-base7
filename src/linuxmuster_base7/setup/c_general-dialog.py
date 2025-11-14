@@ -2,23 +2,24 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20250729
+# 20251114
 #
 
+import configparser
+import datetime
+import os
+import subprocess
 import sys
+
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
-import os
-import sys
-import configparser
 
 from dialog import Dialog
+from IPy import IP
 from linuxmuster_base7.functions import detectedInterfaces, isValidHostname, isValidDomainname
 from linuxmuster_base7.functions import isValidHostIpv4, isValidPassword, mySetupLogfile
 from linuxmuster_base7.functions import printScript
-from IPy import IP
-import subprocess
-import datetime
+from linuxmuster_base7.setup.helpers import runWithLog
 
 logfile = mySetupLogfile(__file__)
 
@@ -158,28 +159,30 @@ try:
     # Use chpasswd with stdin to securely pass password
     result = subprocess.run(['chpasswd'], input=f'root:{adminpw}\n',
                            capture_output=True, text=True, check=False)
+    # Log with password masked
     if logfile and (result.stdout or result.stderr):
         with open(logfile, 'a') as log:
             log.write('-' * 78 + '\n')
             log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
             log.write('#### chpasswd (root password) ####\n')
             if result.stdout:
-                log.write(result.stdout)
+                log.write(result.stdout.replace(adminpw, '******'))
             if result.stderr:
-                log.write(result.stderr)
+                log.write(result.stderr.replace(adminpw, '******'))
             log.write('-' * 78 + '\n')
     if os.path.isdir('/home/linuxmuster'):
         result = subprocess.run(['chpasswd'], input=f'linuxmuster:{adminpw}\n',
                                capture_output=True, text=True, check=False)
+        # Log with password masked
         if logfile and (result.stdout or result.stderr):
             with open(logfile, 'a') as log:
                 log.write('-' * 78 + '\n')
                 log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
                 log.write('#### chpasswd (linuxmuster password) ####\n')
                 if result.stdout:
-                    log.write(result.stdout)
+                    log.write(result.stdout.replace(adminpw, '******'))
                 if result.stderr:
-                    log.write(result.stderr)
+                    log.write(result.stderr.replace(adminpw, '******'))
                 log.write('-' * 78 + '\n')
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
