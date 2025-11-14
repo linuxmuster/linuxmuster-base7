@@ -16,28 +16,9 @@ import environment
 
 from linuxmuster_base7.functions import mySetupLogfile, printScript, randomPassword, readTextfile
 from linuxmuster_base7.functions import replaceInFile, writeTextfile
+from linuxmuster_base7.setup.helpers import runWithLog
 
 logfile = mySetupLogfile(__file__)
-
-# Helper function to run command with logging
-def run_with_log(cmd_string, logfile):
-    """Execute command with output captured to logfile."""
-    cmd_args = shlex.split(cmd_string)
-    result = subprocess.run(cmd_args, capture_output=True, text=True, check=False, shell=False)
-    if logfile and (result.stdout or result.stderr):
-        with open(logfile, 'a') as log:
-            log.write('-' * 78 + '\n')
-            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
-            log.write('#### ' + cmd_string + ' ####\n')
-            if result.stdout:
-                log.write(result.stdout)
-            if result.stderr:
-                log.write(result.stderr)
-            log.write('-' * 78 + '\n')
-    if result.returncode != 0:
-        raise subprocess.CalledProcessError(result.returncode, cmd_args, result.stdout, result.stderr)
-    return result
-
 
 # read setup ini
 msg = 'Reading setup data '
@@ -61,7 +42,7 @@ except Exception as error:
 msg = 'Backing up samba '
 printScript(msg, '', False, False, True)
 try:
-    run_with_log('sophomorix-samba --backup-samba without-users', logfile)
+    runWithLog(['sophomorix-samba', '--backup-samba', 'without-users'], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -73,7 +54,7 @@ if os.path.isfile(environment.SCHOOLCONF):
     os.unlink(environment.SCHOOLCONF)
 if os.path.isfile(environment.SOPHOSYSDIR + '/sophomorix.conf'):
     os.unlink(environment.SOPHOSYSDIR + '/sophomorix.conf')
-run_with_log('sophomorix-postinst', logfile)
+runWithLog(['sophomorix-postinst'], logfile)
 
 # create default-school share
 schoolname = os.path.basename(environment.DEFAULTSCHOOL)
@@ -84,10 +65,9 @@ shareoptsex = ['comment "Share for default-school"', '"hide unreadable" yes', '"
 msg = 'Creating share for ' + schoolname + ' '
 printScript(msg, '', False, False, True)
 try:
-    run_with_log('net conf addshare ' + schoolname + ' '
-            + defaultpath + ' ' + shareopts, logfile)
+    runWithLog(['net', 'conf', 'addshare', schoolname, defaultpath, shareopts], logfile)
     for item in shareoptsex:
-        run_with_log('net conf setparm ' + schoolname + ' ' + item, logfile)
+        runWithLog('net conf setparm ' + schoolname + ' ' + item, logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -98,10 +78,11 @@ sophomorix_comment = "created by linuxmuster-setup"
 msg = 'Creating samba account for global-admin '
 printScript(msg, '', False, False, True)
 try:
-    run_with_log('sophomorix-admin --create-global-admin global-admin --password "'
-            + adminpw + '"', logfile)
-    run_with_log('sophomorix-user --user global-admin --comment "'
-            + sophomorix_comment + '"', logfile)
+    runWithLog(['sophomorix-admin', '--create-global-admin', 'global-admin',
+                '--password', adminpw],
+               logfile, maskSecrets=[adminpw])
+    runWithLog(['sophomorix-user', '--user', 'global-admin',
+                '--comment', sophomorix_comment], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -111,10 +92,11 @@ except Exception as error:
 msg = 'Creating samba account for global-binduser '
 printScript(msg, '', False, False, True)
 try:
-    run_with_log('sophomorix-admin --create-global-binduser global-binduser --password "'
-            + binduserpw + '"', logfile)
-    run_with_log('sophomorix-user --user global-binduser --comment "'
-            + sophomorix_comment + '"', logfile)
+    runWithLog(['sophomorix-admin', '--create-global-binduser', 'global-binduser',
+                '--password', binduserpw],
+               logfile, maskSecrets=[binduserpw])
+    runWithLog(['sophomorix-user', '--user', 'global-binduser',
+                '--comment', sophomorix_comment], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -125,8 +107,9 @@ msg = 'No expiry for administrative passwords '
 printScript(msg, '', False, False, True)
 try:
     for item in ['Administrator', 'global-admin', 'global-binduser']:
-        run_with_log('samba-tool user setexpiry ' + item + ' --noexpiry --username=global-admin --password="'
-            + adminpw + '"', logfile)
+        runWithLog(['samba-tool', 'user', 'setexpiry', item, '--noexpiry',
+                    '--username=global-admin', '--password=' + adminpw],
+                   logfile, maskSecrets=[adminpw])
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))
@@ -136,8 +119,8 @@ except Exception as error:
 msg = 'Creating ou for ' + schoolname + ' '
 printScript(msg, '', False, False, True)
 try:
-    run_with_log('sophomorix-school --create --school ' + schoolname, logfile)
-    run_with_log('sophomorix-school --gpo-create ' + schoolname, logfile)
+    runWithLog(['sophomorix-school', '--create', '--school', schoolname], logfile)
+    runWithLog(['sophomorix-school', '--gpo-create', schoolname], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -147,10 +130,11 @@ except Exception as error:
 msg = 'Creating samba account for pgmadmin '
 printScript(msg, '', False, False, True)
 try:
-    run_with_log('sophomorix-admin --create-school-admin pgmadmin --school '
-            + schoolname + ' --password "' + adminpw + '"', logfile)
-    run_with_log('sophomorix-user --user pgmadmin --comment "'
-            + sophomorix_comment + '"', logfile)
+    runWithLog(['sophomorix-admin', '--create-school-admin', 'pgmadmin',
+                '--school', schoolname, '--password', adminpw],
+               logfile, maskSecrets=[adminpw])
+    runWithLog(['sophomorix-user', '--user', 'pgmadmin',
+                '--comment', sophomorix_comment], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -162,10 +146,16 @@ printScript(msg, '', False, False, True)
 try:
     dnspw = randomPassword(16)
     desc = 'Unprivileged user for DNS updates via DHCP server'
-    run_with_log('samba-tool user create dns-admin "' + dnspw + '" --description="'
-        + desc + '" --username=global-admin --password="' + adminpw + '"', logfile)
-    run_with_log('samba-tool user setexpiry dns-admin --noexpiry --username=global-admin --password="' + adminpw + '"', logfile)
-    run_with_log('samba-tool group addmembers DnsAdmins dns-admin --username=global-admin --password="' + adminpw + '"', logfile)
+    runWithLog(['samba-tool', 'user', 'create', 'dns-admin', dnspw,
+                '--description=' + desc, '--username=global-admin',
+                '--password=' + adminpw],
+               logfile, maskSecrets=[dnspw, adminpw])
+    runWithLog(['samba-tool', 'user', 'setexpiry', 'dns-admin', '--noexpiry',
+                '--username=global-admin', '--password=' + adminpw],
+               logfile, maskSecrets=[adminpw])
+    runWithLog(['samba-tool', 'group', 'addmembers', 'DnsAdmins', 'dns-admin',
+                '--username=global-admin', '--password=' + adminpw],
+               logfile, maskSecrets=[adminpw])
     rc = writeTextfile(environment.DNSADMINSECRET, dnspw, 'w')
     subprocess.run(['chgrp', 'dhcpd', environment.DNSADMINSECRET], check=True)
     subprocess.run(['chmod', '440', environment.DNSADMINSECRET], check=True)

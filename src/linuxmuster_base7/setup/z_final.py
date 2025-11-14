@@ -17,28 +17,9 @@ import environment
 
 from linuxmuster_base7.functions import getSetupValue, mySetupLogfile, printScript, readTextfile, \
     waitForFw, writeTextfile
+from linuxmuster_base7.setup.helpers import runWithLog
 
 logfile = mySetupLogfile(__file__)
-
-# Helper function to run command with logging
-def run_with_log(cmd_string, logfile, check_errors=False):
-    """Execute command with output captured to logfile."""
-    cmd_args = shlex.split(cmd_string) if isinstance(cmd_string, str) else cmd_string
-    result = subprocess.run(cmd_args, capture_output=True, text=True, check=False, shell=False)
-    if logfile and (result.stdout or result.stderr):
-        with open(logfile, 'a') as log:
-            log.write('-' * 78 + '\n')
-            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
-            log.write('#### ' + (cmd_string if isinstance(cmd_string, str) else ' '.join(cmd_args)) + ' ####\n')
-            if result.stdout:
-                log.write(result.stdout)
-            if result.stderr:
-                log.write(result.stderr)
-            log.write('-' * 78 + '\n')
-    if check_errors and result.returncode != 0:
-        raise subprocess.CalledProcessError(result.returncode, cmd_args, result.stdout, result.stderr)
-    return result
-
 
 # remove temporary files
 if os.path.isfile('/tmp/setup.ini'):
@@ -62,7 +43,7 @@ for file in glob.glob('/etc/netplan/*.yaml*'):
 msg = 'Restarting apparmor service '
 printScript(msg, '', False, False, True)
 try:
-    run_with_log(['systemctl', 'restart', 'apparmor.service'], logfile, check_errors=True)
+    runWithLog(['systemctl', 'restart', 'apparmor.service'], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -87,7 +68,7 @@ except Exception as error:
 msg = 'Starting device import '
 printScript(msg, '', False, False, True)
 try:
-    run_with_log('linuxmuster-import-devices', logfile, check_errors=True)
+    runWithLog(['linuxmuster-import-devices'], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -106,7 +87,7 @@ if not skipfw:
 msg = 'Starting subnets import '
 printScript(msg, '', False, False, True)
 try:
-    run_with_log('linuxmuster-import-subnets', logfile, check_errors=True)
+    runWithLog(['linuxmuster-import-subnets'], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -116,7 +97,8 @@ except Exception as error:
 msg = 'Creating web proxy sso keytab '
 printScript(msg, '', False, False, True)
 try:
-    run_with_log(environment.FWSHAREDIR + "/create-keytab.py -v -a '" + adminpw + "'", logfile, check_errors=False)
+    runWithLog([environment.FWSHAREDIR + '/create-keytab.py', '-v', '-a', adminpw],
+               logfile, checkErrors=False, maskSecrets=[adminpw])
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
