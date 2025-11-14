@@ -19,28 +19,9 @@ from bs4 import BeautifulSoup
 from linuxmuster_base7.functions import getFwConfig, getSetupValue, isValidHostIpv4, mySetupLogfile
 from linuxmuster_base7.functions import modIni, printScript, putFwConfig, putSftp, randomPassword
 from linuxmuster_base7.functions import readTextfile, sshExec, writeTextfile
+from linuxmuster_base7.setup.helpers import runWithLog
 
 logfile = mySetupLogfile(__file__)
-
-# Helper function to run command with logging
-def run_with_log(cmd_string, logfile):
-    """Execute command with output captured to logfile."""
-    cmd_args = shlex.split(cmd_string) if isinstance(cmd_string, str) else cmd_string
-    result = subprocess.run(cmd_args, capture_output=True, text=True, check=False, shell=False)
-    if logfile and (result.stdout or result.stderr):
-        with open(logfile, 'a') as log:
-            log.write('-' * 78 + '\n')
-            log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
-            log.write('#### ' + (cmd_string if isinstance(cmd_string, str) else ' '.join(cmd_args)) + ' ####\n')
-            if result.stdout:
-                log.write(result.stdout)
-            if result.stderr:
-                log.write(result.stderr)
-            log.write('-' * 78 + '\n')
-    if result.returncode != 0:
-        raise subprocess.CalledProcessError(result.returncode, cmd_args, result.stdout, result.stderr)
-    return result
-
 
 
 # main routine
@@ -89,7 +70,7 @@ def main():
         radiussecret = randomPassword(16)
         with open(environment.RADIUSSECRET, 'w') as secret:
             secret.write(radiussecret)
-        run_with_log(['chmod', '400', environment.RADIUSSECRET], logfile)
+        runWithLog(['chmod', '400', environment.RADIUSSECRET], logfile)
         printScript(' Success!', '', True, True, False, len(msg))
     except Exception as error:
         printScript(f' Failed: {error}', '', True, True, False, len(msg))
@@ -257,7 +238,7 @@ def main():
 
     # upload modified auth config file for web-proxy sso (#83)
     printScript('Creating web proxy sso auth config file')
-    run_with_log(environment.FWSHAREDIR + '/create-auth-config.py', logfile)
+    runWithLog([environment.FWSHAREDIR + '/create-auth-config.py'], logfile)
     conftmp = '/tmp/' + os.path.basename(environment.FWAUTHCFG)
     if not os.path.isfile(conftmp):
         sys.exit(1)

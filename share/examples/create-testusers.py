@@ -12,10 +12,12 @@ import getopt
 import os
 import subprocess
 import sys
+sys.path.insert(0, '/usr/lib/linuxmuster')
 
 from linuxmuster_base7.functions import printScript
 from linuxmuster_base7.functions import sambaTool
 from linuxmuster_base7.functions import replaceInFile
+from linuxmuster_base7.setup.helpers import runWithLog
 from shutil import copyfile
 
 starget = environment.DEFAULTSCHOOL + '/students.csv'
@@ -28,17 +30,6 @@ def usage():
     print(' [options] may be:')
     print(' -f, --force   : Ignore existing users.')
     print(' -h, --help    : Print this help.')
-
-
-def run_with_log(cmd_list, cmd_desc):
-    """Run command and log output to logfile"""
-    with open(logfile, 'a') as log:
-        log.write('-' * 78 + '\n')
-        log.write('#### ' + str(datetime.datetime.now()).split('.')[0] + ' ####\n')
-        log.write('#### ' + cmd_desc + ' ####\n')
-        log.flush()
-        result = subprocess.run(cmd_list, stdout=log, stderr=subprocess.STDOUT, check=True)
-    return result
 
 
 # get cli args
@@ -100,7 +91,7 @@ except:
 msg = 'Running sophomorix-check '
 printScript(msg, '', False, False, True)
 try:
-    run_with_log(['sophomorix-check'], 'sophomorix-check')
+    runWithLog(['sophomorix-check'], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -110,7 +101,7 @@ except:
 msg = 'Running sophomorix-add '
 printScript(msg, '', False, False, True)
 try:
-    run_with_log(['sophomorix-add'], 'sophomorix-add')
+    runWithLog(['sophomorix-add'], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -120,7 +111,7 @@ except:
 msg = 'Running sophomorix-quota '
 printScript(msg, '', False, False, True)
 try:
-    run_with_log(['sophomorix-quota'], 'sophomorix-quota')
+    runWithLog(['sophomorix-quota'], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except:
     printScript(' Failed!', '', True, True, False, len(msg))
@@ -161,8 +152,8 @@ for user in users:
     msg = ' * ' + user + ' '
     printScript(msg, '', False, False, True)
     try:
-        run_with_log(['sophomorix-passwd', '--user', user, '--pass', pw],
-                     'sophomorix-passwd --user ' + user)
+        runWithLog(['sophomorix-passwd', '--user', user, '--pass', pw],
+                   logfile, maskSecrets=[pw])
         printScript(' Success!', '', True, True, False, len(msg))
     except:
         printScript(' Failed!', '', True, True, False, len(msg))
