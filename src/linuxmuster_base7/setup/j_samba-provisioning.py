@@ -5,6 +5,29 @@
 # 20250729
 #
 
+"""
+Setup module j_samba-provisioning: Provision Samba Active Directory Domain Controller.
+
+This module:
+- Stops existing Samba services
+- Removes old Samba database if present
+- Provisions new Samba AD DC with domain configuration
+- Sets up Kerberos realm and domain
+- Configures DNS forwarders
+- Creates initial administrator account
+- Starts Samba AD DC service
+- Waits for Samba to become fully operational
+
+This is a critical setup step that creates the Active Directory infrastructure
+used for user authentication, file sharing, and centralized management.
+
+Provisioning parameters include:
+- Domain name, realm, workgroup
+- Administrator password
+- Server role (DC - Domain Controller)
+- DNS backend and forwarders
+"""
+
 import configparser
 import datetime
 import os

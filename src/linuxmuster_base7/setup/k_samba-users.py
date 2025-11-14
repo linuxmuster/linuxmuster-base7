@@ -5,6 +5,27 @@
 # 20251113
 #
 
+"""
+Setup module k_samba-users: Create initial Samba users, groups, and shares.
+
+This module:
+- Creates global binduser account for LDAP queries (used by dhcpd, etc.)
+- Creates sophomorix-admin user for school management
+- Creates global-admin user for system administration
+- Sets passwords for all service accounts
+- Creates required organizational units (OUs) in AD
+- Configures Samba shares (homes, printers, etc.)
+- Sets proper ACLs and permissions on share directories
+- Runs sophomorix-check to validate user database
+
+User accounts created:
+- global-binduser: Read-only LDAP access for services
+- sophomorix-admin: School administration via sophomorix tools
+- global-admin: Full system administration rights
+
+All service passwords are stored securely in /etc/linuxmuster/.secret/
+"""
+
 import configparser
 import datetime
 import os

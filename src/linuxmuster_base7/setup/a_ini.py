@@ -5,6 +5,21 @@
 # 20251114
 #
 
+"""
+Setup module a_ini: Process and validate setup configuration files.
+
+This module:
+- Reads and merges multiple INI configuration files (defaults, prep, setup, custom)
+- Validates domain name, server name, and network configuration
+- Derives additional values from primary configuration (realm, basedn, netmask, etc.)
+- Calculates DHCP range based on network configuration
+- Generates global binduser password
+- Writes final setup.ini file
+- Cleans up temporary configuration files
+
+The configuration cascade: defaults.ini < prep.ini < setup.ini < custom.ini
+"""
+
 import configparser
 import datetime
 import os
@@ -23,13 +38,14 @@ from linuxmuster_base7.setup.helpers import DHCP_RANGE_START_LARGE_NET, DHCP_RAN
 
 logfile = mySetupLogfile(__file__)
 
-# read ini files
+# Read and merge INI configuration files in priority order
+# Files are read in cascade: each file can override values from previous ones
 setup = configparser.RawConfigParser(delimiters=('='))
 for item in [environment.DEFAULTSINI, environment.PREPINI, environment.SETUPINI, environment.CUSTOMINI]:
-    # skip non existant file
+    # Skip non-existent files (e.g., custom.ini may not exist)
     if not os.path.isfile(item):
         continue
-    # reading setup values
+    # Read and merge configuration values
     msg = 'Reading ' + item + ' '
     printScript(msg, '', False, False, True)
     try:
@@ -39,8 +55,8 @@ for item in [environment.DEFAULTSINI, environment.PREPINI, environment.SETUPINI,
         printScript(f' Failed: {error}', '', True, True, False, len(msg))
         sys.exit(1)
 
-# compute missing values
-# from domainname
+# Validate and process domain name
+# Domain name is the primary identifier from which other values are derived
 msg = '* Domainname '
 printScript(msg, '', False, False, True)
 try:
@@ -54,18 +70,19 @@ except Exception as error:
     printScript(f' not set: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# derive values from domainname
-# realm
+# Derive Samba/LDAP values from domain name
+# Realm: uppercase version of domain (e.g., LINUXMUSTER.LAN)
 setup.set('setup', 'realm', domainname.upper())
-# sambadomain
+# Samba domain: first part of domain in uppercase (e.g., LINUXMUSTER)
 setup.set('setup', 'sambadomain', domainname.split('.')[0].upper())
-# basedn
+# Base DN: LDAP distinguished name (e.g., DC=linuxmuster,DC=lan)
 basedn = ''
 for item in domainname.split('.'):
     basedn = basedn + 'DC=' + item + ','
 setup.set('setup', 'basedn', basedn[:-1])
 
-# servername
+# Validate and process server name
+# Accept either 'servername' or legacy 'hostname' parameter
 msg = '* Servername '
 printScript(msg, '', False, False, True)
 servername = '_'
@@ -80,11 +97,10 @@ if not isValidHostname(servername):
 printScript(' ' + servername, '', True, True, False, len(msg))
 setup.set('setup', 'servername', servername)
 
-# derive values from servername
-# netbiosname
+# Derive NetBIOS name from server name (uppercase version)
 setup.set('setup', 'netbiosname', servername.upper())
 
-# serverip
+# Validate server IP address
 msg = '* Server-IP '
 printScript(msg, '', False, False, True)
 try:
@@ -98,7 +114,7 @@ except Exception as error:
     printScript(f' not set: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# netmask
+# Validate bitmask and create IP network object
 msg = '* Bitmask '
 printScript(msg, '', False, False, True)
 try:
@@ -110,15 +126,16 @@ except Exception as error:
     sys.exit(1)
 printScript(' ' + bitmask, '', True, True, False, len(msg))
 
-# derive values from bitmask
-# netmask
+# Derive network parameters from bitmask
+# Netmask in dotted notation (e.g., 255.255.0.0)
 setup.set('setup', 'netmask', ip.netmask().strNormal(0))
-# network address
+# Network address (e.g., 10.0.0.0)
 setup.set('setup', 'network', IP(ip).strNormal(0))
-# broadcast address
+# Broadcast address (e.g., 10.0.255.255)
 setup.set('setup', 'broadcast', ip.broadcast().strNormal(0))
 
-# dhcprange
+# Calculate DHCP range
+# If not provided or invalid, calculate based on network size
 msg = '* DHCP range '
 printScript(msg, '', False, False, True)
 try:
@@ -132,9 +149,11 @@ except Exception as error:
 if dhcprange == '':
     try:
         octets = splitIpOctets(serverip)
+        # Large networks (/16 or smaller): use wider range in 3rd octet
         if int(bitmask) <= 16:
             dhcprange1 = buildIp([octets[0], octets[1], *DHCP_RANGE_START_LARGE_NET.split('.')])
             dhcprange2 = buildIp([octets[0], octets[1], *DHCP_RANGE_END_LARGE_NET.split('.')])
+        # Smaller networks: use range in 4th octet
         else:
             prefix = getNetworkPrefix(serverip)
             dhcprange1 = buildIp([*prefix.split('.'), str(DHCP_RANGE_START_SUFFIX)])
@@ -147,7 +166,7 @@ if dhcprange == '':
 printScript(' ' + dhcprange1 + '-' + dhcprange2,
             '', True, True, False, len(msg))
 
-# firewallip
+# Validate firewall IP address
 msg = '* Firewall IP '
 printScript(msg, '', False, False, True)
 try:
@@ -161,7 +180,8 @@ except Exception as error:
     printScript(f' not set: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# create global binduser password
+# Create global binduser password for LDAP authentication
+# This password is used by various services (dhcpd, etc.) to bind to LDAP
 msg = 'Creating global binduser secret '
 printScript(msg, '', False, False, True)
 try:
@@ -175,14 +195,15 @@ except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# write setup.ini finally
+# Write final setup.ini file with all computed and validated values
 msg = 'Writing setup ini file '
 printScript(msg, '', False, False, True)
 try:
     with open(environment.SETUPINI, 'w') as outfile:
         setup.write(outfile)
     runWithLog(['chmod', '600', environment.SETUPINI], logfile, checkErrors=False)
-    # temporary setup.ini for transfering it later to additional vms
+    # Create temporary setup.ini for transferring to additional VMs
+    # Include binduser password but clear admin password for security
     setup.set('setup', 'binduserpw', binduserpw)
     setup.set('setup', 'adminpw', '')
     with open('/tmp/setup.ini', 'w') as outfile:
@@ -193,7 +214,7 @@ except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# delete obsolete ini files
+# Clean up obsolete temporary configuration files
 for item in [environment.CUSTOMINI, environment.PREPINI]:
     if os.path.isfile(item):
         os.unlink(item)

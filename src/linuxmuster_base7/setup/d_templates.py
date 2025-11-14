@@ -5,6 +5,25 @@
 # 20250910
 #
 
+"""
+Setup module d_templates: Process and deploy configuration file templates.
+
+This module:
+- Reads setup values from configuration
+- Iterates through all template files in /usr/share/linuxmuster/templates/
+- Replaces placeholder variables (@@servername@@, @@serverip@@, etc.) with actual values
+- Extracts target path from first line of each template
+- Creates target directories if needed
+- Backs up existing files (unless in DO_NOT_BACKUP list)
+- Skips overwriting certain files (if in DO_NOT_OVERWRITE list)
+- Sets appropriate file permissions (755 for scripts, 400 for sudoers, 644 for others)
+- Runs lmn-prepare to configure linuxmuster packages
+- Synchronizes system time with NTP servers
+
+Templates are text files with placeholders like @@variable@@ that get replaced
+with actual configuration values during setup.
+"""
+
 import configparser
 import datetime
 import os
@@ -20,14 +39,14 @@ from linuxmuster_base7.setup.helpers import DO_NOT_OVERWRITE_FILES, DO_NOT_BACKU
 
 logfile = mySetupLogfile(__file__)
 
-# read setup data
+# Read all setup configuration values needed for template processing
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 try:
-    # read default values
+    # Read default values from defaults.ini
     defaults = configparser.ConfigParser(delimiters=('='))
     defaults.read(environment.DEFAULTSINI)
-    # read setup values
+    # Read computed setup values
     adminpw = getSetupValue('adminpw')
     bitmask = getSetupValue('bitmask')
     broadcast = getSetupValue('broadcast')
@@ -50,17 +69,18 @@ except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# Note: do_not_overwrite and do_not_backup constants are imported from helpers.py
-
+# Process all template files from templates directory
+# Note: DO_NOT_OVERWRITE_FILES and DO_NOT_BACKUP_FILES are imported from helpers.py
 printScript('Processing config templates:')
 for f in os.listdir(environment.TPLDIR):
     source = environment.TPLDIR + '/' + f
     msg = '* ' + f + ' '
     printScript(msg, '', False, False, True)
     try:
-        # read template file
+        # Read template file content
         rc, filedata = readTextfile(source)
-        # replace placeholders with values
+
+        # Replace all placeholder variables with actual values
         variables = {
             '@@bitmask@@': bitmask,
             '@@broadcast@@': broadcast,
@@ -81,10 +101,13 @@ for f in os.listdir(environment.TPLDIR):
             '@@ntpsockdir@@': environment.NTPSOCKDIR
         }
         filedata = replaceTemplateVars(filedata, variables)
-        # get target path
+
+        # Extract target path from first line (shebang or comment)
         firstline = filedata.split('\n')[0]
         target = firstline.partition(' ')[2]
-        # remove target path from shebang line, define target file permissions
+
+        # Determine file permissions based on file type
+        # Shell scripts: 755 (executable), sudoers: 400 (read-only root), others: 644
         if '#!/bin/sh' in firstline or '#!/bin/bash' in firstline:
             filedata = filedata.replace(' ' + target, '\n# ' + target)
             operms = '755'
@@ -92,17 +115,22 @@ for f in os.listdir(environment.TPLDIR):
             operms = '400'
         else:
             operms = '644'
-        # do not overwrite specified configfiles if they exist
+
+        # Skip overwriting if file exists and is in protection list
         if (f in DO_NOT_OVERWRITE_FILES and os.path.isfile(target)):
             printScript(' Success!', '', True, True, False, len(msg))
             continue
-        # create target directory
+
+        # Create target directory if it doesn't exist
         targetdir = os.path.dirname(target)
         if targetdir:
             runWithLog(['mkdir', '-p', targetdir], logfile, checkErrors=False)
-        # backup file
+
+        # Backup existing file unless it's in no-backup list
         if f not in DO_NOT_BACKUP_FILES:
             backupCfg(target)
+
+        # Write processed template to target location
         with open(target, 'w') as outfile:
             outfile.write(setupComment())
             outfile.write(filedata)
@@ -112,7 +140,7 @@ for f in os.listdir(environment.TPLDIR):
         printScript(f' Failed: {error}', '', True, True, False, len(msg))
         sys.exit(1)
 
-# server prepare update
+# Run lmn-prepare to configure linuxmuster packages with setup parameters
 msg = 'Server prepare update '
 printScript(msg, '', False, False, True)
 try:
@@ -126,7 +154,8 @@ except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# set server time
+# Synchronize system time with NTP servers
+# Disable systemd-timesyncd, use ntpd instead for better accuracy
 msg = 'Adjusting server time '
 printScript(msg, '', False, False, True)
 runWithLog(['mkdir', '-p', environment.NTPSOCKDIR], logfile, checkErrors=False)
@@ -134,8 +163,8 @@ runWithLog(['chgrp', 'ntp', environment.NTPSOCKDIR], logfile, checkErrors=False)
 runWithLog(['chmod', '750', environment.NTPSOCKDIR], logfile, checkErrors=False)
 runWithLog(['timedatectl', 'set-ntp', 'false'], logfile, checkErrors=False)
 runWithLog(['systemctl', 'stop', 'ntp'], logfile, checkErrors=False)
-runWithLog(['ntpdate', 'pool.ntp.org'], logfile, checkErrors=False)
+runWithLog(['ntpdate', 'pool.ntp.org'], logfile, checkErrors=False)  # One-time sync
 runWithLog(['systemctl', 'enable', 'ntp'], logfile, checkErrors=False)
-runWithLog(['systemctl', 'start', 'ntp'], logfile, checkErrors=False)
+runWithLog(['systemctl', 'start', 'ntp'], logfile, checkErrors=False)  # Start continuous sync
 now = str(datetime.datetime.now()).split('.')[0]
 printScript(' ' + now, '', True, True, False, len(msg))

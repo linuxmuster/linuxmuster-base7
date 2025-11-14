@@ -5,6 +5,20 @@
 # 20220105
 #
 
+"""
+Setup module e_fstab: Configure filesystem mount options in /etc/fstab.
+
+This module:
+- Reads /etc/fstab configuration
+- Modifies mount options for root (/) and /srv filesystems
+- Applies mount options from environment.ROOTMNTOPTS (typically includes user_xattr, acl)
+- Remounts filesystems with new options immediately
+- Logs all mount operations
+
+Mount options are critical for proper ACL and extended attribute support
+needed by Samba and other services.
+"""
+
 import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
@@ -20,33 +34,35 @@ import datetime
 
 logfile = mySetupLogfile(__file__)
 
-# patch fstab with mount options
+# Load and modify /etc/fstab to set proper mount options
 config = FSTabConfig(path='/etc/fstab')
 config.load()
 c = 0
-mountpoints = ['/', '/srv']
+mountpoints = ['/', '/srv']  # Filesystems that need ACL and xattr support
 while True:
-    # try all fstab entries
+    # Iterate through all fstab entries
     try:
         for i in mountpoints:
-            # if mountpoint matches change mount options
+            # Check if current entry matches one of our target mountpoints
             if config.tree.filesystems[c].mountpoint == i:
                 msg = 'Modifying mount options for ' + i + ' '
                 printScript(msg, '', False, False, True)
                 try:
-                    # get mount options from environment
+                    # Apply mount options from environment (user_xattr, acl, etc.)
                     config.tree.filesystems[c].options = environment.ROOTMNTOPTS
-                    # save fstab
+                    # Write updated fstab
                     config.save()
                     printScript(' Success!', '', True, True, False, len(msg))
                 except Exception as error:
                     printScript(f' Failed: {error}', '', True, True, False, len(msg))
                     sys.exit(1)
+
+                # Remount filesystem immediately to apply new options
                 msg = 'Remounting ' + i + ' '
                 printScript(msg, '', False, False, True)
-                # try to remount filesystem with new options
                 try:
                     result = subprocess.run(['mount', '-o', 'remount', i], capture_output=True, text=True, check=False)
+                    # Log mount command output if any
                     if logfile and (result.stdout or result.stderr):
                         with open(logfile, 'a') as log:
                             log.write('-' * 78 + '\n')
@@ -61,8 +77,8 @@ while True:
                 except Exception as error:
                     printScript(f' Failed: {error}', '', True, True, False, len(msg))
                     sys.exit(1)
-        # next entry
+        # Move to next fstab entry
         c += 1
-    # break if entries ran out
+    # Exit loop when all entries have been processed
     except Exception as error:
         break

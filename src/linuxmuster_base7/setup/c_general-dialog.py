@@ -5,6 +5,27 @@
 # 20251114
 #
 
+"""
+Setup module c_general-dialog: Interactive setup dialog for initial configuration.
+
+This module:
+- Presents interactive dialog (if not in unattended mode)
+- Collects essential setup parameters from user:
+  - School name
+  - Country, state, and location
+  - Server hostname and domain name
+  - Network configuration (IP, netmask, firewall IP)
+  - Admin password
+  - DHCP range
+- Validates all user inputs
+- Writes configuration to custom.ini
+- Allows user to review and confirm settings
+
+This dialog only runs during initial setup when configuration is missing
+or incomplete. In unattended mode, all values must be provided via
+command-line arguments or configuration files.
+"""
+
 import configparser
 import datetime
 import os

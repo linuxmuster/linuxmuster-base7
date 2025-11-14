@@ -5,6 +5,22 @@
 # 20251112
 #
 
+"""
+Setup module g_ssl: Generate SSL/TLS certificates for server and services.
+
+This module:
+- Creates root CA (Certificate Authority) for the domain
+- Generates server certificate signed by CA
+- Creates firewall certificate for OPNsense
+- Generates OPSI certificate if OPSI is enabled
+- Encodes certificates to base64 for configuration files
+- Sets proper file permissions (600 for private keys)
+- Stores certificates in /etc/linuxmuster/ssl/
+
+Certificates are valid for the number of days defined in CERT_VALIDITY_DAYS
+and are essential for secure LDAP, HTTPS, and other encrypted services.
+"""
+
 from __future__ import print_function
 
 import configparser

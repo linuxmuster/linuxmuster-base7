@@ -5,6 +5,21 @@
 # 20251112
 #
 
+"""
+Setup module h_ssh: Configure SSH host keys and authorized keys for root.
+
+This module:
+- Generates SSH RSA host key pair for the server
+- Creates authorized_keys file for root user
+- Encodes public key to base64 for firewall configuration
+- Sets proper file permissions (600 for private keys, 644 for public keys)
+- Stores keys in /root/.ssh/ and /etc/linuxmuster/ssl/
+
+SSH keys are used for:
+- Secure password-less authentication from server to firewall
+- Remote management and configuration of OPNsense firewall
+"""
+
 import configparser
 import datetime
 import glob

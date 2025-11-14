@@ -5,6 +5,25 @@
 # 20251110
 #
 
+"""
+Setup module m_firewall: Configure OPNsense firewall appliance.
+
+This module:
+- Reads setup configuration and passwords
+- Downloads current firewall configuration via SSH
+- Backs up existing configuration
+- Extracts and preserves certain config values (firmware, interfaces, gateways)
+- Reads SSL certificates and SSH keys
+- Creates new firewall configuration from template with all placeholders replaced
+- Generates RADIUS secret for authentication
+- Creates API credentials for firewall management
+- Uploads configuration and auth files to firewall
+- Installs extensions and reboots firewall
+
+The firewall is accessed via SSH using either rollout password (initial setup)
+or production password (post-setup modifications).
+"""
+
 import bcrypt
 import datetime
 import os

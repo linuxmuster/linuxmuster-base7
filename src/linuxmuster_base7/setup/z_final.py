@@ -4,6 +4,23 @@
 # thomas@linuxmuster.net
 # 20250422
 
+"""
+Setup module z_final: Perform final setup tasks and cleanup.
+
+This module (executed last in setup sequence):
+- Removes temporary setup files
+- Fixes netplan file permissions for security
+- Restarts apparmor service
+- Writes school name to sophomorix configuration
+- Imports devices from devices.csv into system
+- Waits for firewall to be ready (if not skipped)
+- Imports subnet configuration
+- Creates web proxy SSO keytab for authentication
+- Removes admin password from setup.ini for security
+
+This is the last module in the setup chain and finalizes the installation.
+"""
+
 import configparser
 import datetime
 import glob
@@ -21,11 +38,11 @@ from linuxmuster_base7.setup.helpers import runWithLog
 
 logfile = mySetupLogfile(__file__)
 
-# remove temporary files
+# Clean up temporary setup files from /tmp
 if os.path.isfile('/tmp/setup.ini'):
     os.unlink('/tmp/setup.ini')
 
-# get various setup values
+# Read admin password from setup configuration
 msg = 'Reading setup data '
 printScript(msg, '', False, False, True)
 try:
@@ -35,11 +52,11 @@ except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# fix netplan file permissions
+# Secure netplan configuration files (should be readable only by root)
 for file in glob.glob('/etc/netplan/*.yaml*'):
     os.chmod(file, 0o600)
 
-# restart apparmor service
+# Restart apparmor to apply new security profiles
 msg = 'Restarting apparmor service '
 printScript(msg, '', False, False, True)
 try:
@@ -49,13 +66,13 @@ except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# write schoolname to sophomorix school.conf
+# Write school name to sophomorix configuration
 msg = 'Writing school name to school.conf '
 printScript(msg, '', False, False, True)
 try:
     schoolname = getSetupValue('schoolname')
     rc, content = readTextfile(environment.SCHOOLCONF)
-    # need to use regex because sophomorix config files do not do not comply with the ini file standard
+    # Use regex because sophomorix config files don't comply with INI standard
     content = re.sub(r'SCHOOL_LONGNAME=.*\n',
                      'SCHOOL_LONGNAME=' + schoolname + '\n', content)
     rc = writeTextfile(environment.SCHOOLCONF, content, 'w')
@@ -64,7 +81,7 @@ except Exception as error:
     printScript(error, '', True, True, False, len(msg))
     sys.exit(1)
 
-# import devices
+# Import devices from devices.csv into system (DHCP, DNS, etc.)
 msg = 'Starting device import '
 printScript(msg, '', False, False, True)
 try:
@@ -74,7 +91,7 @@ except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# wait for fw
+# Wait for firewall to become ready after configuration
 skipfw = getSetupValue('skipfw')
 if not skipfw:
     try:
@@ -83,7 +100,7 @@ if not skipfw:
         print(error)
         sys.exit(1)
 
-# import subnets
+# Import subnet configuration to firewall
 msg = 'Starting subnets import '
 printScript(msg, '', False, False, True)
 try:
@@ -93,7 +110,7 @@ except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# create web proxy sso keytab
+# Create Kerberos keytab for web proxy SSO authentication
 msg = 'Creating web proxy sso keytab '
 printScript(msg, '', False, False, True)
 try:
@@ -104,7 +121,8 @@ except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# admin password not more needed in setup.ini
+# Remove admin password from setup.ini for security
+# Password is no longer needed after setup completion
 msg = 'Removing admin password from setup.ini '
 printScript(msg, '', False, False, True)
 setupini = environment.SETUPINI

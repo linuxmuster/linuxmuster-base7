@@ -5,6 +5,23 @@
 # 20251114
 #
 
+"""
+Setup module i_linbo: Configure LINBO (Linux Network Boot) system.
+
+This module:
+- Creates LINBO directory structure (/srv/linbo/)
+- Generates example start.conf files for different OS types (Ubuntu, Windows)
+- Creates LINBO icons directory and copies default icons
+- Sets up PXE boot configuration
+- Configures proper file and directory permissions
+- Prepares cache and image directories
+
+LINBO is the linuxmuster.net boot and imaging solution that allows:
+- Network booting of client computers
+- OS image deployment and management
+- Automated system installation and recovery
+"""
+
 import configparser
 import datetime
 import glob
