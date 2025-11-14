@@ -166,7 +166,7 @@ try:
         + desc + '" --username=global-admin --password="' + adminpw + '"', logfile)
     run_with_log('samba-tool user setexpiry dns-admin --noexpiry --username=global-admin --password="' + adminpw + '"', logfile)
     run_with_log('samba-tool group addmembers DnsAdmins dns-admin --username=global-admin --password="' + adminpw + '"', logfile)
-    rc, writeTextfile(environment.DNSADMINSECRET, dnspw, 'w')
+    rc = writeTextfile(environment.DNSADMINSECRET, dnspw, 'w')
     subprocess.run(['chgrp', 'dhcpd', environment.DNSADMINSECRET], check=True)
     subprocess.run(['chmod', '440', environment.DNSADMINSECRET], check=True)
     printScript(' Success!', '', True, True, False, len(msg))
