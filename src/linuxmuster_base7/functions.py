@@ -381,10 +381,23 @@ def getGrubOstype(osname):
     return 'unknown'
 
 
-# concenate files
+# concatenate files safely without shell injection risk
 def catFiles(filelist, outfile):
-    files = " ".join(filelist)
-    subprocess.run(f"cat {files} > {outfile}", shell=True)
+    """
+    Concatenate multiple files into a single output file.
+
+    Uses binary mode to preserve file contents exactly (important for certificates).
+    Avoids shell injection by using native Python file operations instead of subprocess.
+
+    Args:
+        filelist: List of file paths to concatenate
+        outfile: Output file path where concatenated content will be written
+    """
+    import shutil
+    with open(outfile, 'wb') as out:
+        for filepath in filelist:
+            with open(filepath, 'rb') as infile:
+                shutil.copyfileobj(infile, out)
 
 
 # return content of text file
