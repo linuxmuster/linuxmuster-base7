@@ -30,6 +30,16 @@ import requests
 
 
 def get_holidays(year, state) -> list:
+    """
+    Fetch holidays from ferien-api.de for a given year and state.
+
+    Args:
+        year: Year to fetch holidays for
+        state: German state abbreviation (e.g., 'BW', 'BY')
+
+    Returns:
+        List of holiday dictionaries with start/end dates
+    """
     url = "https://ferien-api.de/api/v1/holidays/" + state
     headers = CaseInsensitiveDict()
     headers["Content-Type"] = "application/json"
@@ -39,8 +49,15 @@ def get_holidays(year, state) -> list:
 
     for entry in content:
         if entry['year'] == int(year) or entry['year'] == int(year) + 1:
-            start = datetime.strptime(entry['start'], '%Y-%m-%dT%H:%MZ')
-            end = datetime.strptime(entry['end'], '%Y-%m-%dT%H:%MZ')
+            # Try parsing with time format first, fall back to date-only format
+            try:
+                start = datetime.strptime(entry['start'], '%Y-%m-%dT%H:%MZ')
+                end = datetime.strptime(entry['end'], '%Y-%m-%dT%H:%MZ')
+            except ValueError:
+                # API sometimes returns date-only format
+                start = datetime.strptime(entry['start'], '%Y-%m-%d')
+                end = datetime.strptime(entry['end'], '%Y-%m-%d')
+
             holidays.append({entry['name']: {'start': start.strftime('%d.%m.%Y'), 'end': end.strftime('%d.%m.%Y')}})
     return holidays
 
