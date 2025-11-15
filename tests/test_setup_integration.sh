@@ -3,7 +3,7 @@
 # Integration test script for linuxmuster-setup with system state management
 # Creates snapshots and restores system state between tests
 # thomas@linuxmuster.net
-# 20251113
+# 20251115
 #
 
 # Don't use set -e as it can interfere with test execution
@@ -109,13 +109,6 @@ check_system() {
         exit 1
     fi
 
-    # Check if system is configured
-    . /usr/share/linuxmuster/environment.sh || exit 1
-    if [ -e "$SETUPINI" ]; then
-        echo -e "${RED}ERROR: linuxmuster-setup has already been run. Is this a production system?${NC}"
-        exit 1
-    fi
-
     # Check available disk space (need at least 500MB for snapshots)
     available=$(df /tmp | awk 'NR==2 {print $4}')
     if [ "$available" -lt 512000 ]; then
@@ -128,6 +121,16 @@ check_system() {
     fi
 
     print_info "System check passed"
+}
+
+# check if system is already configured
+check_configured(){
+    # Check if system is configured
+    . /usr/share/linuxmuster/environment.sh || exit 1
+    if [ -e "$SETUPINI" ]; then
+        echo -e "${RED}ERROR: linuxmuster-setup has already been run. Is this a production system?${NC}"
+        exit 1
+    fi
 }
 
 # Create system snapshot
@@ -1084,6 +1087,8 @@ EOF
 
     # Handle combined -t and -r options, or standalone -r
     if [ -n "$test_spec" ]; then
+        # check if system is already configured
+        check_configured
         # Run tests with optional restore after
         if [[ "$test_spec" == *","* ]]; then
             run_multiple_tests "$test_spec" "$restore_snapshot"
