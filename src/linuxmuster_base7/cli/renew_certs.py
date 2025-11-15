@@ -24,8 +24,9 @@ import shutil
 import subprocess
 import sys
 
-from linuxmuster_base7.functions import catFiles, checkFwMajorVer, getFwConfig, getSetupValue, printScript, putFwConfig, \
-    readTextfile, replaceInFile, sshExec, tee
+from linuxmuster_base7.functions import catFiles, checkFwMajorVer, createCertificateChain, createCnfFromTemplate, \
+    encodeCertToBase64, getFwConfig, getSetupValue, printScript, putFwConfig, readTextfile, renewCaCertificate, \
+    replaceInFile, signCertificateWithCa, sshExec, tee
 
 
 def usage():
@@ -207,38 +208,6 @@ class CertificateRenewer:
             print(err)
             sys.exit(1)
 
-    def createCnfFromTemplate(self, cnf_tpl):
-        """
-        Create OpenSSL configuration file from template.
-
-        Args:
-            cnf_tpl: Path to configuration template file
-
-        Returns:
-            Path to created configuration file
-        """
-        # Read template file
-        rc, filedata = readTextfile(cnf_tpl)
-        # Replace placeholders with actual values
-        replacements = {
-            '@@domainname@@': self.domainname,
-            '@@firewallip@@': self.firewallip,
-            '@@realm@@': self.realm,
-            '@@sambadomain@@': self.sambadomain,
-            '@@schoolname@@': self.schoolname,
-            '@@servername@@': self.servername,
-            '@@serverip@@': self.serverip,
-        }
-        for placeholder, value in replacements.items():
-            filedata = filedata.replace(placeholder, value)
-        # Extract target path from first line
-        firstline = filedata.split('\n')[0]
-        cnf = firstline.partition(' ')[2]
-        # Write configuration file
-        with open(cnf, 'w') as outfile:
-            outfile.write(filedata)
-        return cnf
-
     def renewCertificate(self, item):
         """
         Renew a specific certificate.
@@ -276,35 +245,30 @@ class CertificateRenewer:
         printScript(msg)
         try:
             if name == 'ca':
-                # Renew CA certificate using password-protected CA key (matches g_ssl.py methodology)
+                # Renew CA certificate using shared function
                 printScript('Note that you have to renew and deploy also all certs which depend on cacert.')
-                with open(self.logfile, 'a') as log:
-                    subprocess.run(['openssl', 'req', '-batch', '-x509', self.cacert_subject, '-new', '-nodes',
-                                  '-passin', 'pass:' + self.cakeypw, '-key', self.cakey,
-                                  '-sha256', '-days', self.days, '-out', self.cacert],
-                                 stdout=log, stderr=subprocess.STDOUT, check=True)
-                with open(self.logfile, 'a') as log:
-                    subprocess.run(['openssl', 'x509', '-in', self.cacert, '-inform', 'PEM', '-out', self.cacert_crt],
-                                 stdout=log, stderr=subprocess.STDOUT, check=True)
+                if not renewCaCertificate(self.cacert_subject, self.days, self.logfile):
+                    raise Exception('Failed to renew CA certificate')
             else:
-                # Renew server or firewall certificate using password-protected CA key
-                cnf = self.createCnfFromTemplate(cnf_tpl)
-                with open(self.logfile, 'a') as log:
-                    subprocess.run(['openssl', 'x509', '-req', '-in', csr, '-CA', self.cacert,
-                                  '-passin', 'pass:' + self.cakeypw, '-CAkey', self.cakey,
-                                  '-CAcreateserial', '-out', pem, '-days', self.days,
-                                  '-sha256', '-extfile', cnf],
-                                 stdout=log, stderr=subprocess.STDOUT, check=True)
+                # Renew server or firewall certificate using shared functions
+                cnf = createCnfFromTemplate(cnf_tpl)
+                if not cnf:
+                    raise Exception('Failed to create configuration from template')
+
+                if not signCertificateWithCa(csr, pem, self.days, cnf, self.logfile):
+                    raise Exception('Failed to sign certificate')
+
                 # Create certificate chains
-                catFiles([pem, self.cacert], chn)
+                if not createCertificateChain(pem, chn):
+                    raise Exception('Failed to create certificate chain')
+
+                # Create bundle with key + cert
                 catFiles([key, pem], bdl)
 
             # Update firewall configuration if needed
             if name == 'firewall' or name == 'ca':
                 shutil.copyfile(b64, b64_old)
-                with open(self.logfile, 'a') as log:
-                    with open(b64, 'w') as outfile:
-                        subprocess.run(['base64', '-w0', pem], stdout=outfile, stderr=log, check=True)
+                encodeCertToBase64(pem, b64)
                 self.patchFwCert(b64, b64_old)
         except Exception as err:
             printScript('Failed!')
