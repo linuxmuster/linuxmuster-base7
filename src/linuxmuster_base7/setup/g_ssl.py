@@ -32,8 +32,8 @@ import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from linuxmuster_base7.functions import createServerCert, mySetupLogfile, randomPassword, \
-    printScript, writeTextfile
+from linuxmuster_base7.functions import createServerCert, encodeCertToBase64, mySetupLogfile, \
+    randomPassword, printScript, writeTextfile
 from linuxmuster_base7.setup.helpers import runWithLog, CERT_VALIDITY_DAYS
 
 logfile = mySetupLogfile(__file__)
@@ -90,10 +90,8 @@ try:
                 '/usr/local/share/ca-certificates/linuxmuster_cacert.crt'],
                logfile, checkErrors=False)
     runWithLog(['update-ca-certificates'], logfile, checkErrors=False)
-    # create base64 encoded version for opnsense's config.xml
-    cacertb64 = subprocess.check_output(['base64', '-w0', environment.CACERT]).decode('utf-8')
-    writeTextfile(environment.CACERTB64, cacertb64, 'w')
-    if not os.path.isfile(environment.CACERTB64):
+    # create base64 encoded version for opnsense's config.xml using shared function
+    if not encodeCertToBase64(environment.CACERT, environment.CACERTB64):
         printScript(' Failed!', '', True, True, False, len(msg))
         sys.exit(1)
     printScript(' Success!', '', True, True, False, len(msg))
