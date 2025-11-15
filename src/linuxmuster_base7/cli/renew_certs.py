@@ -80,8 +80,9 @@ class CertificateRenewer:
         self.cacert_crt = environment.CACERTCRT
         self.cacert_subject = f'-subj /O="{self.schoolname}"/OU={self.sambadomain}/CN={self.realm}/subjectAltName={self.realm}/'
         self.cakey = environment.CAKEY
+        # Read CA key password from secret file (created during setup in g_ssl.py)
         rc, cakeypw = readTextfile(environment.CAKEYSECRET)
-        self.cakey_passin = '-passin pass:' + cakeypw
+        self.cakeypw = cakeypw.strip()
         self.fwconftmp = environment.FWCONFLOCAL
         now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
         self.fwconfbak = self.fwconftmp.replace('.xml', '-' + now + '.xml')
@@ -115,7 +116,7 @@ class CertificateRenewer:
             print(err)
             sys.exit(1)
 
-    def validate_options(self):
+    def validateOptions(self):
         """Validate command-line options and configuration."""
         if self.skipfw and self.dry_run:
             printScript('Dry mode runs only with standard OPNsense firewall.')
@@ -127,7 +128,7 @@ class CertificateRenewer:
             self.force = True
             self.cert_list = ['ca', 'firewall']
 
-    def prompt_security_confirmation(self):
+    def promptSecurityConfirmation(self):
         """Prompt user for security confirmation unless force mode is enabled."""
         if not self.force:
             msg = 'Attention! Please confirm the renewing of the server certificates.'
@@ -136,7 +137,7 @@ class CertificateRenewer:
             if answer != "YES":
                 sys.exit(1)
 
-    def test_fw_cert(self, item, b64):
+    def testFwCert(self, item, b64):
         """
         Test if firewall certificate can be renewed.
 
@@ -161,7 +162,7 @@ class CertificateRenewer:
             print(err)
             sys.exit(1)
 
-    def patch_fw_cert(self, new, old):
+    def patchFwCert(self, new, old):
         """
         Patch firewall configuration with new certificate.
 
@@ -180,7 +181,7 @@ class CertificateRenewer:
             print(err)
             return False
 
-    def check_and_download_fw_config(self):
+    def checkAndDownloadFwConfig(self):
         """Check firewall version and download current configuration."""
         if self.skipfw:
             return
@@ -193,7 +194,7 @@ class CertificateRenewer:
             print(err)
             sys.exit(1)
 
-    def apply_fw_changes(self):
+    def applyFwChanges(self):
         """Upload updated configuration to firewall and optionally reboot."""
         if self.skipfw:
             return
@@ -206,7 +207,7 @@ class CertificateRenewer:
             print(err)
             sys.exit(1)
 
-    def create_cnf_from_template(self, cnf_tpl):
+    def createCnfFromTemplate(self, cnf_tpl):
         """
         Create OpenSSL configuration file from template.
 
@@ -238,7 +239,7 @@ class CertificateRenewer:
             outfile.write(filedata)
         return cnf
 
-    def renew_certificate(self, item):
+    def renewCertificate(self, item):
         """
         Renew a specific certificate.
 
@@ -267,7 +268,7 @@ class CertificateRenewer:
 
         # Test firewall certificate if applicable
         if name == 'firewall' or name == 'ca':
-            self.test_fw_cert(item, b64)
+            self.testFwCert(item, b64)
             if self.dry_run:
                 return
 
@@ -275,21 +276,23 @@ class CertificateRenewer:
         printScript(msg)
         try:
             if name == 'ca':
-                # Renew CA certificate
+                # Renew CA certificate using password-protected CA key (matches g_ssl.py methodology)
                 printScript('Note that you have to renew and deploy also all certs which depend on cacert.')
                 with open(self.logfile, 'a') as log:
                     subprocess.run(['openssl', 'req', '-batch', '-x509', self.cacert_subject, '-new', '-nodes',
-                                  self.cakey_passin, '-key', self.cakey, '-sha256', '-days', self.days, '-out', self.cacert],
+                                  '-passin', 'pass:' + self.cakeypw, '-key', self.cakey,
+                                  '-sha256', '-days', self.days, '-out', self.cacert],
                                  stdout=log, stderr=subprocess.STDOUT, check=True)
                 with open(self.logfile, 'a') as log:
                     subprocess.run(['openssl', 'x509', '-in', self.cacert, '-inform', 'PEM', '-out', self.cacert_crt],
                                  stdout=log, stderr=subprocess.STDOUT, check=True)
             else:
-                # Renew server or firewall certificate
-                cnf = self.create_cnf_from_template(cnf_tpl)
+                # Renew server or firewall certificate using password-protected CA key
+                cnf = self.createCnfFromTemplate(cnf_tpl)
                 with open(self.logfile, 'a') as log:
-                    subprocess.run(['openssl', 'x509', '-req', '-in', csr, '-CA', self.cacert, self.cakey_passin,
-                                  '-CAkey', self.cakey, '-CAcreateserial', '-out', pem, '-days', self.days,
+                    subprocess.run(['openssl', 'x509', '-req', '-in', csr, '-CA', self.cacert,
+                                  '-passin', 'pass:' + self.cakeypw, '-CAkey', self.cakey,
+                                  '-CAcreateserial', '-out', pem, '-days', self.days,
                                   '-sha256', '-extfile', cnf],
                                  stdout=log, stderr=subprocess.STDOUT, check=True)
                 # Create certificate chains
@@ -302,13 +305,13 @@ class CertificateRenewer:
                 with open(self.logfile, 'a') as log:
                     with open(b64, 'w') as outfile:
                         subprocess.run(['base64', '-w0', pem], stdout=outfile, stderr=log, check=True)
-                self.patch_fw_cert(b64, b64_old)
+                self.patchFwCert(b64, b64_old)
         except Exception as err:
             printScript('Failed!')
             print(err)
             sys.exit(1)
 
-    def reorder_cert_list(self):
+    def reorderCertList(self):
         """Ensure CA certificate is renewed first (dependencies)."""
         if 'ca' in self.cert_list and len(self.cert_list) > 1 and self.cert_list[0] != 'ca':
             self.cert_list.remove('ca')
@@ -322,24 +325,24 @@ class CertificateRenewer:
         printScript(os.path.basename(__file__), 'begin')
 
         # Validate options
-        self.validate_options()
+        self.validateOptions()
 
         # Security prompt
-        self.prompt_security_confirmation()
+        self.promptSecurityConfirmation()
 
         # Ensure CA is processed first if in list
-        self.reorder_cert_list()
+        self.reorderCertList()
 
         # Check firewall and download config if needed
         if 'firewall' in self.cert_list or 'ca' in self.cert_list:
-            self.check_and_download_fw_config()
+            self.checkAndDownloadFwConfig()
 
         # Process each certificate
         for item in self.cert_list:
             # Process only valid certificate types
             if item not in self.all_certs:
                 continue
-            self.renew_certificate(item)
+            self.renewCertificate(item)
 
         # Handle dry-run mode
         if self.dry_run:
@@ -347,7 +350,7 @@ class CertificateRenewer:
         else:
             # Apply firewall changes
             if 'firewall' in self.cert_list or 'ca' in self.cert_list:
-                self.apply_fw_changes()
+                self.applyFwChanges()
 
             # Reboot server if requested
             if self.reboot:
