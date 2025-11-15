@@ -241,60 +241,216 @@ def getIpBcAddress(ip):
 #   checked, if 'DHCP' is specified all dynamic ip hosts are returned
 # pxeflag filter: comma separated list of flags ('0,1,2,3'), only hosts with
 #   the specified pxeflags were returned
-def getDevicesArray(fieldnrs='', subnet='', pxeflag='', school='default-school'):
-    devices_array = []
-    if school == "default-school":
-        infile = open(environment.SOPHOSYSDIR
-                      + "/default-school/devices.csv", newline='')
-    else:
-        infile = open(environment.SOPHOSYSDIR+"/" + school
-                      + "/" + school + ".devices.csv", newline='')
+def readDevicesCsv(school='default-school'):
+    """
+    Read devices CSV file for specified school.
 
-    content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
-    for row in content:
-        # skip rows, which begin with non alphanumeric characters
+    Opens the appropriate devices.csv file based on school name and reads
+    all rows. Skips rows that begin with non-alphanumeric characters
+    (comments or empty lines).
+
+    Args:
+        school: School name (default: 'default-school')
+
+    Returns:
+        List of raw CSV rows (each row is a list of fields)
+
+    Raises:
+        IOError: If devices.csv file cannot be opened
+    """
+    # Determine CSV file path based on school
+    if school == "default-school":
+        csv_path = environment.SOPHOSYSDIR + "/default-school/devices.csv"
+    else:
+        csv_path = environment.SOPHOSYSDIR + "/" + school + "/" + school + ".devices.csv"
+
+    # Read CSV file
+    with open(csv_path, newline='') as infile:
+        content = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
+        rows = []
+        for row in content:
+            # Skip rows that begin with non-alphanumeric characters
+            try:
+                if row[0][0:1].isalnum():
+                    rows.append(row)
+            except (IndexError, Exception):
+                continue
+    return rows
+
+
+def validateDeviceRow(row, school='default-school'):
+    """
+    Validate and parse a device row from devices.csv.
+
+    Extracts device fields, applies hostname transformation for non-default
+    schools, and validates hostname, MAC address, and IP address.
+
+    Args:
+        row: CSV row as list of fields
+        school: School name for hostname transformation
+
+    Returns:
+        Tuple of (is_valid, device_dict) where:
+        - is_valid: Boolean indicating if row is valid
+        - device_dict: Dictionary with parsed fields (hostname, group, mac, ip, pxe, raw_row)
+          or None if invalid
+    """
+    try:
+        # Transform hostname for non-default schools (add school prefix)
+        if school != "default-school":
+            row = row.copy()  # Don't modify original
+            row[1] = school + "-" + row[1]
+
+        # Extract device fields from CSV columns
+        hostname = row[1]
+        group = row[2]
+        mac = row[3]
+        ip = row[4]
+        pxe = row[10]
+
+        # Validate hostname and MAC address
+        if not isValidHostname(hostname) or not isValidMac(mac):
+            return False, None
+
+        # Validate IP address (must be valid IPv4 or 'DHCP')
+        if not isValidHostIpv4(ip) and ip != 'DHCP':
+            return False, None
+
+        # Return validated device data
+        device = {
+            'hostname': hostname,
+            'group': group,
+            'mac': mac,
+            'ip': ip,
+            'pxe': pxe,
+            'raw_row': row
+        }
+        return True, device
+
+    except (IndexError, KeyError, Exception) as error:
+        # Invalid row format or missing fields
+        print(error)
+        return False, None
+
+
+def filterDevices(devices, subnet='', pxeflag=''):
+    """
+    Filter device list based on subnet and PXE flag criteria.
+
+    Applies filtering rules:
+    - subnet='DHCP': Only include devices with ip='DHCP'
+    - subnet='x.x.x.x/y': Only include devices in specified subnet
+    - pxeflag='flag1,flag2': Only include devices with matching PXE flags
+
+    Args:
+        devices: List of device dictionaries
+        subnet: Subnet filter ('DHCP', IP/netmask, or empty for no filter)
+        pxeflag: PXE flag filter (comma-separated values, empty for no filter)
+
+    Returns:
+        Filtered list of device dictionaries
+    """
+    filtered = []
+    for device in devices:
+        ip = device['ip']
+        pxe = device['pxe']
+
+        # Filter by subnet
+        if subnet == 'DHCP':
+            # Only include DHCP devices
+            if ip != 'DHCP':
+                continue
+        elif subnet != '':
+            # Only include devices in specified subnet
+            if ip == 'DHCP' or not ipMatchSubnet(ip, subnet):
+                continue
+
+        # Filter by PXE flag
+        if pxeflag != '':
+            if pxe not in pxeflag.split(','):
+                continue
+
+        filtered.append(device)
+
+    return filtered
+
+
+def transformDeviceRow(device, fieldnrs=''):
+    """
+    Transform device dict to include only specified fields from raw CSV row.
+
+    Args:
+        device: Device dictionary with 'raw_row' field
+        fieldnrs: Comma-separated field numbers to return (empty=all fields)
+
+    Returns:
+        List with selected fields from raw CSV row
+
+    Examples:
+        fieldnrs='' returns entire row
+        fieldnrs='1,3,4' returns fields at positions 1, 3, and 4
+    """
+    raw_row = device['raw_row']
+
+    # Return all fields if no specific fields requested
+    if fieldnrs == '':
+        return raw_row
+
+    # Extract only requested field numbers
+    result = []
+    for field in fieldnrs.split(','):
         try:
-            if not row[0][0:1].isalnum():
-                continue
-        except Exception:
+            result.append(raw_row[int(field)])
+        except (ValueError, IndexError):
+            # Invalid field number, skip it
             continue
-        try:
-            # collect values
-            if school != "default-school":
-                # add the prefix to the computername for DHCP config
-                row[1] = school + "-" + row[1]
-            hostname = row[1]
-            group = row[2]
-            mac = row[3]
-            ip = row[4]
-            pxe = row[10]
-            # skip rows with invalid values
-            # filter dynamic ip hosts
-            if subnet == 'DHCP' and ip != 'DHCP':
-                continue
-            # filter invalid hostnames and macs
-            if not isValidHostname(hostname) or not isValidMac(mac):
-                continue
-            # filter invalid ips
-            if not isValidHostIpv4(ip) and ip != 'DHCP':
-                continue
-            # filter not matching pxeflags
-            if pxeflag != '' and pxe not in pxeflag.split(','):
-                continue
-            # filter not matching subnet
-            if subnet != '' and subnet != 'DHCP' and not ipMatchSubnet(ip, subnet):
-                continue
-            # collect fields
-            if fieldnrs == '':
-                row_res = row
-            else:
-                row_res = []
-                for field in fieldnrs.split(','):
-                    row_res.append(row[int(field)])
-            devices_array.append(row_res)
-        except Exception as error:
-            print(error)
-            continue
+
+    return result
+
+
+def getDevicesArray(fieldnrs='', subnet='', pxeflag='', school='default-school'):
+    """
+    Get filtered and validated device array from devices.csv.
+
+    This function orchestrates the device reading, validation, filtering,
+    and transformation process by calling specialized helper functions.
+
+    Args:
+        fieldnrs: Comma-separated field numbers to return (empty=all fields)
+        subnet: Subnet filter ('DHCP', IP/netmask, or empty for no filter)
+        pxeflag: PXE flag filter (comma-separated values, empty for no filter)
+        school: School name (default: 'default-school')
+
+    Returns:
+        List of device rows matching criteria, with selected fields
+
+    Example:
+        # Get all devices
+        devices = getDevicesArray()
+
+        # Get DHCP devices, return only fields 1,3,4
+        devices = getDevicesArray(fieldnrs='1,3,4', subnet='DHCP')
+
+        # Get devices in subnet with PXE flags '1' or '3'
+        devices = getDevicesArray(subnet='10.0.0.0/16', pxeflag='1,3')
+    """
+    # Read CSV file
+    raw_rows = readDevicesCsv(school)
+
+    # Validate and parse each row
+    valid_devices = []
+    for row in raw_rows:
+        is_valid, device = validateDeviceRow(row, school)
+        if is_valid:
+            valid_devices.append(device)
+
+    # Apply filters
+    filtered_devices = filterDevices(valid_devices, subnet, pxeflag)
+
+    # Transform to requested fields
+    devices_array = []
+    for device in filtered_devices:
+        devices_array.append(transformDeviceRow(device, fieldnrs))
 
     return devices_array
 
@@ -752,7 +908,7 @@ def sshExec(ip, cmd, secret=''):
         if secret == '':
             # key-based auth: test connection with subprocess (no shell=True)
             subprocess.run(['ssh'] + sshopts + ['-l', 'root', ip, 'exit'],
-                          check=True, capture_output=True)
+                          check=True, capture_output=False)
         else:
             # password auth: test connection with paramiko
             ssh.connect(ip, port=22, username='root', password=secret)
