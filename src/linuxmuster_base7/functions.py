@@ -908,7 +908,7 @@ def sshExec(ip, cmd, secret=''):
         if secret == '':
             # key-based auth: test connection with subprocess (no shell=True)
             subprocess.run(['ssh'] + sshopts + ['-l', 'root', ip, 'exit'],
-                          check=True, capture_output=False)
+                          check=True, stdout=subprocess.DEVNULL)
         else:
             # password auth: test connection with paramiko
             ssh.connect(ip, port=22, username='root', password=secret)
