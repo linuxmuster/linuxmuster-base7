@@ -83,7 +83,7 @@ for a in CRYPTO_TYPES:
     msg = '* ' + a + ' key '
     printScript(msg, '', False, False, True)
     try:
-        keyfile = rootkey_prefix + a + '_key'
+        keyfile = rootkey_prefix + a
         runWithLog(['ssh-keygen', '-t', a, '-f', keyfile, '-N', ''], logfile, checkErrors=False)
         if a == 'rsa':
             pubkey = keyfile + '.pub'
