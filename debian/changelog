@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.3.29-0) lmn73; urgency=low
+
+  * syntax fix in k_samba-users.py (9a9e7eb).
+  * firewall setup interfaces fix (dab0aea).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 17 Nov 2025 10:55:34 +0100
+
 linuxmuster-base7 (7.3.28-0) lmn73; urgency=low
 
   * fix missing missing wan gateway in opnsense after setup if static wan interface was configured (1bd2359).
