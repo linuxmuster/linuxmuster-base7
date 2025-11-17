@@ -2,7 +2,7 @@
 #
 # renew self-signed server certs
 # thomas@linuxmuster.net
-# 20251114
+# 20251117
 #
 
 """
@@ -68,28 +68,34 @@ class CertificateRenewer:
         self.reboot = reboot
         self.all_certs = ['ca', 'server', 'firewall']
 
-        # Setup logging
+        # Setup logging - redirect stdout/stderr to log file
         self.logfile = environment.LOGDIR + '/renew-certs.log'
-        self._setup_logging()
+        self._setupLogging()
 
-        # Load configuration
-        self._load_setup_values()
+        # Load configuration from setup.ini
+        self._loadSetupValues()
 
         # Certificate paths and configuration
-        self.ssldir = environment.SSLDIR
-        self.cacert = environment.CACERT
-        self.cacert_crt = environment.CACERTCRT
+        self.ssldir = environment.SSLDIR  # Base SSL directory
+        self.cacert = environment.CACERT  # CA certificate path
+        self.cacert_crt = environment.CACERTCRT  # CA certificate in CRT format
+        # CA certificate subject line with organization, domain, and realm
         self.cacert_subject = f'-subj /O="{self.schoolname}"/OU={self.sambadomain}/CN={self.realm}/subjectAltName={self.realm}/'
-        self.cakey = environment.CAKEY
+        self.cakey = environment.CAKEY  # CA private key path
         # Read CA key password from secret file (created during setup in g_ssl.py)
         rc, cakeypw = readTextfile(environment.CAKEYSECRET)
         self.cakeypw = cakeypw.strip()
-        self.fwconftmp = environment.FWCONFLOCAL
+        # Firewall configuration paths
+        self.fwconftmp = environment.FWCONFLOCAL  # Temporary firewall config
         now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-        self.fwconfbak = self.fwconftmp.replace('.xml', '-' + now + '.xml')
+        self.fwconfbak = self.fwconftmp.replace('.xml', '-' + now + '.xml')  # Timestamped backup
 
-    def _setup_logging(self):
-        """Configure logging to file and stdout/stderr."""
+    def _setupLogging(self):
+        """Configure logging to file and stdout/stderr.
+
+        Redirects both stdout and stderr to the log file while maintaining
+        console output using the tee utility function.
+        """
         try:
             l = open(self.logfile, 'a')
             sys.stdout = tee(sys.stdout, l)
@@ -99,35 +105,48 @@ class CertificateRenewer:
             printScript(err)
             sys.exit(1)
 
-    def _load_setup_values(self):
-        """Load configuration values from setup.ini."""
+    def _loadSetupValues(self):
+        """Load configuration values from setup.ini.
+
+        Reads all required setup values including school name, server name,
+        domain configuration, firewall IP, and skip_firewall flag.
+        """
         msg = 'Reading setup data.'
         printScript(msg)
         try:
-            self.schoolname = getSetupValue('schoolname')
-            self.servername = getSetupValue('servername')
-            self.domainname = getSetupValue('domainname')
-            self.sambadomain = getSetupValue('sambadomain')
-            self.skipfw = getSetupValue('skipfw')
-            self.realm = getSetupValue('realm')
-            self.firewallip = getSetupValue('firewallip')
-            self.serverip = getSetupValue('serverip')
+            self.schoolname = getSetupValue('schoolname')  # School/organization name
+            self.servername = getSetupValue('servername')  # Server hostname
+            self.domainname = getSetupValue('domainname')  # DNS domain name
+            self.sambadomain = getSetupValue('sambadomain')  # Samba/AD domain
+            self.skipfw = getSetupValue('skipfw')  # Skip firewall flag
+            self.realm = getSetupValue('realm')  # Kerberos realm
+            self.firewallip = getSetupValue('firewallip')  # Firewall IP address
+            self.serverip = getSetupValue('serverip')  # Server IP address
         except Exception as err:
             printScript(msg + ' errors detected!')
             print(err)
             sys.exit(1)
 
     def validateOptions(self):
-        """Validate command-line options and configuration."""
+        """Validate command-line options and configuration.
+
+        Checks for invalid option combinations and enforces constraints:
+        - Dry-run requires OPNsense firewall (not skipfw)
+        - Firewall cert renewal requires OPNsense firewall
+        - Dry-run mode forces certain options (skip prompt, limit to ca+firewall)
+        """
+        # Dry-run mode requires standard OPNsense firewall
         if self.skipfw and self.dry_run:
             printScript('Dry mode runs only with standard OPNsense firewall.')
             sys.exit(1)
+        # Firewall certificate renewal requires OPNsense firewall
         if self.skipfw and 'firewall' in self.cert_list:
             printScript('Renewing the firewall certificate works only with standard OPNsense firewall.')
             sys.exit(1)
+        # Dry-run mode automatically enables force mode and limits to ca+firewall certs
         if self.dry_run:
-            self.force = True
-            self.cert_list = ['ca', 'firewall']
+            self.force = True  # Skip security prompt
+            self.cert_list = ['ca', 'firewall']  # Only test these two certs
 
     def promptSecurityConfirmation(self):
         """Prompt user for security confirmation unless force mode is enabled."""
@@ -212,71 +231,88 @@ class CertificateRenewer:
         """
         Renew a specific certificate.
 
+        This method handles the complete certificate renewal workflow:
+        1. Normalize certificate name (e.g., servername -> 'server')
+        2. Set up file paths for certificates, keys, and chains
+        3. Test firewall certificate compatibility (if applicable)
+        4. Generate new certificate (CA or signed cert)
+        5. Create certificate chains and bundles
+        6. Update firewall configuration with new certificate
+
         Args:
             item: Certificate identifier ('ca', 'server', or 'firewall')
         """
-        # Normalize certificate name
+        # Normalize certificate name (servername could be custom, but we use 'server' internally)
         if item == self.servername and self.servername != 'server':
             name = 'server'
         else:
             name = item
 
-        # Set up certificate paths
+        # Set up certificate paths based on certificate type
         if item == 'ca':
+            # CA certificate only needs PEM file
             pem = self.cacert
         else:
-            key = self.ssldir + '/' + name + '.key.pem'
-            pem = self.ssldir + '/' + name + '.cert.pem'
-            csr = self.ssldir + '/' + name + '.csr'
-            chn = self.ssldir + '/' + name + '.fullchain.pem'
-            bdl = self.ssldir + '/' + name + '.cert.bundle.pem'
-            cnf_tpl = environment.TPLDIR + '/' + name + '_cert_ext.cnf'
+            # Server/firewall certificates need multiple files
+            key = self.ssldir + '/' + name + '.key.pem'  # Private key
+            pem = self.ssldir + '/' + name + '.cert.pem'  # Certificate
+            csr = self.ssldir + '/' + name + '.csr'  # Certificate signing request
+            chn = self.ssldir + '/' + name + '.fullchain.pem'  # Full chain (cert + CA)
+            bdl = self.ssldir + '/' + name + '.cert.bundle.pem'  # Bundle (key + cert)
+            cnf_tpl = environment.TPLDIR + '/' + name + '_cert_ext.cnf'  # OpenSSL config template
 
-        b64 = pem + '.b64'
-        b64_old = b64 + '_old'
+        # Base64-encoded versions for firewall configuration
+        b64 = pem + '.b64'  # Current base64-encoded cert
+        b64_old = b64 + '_old'  # Backup of old base64-encoded cert
 
-        # Test firewall certificate if applicable
+        # Test firewall certificate if this cert will be uploaded to firewall
         if name == 'firewall' or name == 'ca':
             self.testFwCert(item, b64)
             if self.dry_run:
-                return
+                return  # Dry-run mode stops after testing
 
         msg = 'Renewing ' + name + ' certificate.'
         printScript(msg)
         try:
             if name == 'ca':
-                # Renew CA certificate using shared function
+                # CA certificate renewal is special - it's self-signed
                 printScript('Note that you have to renew and deploy also all certs which depend on cacert.')
                 if not renewCaCertificate(self.cacert_subject, self.days, self.logfile):
                     raise Exception('Failed to renew CA certificate')
             else:
-                # Renew server or firewall certificate using shared functions
+                # Server/firewall certificate renewal - signed by CA
+                # Step 1: Create OpenSSL configuration from template
                 cnf = createCnfFromTemplate(cnf_tpl)
                 if not cnf:
                     raise Exception('Failed to create configuration from template')
 
+                # Step 2: Sign the CSR with CA to create new certificate
                 if not signCertificateWithCa(csr, pem, self.days, cnf, self.logfile):
                     raise Exception('Failed to sign certificate')
 
-                # Create certificate chains
+                # Step 3: Create full chain (cert + CA cert) for clients
                 if not createCertificateChain(pem, chn):
                     raise Exception('Failed to create certificate chain')
 
-                # Create bundle with key + cert
+                # Step 4: Create bundle (key + cert) for services that need both
                 catFiles([key, pem], bdl)
 
-            # Update firewall configuration if needed
+            # Update firewall configuration if this cert is used by firewall
             if name == 'firewall' or name == 'ca':
-                shutil.copyfile(b64, b64_old)
-                encodeCertToBase64(pem, b64)
-                self.patchFwCert(b64, b64_old)
+                shutil.copyfile(b64, b64_old)  # Backup old base64 cert
+                encodeCertToBase64(pem, b64)  # Encode new cert to base64
+                self.patchFwCert(b64, b64_old)  # Replace in firewall config
         except Exception as err:
             printScript('Failed!')
             print(err)
             sys.exit(1)
 
     def reorderCertList(self):
-        """Ensure CA certificate is renewed first (dependencies)."""
+        """Ensure CA certificate is renewed first (dependencies).
+
+        The CA certificate must be renewed before any certificates signed by it.
+        This method moves 'ca' to the front of the list if present.
+        """
         if 'ca' in self.cert_list and len(self.cert_list) > 1 and self.cert_list[0] != 'ca':
             self.cert_list.remove('ca')
             ordered_list = ['ca']
@@ -285,38 +321,48 @@ class CertificateRenewer:
             self.cert_list = ordered_list
 
     def run(self):
-        """Execute the certificate renewal process."""
+        """Execute the certificate renewal process.
+
+        Main orchestration method that coordinates the complete renewal workflow:
+        1. Validate options and configuration
+        2. Prompt for security confirmation (unless --force)
+        3. Reorder cert list (CA first if present)
+        4. Download firewall config (if needed)
+        5. Renew each certificate in the list
+        6. Upload updated firewall config (if changed)
+        7. Optionally reboot server and/or firewall
+        """
         printScript(os.path.basename(__file__), 'begin')
 
-        # Validate options
+        # Step 1: Validate options and check for conflicts
         self.validateOptions()
 
-        # Security prompt
+        # Step 2: Security prompt (unless force mode or dry-run)
         self.promptSecurityConfirmation()
 
-        # Ensure CA is processed first if in list
+        # Step 3: Ensure CA is processed first (dependency order)
         self.reorderCertList()
 
-        # Check firewall and download config if needed
+        # Step 4: Download firewall config if any firewall-related certs will be renewed
         if 'firewall' in self.cert_list or 'ca' in self.cert_list:
             self.checkAndDownloadFwConfig()
 
-        # Process each certificate
+        # Step 5: Process each certificate in the list
         for item in self.cert_list:
-            # Process only valid certificate types
+            # Skip invalid certificate types (should not happen after validation)
             if item not in self.all_certs:
                 continue
             self.renewCertificate(item)
 
-        # Handle dry-run mode
+        # Step 6: Handle dry-run vs real execution
         if self.dry_run:
             printScript("Dry run finished successfully.")
         else:
-            # Apply firewall changes
+            # Upload modified firewall config if firewall-related certs were renewed
             if 'firewall' in self.cert_list or 'ca' in self.cert_list:
                 self.applyFwChanges()
 
-            # Reboot server if requested
+            # Reboot server if requested via --reboot flag
             if self.reboot:
                 printScript("Rebooting server.")
                 with open(self.logfile, 'a') as log:
@@ -326,8 +372,15 @@ class CertificateRenewer:
 
 
 def main():
-    """Parse command-line arguments and initiate certificate renewal."""
-    # Parse command-line arguments
+    """Parse command-line arguments and initiate certificate renewal.
+
+    Main entry point that handles:
+    1. Command-line argument parsing
+    2. Option validation
+    3. Creation of CertificateRenewer instance
+    4. Execution of renewal workflow
+    """
+    # Step 1: Parse command-line arguments
     try:
         opts, args = getopt.getopt(sys.argv[1:], "c:d:fhnr", ["certs=", "days=", "dry-run", "force", "help", "reboot"])
     except getopt.GetoptError as err:
@@ -335,28 +388,33 @@ def main():
         usage()
         sys.exit(2)
 
-    # Default values
-    dry_run = False
-    force = False
-    reboot = False
-    days = '7305'
-    all_list = ['ca', 'server', 'firewall']
-    cert_list = []
+    # Step 2: Initialize default values
+    dry_run = False  # Test mode without applying changes
+    force = False  # Skip security confirmation prompt
+    reboot = False  # Reboot server and firewall after renewal
+    days = '7305'  # Certificate validity (~20 years)
+    all_list = ['ca', 'server', 'firewall']  # All possible certificates
+    cert_list = []  # List of certs to renew (will be populated from -c option)
 
-    # Evaluate options
+    # Step 3: Process command-line options
     for o, a in opts:
         if o in ("-c", "--certs"):
+            # Parse certificate list: 'all' or comma-separated list
             if a == 'all':
                 cert_list = all_list
             else:
                 cert_list = a.split(',')
         elif o in ("-d", "--days"):
+            # Custom certificate validity period
             days = str(a)
         elif o in ("-f", "--force"):
+            # Skip security confirmation
             force = True
         elif o in ("-n", "--dry-run"):
+            # Test mode - validate certs can be renewed without changes
             dry_run = True
         elif o in ("-r", "--reboot"):
+            # Reboot after renewal
             reboot = True
         elif o in ("-h", "--help"):
             usage()
@@ -364,13 +422,13 @@ def main():
         else:
             assert False, "unhandled option"
 
-    # Validate required arguments
+    # Step 4: Validate that at least one certificate was specified
     if len(cert_list) == 0:
         printScript('No certs to renew given (-c)!')
         usage()
         sys.exit(1)
 
-    # Create renewer instance and run
+    # Step 5: Create CertificateRenewer instance and execute renewal
     renewer = CertificateRenewer(cert_list, days, dry_run, force, reboot)
     renewer.run()
 
