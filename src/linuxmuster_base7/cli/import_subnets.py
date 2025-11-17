@@ -18,23 +18,17 @@ from bs4 import BeautifulSoup
 from linuxmuster_base7.functions import firewallApi, getFwConfig, getSetupValue, getSubnetArray, isValidHostIpv4, printScript, putFwConfig, readTextfile, writeTextfile
 from IPy import IP
 
-# read necessary values from setup.ini and other sources
-serverip = getSetupValue('serverip')
-domainname = getSetupValue('domainname')
-gateway = getSetupValue('gateway')
-firewallip = getSetupValue('firewallip')
-# get boolean value
-skipfw = getSetupValue('skipfw')
-bitmask_setup = getSetupValue('bitmask')
-network_setup = getSetupValue('network')
-ipnet_setup = network_setup + '/' + bitmask_setup
+# Constants for subnet field mappings
+# Field numbers correspond to columns in subnets.csv:
+# 0=network, 1=router, 2=range_start, 3=range_end, 4=nameserver, 5=nextserver
+SUBNET_FIELDS = '1,2,3,4,5'  # Fields needed for DHCP subnet configuration
+
+# Module-level execution code has been moved to main() function below
 
 
-# template variables
-
-# lan gateway
-gw_lan_descr = 'Interface LAN Gateway'
-gw_lan_xml = """
+# Template variables - LAN gateway configuration
+GW_LAN_DESCR = 'Interface LAN Gateway'
+GW_LAN_XML_TPL = """
         <gateway_item>
             <interface>lan</interface>
             <gateway>@@gw_ip@@</gateway>
@@ -49,12 +43,10 @@ gw_lan_xml = """
             <monitor_disable>1</monitor_disable>
         </gateway_item>
 """
-gw_lan_xml = gw_lan_xml.replace('@@gw_lan@@', environment.GW_LAN).replace(
-    '@@gw_lan_descr@@', gw_lan_descr)
 
-# outbound nat rules
-nat_rule_descr = 'Outbound NAT rule for subnet'
-nat_rule_xml = """
+# Template variables - Outbound NAT rules
+NAT_RULE_DESCR = 'Outbound NAT rule for subnet'
+NAT_RULE_XML_TPL = """
       <rule>
         <source>
           <network>@@subnet@@</network>
@@ -78,8 +70,6 @@ nat_rule_xml = """
         <sourceport/>
       </rule>
 """
-nat_rule_xml = nat_rule_xml.replace(
-    '@@nat_rule_descr@@', nat_rule_descr).replace('@@serverip@@', serverip)
 
 
 # functions begin
@@ -140,7 +130,7 @@ def updateNetplan(subnets):
 
 
 # update vlan gateway on firewall
-def updateFwGw(servernet_router, content):
+def updateFwGw(servernet_router, content, gw_lan_xml):
     soup = BeautifulSoup(content, features='xml')
     # get all gateways
     gateways = soup.findAll('gateways')[0]
@@ -148,7 +138,7 @@ def updateFwGw(servernet_router, content):
     # remove old lan gateway from gateways
     gw_array = []
     for gw_item in soup.findAll('gateway_item'):
-        if gw_lan_descr not in str(gw_item):
+        if GW_LAN_DESCR not in str(gw_item):
             gw_array.append(gw_item)
     # append new lan gateway
     gw_array.append(gw_lan_xml.replace('@@gw_ip@@', servernet_router))
@@ -163,7 +153,7 @@ def updateFwGw(servernet_router, content):
 
 
 # update subnet nat rules on firewall
-def updateFwNat(subnets, ipnet_setup, serverip, content):
+def updateFwNat(subnets, ipnet_setup, nat_rule_xml, content):
     # create array with all nat rules
     soup = BeautifulSoup(content, features='xml')
     out_nat = soup.findAll('outbound')[0]
@@ -171,7 +161,7 @@ def updateFwNat(subnets, ipnet_setup, serverip, content):
     # remove old subnet rules from array
     nat_rules = []
     for item in soup.findAll('rule'):
-        if nat_rule_descr not in str(item):
+        if NAT_RULE_DESCR not in str(item):
             nat_rules.append(item)
     # add new subnet rules to array
     for item in subnets:
