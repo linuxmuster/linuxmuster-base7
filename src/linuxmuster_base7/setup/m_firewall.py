@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20251110
+# 20251117
 #
 
 """
@@ -125,11 +125,15 @@ def extractConfigValues(fwconftmp):
         }
 
         # get already configured interfaces
-        interfaces_element = soup.find('interfaces')
-        if interfaces_element and '<lan>' in str(interfaces_element):
-            config['interfaces'] = str(interfaces_element)
-        else:
-            config['interfaces'] = ''
+        config['interfaces'] = ''
+        count = 0
+        interfaces_elements = soup.findAll('interfaces')
+        while count < len(interfaces_elements):
+            item = str(interfaces_elements[count])
+            if '<lan>' in item:
+                config['interfaces'] = item
+                break
+            count = count + 1
 
         # save language information
         try:
@@ -141,10 +145,6 @@ def extractConfigValues(fwconftmp):
             except Exception:
                 lang = 'en_US'
             config['language'] = '<language>' + lang + '</language>'
-
-        # save gateways configuration
-        gateways_element = soup.find('gateways')
-        config['gateways'] = str(gateways_element) if gateways_element else ''
 
         gwconfig_element = soup.find('Gateways')
         config['gwconfig'] = str(gwconfig_element) if gwconfig_element else ''
@@ -225,7 +225,6 @@ def createFirewallConfig(fwconftpl, fwconftmp, config, setup_data, productionpw,
             '@@domainname@@': setup_data['domainname'],
             '@@basedn@@': setup_data['basedn'],
             '@@interfaces@@': config['interfaces'],
-            '@@gateways@@': config['gateways'],
             '@@gwconfig@@': config['gwconfig'],
             '@@serverip@@': setup_data['serverip'],
             '@@firewallip@@': setup_data['firewallip'],

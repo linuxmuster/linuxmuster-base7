@@ -1243,7 +1243,6 @@
   <ntpd>
     <interface>lan</interface>
   </ntpd>
-  @@gateways@@
   <staticroutes version="1.0.0"/>
   <hasync version="1.0.2">
     <disablepreempt>0</disablepreempt>
