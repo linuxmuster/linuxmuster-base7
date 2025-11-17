@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20251115
+# 20251117
 #
 
 import configparser
@@ -34,8 +34,11 @@ logfile = environment.LOGDIR + '/import-devices.log'
 DEVICE_FIELDS_DHCP = '1,2,3,4,7,8,10'  # Fields needed for DHCP config
 DEVICE_FIELDS_LINKS = '1,2,3,4,10'      # Fields needed for LINBO symlinks
 
+# Minimum length for valid DHCP options string (e.g., "opt=val")
+MIN_DHCP_OPTS_LENGTH = 5
 
-def log_to_file(message):
+
+def logToFile(message):
     """Write message to logfile with timestamp."""
     try:
         with open(logfile, 'a') as f:
@@ -58,6 +61,12 @@ def usage():
 
 # delete symlinks
 def delSymlinksByPattern(directory, pattern):
+    """Delete all symlinks matching a pattern in a directory tree.
+
+    Args:
+        directory: Root directory to search for symlinks
+        pattern: Glob pattern to match against symlink names (e.g., "*.cfg")
+    """
     # check if dir exists
     if not os.path.exists(directory):
         #print(f"Directory '{directory}' does not exist.")  # debug
@@ -71,7 +80,7 @@ def delSymlinksByPattern(directory, pattern):
                 try:
                     os.unlink(path)  # delete symlink
                     #print(f"Symlink deleted: {path}")  # debug
-                except Exception as err:
+                except Exception as error:
                     continue
                     #print(f"Deletion of {path} failed: {err}")  # debug
 
@@ -111,8 +120,8 @@ def createGrubGlobalSection(grubcfg, group, cacheroot, cachelabel, kopts):
         True if successful, False otherwise
     """
     # Load global grub template (contains menu structure and basic settings)
-    globaltpl = environment.LINBOTPLDIR + '/grub.cfg.global'
-    rc, content = readTextfile(globaltpl)
+    global_tpl = environment.LINBOTPLDIR + '/grub.cfg.global'
+    rc, content = readTextfile(global_tpl)
     if not rc:
         return False
 
@@ -241,6 +250,14 @@ def doGrubCfg(startconf, group, kopts):
 
 # write linbo start configuration file
 def doLinboStartconf(group):
+    """Process LINBO start.conf and GRUB configuration for a device group.
+
+    Ensures start.conf exists for the group (creates unconfigured template if missing),
+    checks configuration status, and generates corresponding GRUB boot configuration.
+
+    Args:
+        group: Device group name
+    """
     startconf = environment.LINBODIR + '/start.conf.' + group
     # provide unconfigured start.conf if there is none for this group
     if os.path.isfile(startconf):
@@ -292,8 +309,8 @@ def buildDhcpHostDeclaration(hostname, group, mac, ip, dhcpopts, pxeflag):
     if int(pxeflag) != 0:
         # extensions-path and nis-domain tell client which LINBO group config to use
         host_decl = host_decl + '  option extensions-path "' + group + '";\n  option nis-domain "' + group + '";\n'
-        # Add custom DHCP options if provided (minimum 5 chars for validation)
-        if len(dhcpopts) > 4:
+        # Add custom DHCP options if provided (minimum length for validation)
+        if len(dhcpopts) >= MIN_DHCP_OPTS_LENGTH:
             for opt in dhcpopts.split(','):
                 host_decl = host_decl + '  ' + opt + ';\n'
 
@@ -369,17 +386,17 @@ def writeDhcpDevicesConfig(school='default-school'):
     printScript('', 'begin')
     msg = 'Working on dhcp configuration for devices'
     printScript(msg)
-    log_to_file(msg)
+    logToFile(msg)
 
-    baseConfigFilePath = environment.DHCPDEVCONF
-    devicesConfigBasedir = "/etc/dhcp/devices"
-    Path(devicesConfigBasedir).mkdir(parents=True, exist_ok=True)
+    base_config_file_path = environment.DHCPDEVCONF
+    devices_config_basedir = "/etc/dhcp/devices"
+    Path(devices_config_basedir).mkdir(parents=True, exist_ok=True)
 
-    cfgfile = devicesConfigBasedir + "/" + school + ".conf"
+    cfgfile = devices_config_basedir + "/" + school + ".conf"
     if os.path.isfile(cfgfile):
         os.unlink(cfgfile)
-    if os.path.isfile(baseConfigFilePath):
-        os.unlink(baseConfigFilePath)
+    if os.path.isfile(base_config_file_path):
+        os.unlink(base_config_file_path)
 
     try:
         # open devices/<school>.conf for append
@@ -392,9 +409,9 @@ def writeDhcpDevicesConfig(school='default-school'):
                 processDevicesForSubnet(outfile, subnet, school)
 
         # open devices.conf for append
-        with open(baseConfigFilePath, 'a') as outfile:
-            for devicesConf in listdir(devicesConfigBasedir):
-                outfile.write("include \"{0}/{1}\";\n".format(devicesConfigBasedir, devicesConf))
+        with open(base_config_file_path, 'a') as outfile:
+            for devices_conf in listdir(devices_config_basedir):
+                outfile.write("include \"{0}/{1}\";\n".format(devices_config_basedir, devices_conf))
 
     except Exception as error:
         print(error)
@@ -402,18 +419,30 @@ def writeDhcpDevicesConfig(school='default-school'):
 
 
 # Create necessary host-based symlinks
-def doSchoolSpecificGroupLinksAndGetPxeGroups(school='default-school'):
+def doPxeGroupsBySchool(school='default-school'):
+    """Generate PXE boot symlinks for devices by school.
+
+    Creates symlinks mapping each PXE-enabled device to its group configuration.
+    This allows LINBO to identify which start.conf and grub.cfg to use based on
+    the client's hostname, IP, or MAC address.
+
+    Args:
+        school: School name (default: 'default-school')
+
+    Returns:
+        List of unique PXE-enabled groups for this school
+    """
     pxe_groups = []
 
     # clean up
-    linksFileBasepath = environment.LINBODIR + "/boot/links"
-    Path(linksFileBasepath).mkdir(parents=True, exist_ok=True)
-    linksFile = linksFileBasepath + "/" + school + ".csv"
-    if os.path.isfile(linksFile):
-        os.unlink(linksFile)
+    links_file_basepath = environment.LINBODIR + "/boot/links"
+    Path(links_file_basepath).mkdir(parents=True, exist_ok=True)
+    links_file = links_file_basepath + "/" + school + ".csv"
+    if os.path.isfile(links_file):
+        os.unlink(links_file)
 
-    with open(linksFile, "w+") as csvfile:
-        csvWriter = csv.writer(csvfile, delimiter=';',
+    with open(links_file, "w+") as csvfile:
+        csv_writer = csv.writer(csvfile, delimiter=';',
                                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
         for device_array in getDevicesArray(fieldnrs=DEVICE_FIELDS_LINKS, subnet='all', pxeflag='1,2,3', school=school):
@@ -426,37 +455,43 @@ def doSchoolSpecificGroupLinksAndGetPxeGroups(school='default-school'):
             printScript("  {: <15} | {: <15}".format(host, group))
 
             # start.conf
-            linkSource = 'start.conf.' + group
-            linkTarget = environment.LINBODIR + '/start.conf-'
+            link_source = 'start.conf.' + group
+            link_target = environment.LINBODIR + '/start.conf-'
             if ip == 'DHCP':
-                linkTarget += mac.lower()
+                link_target += mac.lower()
             else:
-                linkTarget += ip
-            csvWriter.writerow([linkSource, linkTarget])
+                link_target += ip
+            csv_writer.writerow([link_source, link_target])
 
             # Grub.cfg
-            linkSource = '../' + group + '.cfg'
-            linkTarget = environment.LINBOGRUBDIR + '/hostcfg/' + host + '.cfg'
-            csvWriter.writerow([linkSource, linkTarget])
+            link_source = '../' + group + '.cfg'
+            link_target = environment.LINBOGRUBDIR + '/hostcfg/' + host + '.cfg'
+            csv_writer.writerow([link_source, link_target])
 
     return pxe_groups
 
 
 # look up all links for all schools and place them in the correct place
 def doAllGroupLinks():
+    """Create all PXE boot symlinks from CSV files for all schools.
+
+    Reads the link definition CSV files created by doPxeGroupsBySchool()
+    and creates the actual symlinks in the filesystem. This maps device
+    identifiers (IP, MAC, hostname) to their respective group configurations.
+    """
     # delete old config links
     delSymlinksByPattern(environment.LINBODIR, "start.conf-*")
     delSymlinksByPattern(environment.LINBOGRUBDIR + "/hostcfg", "*.cfg")
 
-    linksConfBasedir = environment.LINBODIR + "/boot/links"
-    for schoolLinksConf in listdir(linksConfBasedir):
-        schoolLinksConfPath = linksConfBasedir + "/" + schoolLinksConf
-        if not os.path.isfile(schoolLinksConfPath) or not schoolLinksConf.endswith(".csv"):
+    links_conf_basedir = environment.LINBODIR + "/boot/links"
+    for school_links_conf in listdir(links_conf_basedir):
+        school_links_conf_path = links_conf_basedir + "/" + school_links_conf
+        if not os.path.isfile(school_links_conf_path) or not school_links_conf.endswith(".csv"):
             continue
 
-        with open(schoolLinksConfPath, newline='') as csvfile:
-            csvReader = csv.reader(csvfile, delimiter=';', quotechar='"')
-            for row in csvReader:
+        with open(school_links_conf_path, newline='') as csvfile:
+            csv_reader = csv.reader(csvfile, delimiter=';', quotechar='"')
+            for row in csv_reader:
                 os.symlink(row[0], row[1])
 
 # functions end
@@ -498,14 +533,14 @@ def main():
 
     # Log import start
     printScript(os.path.basename(__file__), 'begin')
-    log_to_file('=' * 78)
-    log_to_file('linuxmuster-import-devices started')
-    log_to_file('School: ' + school)
+    logToFile('=' * 78)
+    logToFile('linuxmuster-import-devices started')
+    logToFile('School: ' + school)
 
     # Step 1: Run sophomorix-device to validate devices.csv syntax
     msg = 'Starting sophomorix-device syntax check:'
     printScript(msg)
-    log_to_file(msg)
+    logToFile(msg)
     try:
         # Run sophomorix-device and log detailed output to file (not console)
         with open(logfile, 'a') as log:
@@ -520,16 +555,16 @@ def main():
         if result.returncode == 0:
             msg = 'sophomorix-device finished OK!'
             printScript(msg)
-            log_to_file(msg)
+            logToFile(msg)
         else:
             msg = f'sophomorix-device finished with return code {result.returncode}'
             printScript(msg)
-            log_to_file(msg)
-    except Exception as err:
+            logToFile(msg)
+    except Exception as error:
         msg = 'sophomorix-device errors detected!'
         printScript(msg)
-        log_to_file(msg + ' ' + str(err))
-        print(err)
+        logToFile(msg + ' ' + str(error))
+        print(error)
         sys.exit(1)
 
     # Step 2: Generate DHCP configuration for all devices
@@ -540,10 +575,10 @@ def main():
     printScript('', 'begin')
     msg = 'Working on linbo/grub configuration for devices:'
     printScript(msg)
-    log_to_file(msg)
+    logToFile(msg)
 
     # Create symlinks from devices to their group configurations
-    pxe_groups = doSchoolSpecificGroupLinksAndGetPxeGroups(school=school)
+    pxe_groups = doPxeGroupsBySchool(school=school)
 
     # Resolve and place all symlinks for all schools
     doAllGroupLinks()
@@ -552,7 +587,7 @@ def main():
     printScript('', 'begin')
     msg = 'Working on linbo/grub configuration for groups:'
     printScript(msg)
-    log_to_file(msg)
+    logToFile(msg)
     printScript("  {: <15} | {: <20} | {: <20}".format(
         *[' ', 'linbo start.conf', 'grub cfg']))
     printScript("  {: <15}+{: <20}+{: <20}".format(*['-'*16, '-'*22, '-'*21]))
@@ -567,30 +602,30 @@ def main():
         printScript('', 'begin')
         msg = 'Executing post hooks:'
         printScript(msg)
-        log_to_file(msg)
+        logToFile(msg)
         for h in hookscripts:
             hookscript = hookpath + '/' + h
             msg = '* ' + h + ' '
             printScript(msg, '', False, False, True)
-            log_to_file('Executing hook: ' + h)
+            logToFile('Executing hook: ' + h)
             output = subprocess.check_output([hookscript, "-s", school]).decode('utf-8')
             if output != '':
                 print(output)
-                log_to_file('Hook output: ' + output.strip())
+                logToFile('Hook output: ' + output.strip())
 
     # Step 5: Restart DHCP service to apply new configuration
     printScript('', 'begin')
     msg = 'Finally restarting dhcp service.'
     printScript(msg)
-    log_to_file(msg)
+    logToFile(msg)
     result = subprocess.run(['service', 'isc-dhcp-server', 'restart'],
                            shell=False, check=False)
-    log_to_file(f'DHCP service restart: return code {result.returncode}')
+    logToFile(f'DHCP service restart: return code {result.returncode}')
 
     # Log completion
     printScript(os.path.basename(__file__), 'end')
-    log_to_file('linuxmuster-import-devices completed')
-    log_to_file('=' * 78)
+    logToFile('linuxmuster-import-devices completed')
+    logToFile('=' * 78)
 
 
 if __name__ == '__main__':
