@@ -2,8 +2,7 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20250721
-#
+# 20251117
 
 import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
@@ -72,9 +71,25 @@ NAT_RULE_XML_TPL = """
 """
 
 
-# functions begin
-# update static routes in netplan configuration
-def updateNetplan(subnets):
+# Functions begin
+
+def updateNetplan(subnets, gateway, servernet_router):
+    """Update static routes in netplan configuration.
+
+    Configures network routes in Ubuntu's netplan system:
+    - Sets default gateway route
+    - Adds routes for additional subnets via their gateways
+    - Creates timestamped backup before changes
+    - Rolls back if netplan apply fails
+
+    Args:
+        subnets: List of subnet strings in format 'network:gateway'
+        gateway: Default gateway IP address
+        servernet_router: Router IP for the server network
+
+    Returns:
+        False if operation failed, None if successful
+    """
     printScript('Processing netplan configuration:')
     cfgfile = environment.NETCFG
     # create backup of current configuration
@@ -129,8 +144,22 @@ def updateNetplan(subnets):
         return False
 
 
-# update vlan gateway on firewall
 def updateFwGw(servernet_router, content, gw_lan_xml):
+    """Update VLAN gateway configuration in firewall XML.
+
+    Modifies the firewall's gateway configuration by:
+    - Parsing existing gateway items from XML
+    - Removing old LAN gateway entries
+    - Adding new LAN gateway with updated IP
+
+    Args:
+        servernet_router: IP address of the server network router
+        content: Firewall XML configuration as string
+        gw_lan_xml: Gateway XML template with placeholders
+
+    Returns:
+        Tuple of (success_boolean, modified_content_string)
+    """
     soup = BeautifulSoup(content, features='xml')
     # get all gateways
     gateways = soup.findAll('gateways')[0]
@@ -152,8 +181,24 @@ def updateFwGw(servernet_router, content, gw_lan_xml):
     return True, content
 
 
-# update subnet nat rules on firewall
 def updateFwNat(subnets, ipnet_setup, nat_rule_xml, content):
+    """Update subnet NAT rules in firewall XML configuration.
+
+    Manages outbound NAT rules for subnets by:
+    - Extracting existing NAT rules from XML
+    - Removing old subnet-specific rules
+    - Adding new NAT rules for each subnet (except server network)
+    - Each rule allows outbound traffic from subnet to WAN
+
+    Args:
+        subnets: List of subnet strings in format 'network:gateway'
+        ipnet_setup: Server network address (to be skipped)
+        nat_rule_xml: NAT rule XML template with placeholders
+        content: Firewall XML configuration as string
+
+    Returns:
+        Tuple of (success_boolean, modified_content_string)
+    """
     # create array with all nat rules
     soup = BeautifulSoup(content, features='xml')
     out_nat = soup.findAll('outbound')[0]
@@ -183,8 +228,26 @@ def updateFwNat(subnets, ipnet_setup, nat_rule_xml, content):
     return True, content
 
 
-# download, modify and upload firewall config
-def updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gw_lan_xml):
+def updateFw(subnets, firewallip, ipnet_setup, servernet_router, gw_lan_xml, nat_rule_xml):
+    """Download, modify and upload firewall configuration.
+
+    Orchestrates firewall configuration updates:
+    1. Downloads current config.xml from firewall
+    2. Updates gateway configuration (via updateFwGw)
+    3. Updates NAT rules (via updateFwNat)
+    4. Uploads modified config back to firewall
+
+    Args:
+        subnets: List of subnet strings in format 'network:gateway'
+        firewallip: IP address of the firewall
+        ipnet_setup: Server network address
+        servernet_router: Router IP for server network
+        gw_lan_xml: Gateway XML template
+        nat_rule_xml: NAT rule XML template
+
+    Returns:
+        Boolean indicating if changes were made, False on error
+    """
     # first get config.xml
     if not getFwConfig(firewallip):
         return False
@@ -194,11 +257,11 @@ def updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gw_la
         return rc
     changed = False
     # add vlan gateway to firewall
-    rc, content = updateFwGw(servernet_router, content)
+    rc, content = updateFwGw(servernet_router, content, gw_lan_xml)
     if rc:
         changed = rc
     # add subnet nat rules to firewall
-    rc, content = updateFwNat(subnets, ipnet_setup, serverip, content)
+    rc, content = updateFwNat(subnets, ipnet_setup, nat_rule_xml, content)
     if rc:
         changed = rc
     if changed:
@@ -213,8 +276,18 @@ def updateFw(subnets, firewallip, ipnet_setup, serverip, servernet_router, gw_la
     return changed
 
 
-# add single route
 def addFwRoute(subnet):
+    """Add a single static route to the firewall via API.
+
+    Creates a new route entry on the firewall that directs
+    traffic for the given subnet through the LAN gateway.
+
+    Args:
+        subnet: Network address in CIDR notation (e.g., '10.1.0.0/16')
+
+    Returns:
+        True if route was added successfully, False on error
+    """
     try:
         payload = '{"route": {"network": "' + subnet + '", "gateway": "' + \
             environment.GW_LAN + '", "descr": "Route for subnet ' + \
@@ -227,8 +300,18 @@ def addFwRoute(subnet):
         return False
 
 
-# delete route on firewall by uuid
 def delFwRoute(uuid, subnet):
+    """Delete a static route from the firewall by UUID.
+
+    Removes a route entry from the firewall using the API.
+
+    Args:
+        uuid: Unique identifier of the route to delete
+        subnet: Network address (used for logging only)
+
+    Returns:
+        True if route was deleted successfully, False on error
+    """
     try:
         rc = firewallApi('post', '/routes/routes/delroute/' + uuid)
         printScript('* Route ' + uuid + ' - ' + subnet + ' deleted.')
@@ -238,8 +321,23 @@ def delFwRoute(uuid, subnet):
         return False
 
 
-# update firewall routes
 def updateFwRoutes(subnets, ipnet_setup, servernet_router):
+    """Update all static routes on the firewall.
+
+    Synchronizes firewall routes with subnets configuration:
+    1. Fetches current routes from firewall
+    2. Deletes non-compliant routes (wrong gateway or obsolete subnets)
+    3. Adds missing routes for new subnets
+    4. All routes use the LAN gateway (servernet_router)
+
+    Args:
+        subnets: List of subnet strings in format 'network:gateway'
+        ipnet_setup: Server network address (to be skipped)
+        servernet_router: Router IP for the server network
+
+    Returns:
+        Boolean indicating if changes were made, False on error
+    """
     printScript('Updating subnet routing on firewall:')
     try:
         routes = firewallApi('get', '/routes/routes/searchroute')
@@ -278,120 +376,173 @@ def updateFwRoutes(subnets, ipnet_setup, servernet_router):
             if rc:
                 changed = rc
     return changed
-# functions end
-
-
-# iterate over subnets
-printScript('linuxmuster-import-subnets')
-printScript('', 'begin')
-printScript('Reading setup data:')
-printScript('* Server address: ' + serverip)
-printScript('* Server network: ' + ipnet_setup)
-printScript('Processing dhcp subnets:')
-servernet_router = firewallip
-subnets = []
-# collect subnet data and write dhcpd's subnet.conf
-subnetconf = open(environment.DHCPSUBCONF, 'w')
-for row in getSubnetArray():
-    try:
-        ipnet = row[0]
-        router = row[1]
-        range1 = row[2]
-        range2 = row[3]
-        nameserver = row[4]
-    except Exception as error:
-        continue
-    try:
-        nextserver = row[5]
-    except Exception as error:
-        nextserver = ''
-    if ipnet[:1] == '#' or ipnet[:1] == ';' or not isValidHostIpv4(router):
-        continue
-    if not isValidHostIpv4(range1) or not isValidHostIpv4(range2):
-        range1 = ''
-        range2 = ''
-    if not isValidHostIpv4(nameserver):
-        nameserver = ''
-    if not isValidHostIpv4(nextserver):
-        nextserver = ''
-
-    # compute network data
-    try:
-        n = IP(ipnet, make_net=True)
-        network = IP(n).strNormal(0)
-        netmask = IP(n).strNormal(2).split('/')[1]
-        broadcast = IP(n).strNormal(3).split('-')[1]
-    except Exception as error:
-        continue
-    # save servernet router address for later use
-    if ipnet == ipnet_setup:
-        servernet_router = router
-        supp_info = 'server network'
-    else:
-        supp_info = ''
-    subnets.append(ipnet + ':' + router)
-    # write subnets.conf
-    printScript('* ' + ipnet)
-    subnetconf.write('# Subnet ' + ipnet + ' ' + supp_info + '\n')
-    subnetconf.write('subnet ' + network + ' netmask ' + netmask + ' {\n')
-    subnetconf.write('  option routers ' + router + ';\n')
-    subnetconf.write('  option subnet-mask ' + netmask + ';\n')
-    subnetconf.write('  option broadcast-address ' + broadcast + ';\n')
-    if nameserver != '':
-        subnetconf.write('  option domain-name-servers ' + nameserver + ';\n')
-        nameserver = ''
-    else:
-        subnetconf.write('  option netbios-name-servers ' + serverip + ';\n')
-    if nextserver != '':
-        subnetconf.write('  next-server ' + nextserver + ';\n')
-    if range1 != '':
-        subnetconf.write('  range ' + range1 + ' ' + range2 + ';\n')
-    subnetconf.write('  option host-name pxeclient;\n')
-    subnetconf.write('}\n')
-
-subnetconf.close()
-
-# restart dhcp service
-service = 'isc-dhcp-server'
-msg = 'Restarting ' + service + ' '
-printScript(msg, '', False, False, True)
-subprocess.call('service ' + service + ' stop', shell=True)
-subprocess.call('service ' + service + ' start', shell=True)
-# wait one second before service check
-time.sleep(1)
-rc = subprocess.call('systemctl is-active --quiet ' + service, shell=True)
-if rc == 0:
-    printScript(' OK!', '', True, True, False, len(msg))
-else:
-    printScript(' Failed!', '', True, True, False, len(msg))
-
-subprocess.call('systemctl restart isc-dhcp-server.service', shell=True)
-
-# update netplan config with new routes for server (localhost)
-changed = updateNetplan(subnets)
-
-# update ntp.conf
-subprocess.call('linuxmuster-update-ntpconf', shell=True)
-
-# update firewall
-if not skipfw:
-    changed = updateFw(subnets, firewallip, ipnet_setup,
-                       serverip, servernet_router, gw_lan_xml)
-    if changed:
-        changed = firewallApi('post', '/routes/routes/reconfigure')
-        if changed:
-            printScript('Applied new gateway.')
-    changed = updateFwRoutes(subnets, ipnet_setup, servernet_router)
-    if changed:
-        changed = firewallApi('post', '/routes/routes/reconfigure')
-        if changed:
-            printScript('Applied new routes.')
-
+# Functions end
 
 
 def main():
-    """Main entry point for CLI tool."""
-    pass
+    """Main entry point for CLI tool.
+
+    This function orchestrates the complete subnet import workflow:
+    1. Reads setup configuration (server IP, network, firewall, etc.)
+    2. Processes subnets from subnets.csv and generates DHCP configuration
+    3. Restarts DHCP service with new configuration
+    4. Updates netplan with static routes for subnets
+    5. Updates NTP configuration
+    6. Updates firewall gateway, NAT rules, and static routes (if not skipped)
+    """
+    # Step 1: Read necessary values from setup.ini
+    serverip = getSetupValue('serverip')
+    domainname = getSetupValue('domainname')
+    gateway = getSetupValue('gateway')
+    firewallip = getSetupValue('firewallip')
+    skipfw = getSetupValue('skipfw')  # Boolean flag to skip firewall updates
+    bitmask_setup = getSetupValue('bitmask')
+    network_setup = getSetupValue('network')
+    ipnet_setup = network_setup + '/' + bitmask_setup  # Server network in CIDR notation
+
+    # Prepare XML templates for firewall configuration
+    # Replace placeholders in gateway template
+    gw_lan_xml = GW_LAN_XML_TPL.replace('@@gw_lan@@', environment.GW_LAN).replace(
+        '@@gw_lan_descr@@', GW_LAN_DESCR)
+    # Replace placeholders in NAT rule template
+    nat_rule_xml = NAT_RULE_XML_TPL.replace(
+        '@@nat_rule_descr@@', NAT_RULE_DESCR).replace('@@serverip@@', serverip)
+
+    # Step 2: Process subnets and generate DHCP configuration
+    printScript('linuxmuster-import-subnets')
+    printScript('', 'begin')
+    printScript('Reading setup data:')
+    printScript('* Server address: ' + serverip)
+    printScript('* Server network: ' + ipnet_setup)
+    printScript('Processing dhcp subnets:')
+
+    servernet_router = firewallip  # Default router is the firewall
+    subnets = []  # Will store all subnets in format 'network:router'
+
+    # Open DHCP subnets configuration file for writing
+    subnetconf = open(environment.DHCPSUBCONF, 'w')
+
+    # Iterate through all subnets defined in subnets.csv
+    for row in getSubnetArray():
+        try:
+            # Extract subnet configuration fields
+            ipnet = row[0]        # Network address in CIDR notation
+            router = row[1]       # Gateway/router IP for this subnet
+            range1 = row[2]       # DHCP range start IP
+            range2 = row[3]       # DHCP range end IP
+            nameserver = row[4]   # DNS server IP
+        except Exception as error:
+            continue  # Skip malformed rows
+        try:
+            nextserver = row[5]   # PXE boot server IP (optional)
+        except Exception as error:
+            nextserver = ''
+
+        # Skip commented lines and invalid router addresses
+        if ipnet[:1] == '#' or ipnet[:1] == ';' or not isValidHostIpv4(router):
+            continue
+
+        # Validate DHCP range IPs, clear if invalid
+        if not isValidHostIpv4(range1) or not isValidHostIpv4(range2):
+            range1 = ''
+            range2 = ''
+
+        # Validate optional server IPs
+        if not isValidHostIpv4(nameserver):
+            nameserver = ''
+        if not isValidHostIpv4(nextserver):
+            nextserver = ''
+
+        # Compute network parameters from CIDR notation
+        try:
+            n = IP(ipnet, make_net=True)
+            network = IP(n).strNormal(0)       # Network address (e.g., 10.0.0.0)
+            netmask = IP(n).strNormal(2).split('/')[1]  # Netmask (e.g., 255.255.0.0)
+            broadcast = IP(n).strNormal(3).split('-')[1]  # Broadcast address
+        except Exception as error:
+            continue  # Skip subnets with invalid network notation
+
+        # Identify server network and save its router
+        if ipnet == ipnet_setup:
+            servernet_router = router  # This is the gateway for the server network
+            supp_info = 'server network'
+        else:
+            supp_info = ''
+
+        # Store subnet for later use in routing configuration
+        subnets.append(ipnet + ':' + router)
+
+        # Write DHCP subnet declaration
+        printScript('* ' + ipnet)
+        subnetconf.write('# Subnet ' + ipnet + ' ' + supp_info + '\n')
+        subnetconf.write('subnet ' + network + ' netmask ' + netmask + ' {\n')
+        subnetconf.write('  option routers ' + router + ';\n')
+        subnetconf.write('  option subnet-mask ' + netmask + ';\n')
+        subnetconf.write('  option broadcast-address ' + broadcast + ';\n')
+
+        # Add DNS server option if specified
+        if nameserver != '':
+            subnetconf.write('  option domain-name-servers ' + nameserver + ';\n')
+            nameserver = ''
+        else:
+            # Use server as WINS server if no nameserver specified
+            subnetconf.write('  option netbios-name-servers ' + serverip + ';\n')
+
+        # Add PXE boot server if specified
+        if nextserver != '':
+            subnetconf.write('  next-server ' + nextserver + ';\n')
+
+        # Add DHCP range if specified
+        if range1 != '':
+            subnetconf.write('  range ' + range1 + ' ' + range2 + ';\n')
+
+        # Set default hostname for PXE clients
+        subnetconf.write('  option host-name pxeclient;\n')
+        subnetconf.write('}\n')
+
+    subnetconf.close()
+
+    # Step 3: Restart DHCP service with new configuration
+    service = 'isc-dhcp-server'
+    msg = 'Restarting ' + service + ' '
+    printScript(msg, '', False, False, True)
+    subprocess.call('service ' + service + ' stop', shell=True)
+    subprocess.call('service ' + service + ' start', shell=True)
+    # Wait for service to stabilize
+    time.sleep(1)
+    rc = subprocess.call('systemctl is-active --quiet ' + service, shell=True)
+    if rc == 0:
+        printScript(' OK!', '', True, True, False, len(msg))
+    else:
+        printScript(' Failed!', '', True, True, False, len(msg))
+
+    # Ensure service is running
+    subprocess.call('systemctl restart isc-dhcp-server.service', shell=True)
+
+    # Step 4: Update netplan configuration with static routes for all subnets
+    changed = updateNetplan(subnets, gateway, servernet_router)
+
+    # Step 5: Update NTP configuration to reflect network changes
+    subprocess.call('linuxmuster-update-ntpconf', shell=True)
+
+    # Step 6: Update firewall configuration (unless skipfw is set)
+    if not skipfw:
+        # Update firewall gateway and NAT rules
+        changed = updateFw(subnets, firewallip, ipnet_setup,
+                           servernet_router, gw_lan_xml, nat_rule_xml)
+        if changed:
+            # Apply gateway changes via firewall API
+            changed = firewallApi('post', '/routes/routes/reconfigure')
+            if changed:
+                printScript('Applied new gateway.')
+
+        # Update static routes on firewall
+        changed = updateFwRoutes(subnets, ipnet_setup, servernet_router)
+        if changed:
+            # Apply route changes via firewall API
+            changed = firewallApi('post', '/routes/routes/reconfigure')
+            if changed:
+                printScript('Applied new routes.')
 
 
 if __name__ == '__main__':
