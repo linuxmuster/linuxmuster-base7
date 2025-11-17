@@ -162,7 +162,7 @@ def updateFwGw(servernet_router, content, gw_lan_xml):
     """
     soup = BeautifulSoup(content, features='xml')
     # get all gateways
-    gateways = soup.findAll('gateways')[0]
+    gateways = soup.find('Gateways')
     soup = BeautifulSoup(str(gateways), features='xml')
     # remove old lan gateway from gateways
     gw_array = []
