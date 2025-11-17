@@ -138,7 +138,7 @@ try:
               + ' --description="' + desc + '"', logfile)
     sambaTool('user setexpiry dns-admin --noexpiry', logfile)
     sambaTool('group addmembers DnsAdmins dns-admin', logfile)
-    rc, writeTextfile(environment.DNSADMINSECRET, dnspw, 'w')
+    writeTextfile(environment.DNSADMINSECRET, dnspw, 'w')
     os.system('chgrp dhcpd ' + environment.DNSADMINSECRET)
     os.system('chmod 440 ' + environment.DNSADMINSECRET)
     printScript(' Success!', '', True, True, False, len(msg))
