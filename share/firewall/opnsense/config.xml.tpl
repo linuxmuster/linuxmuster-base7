@@ -480,7 +480,7 @@
     <column_count>2</column_count>
   </widgets>
   <revision>
-    <username>root@10.0.0.253</username>
+    <username>root</username>
     <description>/api/unbound/settings/set made changes</description>
     <time>1747205917.6058</time>
   </revision>
@@ -1243,7 +1243,6 @@
   <ntpd>
     <interface>lan</interface>
   </ntpd>
-  @@gateways@@
   <staticroutes version="1.0.0"/>
   <hasync version="1.0.2">
     <disablepreempt>0</disablepreempt>

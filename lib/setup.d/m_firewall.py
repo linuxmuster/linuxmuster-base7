@@ -104,9 +104,14 @@ def main():
         sysctl = str(soup.find('sysctl'))
         # get already configured interfaces
         interfaces = ''
-        interfaces_element = soup.find('interfaces')
-        if interfaces_element and '<lan>' in str(interfaces_element):
-            interfaces = str(interfaces_element)
+        interfaces_elements = soup.find_all('interfaces')
+        count = 0
+        while count < len(interfaces_elements):
+            item = str(interfaces_elements[count])
+            if '<lan>' in item:
+                interfaces = item
+                break
+            count = count + 1
         # save language information
         try:
             language = str(soup.findAll('language')[0])
@@ -120,10 +125,6 @@ def main():
                 lang = 'en_US'
             language = '<language>' + lang + '</language>'
         # save gateways configuration
-        gateways = ''
-        gateways_element = soup.find('gateways')
-        if gateways_element:
-            gateways = str(gateways_element)
         gwconfig = ''
         gwconfig_element = soup.find('Gateways')
         if gwconfig_element:
@@ -189,7 +190,6 @@ def main():
         content = content.replace('@@domainname@@', domainname)
         content = content.replace('@@basedn@@', basedn)
         content = content.replace('@@interfaces@@', interfaces)
-        content = content.replace('@@gateways@@', gateways)
         content = content.replace('@@gwconfig@@', gwconfig)
         content = content.replace('@@serverip@@', serverip)
         content = content.replace('@@firewallip@@', firewallip)
