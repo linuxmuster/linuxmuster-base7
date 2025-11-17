@@ -1,4 +1,4 @@
-linuxmuster-base7 (7.3.29-0) lmn73-testing; urgency=low
+linuxmuster-base7 (7.3.30-0) lmn73-testing; urgency=low
 
   * Refactor Python code to comply with Debian Python Policy (Phase 1).
   * Create proper Python package structure under src/linuxmuster_base7/.
@@ -21,7 +21,7 @@ linuxmuster-base7 (7.3.29-0) lmn73-testing; urgency=low
   * Remove deprecated README files.
   * See docs/refactoring-phase-1.md for detailed changes.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 15 Nov 2025 16:25:22 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 17 Nov 2025 15:58:17 +0100
 
 linuxmuster-base7 (7.3.28-0) lmn73; urgency=low
 
