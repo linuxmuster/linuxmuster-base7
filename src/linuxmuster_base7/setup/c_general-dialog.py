@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20251114
+# 20251118
 #
 
 """
@@ -64,7 +64,7 @@ except Exception as error:
 # iface_list, iface_default = detectedInterfaces()
 
 # begin dialog
-title = 'linuxmuster.net 7.2: Setup for ' + \
+title = 'linuxmuster.net 7.3: Setup for ' + \
     servername + '.' + domainname + '\n\n'
 dialog = Dialog(dialog="dialog")
 dialog.set_background_title(title)
