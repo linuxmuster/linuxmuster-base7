@@ -2,7 +2,7 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20250422
+# 20251119
 
 import configparser
 import environment
@@ -33,6 +33,15 @@ except:
 # fix netplan file permissions
 for file in glob.glob('/etc/netplan/*.yaml*'):
     os.chmod(file, 0o600)
+
+# disable isc-dhcp-server6.service
+msg = 'Disabling isc-dhcp-server6 service '
+printScript(msg, '', False, False, True)
+try:
+    for item in ['stop', 'disable', 'mask']:
+        subProc('systemctl ' + item + ' isc-dhcp-server6.service', logfile)
+except Exception as error:
+    printScript(error, '', True, True, False, len(msg))
 
 # restart apparmor service
 msg = 'Restarting apparmor service '
