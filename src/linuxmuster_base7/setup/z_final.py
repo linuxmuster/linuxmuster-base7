@@ -38,7 +38,12 @@ from linuxmuster_base7.setup.helpers import runWithLog
 
 logfile = mySetupLogfile(__file__)
 
+# Constants for file permissions and timeouts
+NETPLAN_PERMISSIONS = 0o600  # Netplan files should be readable only by root
+FIREWALL_WAIT_TIMEOUT = 30   # Seconds to wait for firewall to become ready
+
 # Clean up temporary setup files from /tmp
+# This removes the temporary copy created during setup
 if os.path.isfile('/tmp/setup.ini'):
     os.unlink('/tmp/setup.ini')
 
@@ -53,20 +58,26 @@ except Exception as error:
     sys.exit(1)
 
 # Secure netplan configuration files (should be readable only by root)
+# Netplan files may contain sensitive network credentials and should not be world-readable
 for file in glob.glob('/etc/netplan/*.yaml*'):
-    os.chmod(file, 0o600)
+    os.chmod(file, NETPLAN_PERMISSIONS)
 
-# disable isc-dhcp-server6.service
+# Disable isc-dhcp-server6.service
+# IPv6 DHCP is not used in linuxmuster.net, so we stop, disable and mask the service
+# to prevent it from starting and consuming resources
 msg = 'Disabling isc-dhcp-server6 service '
 printScript(msg, '', False, False, True)
 try:
     for item in ['stop', 'disable', 'mask']:
-        subProc('systemctl ' + item + ' isc-dhcp-server6.service', logfile)
+        runWithLog(['systemctl', item, 'isc-dhcp-server6.service'], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
+    # Non-critical: Continue even if dhcpv6 disable fails
 
 # Restart apparmor to apply new security profiles
+# AppArmor profiles for services like dhcpd and ntpd were updated during setup
+# and need to be reloaded to take effect
 msg = 'Restarting apparmor service '
 printScript(msg, '', False, False, True)
 try:
@@ -77,6 +88,9 @@ except Exception as error:
     sys.exit(1)
 
 # Write school name to sophomorix configuration
+# The school long name is displayed in various places in the web UI and reports
+# We use regex instead of configparser because sophomorix config files use
+# shell-style KEY=VALUE format without sections
 msg = 'Writing school name to school.conf '
 printScript(msg, '', False, False, True)
 try:
@@ -88,10 +102,12 @@ try:
     rc = writeTextfile(environment.SCHOOLCONF, content, 'w')
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# Import devices from devices.csv into system (DHCP, DNS, etc.)
+# Import devices from devices.csv into system (DHCP, DNS, LINBO configuration)
+# This creates DHCP host declarations, DNS entries, and PXE boot configurations
+# for all devices defined in /etc/linuxmuster/sophomorix/default-school/devices.csv
 msg = 'Starting device import '
 printScript(msg, '', False, False, True)
 try:
@@ -102,15 +118,19 @@ except Exception as error:
     sys.exit(1)
 
 # Wait for firewall to become ready after configuration
+# The firewall may need time to restart services and become fully operational
+# after the previous configuration steps
 skipfw = getSetupValue('skipfw')
 if not skipfw:
     try:
-        waitForFw(wait=30)
+        waitForFw(wait=FIREWALL_WAIT_TIMEOUT)
     except Exception as error:
-        print(error)
+        printScript(f'Firewall wait timeout: {error}')
         sys.exit(1)
 
-# Import subnet configuration to firewall
+# Import subnet configuration to firewall and network
+# This configures DHCP subnets, firewall routes, static routes in netplan,
+# and NTP configuration based on /etc/linuxmuster/subnets.csv
 msg = 'Starting subnets import '
 printScript(msg, '', False, False, True)
 try:
@@ -121,6 +141,9 @@ except Exception as error:
     sys.exit(1)
 
 # Create Kerberos keytab for web proxy SSO authentication
+# This enables transparent authentication for users accessing the internet through
+# the OPNsense web proxy (squid). The keytab allows the proxy to authenticate users
+# via Kerberos without prompting for credentials
 if not skipfw:
     msg = 'Creating web proxy sso keytab '
     printScript(msg, '', False, False, True)
@@ -133,7 +156,9 @@ if not skipfw:
         sys.exit(1)
 
 # Remove admin password from setup.ini for security
-# Password is no longer needed after setup completion
+# The global admin password is no longer needed after setup completion
+# and should not be stored in plain text. We blank it out to reduce security risk.
+# Note: The password is still stored in Samba's password database
 msg = 'Removing admin password from setup.ini '
 printScript(msg, '', False, False, True)
 setupini = environment.SETUPINI
