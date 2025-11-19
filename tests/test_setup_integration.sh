@@ -3,7 +3,7 @@
 # Integration test script for linuxmuster-setup with system state management
 # Creates snapshots and restores system state between tests
 # thomas@linuxmuster.net
-# 20251115
+# 20251119
 #
 
 # Don't use set -e as it can interfere with test execution
@@ -404,13 +404,13 @@ run_test_with_snapshot() {
 
 # Example test: Basic setup with minimal parameters
 test_basic_setup() {
-    print_info "Running basic setup test..."
+    print_info "Running basic setup test${skipfw_msg}..."
 
     # Add timeout and verbose output
     local output
     local exit_code
 
-    print_info "Executing: linuxmuster-setup -n testserver -d test.local -a '***' -u -s"
+    print_info "Executing: linuxmuster-setup -n testserver -d test.local -a '***' -u $skipfw_opt"
     print_info "(This may take several minutes, output will be shown live...)"
     echo ""
 
@@ -421,8 +421,7 @@ test_basic_setup() {
         -n testserver \
         -d test.local \
         -a "TestPass123!" \
-        -u \
-        -s 2>&1 | tee "$temp_output" || true
+        -u $skipfw_opt 2>&1 | tee "$temp_output" || true
     exit_code=${PIPESTATUS[0]}
     output=$(cat "$temp_output" 2>/dev/null || echo "")
     rm -f "$temp_output"
@@ -456,7 +455,7 @@ test_basic_setup() {
 
 # Example test: Full parameter setup
 test_full_setup() {
-    print_info "Running full parameter setup test..."
+    print_info "Running full parameter setup test${skipfw_msg}..."
 
     local output
     local exit_code
@@ -476,8 +475,7 @@ test_full_setup() {
         -z "Germany" \
         -v "Test State" \
         -r "10.0.255.1-10.0.255.254" \
-        -u \
-        -s 2>&1 | tee "$temp_output" || true
+        -u $skipfw_opt 2>&1 | tee "$temp_output" || true
     exit_code=${PIPESTATUS[0]}
     output=$(cat "$temp_output" 2>/dev/null || echo "")
     rm -f "$temp_output"
@@ -507,7 +505,7 @@ test_full_setup() {
 
 # Example test: Config file based setup
 test_config_file_setup() {
-    print_info "Running config file setup test..."
+    print_info "Running config file setup test${skipfw_msg}..."
 
     cat > /tmp/test-setup-full.ini << 'EOF'
 [setup]
@@ -521,16 +519,19 @@ state = Test State
 dhcprange = 10.0.255.1-10.0.255.254
 EOF
 
+    # add skipfw option to ini file if given
+    [ -n "$skipfw_ini" ] && echo "$skipfw_ini" >>  /tmp/test-setup-full.ini
+
     local output
     local exit_code
 
-    print_info "Executing: linuxmuster-setup -c /tmp/test-setup-full.ini -u -s"
+    print_info "Executing: linuxmuster-setup -c /tmp/test-setup-full.ini -u"
     print_info "(This may take several minutes, output will be shown live...)"
     echo ""
 
     # Use timeout to prevent hanging (300 seconds = 5 minutes for full setup)
     local temp_output="/tmp/test-setup-output-$$.txt"
-    timeout 300 linuxmuster-setup -c /tmp/test-setup-full.ini -u -s 2>&1 | tee "$temp_output" || true
+    timeout 300 linuxmuster-setup -c /tmp/test-setup-full.ini -u 2>&1 | tee "$temp_output" || true
     exit_code=${PIPESTATUS[0]}
     output=$(cat "$temp_output" 2>/dev/null || echo "")
     rm -f "$temp_output"
@@ -982,6 +983,12 @@ main() {
                 test_spec="$2"
                 shift 2
                 ;;
+            --skip-fw|-s)
+                skipfw_opt="-s"
+                skipfw_ini="skipfw = True"
+                skipfw_msg=" and skipping firewall setup"
+                shift
+                ;;
             -r)
                 if [ -z "$2" ]; then
                     echo "Usage: $0 -r <snapshot-name> [-t <tests>]"
@@ -1035,6 +1042,7 @@ Integration test suite for linuxmuster-setup with snapshot management.
 Options:
   (no options)                   Run all tests automatically
   -t, --test <number[,...]>      Run single or multiple tests (1-4)
+  -s, --skip-fw                  Skip firewall setup during tests
   -r <snapshot>                  Restore snapshot (standalone or after -t tests)
   -i, --interactive              Interactive mode
   -c, --create-snapshot [name]   Create system snapshot
@@ -1058,7 +1066,7 @@ Behavior:
 
 Examples:
   $0                        # Run all tests
-  $0 -t 1                   # Run test 1, no restore after
+  $0 -t 1 -s                # Run test 1 and skip firewall setup, no restore after
   $0 -t 1,2,4               # Run tests 1, 2, and 4, no restore after
   $0 -t 1,3 -r baseline     # Run tests 1 and 3, then restore 'baseline'
   $0 -t 2 -r baseline       # Run test 2, then restore 'baseline'
