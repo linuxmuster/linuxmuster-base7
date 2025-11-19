@@ -56,6 +56,16 @@ except Exception as error:
 for file in glob.glob('/etc/netplan/*.yaml*'):
     os.chmod(file, 0o600)
 
+# disable isc-dhcp-server6.service
+msg = 'Disabling isc-dhcp-server6 service '
+printScript(msg, '', False, False, True)
+try:
+    for item in ['stop', 'disable', 'mask']:
+        subProc('systemctl ' + item + ' isc-dhcp-server6.service', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(error, '', True, True, False, len(msg))
+
 # Restart apparmor to apply new security profiles
 msg = 'Restarting apparmor service '
 printScript(msg, '', False, False, True)
