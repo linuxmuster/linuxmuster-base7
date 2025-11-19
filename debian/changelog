@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.3.30-0) lmn73; urgency=low
+
+  * don't create keytab if firewall setup is skipped (a1c1f8c).
+  * disable isc-dhcp-server6.service during setup (79b68bb).
+  * fix linuxmuster.net version in setup dialog (485811b).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 19 Nov 2025 15:33:19 +0100
+
 linuxmuster-base7 (7.3.29-0) lmn73; urgency=low
 
   * syntax fix in k_samba-users.py (9a9e7eb).
