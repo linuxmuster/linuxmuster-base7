@@ -1,27 +1,23 @@
-linuxmuster-base7 (7.3.30-0) lmn73-testing; urgency=low
+linuxmuster-base7 (7.3.31-0) lmn73-testing; urgency=low
 
-  * Refactor Python code to comply with Debian Python Policy (Phase 1).
-  * Create proper Python package structure under src/linuxmuster_base7/.
-  * Add pyproject.toml with complete package metadata (PEP 621).
-  * Convert all CLI tools to use entry points.
-  * Modernize Debian packaging with dh-python and pybuild.
-  * Remove pip usage and .pth file manipulation from postinst.
-  * Add python3-paramiko, python3-urllib3 as proper Debian dependencies.
-  * Update all imports to use new package namespace (linuxmuster_base7).
-  * Migrate functions.py (1073 lines) to src/linuxmuster_base7/functions.py.
-  * Migrate 12 setup modules to src/linuxmuster_base7/setup/.
-  * Migrate CLI wrappers to src/linuxmuster_base7/cli/.
-  * Migrate firewall tools to src/linuxmuster_base7/firewall/.
-  * Update all 7 sbin scripts to use new imports.
-  * Update share/examples and share/firewall scripts.
-  * Fix shebangs: Replace #!/usr/bin/env python3 with #!/usr/bin/python3.
-  * Add comprehensive test suite (tests/test_setup_cli.sh: 20 tests).
-  * Add integration test suite with snapshot/restore (tests/test_setup_integration.sh: 6 tests).
-  * Increase debian/compat level to 10.
-  * Remove deprecated README files.
-  * See docs/refactoring-phase-1.md for detailed changes.
+  * Refactor Python code to comply with Debian Python Policy
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 17 Nov 2025 15:58:17 +0100
+
+linuxmuster-base7 (7.3.30-0) lmn73; urgency=low
+
+  * don't create keytab if firewall setup is skipped (f04058f).
+  * disable isc-dhcp-server6.service during setup (8e8861f).
+  * fix linuxmuster.net version in setup dialog (97c7755).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 19 Nov 2025 15:33:19 +0100
+
+linuxmuster-base7 (7.3.29-0) lmn73; urgency=low
+
+  * Fix critical syntax error in k_samba-users.py (b46c9e3).
+  * firewall setup interfaces fix (a72fc66).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 17 Nov 2025 10:55:34 +0100
 
 linuxmuster-base7 (7.3.28-0) lmn73; urgency=low
 
