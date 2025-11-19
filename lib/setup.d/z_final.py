@@ -40,6 +40,7 @@ printScript(msg, '', False, False, True)
 try:
     for item in ['stop', 'disable', 'mask']:
         subProc('systemctl ' + item + ' isc-dhcp-server6.service', logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))
 
