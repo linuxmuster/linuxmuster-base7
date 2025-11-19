@@ -97,15 +97,16 @@ except Exception as error:
     printScript(error, '', True, True, False, len(msg))
     sys.exit(1)
 
-# create web proxy sso keytab
-msg = 'Creating web proxy sso keytab '
-printScript(msg, '', False, False, True)
-try:
-    subProc(environment.FWSHAREDIR + "/create-keytab.py -v -a '" + adminpw + "'", logfile, True)
-    printScript(' Success!', '', True, True, False, len(msg))
-except Exception as error:
-    printScript(error, '', True, True, False, len(msg))
-    sys.exit(1)
+# create web proxy sso keytab if firewall setup is not to be skipped
+if not skipfw:
+    msg = 'Creating web proxy sso keytab '
+    printScript(msg, '', False, False, True)
+    try:
+        subProc(environment.FWSHAREDIR + "/create-keytab.py -v -a '" + adminpw + "'", logfile, True)
+        printScript(' Success!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(error, '', True, True, False, len(msg))
+        sys.exit(1)
 
 # admin password not more needed in setup.ini
 msg = 'Removing admin password from setup.ini '
