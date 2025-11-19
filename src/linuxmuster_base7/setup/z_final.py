@@ -2,7 +2,7 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20250422
+# 20251119
 
 """
 Setup module z_final: Perform final setup tasks and cleanup.
@@ -111,15 +111,16 @@ except Exception as error:
     sys.exit(1)
 
 # Create Kerberos keytab for web proxy SSO authentication
-msg = 'Creating web proxy sso keytab '
-printScript(msg, '', False, False, True)
-try:
-    runWithLog([environment.FWSHAREDIR + '/create-keytab.py', '-v', '-a', adminpw],
-               logfile, checkErrors=False, maskSecrets=[adminpw])
-    printScript(' Success!', '', True, True, False, len(msg))
-except Exception as error:
-    printScript(f' Failed: {error}', '', True, True, False, len(msg))
-    sys.exit(1)
+if not skipfw:
+    msg = 'Creating web proxy sso keytab '
+    printScript(msg, '', False, False, True)
+    try:
+        runWithLog([environment.FWSHAREDIR + '/create-keytab.py', '-v', '-a', adminpw],
+                logfile, checkErrors=False, maskSecrets=[adminpw])
+        printScript(' Success!', '', True, True, False, len(msg))
+    except Exception as error:
+        printScript(f' Failed: {error}', '', True, True, False, len(msg))
+        sys.exit(1)
 
 # Remove admin password from setup.ini for security
 # Password is no longer needed after setup completion
