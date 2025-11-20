@@ -161,7 +161,16 @@ printScript(msg, '', False, False, True)
 runWithLog(['mkdir', '-p', environment.NTPSOCKDIR], logfile, checkErrors=False)
 runWithLog(['chgrp', 'ntpsec', environment.NTPSOCKDIR], logfile, checkErrors=False)
 runWithLog(['chmod', '750', environment.NTPSOCKDIR], logfile, checkErrors=False)
-runWithLog(['timedatectl', 'set-ntp', 'false'], logfile, checkErrors=False)
+
+# Only disable systemd-timesyncd NTP if it's currently enabled
+try:
+    ntp_status = subprocess.run(['timedatectl', 'show', '-p', 'NTP', '--value'],
+                                capture_output=True, text=True, check=True)
+    if ntp_status.stdout.strip() == 'yes':
+        runWithLog(['timedatectl', 'set-ntp', 'false'], logfile, checkErrors=False)
+except subprocess.CalledProcessError:
+    pass  # timedatectl not available or failed, skip NTP disable
+
 runWithLog(['systemctl', 'stop', 'ntpsec'], logfile, checkErrors=False)
 runWithLog(['ntpdate', 'pool.ntp.org'], logfile, checkErrors=False)  # One-time sync
 runWithLog(['systemctl', 'enable', 'ntpsec'], logfile, checkErrors=False)
