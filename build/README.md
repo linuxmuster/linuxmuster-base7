@@ -5,11 +5,14 @@ This directory contains a Docker-based build environment for creating linuxmuste
 ## Quick Start
 
 ```bash
-# Build the package
+# Build the package (output to ./deb)
 ./build/build-package.sh
 
 # Rebuild Docker image and build package
 ./build/build-package.sh --rebuild
+
+# Build with custom output directory
+./build/build-package.sh --output-dir /tmp/packages
 
 # Interactive mode for debugging
 ./build/build-package.sh --interactive
@@ -60,7 +63,7 @@ The build process:
 ```
 - Uses cached Docker image if available
 - Builds package with default options
-- Outputs .deb to parent directory
+- Outputs .deb files to `./deb` directory (default)
 
 ### Rebuild Docker Image
 ```bash
@@ -86,6 +89,15 @@ The build process:
 - Removes all build artifacts before building
 - Ensures a completely fresh build
 - Cleans debian/linuxmuster-base7/, *.deb, etc.
+
+### Custom Output Directory
+```bash
+./build/build-package.sh --output-dir /path/to/output
+```
+- Specifies where to save .deb, .changes, and .buildinfo files
+- Default is `./deb` (relative to project root)
+- Directory is created automatically if it doesn't exist
+- Useful for CI/CD pipelines or custom workflows
 
 ## Requirements
 
@@ -134,12 +146,17 @@ docker system prune -a
 
 ## Output Location
 
-Built packages are placed in the parent directory of the project:
+By default, built packages are placed in the `./deb` directory:
 ```
-/home/thomas/lmndev/base73/
+./deb/
 ├── linuxmuster-base7_7.3.29_all.deb
 ├── linuxmuster-base7_7.3.29.buildinfo
 └── linuxmuster-base7_7.3.29_amd64.changes
+```
+
+You can customize this with the `--output-dir` option:
+```bash
+./build/build-package.sh --output-dir /tmp/packages
 ```
 
 ## Manual Docker Commands

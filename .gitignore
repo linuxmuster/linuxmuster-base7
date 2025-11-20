@@ -4,3 +4,7 @@ mkpkg
 /syncToTestServer.sh
 __pycache__/
 *.pyc
+
+# Docker build output directory
+/deb/
+/build/Dockerfile

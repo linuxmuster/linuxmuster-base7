@@ -25,6 +25,7 @@ NC='\033[0m' # No Color
 REBUILD_IMAGE=0
 INTERACTIVE=0
 CLEAN_BUILD=0
+OUTPUT_DIR="./deb"  # Default output directory
 
 usage() {
     echo "Usage: $0 [OPTIONS]"
@@ -32,16 +33,18 @@ usage() {
     echo "Build linuxmuster-base7 Debian package in Docker container"
     echo ""
     echo "Options:"
-    echo "  -r, --rebuild     Rebuild Docker image from scratch"
-    echo "  -i, --interactive Enter interactive shell in build container"
-    echo "  -c, --clean       Clean build artifacts before building"
-    echo "  -h, --help        Show this help message"
+    echo "  -r, --rebuild           Rebuild Docker image from scratch"
+    echo "  -i, --interactive       Enter interactive shell in build container"
+    echo "  -c, --clean             Clean build artifacts before building"
+    echo "  -o, --output-dir <dir>  Output directory for .deb files (default: ./deb)"
+    echo "  -h, --help              Show this help message"
     echo ""
     echo "Examples:"
-    echo "  $0                Build package with existing Docker image"
-    echo "  $0 --rebuild      Rebuild Docker image and build package"
-    echo "  $0 --interactive  Enter container for manual debugging"
-    echo "  $0 --clean        Clean old builds and build fresh"
+    echo "  $0                          Build package with existing Docker image"
+    echo "  $0 --rebuild                Rebuild Docker image and build package"
+    echo "  $0 --interactive            Enter container for manual debugging"
+    echo "  $0 --clean                  Clean old builds and build fresh"
+    echo "  $0 --output-dir /tmp/debs   Build and output to /tmp/debs"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -57,6 +60,15 @@ while [[ $# -gt 0 ]]; do
         -c|--clean)
             CLEAN_BUILD=1
             shift
+            ;;
+        -o|--output-dir)
+            OUTPUT_DIR="$2"
+            if [ -z "$OUTPUT_DIR" ]; then
+                echo -e "${RED}Error: --output-dir requires a directory path${NC}"
+                usage
+                exit 1
+            fi
+            shift 2
             ;;
         -h|--help)
             usage
@@ -157,6 +169,34 @@ else
 
     echo ""
     echo -e "${GREEN}✓ Package built successfully${NC}"
+
+    # Move package files to output directory
+    if [ $INTERACTIVE -eq 0 ]; then
+        echo ""
+        echo -e "${YELLOW}[4.5/5] Moving package files to output directory...${NC}"
+
+        # Create output directory if it doesn't exist
+        mkdir -p "$OUTPUT_DIR"
+
+        # Find generated package files in parent directory
+        BUILD_DIR="$(dirname "$PROJECT_ROOT")"
+        PACKAGE_FILES=$(find "$BUILD_DIR" -maxdepth 1 \( \
+            -name "linuxmuster-base7_*.deb" -o \
+            -name "linuxmuster-base7_*.changes" -o \
+            -name "linuxmuster-base7_*.buildinfo" \
+            \) -newer "$SCRIPT_DIR/build-package.sh" 2>/dev/null || true)
+
+        if [ -n "$PACKAGE_FILES" ]; then
+            FILE_COUNT=0
+            for file in $PACKAGE_FILES; do
+                mv "$file" "$OUTPUT_DIR/"
+                FILE_COUNT=$((FILE_COUNT + 1))
+            done
+            echo -e "${GREEN}✓ Moved $FILE_COUNT file(s) to $OUTPUT_DIR${NC}"
+        else
+            echo -e "${YELLOW}⚠ No package files found to move${NC}"
+        fi
+    fi
 fi
 echo ""
 
@@ -164,8 +204,13 @@ echo ""
 echo -e "${YELLOW}[5/5] Build results:${NC}"
 echo ""
 
-# Find generated .deb files
-DEB_FILES=$(find "$(dirname "$PROJECT_ROOT")" -maxdepth 1 -name "linuxmuster-base7_*.deb" -newer "$SCRIPT_DIR/build-package.sh" 2>/dev/null || true)
+# Find generated .deb files in output directory
+if [ $INTERACTIVE -eq 0 ]; then
+    DEB_FILES=$(find "$OUTPUT_DIR" -maxdepth 1 -name "linuxmuster-base7_*.deb" 2>/dev/null || true)
+else
+    # In interactive mode, check parent directory
+    DEB_FILES=$(find "$(dirname "$PROJECT_ROOT")" -maxdepth 1 -name "linuxmuster-base7_*.deb" -newer "$SCRIPT_DIR/build-package.sh" 2>/dev/null || true)
+fi
 
 if [ -n "$DEB_FILES" ]; then
     echo -e "${GREEN}Generated packages:${NC}"
@@ -175,10 +220,14 @@ if [ -n "$DEB_FILES" ]; then
     done
     echo ""
     echo -e "${YELLOW}Installation command:${NC}"
-    echo -e "  ${GREEN}sudo dpkg -i $(basename "$DEB_FILES" | head -1)${NC}"
+    echo -e "  ${GREEN}sudo dpkg -i $OUTPUT_DIR/$(basename "$DEB_FILES" | head -1)${NC}"
     echo ""
     echo -e "${YELLOW}Package location:${NC}"
-    echo -e "  ${BLUE}$(dirname "$PROJECT_ROOT")/${NC}"
+    if [ $INTERACTIVE -eq 0 ]; then
+        echo -e "  ${BLUE}$(realpath "$OUTPUT_DIR")/${NC}"
+    else
+        echo -e "  ${BLUE}$(dirname "$PROJECT_ROOT")/${NC}"
+    fi
 else
     if [ $INTERACTIVE -eq 0 ]; then
         echo -e "${YELLOW}No .deb files found (build may have failed)${NC}"

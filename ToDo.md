@@ -1,3 +1,3 @@
-- SSH-Verbindung zu FW bei Setup mit abweichendem Passwort
-- sshExec-Ausgabe unterdrücken
-- 
+- refactoring of src/functions.py
+- consolidating src/functions.py and src/setup/helpers.py
+- better solution for python-reconfigure
