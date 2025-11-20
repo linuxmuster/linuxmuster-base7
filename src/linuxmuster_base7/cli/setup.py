@@ -143,7 +143,7 @@ def main():
 
     # work off setup modules from the Python package
     import pkgutil
-    import setup as setup_package
+    from linuxmuster_base7 import setup as setup_package
 
     # Get all modules from setup package
     setup_modules = []
