@@ -37,10 +37,10 @@ import environment
 
 from dialog import Dialog
 from IPy import IP
-from linuxmuster_base7.functions import detectedInterfaces, isValidHostname, isValidDomainname
-from linuxmuster_base7.functions import isValidHostIpv4, isValidPassword, mySetupLogfile
-from linuxmuster_base7.functions import printScript
-from linuxmuster_base7.setup.helpers import runWithLog
+from functions import detectedInterfaces, isValidHostname, isValidDomainname
+from functions import isValidHostIpv4, isValidPassword, mySetupLogfile
+from functions import printScript
+from setup.helpers import runWithLog
 
 logfile = mySetupLogfile(__file__)
 

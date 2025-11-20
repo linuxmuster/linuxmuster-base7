@@ -30,11 +30,11 @@ sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
 from IPy import IP
-from linuxmuster_base7.functions import isValidHostname, isValidDomainname, isValidHostIpv4
-from linuxmuster_base7.functions import mySetupLogfile, printScript, randomPassword
-from linuxmuster_base7.setup.helpers import runWithLog, buildIp, getNetworkPrefix, splitIpOctets
-from linuxmuster_base7.setup.helpers import DHCP_RANGE_START_SUFFIX, DHCP_RANGE_END_SUFFIX
-from linuxmuster_base7.setup.helpers import DHCP_RANGE_START_LARGE_NET, DHCP_RANGE_END_LARGE_NET
+from functions import isValidHostname, isValidDomainname, isValidHostIpv4
+from functions import mySetupLogfile, printScript, randomPassword
+from setup.helpers import runWithLog, buildIp, getNetworkPrefix, splitIpOctets
+from setup.helpers import DHCP_RANGE_START_SUFFIX, DHCP_RANGE_END_SUFFIX
+from setup.helpers import DHCP_RANGE_START_LARGE_NET, DHCP_RANGE_END_LARGE_NET
 
 logfile = mySetupLogfile(__file__)
 

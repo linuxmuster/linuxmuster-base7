@@ -32,10 +32,10 @@ import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from linuxmuster_base7.functions import backupCfg, getSetupValue, mySetupLogfile, printScript, readTextfile
-from linuxmuster_base7.functions import replaceInFile, setupComment
-from linuxmuster_base7.setup.helpers import runWithLog, replaceTemplateVars
-from linuxmuster_base7.setup.helpers import DO_NOT_OVERWRITE_FILES, DO_NOT_BACKUP_FILES
+from functions import backupCfg, getSetupValue, mySetupLogfile, printScript, readTextfile
+from functions import replaceInFile, setupComment
+from setup.helpers import runWithLog, replaceTemplateVars
+from setup.helpers import DO_NOT_OVERWRITE_FILES, DO_NOT_BACKUP_FILES
 
 logfile = mySetupLogfile(__file__)
 

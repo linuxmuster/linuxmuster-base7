@@ -35,9 +35,9 @@ import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from linuxmuster_base7.functions import mySetupLogfile, printScript, randomPassword, readTextfile
-from linuxmuster_base7.functions import replaceInFile, writeTextfile
-from linuxmuster_base7.setup.helpers import runWithLog
+from functions import mySetupLogfile, printScript, randomPassword, readTextfile
+from functions import replaceInFile, writeTextfile
+from setup.helpers import runWithLog
 
 logfile = mySetupLogfile(__file__)
 

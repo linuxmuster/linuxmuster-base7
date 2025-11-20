@@ -21,7 +21,7 @@ Features:
 - Compatible with existing printScript() calls
 
 Usage:
-    from linuxmuster_base7.logging import Logger
+    from logging import Logger
 
     logger = Logger('import-devices.log')
     logger.info('Starting device import')

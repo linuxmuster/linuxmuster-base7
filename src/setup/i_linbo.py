@@ -34,9 +34,9 @@ import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from linuxmuster_base7.functions import backupCfg, enterPassword, getSetupValue, isValidPassword, \
+from functions import backupCfg, enterPassword, getSetupValue, isValidPassword, \
     mySetupLogfile, modIni, printScript, readTextfile, setupComment, writeTextfile
-from linuxmuster_base7.setup.helpers import DEFAULT_LINBO_IP
+from setup.helpers import DEFAULT_LINBO_IP
 
 logfile = mySetupLogfile(__file__)
 

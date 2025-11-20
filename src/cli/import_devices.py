@@ -21,7 +21,7 @@ from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 
-from linuxmuster_base7.functions import getDevicesArray, getGrubOstype, getGrubPart, getSetupValue, getStartconfOsValues, \
+from functions import getDevicesArray, getGrubOstype, getGrubPart, getSetupValue, getStartconfOsValues, \
     getStartconfOption, getStartconfPartnr, getStartconfPartlabel, getSubnetArray, \
     getLinboVersion, printScript, readTextfile, writeTextfile
 

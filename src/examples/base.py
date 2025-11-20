@@ -28,7 +28,7 @@ import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from linuxmuster_base7.functions import printScript
+from functions import printScript
 
 
 class BaseCLI:

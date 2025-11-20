@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import sys
 
-from linuxmuster_base7.functions import getSetupValue, getSubnetArray, isValidHostIpv4, \
+from functions import getSetupValue, getSubnetArray, isValidHostIpv4, \
     printScript, readTextfile, writeTextfile
 
 

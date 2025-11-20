@@ -10,7 +10,7 @@ import os
 import subprocess
 import sys
 
-from linuxmuster_base7.functions import modIni, printLf
+from functions import modIni, printLf
 
 
 def usage():

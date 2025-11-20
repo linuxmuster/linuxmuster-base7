@@ -14,7 +14,7 @@ This module provides:
 - Shared constants
 
 Usage:
-    from linuxmuster_base7.setup.helpers import runWithLog, buildIp, DHCP_RANGE_START_SUFFIX
+    from setup.helpers import runWithLog, buildIp, DHCP_RANGE_START_SUFFIX
 """
 
 import datetime

@@ -17,7 +17,7 @@ import shutil
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from linuxmuster_base7.functions import checkFwMajorVer, modIni, printScript, tee
+from functions import checkFwMajorVer, modIni, printScript, tee
 
 
 def usage():
@@ -143,9 +143,9 @@ def main():
 
     # work off setup modules from the Python package
     import pkgutil
-    import linuxmuster_base7.setup as setup_package
+    import setup as setup_package
 
-    # Get all modules from linuxmuster_base7.setup package
+    # Get all modules from setup package
     setup_modules = []
     for importer, modname, ispkg in pkgutil.iter_modules(setup_package.__path__):
         if not ispkg and modname not in ['__init__', 'helpers']:

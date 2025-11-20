@@ -32,9 +32,9 @@ import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from linuxmuster_base7.functions import createServerCert, encodeCertToBase64, mySetupLogfile, \
+from functions import createServerCert, encodeCertToBase64, mySetupLogfile, \
     randomPassword, printScript, writeTextfile
-from linuxmuster_base7.setup.helpers import runWithLog, CERT_VALIDITY_DAYS
+from setup.helpers import runWithLog, CERT_VALIDITY_DAYS
 
 logfile = mySetupLogfile(__file__)
 

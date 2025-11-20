@@ -14,7 +14,7 @@ import time
 import yaml
 
 from bs4 import BeautifulSoup
-from linuxmuster_base7.functions import firewallApi, getFwConfig, getSetupValue, getSubnetArray, isValidHostIpv4, printScript, putFwConfig, readTextfile, writeTextfile
+from functions import firewallApi, getFwConfig, getSetupValue, getSubnetArray, isValidHostIpv4, printScript, putFwConfig, readTextfile, writeTextfile
 from IPy import IP
 
 # Constants for subnet field mappings

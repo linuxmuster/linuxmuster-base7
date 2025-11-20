@@ -24,7 +24,7 @@ import shutil
 import subprocess
 import sys
 
-from linuxmuster_base7.functions import catFiles, checkFwMajorVer, createCertificateChain, createCnfFromTemplate, \
+from functions import catFiles, checkFwMajorVer, createCertificateChain, createCnfFromTemplate, \
     encodeCertToBase64, getFwConfig, getSetupValue, printScript, putFwConfig, readTextfile, renewCaCertificate, \
     replaceInFile, signCertificateWithCa, sshExec, tee
 
