@@ -8,3 +8,6 @@ __pycache__/
 # Docker build output directory
 /deb/
 /build/Dockerfile
+
+# Python build artifacts
+.pybuild/
