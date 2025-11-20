@@ -19,6 +19,7 @@ RUN apt-get update && \
     devscripts \
     equivs \
     lintian \
+    fakeroot \
     git \
     ca-certificates \
     wget \
@@ -27,8 +28,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Add linuxmuster.net repository
-RUN echo "deb [signed-by=/usr/share/keyrings/linuxmuster.gpg] https://archive.linuxmuster.net/ lmn73 main" > /etc/apt/sources.list.d/linuxmuster.list && \
-    wget -qO- https://archive.linuxmuster.net/archive.key | gpg --dearmor > /usr/share/keyrings/linuxmuster.gpg
+RUN mkdir -p /usr/share/keyrings && \
+    wget -qO- https://deb.linuxmuster.net/pub.gpg | gpg --dearmor > /usr/share/keyrings/linuxmuster.net.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/linuxmuster.net.gpg] https://deb.linuxmuster.net/ lmn73 main" > /etc/apt/sources.list.d/lmn73.list
 
 # Update package lists with linuxmuster repository
 RUN apt-get update
@@ -41,9 +43,15 @@ RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Create build user (non-root for security)
-RUN useradd -m -s /bin/bash builder && \
-    mkdir -p /build && \
-    chown builder:builder /build
+ARG USER_ID=1000
+RUN if id -u ${USER_ID} >/dev/null 2>&1; then \
+        existing_user=$(getent passwd ${USER_ID} | cut -d: -f1); \
+        usermod -l builder -d /home/builder -m "$existing_user" || true; \
+    else \
+        useradd -m -s /bin/bash -u ${USER_ID} builder; \
+    fi && \
+    mkdir -p /build /output && \
+    chown ${USER_ID}:${USER_ID} /build /output
 
 # Set working directory
 WORKDIR /build

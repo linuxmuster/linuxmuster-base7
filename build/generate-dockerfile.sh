@@ -75,9 +75,8 @@ echo -e "${GREEN}Build-Depends found:${NC}"
 echo "$BUILD_DEPENDS" | tr ' ' '\n' | sed 's/^/  - /'
 echo ""
 
-# Filter out packages that might not be needed in Docker
-# (debhelper, dh-python are already installed in base image)
-FILTERED_DEPENDS=$(echo "$BUILD_DEPENDS" | tr ' ' '\n' | grep -v '^$' | grep -vE '^(debhelper|dh-python)$' | tr '\n' ' ')
+# Filter out empty entries only
+FILTERED_DEPENDS=$(echo "$BUILD_DEPENDS" | tr ' ' '\n' | grep -v '^$' | tr '\n' ' ')
 
 echo -e "${YELLOW}Generating Dockerfile...${NC}"
 
