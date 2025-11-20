@@ -93,10 +93,9 @@ for pkg in $FILTERED_DEPENDS; do
     echo "    $pkg \\" >> "$TEMP_FILE"
 done
 
-# Add cleanup commands (remove last backslash from packages)
-sed -i '$ s| \\$| \&\&|' "$TEMP_FILE"
+# Add cleanup commands (remove last backslash from last package)
+sed -i '$ s| \\$| \&\& \\|' "$TEMP_FILE"
 cat >> "$TEMP_FILE" << 'CLEANUP_EOF'
- \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 CLEANUP_EOF
