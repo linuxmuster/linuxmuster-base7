@@ -5,10 +5,5 @@ mkpkg
 __pycache__/
 *.pyc
 
-# Docker build output directory
-/deb/
-/build/Dockerfile
-/build/tmp/
-
 # Python build artifacts
 .pybuild/
