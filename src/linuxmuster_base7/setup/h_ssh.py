@@ -30,9 +30,9 @@ import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from functions import backupCfg, checkSocket, getSetupValue, isValidHostIpv4, modIni, \
+from linuxmuster_base7.functions import backupCfg, checkSocket, getSetupValue, isValidHostIpv4, modIni, \
     mySetupLogfile, printScript, replaceInFile, setupComment, writeTextfile
-from setup.helpers import runWithLog, CRYPTO_TYPES
+from linuxmuster_base7.setup.helpers import runWithLog, CRYPTO_TYPES
 
 logfile = mySetupLogfile(__file__)
 

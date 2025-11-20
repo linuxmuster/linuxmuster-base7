@@ -17,7 +17,7 @@ import shutil
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from functions import checkFwMajorVer, modIni, printScript, tee
+from linuxmuster_base7.functions import checkFwMajorVer, modIni, printScript, tee
 
 
 def usage():

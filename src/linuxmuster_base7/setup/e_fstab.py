@@ -26,7 +26,7 @@ import os
 import reconfigure
 import sys
 
-from functions import mySetupLogfile, printScript
+from linuxmuster_base7.functions import mySetupLogfile, printScript
 from reconfigure.configs import FSTabConfig
 from reconfigure.items.fstab import FilesystemData
 import subprocess

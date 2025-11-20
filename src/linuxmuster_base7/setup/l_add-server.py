@@ -33,9 +33,9 @@ from uuid import getnode
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from functions import getSetupValue, isValidHostIpv4, isValidMac, mySetupLogfile, \
+from linuxmuster_base7.functions import getSetupValue, isValidHostIpv4, isValidMac, mySetupLogfile, \
     printScript, readTextfile, writeTextfile
-from setup.helpers import runWithLog
+from linuxmuster_base7.setup.helpers import runWithLog
 
 logfile = mySetupLogfile(__file__)
 
