@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20250910
+# 20251127
 #
 
 import configparser
@@ -115,6 +115,7 @@ try:
             + ' -n ' + serverip + '/'
             + bitmask + ' -d ' + domainname + ' -t ' + servername + ' -r '
             + serverip + ' -a "' + adminpw + '"', logfile)
+    subProc('/usr/bin/hostnamectl hostname ' + servername + '.' + domainname, logfile)
     # remove adminpw from logfile
     replaceInFile(logfile, adminpw, '******')
     printScript(' Success!', '', True, True, False, len(msg))
