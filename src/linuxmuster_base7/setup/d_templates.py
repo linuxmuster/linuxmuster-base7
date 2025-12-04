@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20251114
+# 20251125
 #
 
 """
@@ -148,7 +148,9 @@ try:
                 '-f', firewallip, '-n', serverip + '/' + bitmask,
                 '-d', domainname, '-t', servername, '-r', serverip,
                 '-a', adminpw],
-               logfile, checkErrors=False, maskSecrets=[adminpw])
+                logfile, checkErrors=False, maskSecrets=[adminpw])
+    runWithLog(['/usr/bin/hostnamectl', 'hostname', servername + '.' + domainname],
+                logfile, checkErrors=False)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
