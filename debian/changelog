@@ -1,8 +1,14 @@
-linuxmuster-base7 (7.3.31-0) lmn73-testing; urgency=low
+linuxmuster-base7 (7.3.32-0) lmn73-testing; urgency=low
 
   * Refactor Python code to comply with Debian Python Policy (#170).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 20 Nov 2025 19:08:47 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 28 Nov 2025 14:52:36 +0100
+
+linuxmuster-base7 (7.3.31-0) lmn73; urgency=low
+
+  * setup fix: changing hostname is ignored by samba provisioning (1c9be06).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 27 Nov 2025 20:48:22 +0100
 
 linuxmuster-base7 (7.3.30-0) lmn73; urgency=low
 
