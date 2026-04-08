@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # thomas@linuxmuster.net
-# 20250721
+# 20260408
 #
 
 # options
@@ -16,7 +16,6 @@ fi
 if [ -n "$donotask" ]; then
     echo "### linuxmuster.net 7.3 upgrade ###"
 else
-    answer="I have been warned"
     echo "############################################################"
     echo "#                                                          #"
     echo "#                        ATTENTION!                        #"
@@ -26,9 +25,7 @@ else
     echo "#                                                          #"
     echo "############################################################"
     echo
-    echo -n "To continue enter \"$answer\": "
-    read given_answer
-    [ "$given_answer" = "$answer" ] || exit 1
+    sleep 3
 fi
 
 # save resolv.conf
