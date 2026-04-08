@@ -1,6 +1,6 @@
 linuxmuster-base7 (7.3.32-0) lmn73-testing; urgency=low
 
-  * Refactor Python code to comply with Debian Python Policy (#170).
+  * Refactor Python code to comply with Debian Python Policy (#170y).
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 28 Nov 2025 14:52:36 +0100
 
