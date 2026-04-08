@@ -14,8 +14,9 @@
 
 import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
-import environment
+import csv
 import datetime
+import environment
 import re
 import subprocess
 import time
@@ -79,77 +80,217 @@ NAT_RULE_XML_TPL = """
 """
 
 
-# Functions begin
+# --------------------------------------------------------------------------- #
+# CSV parsing                                                                  #
+# --------------------------------------------------------------------------- #
 
-def updateNetplan(subnets, gateway, servernet_router):
-    """Update static routes in netplan configuration.
+def readSubnetsCSV(ipnet_setup):
+    """Read subnets.csv and return a list of subnet dicts.
 
-    Configures network routes in Ubuntu's netplan system:
-    - Sets default gateway route
-    - Adds routes for additional subnets via their gateways
-    - Creates timestamped backup before changes
-    - Rolls back if netplan apply fails
+    CSV fields (semicolon-separated):
+      0 network/prefix  1 router  2 range_start  3 range_end
+      4 nameserver      5 nextserver              6 SETUP flag
 
-    Args:
-        subnets: List of subnet strings in format 'network:gateway'
-        gateway: Default gateway IP address
-        servernet_router: Router IP for the server network
+    The server subnet is identified by the SETUP flag in column 6 or by
+    matching ipnet_setup from setup.ini.
+
+    Every skipped row is logged with its reason via printScript.
 
     Returns:
-        False if operation failed, None if successful
+        List of dicts with keys:
+          ipnet, router, range1, range2, nameserver, nextserver,
+          network, netmask, broadcast, is_server
     """
-    printScript('Processing netplan configuration:')
-    cfgfile = environment.NETCFG
-    # create backup of current configuration
-    timestamp = str(datetime.datetime.now()).replace('-', '').replace(' ', '').replace(':', '').split('.')[0]
-    bakfile = cfgfile + '-' + timestamp
-    rc = subprocess.call('cp ' + cfgfile + ' ' + bakfile, shell=True)
-    if rc != 0:
-        printScript('* Failed to backup ' + cfgfile + '!')
+    subnets = []
+    try:
+        infile = open(environment.SUBNETSCSV, newline='')
+    except Exception as e:
+        printScript(f'* Cannot open {environment.SUBNETSCSV}: {e}')
+        return []
+
+    with infile:
+        reader = csv.reader(infile, delimiter=';', quoting=csv.QUOTE_NONE)
+        for row in reader:
+            # skip empty lines and comment/header lines
+            if not row:
+                continue
+            first = row[0].strip()
+            if not first or not first[0].isalnum():
+                continue
+
+            def field(i, default=''):
+                return row[i].strip() if len(row) > i else default
+
+            ipnet      = field(0)
+            router     = field(1)
+            range1     = field(2)
+            range2     = field(3)
+            nameserver = field(4)
+            nextserver = field(5)
+            setup_flag = field(6)
+
+            # router IP is mandatory
+            if not isValidHostIpv4(router):
+                printScript(f'* Skipping {ipnet}: invalid router IP "{router}"')
+                continue
+
+            # compute network parameters from CIDR notation
+            try:
+                n         = IP(ipnet, make_net=True)
+                network   = IP(n).strNormal(0)
+                netmask   = IP(n).strNormal(2).split('/')[1]
+                broadcast = IP(n).strNormal(3).split('-')[1]
+                cidr      = network + '/' + str(IP(n).prefixlen())
+            except Exception as e:
+                printScript(f'* Skipping {ipnet}: invalid network notation: {e}')
+                continue
+
+            # validate optional IPs, clear on failure
+            if not isValidHostIpv4(range1) or not isValidHostIpv4(range2):
+                range1 = range2 = ''
+            if not isValidHostIpv4(nameserver):
+                nameserver = ''
+            if not isValidHostIpv4(nextserver):
+                nextserver = ''
+
+            is_server = (setup_flag.upper() == 'SETUP') or (cidr == ipnet_setup)
+
+            subnets.append({
+                'ipnet':      cidr,
+                'router':     router,
+                'range1':     range1,
+                'range2':     range2,
+                'nameserver': nameserver,
+                'nextserver': nextserver,
+                'network':    network,
+                'netmask':    netmask,
+                'broadcast':  broadcast,
+                'is_server':  is_server,
+            })
+
+    return subnets
+
+
+# --------------------------------------------------------------------------- #
+# DHCP configuration                                                           #
+# --------------------------------------------------------------------------- #
+
+def writeDhcpConfig(subnets, serverip):
+    """Write /etc/dhcp/subnets.conf from the subnet list.
+
+    Output format follows the specification in import_subnets.md (no indentation).
+
+    Returns:
+        True on success, False on error.
+    """
+    printScript('Writing DHCP configuration:')
+    try:
+        with open(environment.DHCPSUBCONF, 'w') as f:
+            for s in subnets:
+                printScript('* ' + s['ipnet'])
+                f.write('# Subnet ' + s['ipnet'] + '\n')
+                f.write('subnet ' + s['network'] + ' netmask ' + s['netmask'] + ' {\n')
+                f.write('option routers ' + s['router'] + ';\n')
+                f.write('option subnet-mask ' + s['netmask'] + ';\n')
+                f.write('option broadcast-address ' + s['broadcast'] + ';\n')
+                if s['nameserver']:
+                    f.write('option domain-name-servers ' + s['nameserver'] + ';\n')
+                else:
+                    f.write('option netbios-name-servers ' + serverip + ';\n')
+                if s['nextserver']:
+                    f.write('next-server ' + s['nextserver'] + ';\n')
+                if s['range1']:
+                    f.write('range ' + s['range1'] + ' ' + s['range2'] + ';\n')
+                f.write('option host-name pxeclient;\n')
+                f.write('}\n')
+        return True
+    except Exception as e:
+        printScript(f'* Failed to write {environment.DHCPSUBCONF}: {e}')
         return False
-    # read netplan config file
-    with open(cfgfile) as config:
-        netcfg = yaml.safe_load(config)
+
+
+def restartDhcp():
+    """Restart isc-dhcp-server and verify it is running.
+
+    Returns:
+        True if the service is active, False otherwise.
+    """
+    service = 'isc-dhcp-server'
+    msg = 'Restarting ' + service + ' '
+    printScript(msg, '', False, False, True)
+    subprocess.call('service ' + service + ' stop', shell=True)
+    subprocess.call('service ' + service + ' start', shell=True)
+    time.sleep(1)
+    rc = subprocess.call('systemctl is-active --quiet ' + service, shell=True)
+    if rc == 0:
+        printScript(' OK!', '', True, True, False, len(msg))
+    else:
+        printScript(' Failed!', '', True, True, False, len(msg))
+    return rc == 0
+
+
+# --------------------------------------------------------------------------- #
+# Netplan                                                                      #
+# --------------------------------------------------------------------------- #
+
+def updateNetplan(extra_subnets, gateway, servernet_router):
+    """Update static routes in /etc/netplan/01-netcfg.yaml.
+
+    - Sets the default route via gateway
+    - Adds one route per extra subnet via servernet_router, provided that
+      servernet_router != gateway (i.e. a L3 switch is present)
+    - Creates a timestamped backup before any change; rolls back automatically
+      if 'netplan apply' fails
+
+    Returns:
+        True on success, False on error.
+    """
+    printScript('Updating netplan configuration:')
+    cfgfile = environment.NETCFG
+    timestamp = (str(datetime.datetime.now())
+                 .replace('-', '').replace(' ', '').replace(':', '')
+                 .split('.')[0])
+    bakfile = cfgfile + '-' + timestamp
+    if subprocess.call(['cp', cfgfile, bakfile]) != 0:
+        printScript('* Failed to back up ' + cfgfile + '!')
+        return False
+
+    with open(cfgfile) as f:
+        netcfg = yaml.safe_load(f)
+
     iface = str(netcfg['network']['ethernets']).split('\'')[1]
     ifcfg = netcfg['network']['ethernets'][iface]
-    # remove deprecated gateway4
-    try:
+
+    # remove deprecated gateway4 entry
+    if 'gateway4' in ifcfg:
         del ifcfg['gateway4']
-        printScript('* Removed deprecated gateway4 statement.')
-    except Exception as error:
-        None
-    # first delete the old routes if there are any
-    try:
+        printScript('* Removed deprecated gateway4 entry.')
+
+    # remove existing routes
+    if 'routes' in ifcfg:
         del ifcfg['routes']
         printScript('* Removed old routes.')
-    except Exception as error:
-        None
+
     # set default route
-    ifcfg['routes'] = []
-    subroute = eval('{"to": \'default\', "via": \'' + gateway + '\'}')
-    ifcfg['routes'].append(subroute)
-    # add subnet routes if there are any beside server network
-    if len(subnets) > 0:
-        for item in subnets:
-            # skip if subnet gateway is the default
-            if servernet_router == gateway:
-                continue
-            subnet = item.split(':')[0]
-            # tricky: concenate dict object for yaml using eval
-            subroute = eval('{"to": \'' + subnet + '\', "via": \'' + servernet_router + '\'}')
-            ifcfg['routes'].append(subroute)
-        printScript('* Added new routes for all subnets.')
-    # save netcfg
-    with open(cfgfile, 'w') as config:
-        config.write(yaml.dump(netcfg, default_flow_style=False))
-    rc = subprocess.call('netplan apply', shell=True)
-    if rc == 0:
-        printScript('* Applied new netplan configuration.')
-    else:
-        printScript('* Failed to apply new netplan configuration. Rolling back to previous status.')
-        subprocess.call('cp ' + bakfile + ' ' + cfgfile, shell=True)
-        subprocess.call('netplan apply', shell=True)
-        return False
+    ifcfg['routes'] = [{'to': 'default', 'via': gateway}]
+
+    # add subnet routes if servernet_router differs from gateway
+    if extra_subnets and servernet_router != gateway:
+        for s in extra_subnets:
+            ifcfg['routes'].append({'to': s['ipnet'], 'via': servernet_router})
+        printScript('* Added routes for all extra subnets.')
+
+    with open(cfgfile, 'w') as f:
+        f.write(yaml.dump(netcfg, default_flow_style=False))
+
+    if subprocess.call(['netplan', 'apply']) == 0:
+        printScript('* New netplan configuration applied.')
+        return True
+
+    printScript('* netplan apply failed - rolling back.')
+    subprocess.call(['cp', bakfile, cfgfile])
+    subprocess.call(['netplan', 'apply'])
+    return False
 
 
 def updateFwGw(servernet_router, content, gw_lan_xml):
@@ -419,124 +560,41 @@ def main():
     # Step 2: Process subnets and generate DHCP configuration
     printScript('linuxmuster-import-subnets')
     printScript('', 'begin')
-    printScript('Reading setup data:')
+    printScript('Setup values:')
     printScript('* Server address: ' + serverip)
     printScript('* Server network: ' + ipnet_setup)
-    printScript('Processing dhcp subnets:')
 
-    servernet_router = firewallip  # Default router is the firewall
-    subnets = []  # Will store all subnets in format 'network:router'
+    printScript('Reading subnets:')
+    subnets = readSubnetsCSV(ipnet_setup)
+    if not subnets:
+        printScript('* No valid subnets found - aborting.')
+        printScript('', 'end')
+        return
 
-    # Open DHCP subnets configuration file for writing
-    subnetconf = open(environment.DHCPSUBCONF, 'w')
+    server_subnet    = next((s for s in subnets if s['is_server']), None)
+    extra_subnets    = [s for s in subnets if not s['is_server']]
+    servernet_router = server_subnet['router'] if server_subnet else firewallip
+    # compat format for legacy firewall functions (will be removed in next commit)
+    subnets_fw = [s['ipnet'] + ':' + s['router'] for s in subnets]
 
-    # Iterate through all subnets defined in subnets.csv
-    for row in getSubnetArray():
-        try:
-            # Extract subnet configuration fields
-            ipnet = row[0]        # Network address in CIDR notation
-            router = row[1]       # Gateway/router IP for this subnet
-            range1 = row[2]       # DHCP range start IP
-            range2 = row[3]       # DHCP range end IP
-            nameserver = row[4]   # DNS server IP
-        except Exception as error:
-            continue  # Skip malformed rows
-        try:
-            nextserver = row[5]   # PXE boot server IP (optional)
-        except Exception as error:
-            nextserver = ''
+    # Step 3: Write DHCP configuration
+    if not writeDhcpConfig(subnets, serverip):
+        printScript('', 'end')
+        return
 
-        # Skip commented lines and invalid router addresses
-        if ipnet[:1] == '#' or ipnet[:1] == ';' or not isValidHostIpv4(router):
-            continue
+    # Step 4: Restart DHCP service
+    restartDhcp()
 
-        # Validate DHCP range IPs, clear if invalid
-        if not isValidHostIpv4(range1) or not isValidHostIpv4(range2):
-            range1 = ''
-            range2 = ''
+    # Step 5: Update netplan configuration with static routes for all subnets
+    updateNetplan(extra_subnets, gateway, servernet_router)
 
-        # Validate optional server IPs
-        if not isValidHostIpv4(nameserver):
-            nameserver = ''
-        if not isValidHostIpv4(nextserver):
-            nextserver = ''
-
-        # Compute network parameters from CIDR notation
-        try:
-            n = IP(ipnet, make_net=True)
-            network = IP(n).strNormal(0)       # Network address (e.g., 10.0.0.0)
-            netmask = IP(n).strNormal(2).split('/')[1]  # Netmask (e.g., 255.255.0.0)
-            broadcast = IP(n).strNormal(3).split('-')[1]  # Broadcast address
-        except Exception as error:
-            continue  # Skip subnets with invalid network notation
-
-        # Identify server network and save its router
-        if ipnet == ipnet_setup:
-            servernet_router = router  # This is the gateway for the server network
-            supp_info = 'server network'
-        else:
-            supp_info = ''
-
-        # Store subnet for later use in routing configuration
-        subnets.append(ipnet + ':' + router)
-
-        # Write DHCP subnet declaration
-        printScript('* ' + ipnet)
-        subnetconf.write('# Subnet ' + ipnet + ' ' + supp_info + '\n')
-        subnetconf.write('subnet ' + network + ' netmask ' + netmask + ' {\n')
-        subnetconf.write('  option routers ' + router + ';\n')
-        subnetconf.write('  option subnet-mask ' + netmask + ';\n')
-        subnetconf.write('  option broadcast-address ' + broadcast + ';\n')
-
-        # Add DNS server option if specified
-        if nameserver != '':
-            subnetconf.write('  option domain-name-servers ' + nameserver + ';\n')
-            nameserver = ''
-        else:
-            # Use server as WINS server if no nameserver specified
-            subnetconf.write('  option netbios-name-servers ' + serverip + ';\n')
-
-        # Add PXE boot server if specified
-        if nextserver != '':
-            subnetconf.write('  next-server ' + nextserver + ';\n')
-
-        # Add DHCP range if specified
-        if range1 != '':
-            subnetconf.write('  range ' + range1 + ' ' + range2 + ';\n')
-
-        # Set default hostname for PXE clients
-        subnetconf.write('  option host-name pxeclient;\n')
-        subnetconf.write('}\n')
-
-    subnetconf.close()
-
-    # Step 3: Restart DHCP service with new configuration
-    service = 'isc-dhcp-server'
-    msg = 'Restarting ' + service + ' '
-    printScript(msg, '', False, False, True)
-    subprocess.call('service ' + service + ' stop', shell=True)
-    subprocess.call('service ' + service + ' start', shell=True)
-    # Wait for service to stabilize
-    time.sleep(1)
-    rc = subprocess.call('systemctl is-active --quiet ' + service, shell=True)
-    if rc == 0:
-        printScript(' OK!', '', True, True, False, len(msg))
-    else:
-        printScript(' Failed!', '', True, True, False, len(msg))
-
-    # Ensure service is running
-    subprocess.call('systemctl restart isc-dhcp-server.service', shell=True)
-
-    # Step 4: Update netplan configuration with static routes for all subnets
-    changed = updateNetplan(subnets, gateway, servernet_router)
-
-    # Step 5: Update NTP configuration to reflect network changes
+    # Step 6: Update NTP configuration to reflect network changes
     subprocess.call('linuxmuster-update-ntpconf', shell=True)
 
-    # Step 6: Update firewall configuration (unless skipfw is set)
+    # Step 7: Update firewall configuration (unless skipfw is set)
     if not skipfw:
         # Update firewall gateway and NAT rules
-        changed = updateFw(subnets, firewallip, ipnet_setup,
+        changed = updateFw(subnets_fw, firewallip, ipnet_setup,
                            servernet_router, gw_lan_xml, nat_rule_xml)
         if changed:
             # Apply gateway changes via firewall API
@@ -545,12 +603,14 @@ def main():
                 printScript('Applied new gateway.')
 
         # Update static routes on firewall
-        changed = updateFwRoutes(subnets, ipnet_setup, servernet_router)
+        changed = updateFwRoutes(subnets_fw, ipnet_setup, servernet_router)
         if changed:
             # Apply route changes via firewall API
             changed = firewallApi('post', '/routes/routes/reconfigure')
             if changed:
                 printScript('Applied new routes.')
+
+    printScript('', 'end')
 
 
 if __name__ == '__main__':
