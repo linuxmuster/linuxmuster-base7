@@ -2,7 +2,15 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20251117
+# 20260326
+#
+# Requirements (import_subnets.md):
+#  - Writes DHCP configuration to /etc/dhcp/subnets.conf
+#  - Manages LAN gateway and static routes on OPNsense via API
+#  - Removes obsolete routes / gateway when no extra subnets are present
+#  - Synchronises outbound NAT rules on OPNsense via API
+#  - Updates static routes in /etc/netplan/01-netcfg.yaml
+#  - Calls linuxmuster-update-ntpconf
 
 import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
