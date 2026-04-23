@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20251006
+# 20260423
 # GPL v3
 #
 
@@ -29,7 +29,7 @@ datestr="$(date +%Y%m%d%H%M)"
 
 # os version specific
 case "$VERSION_ID" in
-  24.04) ntpgrp="ntpsec" ;;
+  24.04|26.04) ntpgrp="ntpsec" ;;
   22.04) ntpgrp="ntp" ;;
   *) echo "Wrong os version $VERSION_ID." ; exit 1 ;;
 esac
