@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.32-0) lmn73; urgency=low
+
+  * add linuxmuster-release-upgrade (549db36).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 23 Apr 2026 10:11:01 +0200
+
 linuxmuster-base7 (7.3.31-0) lmn73; urgency=low
 
   * setup fix: changing hostname is ignored by samba provisioning (9e02e40).
