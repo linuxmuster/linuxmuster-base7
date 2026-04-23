@@ -1,0 +1,130 @@
+#!/bin/bash
+#
+# thomas@linuxmuster.net
+# 20260422
+#
+
+# options
+echo "$@" | grep -qw "\-\-force" && donotask="yes"
+echo "$@" | grep -qw "\-\-reboot" && autoreboot="yes"
+echo "$@" | grep -qw "\-\-clean" && cleancache="yes"
+if echo "$@" | grep -q "\-\-help"; then
+    echo "Usage: linuxmuster-release-upgrade [--force|--reboot|--clean|--help]"
+    echo "  --force   Do not ask for confirmation"
+    echo "  --reboot  Reboot after successful upgrade"
+    echo "  --clean   Clean up apt cache after upgrade"
+    echo "  --help    Show this help message"
+    exit 0
+fi
+
+echo "############################################################"
+echo "#                                                          #"
+echo "#                        ATTENTION!                        #"
+echo "#                                                          #"
+echo "# This script upgrades your system to linuxmuster.net 7.4! #"
+echo "# Make sure you have created a snapshot before.            #"
+echo "#                                                          #"
+echo "############################################################"
+echo
+
+# security query
+if [ ! -n "$donotask" ]; then
+    answer="YES"
+    echo -n "Do you want to continue? Type \"$answer\" to start the upgrade: "
+    read given_answer
+    [ "$given_answer" = "$answer" ] || exit 1
+fi
+
+# ensure time is correct
+echo -e "\n## Adjusting system time..."
+ntpdate pool.ntp.org
+
+# save resolv.conf
+cp /etc/resolv.conf /etc/resolv.conf.release-upgrade
+
+# test if release upgrade is possible
+NEXT_RELEASE="26.04"
+if do-release-upgrade -c 2>&1 | grep -q "$NEXT_RELEASE"; then
+    RELEASE_TYPE="stable"
+else
+    if do-release-upgrade -c -d 2>&1 | grep -q "$NEXT_RELEASE"; then
+        DFLAG="-d"
+        RELEASE_TYPE="development"
+    else
+        echo "Release $NEXT_RELEASE is not available!"
+        exit 1
+    fi
+fi
+echo "Upgrade to $NEXT_RELEASE is available as $RELEASE_TYPE release!"
+
+# first configure grub-pc
+echo -e "\n## Configuring grub-pc package..."
+dpkg-reconfigure --priority=critical grub-pc || exit 1
+
+# start release upgrade
+echo -e "\n## Starting release upgrade..."
+echo DPkg::options \{ \"--force-confdef\"\; \"--force-confold\"\; \} > /etc/apt/apt.conf.d/local
+if ! do-release-upgrade $DFLAG -m server -f DistUpgradeViewNonInteractive; then
+    rm -f /etc/apt/apt.conf.d/local
+    echo "Upgrade failed obviously!"
+    exit 1
+fi
+
+# disable obsolete services
+echo -e "\n## Disabling obsolete services..."
+for s in isc-dhcp-server6 systemd-resolved; do
+    for c in stop disable mask; do
+        systemctl $c $s
+    done
+done
+
+# tweak resolv.conf
+echo -e "\n## Tweaking resolv.conf..."
+rm -f /etc/resolv.conf
+source /usr/share/linuxmuster/environment.sh
+echo "nameserver $firewallip" > /etc/resolv.conf
+
+# ensure samba-ad-dc pkg is installed
+echo -e "\n## Ensuring samba-ad-dc package is installed..."
+DEBIAN_FRONTEND=noninteractive apt-get -yu install samba-ad-dc
+
+# tweak sophomorix
+cfg="/usr/share/sophomorix/devel/sophomorix.ini"
+if ! grep -q "$NEXT_RELEASE" "$cfg"; then
+    echo -e "\n## Tweaking sophomorix configuration..."
+    sed -i "s|DISTRIB_EXPERIMENTAL =.*|DISTRIB_EXPERIMENTAL = $NEXT_RELEASE|" "$cfg"
+fi
+
+# configure linuxmuster-webui package
+echo -e "\n## Configuring linuxmuster-webui..."
+dpkg-reconfigure linuxmuster-webui7
+
+# create repo list
+echo -e "\n## Creating linuxmuster.net repository list..."
+echo "deb https://deb.linuxmuster.net/ lmn74 main" > /etc/apt/sources.list.d/lmn.list
+
+# upgrade linuxmuster pkgs
+echo -e "\n## Upgrading linuxmuster packages..."
+DEBIAN_FRONTEND=noninteractive linuxmuster-distupgrade
+
+
+# clean apt cache
+if [ -n "$cleancache" ]; then
+    echo -e "\n## Cleaning apt cache..."
+    apt-get clean
+fi
+
+# remove apt tweak
+echo -e "\n## Removing apt tweak..."
+rm -f /etc/apt/apt.conf.d/local
+
+# restore resolv.conf
+echo -e "\n## Restoring resolv.conf..."
+rm -f /etc/resolv.conf
+mv /etc/resolv.conf.release-upgrade /etc/resolv.conf
+
+# reboot
+if [ -n "$autoreboot" ]; then
+    echo -e "\n## Rebooting..."
+    reboot
+fi
