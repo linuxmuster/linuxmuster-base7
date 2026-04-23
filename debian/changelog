@@ -1,8 +1,16 @@
-linuxmuster-base7 (7.3.32-0) lmn73-testing; urgency=low
+linuxmuster-base7 (7.4.0-0) lmn74; urgency=low
 
-  * Refactor Python code to comply with Debian Python Policy (#170y).
+  * Refactor Python code to comply with Debian Python Policy (#170).
+  * Cosmetic: update date and add requirements comment (18da3f9).
+  * Refactor: extract CSV parsing, DHCP writing and netplan helpers (87f5009).
+  * Refactor: migrate firewall management to OPNsense REST API (652294e).
+  * Update package metadata (757de62).
+  * add docs to package (a54ee06, c6fe9db, 4b405ce).
+  * Change codename to "Beacon" (21db5bd).
+  * Support for Ubuntu 26.04 (#172):
+    - fix postinst ubuntu version check (2dd6580).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 28 Nov 2025 14:52:36 +0100
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 23 Apr 2026 15:41:14 +0200
 
 linuxmuster-base7 (7.3.31-0) lmn73; urgency=low
 
