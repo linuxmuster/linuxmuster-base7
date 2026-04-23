@@ -2,7 +2,7 @@ linuxmuster-base7 (7.3.32-0) lmn73; urgency=low
 
   * add linuxmuster-release-upgrade (549db36).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 23 Apr 2026 10:11:01 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 23 Apr 2026 14:58:05 +0200
 
 linuxmuster-base7 (7.3.31-0) lmn73; urgency=low
 
