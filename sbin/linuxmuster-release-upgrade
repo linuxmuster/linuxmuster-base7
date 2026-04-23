@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # thomas@linuxmuster.net
-# 20260422
+# 20260423
 #
 
 # options
@@ -95,18 +95,32 @@ if ! grep -q "$NEXT_RELEASE" "$cfg"; then
     sed -i "s|DISTRIB_EXPERIMENTAL =.*|DISTRIB_EXPERIMENTAL = $NEXT_RELEASE|" "$cfg"
 fi
 
-# configure linuxmuster-webui package
-echo -e "\n## Configuring linuxmuster-webui..."
-dpkg-reconfigure linuxmuster-webui7
+# create repo sources file
+echo -e "\n## Creating linuxmuster.net repository sources file..."
+repo_key_local="/etc/apt/trusted.gpg.d/linuxmuster.net.gpg"
+deb_url="https://deb.linuxmuster.net/"
+repo_key_remote="${deb_url}pub.gpg"
+lmn_sources="/etc/apt/sources.list.d/lmn.sources"
+[ -e "$repo_key_local" ] || wget -qO- "$repo_key_remote" | gpg --dearmour -o "$repo_key_local"
+cat << _EOF > "$lmn_sources"
+Types: deb
+URIs: ${deb_url}
+Suites: lmn74
+Components: main
+Signed-By: ${repo_key_local}
+_EOF
+apt-get update
 
-# create repo list
-echo -e "\n## Creating linuxmuster.net repository list..."
-echo "deb https://deb.linuxmuster.net/ lmn74 main" > /etc/apt/sources.list.d/lmn.list
+# force reconfigure of linuxmuster-webui7 package, if no upgrade exists
+if ! apt list --upgradable 2>&1 | grep -q linuxmuster-webui7; then
+    echo -e "\n## Reconfiguring linuxmuster-webui7..."
+    dpkg-reconfigure linuxmuster-webui7
+fi
 
 # upgrade linuxmuster pkgs
 echo -e "\n## Upgrading linuxmuster packages..."
-DEBIAN_FRONTEND=noninteractive linuxmuster-distupgrade
-
+apt-get -yu dist-upgrade
+apt-get -yu autoremove --purge
 
 # clean apt cache
 if [ -n "$cleancache" ]; then
