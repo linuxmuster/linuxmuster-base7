@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 10),
  dh-python,
  python3-all,
  python3-setuptools,
- linuxmuster-common,
+ linuxmuster-common (>= 7.4.0),
  python3-bcrypt,
  python3-bs4,
  python3-lxml,
@@ -25,7 +25,7 @@ Standards-Version: 5.0.0
 Package: linuxmuster-base7
 Architecture: all
 Conflicts: dnsmasq-base
-Pre-Depends: python3, linuxmuster-common
+Pre-Depends: python3, linuxmuster-common (>= 7.4.0)
 Depends: ${python3:Depends}, ${misc:Depends},
   coreutils, cups, printer-driver-cups-pdf, isc-dhcp-server,
   python3-bcrypt, python3-bs4, python3-lxml, python3-ipy, python3-apt,
@@ -33,6 +33,6 @@ Depends: ${python3:Depends}, ${misc:Depends},
   python3-paramiko, python3-requests, python3-setproctitle, python3-urllib3,
   openssl, ntp, ntpdate, samba, samba-dsdb-modules, smbclient, ldb-tools,
   krb5-user, linuxmuster-linbo7, linuxmuster-webui7, ntpsec,
-  sophomorix-samba, tmux, linuxmuster-common (>= 7.3.2)
+  sophomorix-samba, tmux
 Description: linuxmuster.net configuration scripts
  This package provides configuration scripts for linuxmuster.net
