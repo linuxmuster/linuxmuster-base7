@@ -4,6 +4,7 @@ mkpkg
 /syncToTestServer.sh
 __pycache__/
 *.pyc
+*.old
 
 # Python build artifacts
 .pybuild/
