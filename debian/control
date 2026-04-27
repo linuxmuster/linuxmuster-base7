@@ -3,7 +3,7 @@ Section: linuxmuster
 Priority: optional
 Maintainer: Thomas Schmitt <thomas@linuxmuster.net>
 Uploaders: Thomas Schmitt <thomas@linuxmuster.net>
-Build-Depends: debhelper-compat (= 13)
+Build-Depends: debhelper-compat (= 13),
  dh-python,
  python3-all,
  python3-setuptools,
