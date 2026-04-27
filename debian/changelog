@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.4.1-0) lmn74; urgency=low
+
+  * Fix ubuntu 26.04 build system compatibility (2f11e86, 1b15697).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 27 Apr 2026 15:52:22 +0200
+
 linuxmuster-base7 (7.4.0-0) lmn74; urgency=low
 
   * Refactor Python code to comply with Debian Python Policy (#170).
@@ -10,7 +16,7 @@ linuxmuster-base7 (7.4.0-0) lmn74; urgency=low
   * Support for Ubuntu 26.04 (#172):
     - fix postinst ubuntu version check (2dd6580).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 23 Apr 2026 15:41:14 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 27 Apr 2026 15:52:22 +0200
 
 linuxmuster-base7 (7.3.31-0) lmn73; urgency=low
 
