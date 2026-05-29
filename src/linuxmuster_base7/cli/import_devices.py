@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20251117
+# 20260529
 #
 
 import configparser
@@ -537,12 +537,30 @@ def main():
     logToFile('linuxmuster-import-devices started')
     logToFile('School: ' + school)
 
-    # Step 1: Run sophomorix-device to validate devices.csv syntax
-    msg = 'Starting sophomorix-device syntax check:'
+    # Step 1: Run sophomorix-device dry-run first, then sync if dry-run succeeds
+    msg = 'Starting sophomorix-device dry-run:'
     printScript(msg)
     logToFile(msg)
     try:
-        # Run sophomorix-device and log detailed output to file (not console)
+        with open(logfile, 'a') as log:
+            log.write('-' * 78 + '\n')
+            log.write('sophomorix-device --dry-run output:\n')
+            log.write('-' * 78 + '\n')
+            log.flush()
+            result = subprocess.run(['sophomorix-device', '--dry-run'],
+                                  stdout=log, stderr=subprocess.STDOUT,
+                                  shell=False, check=False)
+
+        if result.returncode != 0:
+            msg = f'sophomorix-device --dry-run failed with return code {result.returncode}!'
+            printScript(msg)
+            logToFile(msg)
+            sys.exit(1)
+
+        msg = 'sophomorix-device dry-run OK, starting sync:'
+        printScript(msg)
+        logToFile(msg)
+
         with open(logfile, 'a') as log:
             log.write('-' * 78 + '\n')
             log.write('sophomorix-device --sync output:\n')
@@ -553,13 +571,14 @@ def main():
                                   shell=False, check=False)
 
         if result.returncode == 0:
-            msg = 'sophomorix-device finished OK!'
+            msg = 'sophomorix-device sync finished OK!'
             printScript(msg)
             logToFile(msg)
         else:
-            msg = f'sophomorix-device finished with return code {result.returncode}'
+            msg = f'sophomorix-device --sync failed with return code {result.returncode}!'
             printScript(msg)
             logToFile(msg)
+            sys.exit(1)
     except Exception as error:
         msg = 'sophomorix-device errors detected!'
         printScript(msg)
