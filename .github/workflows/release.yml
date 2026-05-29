@@ -22,10 +22,29 @@ on:
   workflow_dispatch:
 
 jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Select runner image
+        id: image
+        run: |
+          DIST=$(dpkg-parsechangelog -S Distribution)
+          NUM="${DIST#lmn}"
+          if [ "${NUM:-0}" -ge 74 ] 2>/dev/null; then
+            echo "image=ghcr.io/linuxmuster/lmndev-runner:latest" >> "$GITHUB_OUTPUT"
+          else
+            echo "image=ghcr.io/linuxmuster/lmndev-runner:24.04" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: resolve
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/linuxmuster/lmndev-runner:latest
+      image: ${{ needs.resolve.outputs.image }}
       options: --user root
 
     outputs:
@@ -35,9 +54,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          path: build
 
       - name: Read version and distribution from debian/changelog
         id: meta
+        working-directory: build
         run: |
           echo "version=$(dpkg-parsechangelog -S Version)" >> "$GITHUB_OUTPUT"
           echo "distribution=$(dpkg-parsechangelog -S Distribution)" >> "$GITHUB_OUTPUT"
@@ -45,13 +67,13 @@ jobs:
       - name: Build package
         run: /opt/lmndev/build/linuxmuster-base7.sh
         env:
-          OUTPUT_DIR: ${{ github.workspace }}/packages
+          OUTPUT_DIR: ${{ github.workspace }}/output
 
       - name: Upload packages as artifacts
         uses: actions/upload-artifact@v4
         with:
           name: packages
-          path: packages/
+          path: output/
 
   release:
     needs: build
