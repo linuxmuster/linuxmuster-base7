@@ -1,8 +1,9 @@
 linuxmuster-base7 (7.3.32-0) lmn73; urgency=low
 
   * add linuxmuster-release-upgrade (549db36).
+  * Fix: Pre-check failed in linuxmuster-import-devices (#173).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 23 Apr 2026 14:58:05 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 29 May 2026 16:14:10 +0200
 
 linuxmuster-base7 (7.3.31-0) lmn73; urgency=low
 
