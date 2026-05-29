@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.4.3-0) lmn74; urgency=low
+
+  * remove obsolete dependency to ntp.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 29 May 2026 17:41:33 +0200
+
 linuxmuster-base7 (7.4.2-0) lmn74; urgency=low
 
   * Fix ubuntu 26.04 build system compatibility (2f11e86, 1b15697).
