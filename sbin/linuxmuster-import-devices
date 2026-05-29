@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-devices
 # thomas@linuxmuster.net
-# 20250729
+# 20260529
 #
 
 import configparser
@@ -62,12 +62,13 @@ msg = 'Starting sophomorix-device syntax check:'
 printScript(msg)
 try:
     msg = 'sophomorix-device finished '
-    subProc('sophomorix-device --sync')
+    subProc('sophomorix-device --dry-run')
     printScript(msg + ' OK!')
 except Exception as err:
     printScript(msg + ' errors detected!')
     print(err)
     sys.exit(1)
+subProc('sophomorix-device --sync')
 
 
 # functions begin
