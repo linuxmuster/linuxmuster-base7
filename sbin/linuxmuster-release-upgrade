@@ -1,8 +1,17 @@
 #!/bin/bash
 #
+# This script performs a release upgrade to linuxmuster.net 7.4.
 # thomas@linuxmuster.net
-# 20260423
+# 20260531
 #
+
+# get linuxmuster environment
+
+source /usr/share/linuxmuster/environment.sh
+logfile="$LOGDIR/linuxmuster-release-upgrade.log"
+
+# Setup logging, but allow to temporarily restore terminal output for interactive calls
+exec > >(tee -a "$logfile") 2>&1
 
 # options
 echo "$@" | grep -qw "\-\-force" && donotask="yes"
@@ -57,9 +66,9 @@ else
 fi
 echo "Upgrade to $NEXT_RELEASE is available as $RELEASE_TYPE release!"
 
-# first configure grub-pc
-echo -e "\n## Configuring grub-pc package..."
-dpkg-reconfigure --priority=critical grub-pc || exit 1
+# first configure grub-pc, if necessary
+echo -e "\n## Configuring grub boot disk..."
+script -q -c "dpkg-reconfigure --priority=critical grub-pc" /dev/null || exit 1
 
 # start release upgrade
 echo -e "\n## Starting release upgrade..."
