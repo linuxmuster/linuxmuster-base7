@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.33-0) lmn73; urgency=low
+
+  * add logging to linuxmuster-release-upgrade (b7b36cd).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 31 May 2026 16:51:30 +0200
+
 linuxmuster-base7 (7.3.32-0) lmn73; urgency=low
 
   * add linuxmuster-release-upgrade (549db36).
