@@ -1,8 +1,14 @@
+linuxmuster-base7 (7.2.23-0) lmn72; urgency=low
+
+  * check grub-pc configuration before release-upgrade starts (57ff82a).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 03 Jun 2026 17:15:00 +0200
+
 linuxmuster-base7 (7.2.22-0) lmn72; urgency=low
 
   * fix #171: remove warning in upgradescript 7.2 to 7.3.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 08 Apr 2025 14:41:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 08 Apr 2026 14:41:00 +0200
 
 linuxmuster-base7 (7.2.21-0) lmn72; urgency=low
 
