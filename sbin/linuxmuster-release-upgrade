@@ -2,7 +2,7 @@
 #
 # This script performs a release upgrade to linuxmuster.net 7.4.
 # thomas@linuxmuster.net
-# 20260531
+# 20260608
 #
 
 # get linuxmuster environment
@@ -81,7 +81,7 @@ fi
 
 # disable obsolete services
 echo -e "\n## Disabling obsolete services..."
-for s in isc-dhcp-server6 systemd-resolved; do
+for s in isc-dhcp-server6 networkd-wait-online.service systemd-resolved; do
     for c in stop disable mask; do
         systemctl $c $s
     done
