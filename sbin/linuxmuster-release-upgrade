@@ -134,6 +134,10 @@ if ! apt list --upgradable 2>&1 | grep -q linuxmuster-webui7; then
     dpkg-reconfigure linuxmuster-webui7
 fi
 
+# stop linbo-torrent.service before upgrading linbo package
+echo -e "\n## Stopping linbo-torrent.service..."
+systemctl stop linbo-torrent.service
+
 # upgrade linuxmuster pkgs
 echo -e "\n## Upgrading linuxmuster packages..."
 apt-get -yu dist-upgrade
