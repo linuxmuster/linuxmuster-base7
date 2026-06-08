@@ -79,6 +79,14 @@ if ! do-release-upgrade $DFLAG -m server -f DistUpgradeViewNonInteractive; then
     exit 1
 fi
 
+# remove annoying cloud-init package, if installed
+echo -e "\n## Removing cloud-init packages, if installed..."
+for p in cloud-guest-utils cloud-init cloud-init-base; do
+    if dpkg -l $p 2>/dev/null | grep -q ^ii; then
+        apt-get -yu purge $p
+    fi
+done
+
 # disable obsolete services
 echo -e "\n## Disabling obsolete services..."
 for s in isc-dhcp-server6 networkd-wait-online.service systemd-resolved; do
