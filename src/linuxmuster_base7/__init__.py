@@ -8,7 +8,7 @@ Authors: thomas@linuxmuster.net
 License: GPL-3.0
 """
 
-__version__ = "7.3.29"
+__version__ = "7.4.4"
 __author__ = "thomas@linuxmuster.net"
 
 # Make commonly used functions available at package level
