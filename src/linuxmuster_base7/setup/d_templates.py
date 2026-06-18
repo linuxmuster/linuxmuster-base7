@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20251125
+# 20260618
 #
 
 """
@@ -174,7 +174,7 @@ except subprocess.CalledProcessError:
     pass  # timedatectl not available or failed, skip NTP disable
 
 runWithLog(['systemctl', 'stop', 'ntpsec'], logfile, checkErrors=False)
-runWithLog(['ntpdate', 'pool.ntp.org'], logfile, checkErrors=False)  # One-time sync
+runWithLog(['ntpd', 'pool.ntp.org'], logfile, checkErrors=False)  # One-time sync
 runWithLog(['systemctl', 'enable', 'ntpsec'], logfile, checkErrors=False)
 runWithLog(['systemctl', 'start', 'ntpsec'], logfile, checkErrors=False)  # Start continuous sync
 now = str(datetime.datetime.now()).split('.')[0]
