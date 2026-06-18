@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.4.4-0) lmn74; urgency=low
+
+  * remove obsolete dependency to ntpdate (5a13ed6).
+  * fix setuptools deprecation warnings during package build (bf6bcc2).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 18 Jun 2026 10:49:06 +0200
+
 linuxmuster-base7 (7.4.3-0) lmn74; urgency=low
 
   * remove obsolete dependency to ntp.
