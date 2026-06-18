@@ -8,7 +8,7 @@ version = "7.3.29"
 description = "Core Python library and tools for linuxmuster.net 7.x"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "GPL-3.0-or-later"}
+license = "GPL-3.0-or-later"
 authors = [
     {name = "Thomas Schmitt", email = "thomas@linuxmuster.net"}
 ]
@@ -19,7 +19,6 @@ keywords = ["linuxmuster", "education", "school", "network", "management"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: System Administrators",
-    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
