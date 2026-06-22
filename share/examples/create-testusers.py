@@ -2,17 +2,17 @@
 #
 # create a bunch of testusers
 # thomas@linuxmuster.net
-# 20251113
+# 20260622
 #
 
 import configparser
 import datetime
-import environment
 import getopt
 import os
 import subprocess
 import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
+import environment
 
 from linuxmuster_base7.functions import printScript
 from linuxmuster_base7.functions import sambaTool

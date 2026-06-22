@@ -2,14 +2,15 @@
 #
 # create web proxy sso keytab
 # thomas@linuxmuster.net
-# 20250422
+# 20260622
 #
 
-import environment
 import getopt
 import os
 import subprocess
 import sys
+sys.path.insert(0, '/usr/lib/linuxmuster')
+import environment
 
 from linuxmuster_base7.functions import datetime, firewallApi, getSetupValue, printScript, readTextfile
 
