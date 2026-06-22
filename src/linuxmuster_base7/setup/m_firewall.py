@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20251117
+# 20260618
 #
 
 """
@@ -311,7 +311,10 @@ def main():
 
     # Get timezone
     rc, timezone = readTextfile('/etc/timezone')
-    timezone = timezone.replace('\n', '')
+    if timezone is None:
+        timezone = 'Etc/UCT'
+    else:
+        timezone = timezone.replace('\n', '')
 
     # Get binduser password
     rc, binduserpw = readTextfile(environment.BINDUSERSECRET)
