@@ -2,7 +2,7 @@
 #
 # Unified logging module for linuxmuster.net
 # thomas@linuxmuster.net
-# 20251114
+# 20260622
 #
 
 """
@@ -35,6 +35,7 @@ Usage:
 import datetime
 import os
 import sys
+sys.path.insert(0, '/usr/lib/linuxmuster')
 import threading
 from contextlib import contextmanager
 
