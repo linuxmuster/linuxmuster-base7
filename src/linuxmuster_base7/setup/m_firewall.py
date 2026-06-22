@@ -209,8 +209,8 @@ def createFirewallConfig(fwconftpl, fwconftmp, config, setup_data, productionpw,
         fwrootpw_hashed = hashedpw.decode()
 
         # create API credentials
-        apikey = randomPassword(80)
-        apisecret = randomPassword(80)
+        apikey = randomPassword(72)
+        apisecret = randomPassword(72)
         hashedpw = bcrypt.hashpw(str.encode(apisecret), bcrypt.gensalt(10))
         apisecret_hashed = hashedpw.decode()
 
