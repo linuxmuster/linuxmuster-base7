@@ -2,7 +2,7 @@
 #
 # Configure ext4 filesystems for quota and ACL support
 # thomas@linuxmuster.net
-# 20260618
+# 20260622
 #
 
 """
@@ -88,15 +88,15 @@ def get_ext4_features(device):
 
 def enable_ext4_quota(device):
     """Enable quota feature on ext4 filesystem."""
-    msg = 'Enable quota feature '
+    msg = 'Enable quota feature using premount task during next reboot '
     printScript(msg, '', False, False, True, len(msg))
-    result = subprocess.run(['tune2fs', '-O', 'quota', device], capture_output=True, text=True, check=False)
+    result = subprocess.run(['dracut', '--verbose', '--force', '--add', 'linuxmuster'], capture_output=True, text=True, check=False)
     if logfile:
         try:
             with open(logfile, 'a') as log:
                 log.write('-' * 78 + '\n')
                 log.write(f'#### {datetime.datetime.now()} ####\n')
-                log.write(f'#### tune2fs -O quota {device} ####\n')
+                log.write(f'#### dracut --verbose --force --add linuxmuster ####\n')
                 if result.stdout:
                     log.write(result.stdout)
                 if result.stderr:
@@ -208,21 +208,25 @@ def main():
 
         features = get_ext4_features(device)
         if features is None:
-            printScript('Failed: cannot query ext4 features', '', True, True, False, len(msg))
+            msg = 'Failed: cannot query ext4 features'
+            printScript(msg, '', True, True, False, len(msg))
             sys.exit(1)
 
         if 'quota' not in features:
             if not enable_ext4_quota(device):
-                printScript('Failed: tune2fs error', '', True, True, False, len(msg))
+                msg = 'Failed: tune2fs error'
+                printScript(msg, '', True, True, False, len(msg))
                 sys.exit(1)
-            printScript('Success!', '', True, True, False, len(msg))
+            msg = 'Success!'
+            printScript(msg, '', True, True, False, len(msg))
         else:
-            printScript('Already enabled', '', True, True, False, len(msg))
+            msg = 'Already enabled'
+            printScript(msg, '', True, True, False, len(msg))
 
     # Phase 2: Update fstab mount options for all ext4 filesystems
     for mountpoint, device, current_options in ext4_mounts:
         msg = f'Updating /etc/fstab for {mountpoint} '
-        printScript(msg, '', False, False, True)
+        printScript(msg, '', False, False, True, len(msg))
 
         required_options = list(REQUIRED_MOUNT_OPTIONS)
         # Add discard option if SSD is detected

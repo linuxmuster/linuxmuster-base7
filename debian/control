@@ -32,7 +32,7 @@ Depends: ${python3:Depends}, ${misc:Depends},
   python3-netifaces, python3-dialog, python3-ldap3, python3-netaddr,
   python3-paramiko, python3-requests, python3-setproctitle, python3-urllib3,
   openssl, samba, samba-ad-dc, samba-dsdb-modules, smbclient, ldb-tools,
-  krb5-user, linuxmuster-linbo7, linuxmuster-webui7, ntpsec,
-  sophomorix-samba, tmux
+  krb5-user, linuxmuster-prepare, linuxmuster-linbo7, linuxmuster-webui7,
+  ntpsec, sophomorix-samba, tmux
 Description: linuxmuster.net configuration scripts
  This package provides configuration scripts for linuxmuster.net
