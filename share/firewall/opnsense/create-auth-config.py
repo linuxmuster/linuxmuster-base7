@@ -2,12 +2,13 @@
 #
 # create web proxy sso authentication config
 # thomas@linuxmuster.net
-# 20200311
+# 20260622
 #
 
-import environment
 import os
 import sys
+sys.path.insert(0, '/usr/lib/linuxmuster')
+import environment
 
 from linuxmuster_base7.functions import datetime
 from linuxmuster_base7.functions import getSetupValue
