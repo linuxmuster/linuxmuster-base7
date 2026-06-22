@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20260618
+# 20260622
 #
 
 """
@@ -291,6 +291,28 @@ def uploadConfigFiles(firewallip, rolloutpw):
     os.unlink(conftmp)
 
 
+def do_timezone():
+    """Determine the system timezone from /etc/localtime or fall back to UTC."""
+    timezone = None
+    localtime_file = '/etc/localtime'
+    zoneinfo_prefix = '/usr/share/zoneinfo/'
+
+    if os.path.exists(localtime_file):
+        if os.path.islink(localtime_file):
+            target = os.path.realpath(localtime_file)
+            if target.startswith(zoneinfo_prefix):
+                timezone = target[len(zoneinfo_prefix):]
+        else:
+            rc, timezone = readTextfile('/etc/timezone')
+            if timezone is not None:
+                timezone = timezone.replace('\n', '')
+
+    if not timezone:
+        timezone = 'Etc/UTC'
+
+    return timezone
+
+
 def rebootFirewall(firewallip, rolloutpw):
     """Install extensions and reboot firewall."""
     printScript('Installing extensions and rebooting firewall')
@@ -310,11 +332,7 @@ def main():
     setup_data = readSetupData()
 
     # Get timezone
-    rc, timezone = readTextfile('/etc/timezone')
-    if timezone is None:
-        timezone = 'Etc/UCT'
-    else:
-        timezone = timezone.replace('\n', '')
+    timezone = do_timezone()
 
     # Get binduser password
     rc, binduserpw = readTextfile(environment.BINDUSERSECRET)
