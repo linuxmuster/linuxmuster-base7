@@ -1,3 +1,17 @@
+linuxmuster-base7 (7.4.5) lmn74; urgency=low
+
+  * change invokation of ntpdate to ntpd during setup (94187e9).
+  * fix version (3e597f0).
+  * fix fstab & quota handling during setup (#172, dc92f9a, 136743f, c8c4c0c, 590bf00).
+  * add samba-ad-dc to package dependencies (cfdf97a).
+  * firewall setup timezone fix (#172, 11ad20a, ac12748).
+  * firewall setup apisecret length fix (#172, 3c27efc).
+  * fix environment module import (#170, 119010b, 97eb705, e2efc3e).
+  * shell profile fix (9707f29).
+  * remove package revision no. from version.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 24 Jun 2026 17:08:36 +0200
+
 linuxmuster-base7 (7.4.4-0) lmn74; urgency=low
 
   * remove obsolete dependency to ntpdate (5a13ed6).
