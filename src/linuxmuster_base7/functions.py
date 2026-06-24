@@ -138,7 +138,7 @@ def sambaTool(options, logfile=None):
 # print with or without linefeed
 def printLf(msg, lf):
     if lf:
-        print(msg)
+        print(msg, flush=True)
     else:
         print(msg, end='', flush=True)
 

@@ -2,7 +2,7 @@
 #
 # Configure ext4 filesystems for quota and ACL support
 # thomas@linuxmuster.net
-# 20260622
+# 20260623
 #
 
 """
@@ -30,8 +30,6 @@ REQUIRED_MOUNT_OPTIONS = ['acl', 'usrquota', 'usrjquota=aquota.user', 'grpquota'
 
 def is_ssd(device):
     """Check if device is an SSD by examining /sys/block/*/queue/rotational."""
-    msg = 'Check if device is an SSD '
-    printScript(msg, '', False, False, True, len(msg))
     # Extract base device name from /dev/xxx
     if device.startswith('/dev/'):
         dev_name = device.split('/')[-1]
@@ -44,15 +42,14 @@ def is_ssd(device):
     try:
         with open(rotational_path, 'r') as f:
             rotational = f.read().strip()
-            return rotational == '0'
+        return rotational == '0'
     except Exception:
+        printScript(' Failed!', '', True, True, False, len(msg))
         return False
 
 
 def get_mounts():
     """Read current mounts from /proc/self/mounts."""
-    msg = 'Read current mounts '
-    printScript(msg, '', False, False, True, len(msg))
     mounts = {}
     try:
         with open('/proc/self/mounts', 'r') as mountfile:
@@ -68,15 +65,12 @@ def get_mounts():
                     'options': options,
                 }
     except Exception as error:
-        printScript(f'Failed to read /proc/self/mounts: {error}', '', True, True, False)
         sys.exit(1)
     return mounts
 
 
 def get_ext4_features(device):
     """Query ext4 features from filesystem using tune2fs."""
-    msg = 'Query ext4 features from filesystem '
-    printScript(msg, '', False, False, True, len(msg))
     result = subprocess.run(['tune2fs', '-l', device], capture_output=True, text=True, check=False)
     if result.returncode != 0:
         return None
@@ -86,10 +80,8 @@ def get_ext4_features(device):
     return []
 
 
-def enable_ext4_quota(device):
+def enable_ext4_quota():
     """Enable quota feature on ext4 filesystem."""
-    msg = 'Enable quota feature using premount task during next reboot '
-    printScript(msg, '', False, False, True, len(msg))
     result = subprocess.run(['dracut', '--verbose', '--force', '--add', 'linuxmuster'], capture_output=True, text=True, check=False)
     if logfile:
         try:
@@ -109,8 +101,6 @@ def enable_ext4_quota(device):
 
 def merge_mount_options(current_options, required_options):
     """Merge required mount options with existing options."""
-    msg = 'Merge mount options '
-    printScript(msg, '', False, False, True, len(msg))
     options = list(current_options)
     for required in required_options:
         # Check if option is not already present (handles both key and key=value options)
@@ -122,8 +112,6 @@ def merge_mount_options(current_options, required_options):
 
 def update_fstab(mountpoint, required_options):
     """Update /etc/fstab with merged mount options."""
-    msg = 'Update fstab '
-    printScript(msg, '', False, False, True, len(msg))
     try:
         with open('/etc/fstab', 'r') as f:
             lines = f.readlines()
@@ -151,15 +139,13 @@ def update_fstab(mountpoint, required_options):
                 f.writelines(lines)
             return True
     except Exception as error:
-        printScript(f'Failed to update fstab: {error}', '', True, True, False)
+        printScript(f'\nFailed to update fstab: {error}')
         return False
     return False
 
 
 def remount_filesystem(mountpoint, options):
     """Remount filesystem with new options."""
-    msg = 'Remount filesystem '
-    printScript(msg, '', False, False, True, len(msg))
     mount_opts = ','.join(options)
     result = subprocess.run(['mount', '-o', f'remount,{mount_opts}', mountpoint], 
                           capture_output=True, text=True, check=False)
@@ -181,14 +167,13 @@ def remount_filesystem(mountpoint, options):
 
 def is_local_device(device):
     """Check if device is local (not a network device)."""
-    msg = 'Check if device is local '
-    printScript(msg, '', False, False, True, len(msg))
     return device.startswith('/') or device.startswith('UUID=') or device.startswith('LABEL=')
 
 
 def main():
     mounts = get_mounts()
     ext4_mounts = []
+    enable_quota = False
 
     # Phase 1: Enable quota feature on all ext4 filesystems
     for mountpoint, mount in mounts.items():
@@ -203,77 +188,66 @@ def main():
 
         ext4_mounts.append((mountpoint, device, mount['options']))
 
-        msg = f'Enabling quota feature on {device} '
+        msg = f'Checking quota feature on {device} '
         printScript(msg, '', False, False, True)
 
         features = get_ext4_features(device)
         if features is None:
-            msg = 'Failed: cannot query ext4 features'
-            printScript(msg, '', True, True, False, len(msg))
+            printScript(' Failed!', '', True, True, False, len(msg))
             sys.exit(1)
 
-        if 'quota' not in features:
-            if not enable_ext4_quota(device):
-                msg = 'Failed: tune2fs error'
-                printScript(msg, '', True, True, False, len(msg))
-                sys.exit(1)
-            msg = 'Success!'
-            printScript(msg, '', True, True, False, len(msg))
+        if 'quota' in features:
+            printScript(' Enabled!', '', True, True, False, len(msg))
         else:
-            msg = 'Already enabled'
-            printScript(msg, '', True, True, False, len(msg))
+            enable_quota = True
+            printScript(' Not enabled!', '', True, True, False, len(msg))
+    
+    if enable_quota:
+        msg = 'Enabling ext4 quota '
+        printScript(msg, '', False, False, True, len(msg))
+        if enable_ext4_quota():
+            printScript(' Success!', '', True, True, False, len(msg))
+        else:
+            printScript(' Failed!', '', True, True, False, len(msg))
+            sys.exit(1)
 
     # Phase 2: Update fstab mount options for all ext4 filesystems
     for mountpoint, device, current_options in ext4_mounts:
-        msg = f'Updating /etc/fstab for {mountpoint} '
-        printScript(msg, '', False, False, True, len(msg))
+        msg = f'Process mount options for {mountpoint}:'
+        printScript(msg)
 
         required_options = list(REQUIRED_MOUNT_OPTIONS)
         # Add discard option if SSD is detected
         if is_ssd(device):
             if 'discard' not in required_options:
+                printScript(' * Detected SSD, discard option added')
                 required_options.append('discard')
 
         merged_options = merge_mount_options(current_options, required_options)
         if set(merged_options) != set(current_options):
-            if not update_fstab(mountpoint, required_options):
-                printScript('Failed: fstab update error', '', True, True, False, len(msg))
+            msg = ' * Updating fstab '
+            printScript(msg, '', False, False, True, len(msg))
+            if update_fstab(mountpoint, required_options):
+                subprocess.run(['systemctl', 'daemon-reload'], capture_output=True, text=True, check=False)
+                printScript(' Success!', '', True, True, False, len(msg))
+            else:
+                printScript(' Failed!', '', True, True, False, len(msg))
                 sys.exit(1)
-            printScript('Success!', '', True, True, False, len(msg))
-        else:
-            printScript('Already correct', '', True, True, False, len(msg))
 
     # Phase 3: Remount all ext4 filesystems
     for mountpoint, device, _ in ext4_mounts:
-        msg = f'Remounting {mountpoint} '
+        msg = ' * Remounting '
         printScript(msg, '', False, False, True)
 
-        # Read current mount options from fstab
-        new_options = None
-        try:
-            with open('/etc/fstab', 'r') as f:
-                for line in f:
-                    if line.startswith('#') or line.strip() == '':
-                        continue
-                    parts = line.split()
-                    if len(parts) >= 4 and parts[1] == mountpoint:
-                        new_options = parts[3].split(',')
-                        break
-        except Exception as error:
-            printScript(f'Failed to read fstab: {error}', '', True, True, False, len(msg))
-            sys.exit(1)
-
-        if new_options is None:
-            printScript('Failed: cannot read fstab', '', True, True, False, len(msg))
-            sys.exit(1)
-
-        if not remount_filesystem(mountpoint, new_options):
+        if subprocess.run(['mount', '-o', 'remount', f'{mountpoint}'], 
+                          capture_output=True, text=True, check=False):
+            printScript('Success!', '', True, True, False, len(msg))
+        else:
             printScript('Failed: remount error', '', True, True, False, len(msg))
             sys.exit(1)
-        printScript('Success!', '', True, True, False, len(msg))
 
     # Phase 4: Initialize and activate quota
-    if ext4_mounts:
+    if ext4_mounts and not enable_quota:
         msg = 'Initializing quota (quotacheck -a) '
         printScript(msg, '', False, False, True)
         result = subprocess.run(['quotacheck', '-a'], capture_output=True, text=True, check=False)
@@ -289,8 +263,11 @@ def main():
             printScript('Failed: quotaon error', '', True, True, False, len(msg))
             sys.exit(1)
         printScript('Success!', '', True, True, False, len(msg))
+    
+    if enable_quota:
+        printScript('Quota feature enabled on ext4 filesystems. Please reboot to apply changes.')
+        printScript('Don\'t forget to invoke \'quotacheck -a\' and \'quotaon -a\' manually after reboot.')
 
 
-if __name__ == '__main__':
-    main()
+main()
 
