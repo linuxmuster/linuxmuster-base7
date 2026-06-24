@@ -3,7 +3,7 @@
 #
 # thomas@linuxmuster.net
 # credits to joanna
-# 20220530
+# 20260624
 #
 
 upSeconds="$(/usr/bin/cut -d. -f1 /proc/uptime)"
@@ -11,7 +11,7 @@ secs=$((${upSeconds}%60))
 mins=$((${upSeconds}/60%60))
 hours=$((${upSeconds}/3600%24))
 days=$((${upSeconds}/86400))
-UPTIME=`printf "%d days, %02dh%02dm%02ds" "$days" "$hours" "$mins" "$sec"`
+UPTIME=`printf "%d days, %02dh%02dm%02ds" "$days" "$hours" "$mins" "$secs"`
 MEM=`free -m | awk 'NR==2{printf "%s/%sMB (%.2f", $3,$2,$3*100/$2 }'`
 IPint=`ip a | grep glo | awk '{print $2}' | head -1 | cut -f1 -d/`
 IPext=`wget -q -O - http://ipinfo.io/ip | tail`
