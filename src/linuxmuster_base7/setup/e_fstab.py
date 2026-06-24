@@ -234,17 +234,18 @@ def main():
                 printScript(' Failed!', '', True, True, False, len(msg))
                 sys.exit(1)
 
-    # Phase 3: Remount all ext4 filesystems
-    for mountpoint, device, _ in ext4_mounts:
-        msg = ' * Remounting '
-        printScript(msg, '', False, False, True)
+    # Phase 3: Remount all ext4 filesystems (only if quota was not enabled before)
+    if not enable_quota:
+        for mountpoint, device, _ in ext4_mounts:
+            msg = ' * Remounting '
+            printScript(msg, '', False, False, True)
 
-        if subprocess.run(['mount', '-o', 'remount', f'{mountpoint}'], 
-                          capture_output=True, text=True, check=False):
-            printScript('Success!', '', True, True, False, len(msg))
-        else:
-            printScript('Failed: remount error', '', True, True, False, len(msg))
-            sys.exit(1)
+            if subprocess.run(['mount', '-o', 'remount', f'{mountpoint}'], 
+                            capture_output=True, text=True, check=False):
+                printScript('Success!', '', True, True, False, len(msg))
+            else:
+                printScript('Failed: remount error', '', True, True, False, len(msg))
+                sys.exit(1)
 
     # Phase 4: Initialize and activate quota
     if ext4_mounts and not enable_quota:
