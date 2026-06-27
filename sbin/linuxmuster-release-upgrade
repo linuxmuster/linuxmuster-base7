@@ -7,7 +7,7 @@
 
 # get linuxmuster environment
 
-source /usr/share/linuxmuster/environment.sh
+source /usr/share/linuxmuster/helperfunctions.sh
 logfile="$LOGDIR/linuxmuster-release-upgrade.log"
 
 # Setup logging, but allow to temporarily restore terminal output for interactive calls
@@ -37,8 +37,8 @@ echo "############################################################"
 echo
 
 # security query
+answer="YES"
 if [ ! -n "$donotask" ]; then
-    answer="YES"
     echo -n "Do you want to continue? Type \"$answer\" to start the upgrade: "
     read given_answer
     [ "$given_answer" = "$answer" ] || exit 1
@@ -66,18 +66,40 @@ else
 fi
 echo "Upgrade to $NEXT_RELEASE is available as $RELEASE_TYPE release!"
 
-# first detect boot disk via grub-probe...
-echo -en "\n## Trying to auto-detect boot disk via grub-probe: "
-BOOT_DISK=$(grub-probe --target=disk /boot 2>/dev/null)
-if [ -b "$BOOT_DISK" ]; then
-    echo "$BOOT_DISK"
-    echo "## Saving boot disk to grub-pc's debconf database..."
-    echo "grub-pc grub-pc/install_devices multiselect $BOOT_DISK" | debconf-set-selections
+# get grub disks from debconf database and grub-probe
+get_grub_disks() {
+    local grub_disks="$(debconf-show grub-pc 2>/dev/null | grep "grub-pc/install_devices:" | sed 's/.*: //')"
+    local probed_disk="$(grub-probe --target=disk /boot 2>/dev/null)"
+    stringinstring "$probed_disk" "$grub_disks" || grub_disks="$probed_disk $grub_disks"
+    # strip disks from grub_disks that do not exist
+    local disk
+    for disk in $grub_disks; do
+        [ -b "$disk" ] || grub_disks="$(echo "$grub_disks" | sed "s|$disk||")"
+    done
+    echo "$grub_disks" | xargs
+}
+
+# detect grub boot disks
+echo -en "\n## Trying to auto-detect all grub boot disks: "
+BOOT_DISKS="$(get_grub_disks)"
+if [ -n "$BOOT_DISKS" ]; then
+    echo "$BOOT_DISKS"
+    if [ -n "$donotask" ]; then
+        boot_disk="$(echo "$BOOT_DISKS" | awk '{print $1}')"
+    else
+        echo -n "   * Input the grub boot disk to continue: "
+        read boot_disk
+    fi
 else
+    echo "nothing found!"
+fi
+if [ ! -b "$boot_disk" ]; then
     echo -e "\nERROR: Could not determine a valid grub boot disk!"
-    echo "Please run 'dpkg-reconfigure grub-pc' manually to fix the grub configuration."
+    echo "Please run 'dpkg-reconfigure grub-pc' to fix the grub configuration and restart the upgrade."
     exit 1
 fi
+echo "## Saving boot disk $boot_disk to grub-pc's debconf database..."
+echo "grub-pc grub-pc/install_devices multiselect $boot_disk" | debconf-set-selections
 # install grub on detected boot disk
 script -q -c "dpkg-reconfigure --priority=critical grub-pc" || exit 1
 
