@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.36-0) lmn73; urgency=low
+
+  * linuxmuster-release-upgrade: Improved grub disk detection to support more complex setups (#155, dc94b38).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 27 Jun 2026 11:29:14 +0200
+
 linuxmuster-base7 (7.3.35-0) lmn73; urgency=low
 
   * linuxmuster-release-upgrade: auto-detect grub boot device before reconfiguring (78b5398, 82d3ce3).
