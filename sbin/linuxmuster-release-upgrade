@@ -2,7 +2,7 @@
 #
 # This script performs a release upgrade to linuxmuster.net 7.4.
 # thomas@linuxmuster.net
-# 20260608
+# 20260627
 #
 
 # get linuxmuster environment
@@ -68,7 +68,29 @@ echo "Upgrade to $NEXT_RELEASE is available as $RELEASE_TYPE release!"
 
 # first configure grub-pc, if necessary
 echo -e "\n## Configuring grub boot disk..."
-script -q -c "dpkg-reconfigure --priority=critical grub-pc" /dev/null || exit 1
+# validate configured grub boot device(s) before reconfiguring
+GRUB_DEVICES=$(debconf-show grub-pc 2>/dev/null | grep "grub-pc/install_devices:" | sed 's/.*: //')
+grub_valid=true
+for dev in $(echo "$GRUB_DEVICES" | tr ',' '\n' | tr -d ' '); do
+    [ -z "$dev" ] && continue
+    if [ ! -b "$dev" ]; then
+        echo "WARNING: Configured grub device '$dev' is not a valid block device!"
+        grub_valid=false
+    fi
+done
+if [ "$grub_valid" = "false" ] || [ -z "$GRUB_DEVICES" ]; then
+    echo "Trying to auto-detect boot disk via grub-probe..."
+    BOOT_DISK=$(grub-probe --target=disk /boot 2>/dev/null)
+    if [ -b "$BOOT_DISK" ]; then
+        echo "Auto-detected boot disk: $BOOT_DISK"
+        echo "grub-pc grub-pc/install_devices multiselect $BOOT_DISK" | debconf-set-selections
+    else
+        echo "ERROR: Could not determine a valid grub boot disk!"
+        echo "Please run 'dpkg-reconfigure grub-pc' manually to fix the grub configuration."
+        exit 1
+    fi
+fi
+script -q -c "dpkg-reconfigure --priority=critical grub-pc" || exit 1
 
 # start release upgrade
 echo -e "\n## Starting release upgrade..."
