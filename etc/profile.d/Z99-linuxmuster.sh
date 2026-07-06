@@ -22,22 +22,46 @@ VERSIONlinbo7=`dpkg --status linuxmuster-linbo7 | grep ^Version | awk '{print $2
 VERSIONwebui7=`dpkg --status linuxmuster-webui7 | grep ^Version | awk '{print $2}'`
 VERSIONsophomorix=`dpkg --status sophomorix-samba | grep ^Version | awk '{print $2}'`
 
+VERSIONtools7=""
+VERSIONapi7=""
+VERSIONcli7=""
+dpkg -s linuxmuster-tools7 2>/dev/null | grep -q "^Status:.*installed" && VERSIONtools7=`dpkg --status linuxmuster-tools7 | grep ^Version | awk '{print $2}'`
+dpkg -s linuxmuster-api7 2>/dev/null | grep -q "^Status:.*installed" && VERSIONapi7=`dpkg --status linuxmuster-api7 | grep ^Version | awk '{print $2}'`
+dpkg -s linuxmuster-cli7 2>/dev/null | grep -q "^Status:.*installed" && VERSIONcli7=`dpkg --status linuxmuster-cli7 | grep ^Version | awk '{print $2}'`
 
-printf "\e[38;5;208m
-  ███               ███      \e[4m\e[38;5;15mWELCOME TO LINUXMUSTER.NET ${VERSIONlmn} - ${CODEname}\e[38;5;208m\e[24m
- █████             █████    \e[38;5;15m `date +"%A, %e %B %Y, %T"`\e[38;5;208m
+[ -n "$VERSIONtools7" ] && VERSIONtools7_str="$VERSIONtools7" || VERSIONtools7_str="not installed"
+[ -n "$VERSIONapi7" ]   && VERSIONapi7_str="$VERSIONapi7"     || VERSIONapi7_str="not installed"
+[ -n "$VERSIONcli7" ]   && VERSIONcli7_str="$VERSIONcli7"     || VERSIONcli7_str="not installed"
+
+LOGO_WIDTH=46
+TITLE="WELCOME TO LINUXMUSTER.NET ${VERSIONlmn} - ${CODEname}"
+DATESTR=$(date +"%A, %e %B %Y, %T")
+TITLE_PAD=$(( (LOGO_WIDTH - ${#TITLE}) / 2 ))
+DATE_PAD=$(( (LOGO_WIDTH - ${#DATESTR}) / 2 ))
+[ $TITLE_PAD -lt 0 ] && TITLE_PAD=0
+[ $DATE_PAD -lt 0 ] && DATE_PAD=0
+TITLE_SP=$(printf "%${TITLE_PAD}s" "")
+DATE_SP=$(printf "%${DATE_PAD}s" "")
+
+printf "
+\e[38;5;15m${TITLE_SP}\e[4m${TITLE}\e[38;5;208m\e[24m
+\e[38;5;15m${DATE_SP}${DATESTR}\e[38;5;208m
+
   ███               ███
-      ███       ███         \e[38;5;15m Uptime..........: \e[38;5;208m${UPTIME}\e[38;5;208m
-     █████     █████        \e[38;5;15m Memory..........: \e[38;5;208m${MEM}"%%\)"\e[38;5;208m
-      ███       ███         \e[38;5;15m IP Internal.....: \e[38;5;208m${IPint}\e[38;5;24m
-           ███              \e[38;5;15m IP External.....: \e[38;5;208m${IPext}\e[38;5;24m
-          █████
-           ███              \e[38;5;208m
-      ███       ███         \e[38;5;15m linuxmuster.net packages:\e[38;5;208m
-     █████     █████        \e[38;5;15m -Base...........: \e[38;5;208m${VERSIONbase7}
-      ███       ███         \e[38;5;15m -Linbo..........: \e[38;5;208m${VERSIONlinbo7}\e[38;5;208m
-  ███               ███     \e[38;5;15m -WebUI..........: \e[38;5;208m${VERSIONwebui7}\e[38;5;208m
+ █████             █████    \e[38;5;15m Uptime..........: \e[38;5;208m${UPTIME}\e[38;5;208m
+  ███               ███     \e[38;5;15m Memory..........: \e[38;5;208m${MEM}"%%\)"\e[38;5;208m
+      ███       ███         \e[38;5;15m IP Internal.....: \e[38;5;208m${IPint}\e[38;5;208m
+     █████     █████        \e[38;5;15m IP External.....: \e[38;5;208m${IPext}\e[38;5;208m
+      ███       ███         \e[38;5;24m
+           ███              \e[38;5;15m linuxmuster.net packages:\e[38;5;24m
+          █████             \e[38;5;15m -Base...........: \e[38;5;208m${VERSIONbase7}\e[38;5;24m
+           ███              \e[38;5;15m -Linbo..........: \e[38;5;208m${VERSIONlinbo7}\e[38;5;208m
+      ███       ███         \e[38;5;15m -WebUI..........: \e[38;5;208m${VERSIONwebui7}\e[38;5;208m
+     █████     █████        \e[38;5;15m -Tools..........: \e[38;5;208m${VERSIONtools7_str}\e[38;5;208m
+      ███       ███         \e[38;5;15m -API............: \e[38;5;208m${VERSIONapi7_str}\e[38;5;208m
+  ███               ███     \e[38;5;15m -CLI............: \e[38;5;208m${VERSIONcli7_str}\e[38;5;208m
  █████             █████    \e[38;5;15m -Sophomorix.....: \e[38;5;208m${VERSIONsophomorix}\e[38;5;208m
   ███               ███
 \e[0m
 "
+
