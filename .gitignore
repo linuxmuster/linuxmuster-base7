@@ -1,5 +1,3 @@
 .claude
 .directory
-share/firewall/opnsense/opnsense*
-mkpkg
-/syncToTestServer.sh
+.claude/settings.local.json
