@@ -2,7 +2,7 @@
 #
 # This script performs a release upgrade to linuxmuster.net 7.4.
 # thomas@linuxmuster.net
-# 20260627
+# 20260709
 #
 
 # get linuxmuster environment
@@ -128,11 +128,9 @@ for s in isc-dhcp-server6 networkd-wait-online.service systemd-resolved; do
     done
 done
 
-# tweak resolv.conf
-echo -e "\n## Tweaking resolv.conf..."
-rm -f /etc/resolv.conf
-source /usr/share/linuxmuster/environment.sh
-echo "nameserver $firewallip" > /etc/resolv.conf
+# restore resolv.conf
+echo -e "\n## Restoring resolv.conf..."
+mv /etc/resolv.conf.release-upgrade /etc/resolv.conf
 
 # ensure samba-ad-dc pkg is installed
 echo -e "\n## Ensuring samba-ad-dc package is installed..."
