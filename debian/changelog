@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.3.37-0) lmn73; urgency=low
+
+  * linuxmuster-release-upgrade: fix #175, restore resolv.conf to its state prior to the upgrade (3aa4e94).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu,  9 Jul 2026 19:48:52 +0200
+
 linuxmuster-base7 (7.3.36-0) lmn73; urgency=low
 
   * linuxmuster-release-upgrade: Improved grub disk detection to support more complex setups (#155, dc94b38).
