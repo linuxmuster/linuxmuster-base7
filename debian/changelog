@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.4.6) lmn74; urgency=low
+
+  * Merge pull request #174 from linuxmuster/motd-7.4:
+    Add lmnapi, lmncli and lmntools versions (bc741b2).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 10 Jul 2026 14:16:44 +0200
+
 linuxmuster-base7 (7.4.5) lmn74; urgency=low
 
   * change invokation of ntpdate to ntpd during setup (94187e9).
