@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.4.7) lmn74; urgency=low
+
+  * Fix crash and race condition in OPNsense firewall API handling (f26162e).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 15 Jul 2026 15:36:18 +0200
+
 linuxmuster-base7 (7.4.6) lmn74; urgency=low
 
   * Merge pull request #174 from linuxmuster/motd-7.4:
