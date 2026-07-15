@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20250729
+# 20260715
 #
 
 from subprocess import Popen, PIPE
@@ -635,14 +635,28 @@ def waitForFw(timeout=300, wait=0):
             printScript('Timeout!')
             return False
         if sshExec(firewallip, 'exit'):
+            break
+        count = count + 2
+        time.sleep(2)
+
+    # SSH answers well before the OPNsense web stack (lighttpd/php-fpm/configd)
+    # is fully initialized, especially right after a reboot triggered by a
+    # plugin install. Wait for the API to actually respond before declaring
+    # the firewall ready, using a single attempt per poll since this loop
+    # already provides its own retry/backoff.
+    printScript('Waiting for opnsense api to come up')
+    while True:
+        if count > timeout:
+            printScript('Timeout waiting for api!')
+            return False
+        if firewallApi('get', '/core/firmware/status', retries=1) is not None:
             return True
-        else:
-            count = count + 2
-            time.sleep(2)
+        count = count + 2
+        time.sleep(2)
 
 
 # firewall api get request
-def firewallApi(request, path, data=''):
+def firewallApi(request, path, data='', retries=3, retry_wait=3):
     domainname = getSetupValue('domainname')
     fwapi = configparser.RawConfigParser(delimiters=('='))
     fwapi.read(environment.FWAPIKEYS)
@@ -650,23 +664,34 @@ def firewallApi(request, path, data=''):
     apisecret = fwapi.get('api', 'secret')
     headers = {'content-type': 'application/json'}
     url = 'https://firewall.' + domainname + '/api' + path
-    if request == 'get':
-        req = requests.get(url, auth=(apikey, apisecret), verify=False)
-    elif request == 'post' and data == '':
-        req = requests.post(url, auth=(apikey, apisecret), verify=False)
-    elif request == 'post' and data != '':
-        req = requests.post(url, data=data, auth=(
-            apikey, apisecret), headers=headers, verify=False)
-    else:
-        return None
-    # get response
-    if req.status_code == 200:
-        res = json.loads(req.text)
-        return res
-    else:
-        printScript('Connection / Authentication issue, response received:')
-        print(req.text)
-        return None
+
+    for attempt in range(1, retries + 1):
+        try:
+            if request == 'get':
+                req = requests.get(url, auth=(apikey, apisecret), verify=False, timeout=30)
+            elif request == 'post' and data == '':
+                req = requests.post(url, auth=(apikey, apisecret), verify=False, timeout=30)
+            elif request == 'post' and data != '':
+                req = requests.post(url, data=data, auth=(
+                    apikey, apisecret), headers=headers, verify=False, timeout=30)
+            else:
+                return None
+        except requests.exceptions.RequestException as error:
+            printScript(f'* Firewall API connection error (attempt {attempt}/{retries}): {error}')
+            if attempt < retries:
+                time.sleep(retry_wait)
+                continue
+            return None
+
+        # get response
+        if req.status_code == 200:
+            return json.loads(req.text)
+        else:
+            printScript('Connection / Authentication issue, response received:')
+            print(req.text)
+            return None
+
+    return None
 
 
 def encodeCertToBase64(certpath, outpath=None):
