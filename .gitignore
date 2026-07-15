@@ -8,3 +8,6 @@ __pycache__/
 
 # Python build artifacts
 .pybuild/
+
+# Local Claude Code settings (machine-specific)
+.claude/settings.local.json
