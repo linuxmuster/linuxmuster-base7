@@ -1,6 +1,6 @@
 # /etc/apparmor.d/local/usr.sbin.dhcpd
 #
 # thomas@linuxmuster.net
-# 20250328
+# 20260720
 #
-/usr/lib/linuxmuster/dhcpd-update-samba-dns.py Ux,
+/usr/share/linuxmuster/dhcpd-update-samba-dns.py Ux,
