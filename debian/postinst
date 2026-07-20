@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20260423
+# 20260720
 # GPL v3
 #
 
@@ -115,6 +115,21 @@ case "$1" in
   done
   if [[ "$aa_reboot" = "yes" ]]; then
     echo "You need to restart the server to apply the updated apparmor configuration."
+  fi
+
+  # update dhcp events config
+  tpl="$TPLDIR/dhcpd.events.conf"
+  conf="$(head -1 "$tpl" | cut -d' ' -f2)"
+  if [ -s "$conf" ]; then
+    tpl_ver="$(grep -P '(?<!\d)\d{8}(?!\d)' "$tpl" | grep ^# | head -1 | cut -d' ' -f2)"
+    conf_ver="$(grep -P '(?<!\d)\d{8}(?!\d)' "$conf" | grep ^# | head -1 | cut -d' ' -f2)"
+    if [[ $conf_ver -ne $tpl_ver ]]; then
+      echo "Updating $(basename "$conf")."
+      cp "$conf" "${conf}.${datestr}"
+      cp "$tpl" "$conf"
+      echo "Restarting isc-dhcp-server to apply the updated DHCP events configuration."
+      systemctl restart isc-dhcp-server
+    fi
   fi
 
   # enable ntp service, change firewall name to ip (#88)
