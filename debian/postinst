@@ -108,14 +108,11 @@ case "$1" in
     conf_ver="$(grep -P '(?<!\d)\d{8}(?!\d)' "$conf" | grep ^# | head -1 | cut -d' ' -f2)"
     if [[ $conf_ver -ne $tpl_ver ]]; then
       echo "Updating $(basename "$conf")."
-      cp "$conf" "${conf}.${confver}"
+      cp "$conf" "${conf}.${datestr}"
       cp "$tpl" "$conf"
-      aa_reboot="yes"
+      apparmor_parser -r "/etc/apparmor.d/$(basename "$conf")"
     fi
   done
-  if [[ "$aa_reboot" = "yes" ]]; then
-    echo "You need to restart the server to apply the updated apparmor configuration."
-  fi
 
   # update dhcp events config
   tpl="$TPLDIR/dhcpd.events.conf"
