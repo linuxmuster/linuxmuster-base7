@@ -1,10 +1,24 @@
+linuxmuster-base7 (7.4.8) lmn74; urgency=low
+
+  * Fix AppArmor path mismatch for dhcpd-update-samba-dns.py (#176, f869da4).
+  * Guard DNS-update hooks against unknown dynamic clients (#177, 9bab4e1).
+  * Sync events.conf on already-configured systems during package upgrade
+    (#177, ae455b7).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 20 Jul 2026 16:11:09 +0200
+
+linuxmuster-base7 (7.4.7) lmn74; urgency=low
+
+  * Fix crash and race condition in OPNsense firewall API handling (f26162e).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 15 Jul 2026 15:36:18 +0200
+
 linuxmuster-base7 (7.4.6) lmn74; urgency=low
 
   * Merge pull request #174 from linuxmuster/motd-7.4:
     Add lmnapi, lmncli and lmntools versions (bc741b2).
-  * Fix crash and race condition in OPNsense firewall API handling (f26162e).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 15 Jul 2026 19:28:27 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 10 Jul 2026 14:16:44 +0200
 
 linuxmuster-base7 (7.4.5) lmn74; urgency=low
 
