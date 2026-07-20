@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.4.8) lmn74; urgency=low
+
+  * Fix AppArmor path mismatch for dhcpd-update-samba-dns.py (#176, f869da4).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 20 Jul 2026 15:21:43 +0200
+
 linuxmuster-base7 (7.4.7) lmn74; urgency=low
 
   * Fix crash and race condition in OPNsense firewall API handling (f26162e).
