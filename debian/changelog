@@ -3,8 +3,10 @@ linuxmuster-base7 (7.4.8) lmn74; urgency=low
   * Fix TypeError crash when recreating firewall certificate (#178, f90437c).
   * Fix ignored return value of checkFwMajorVer() in renew-certs
     (#179, 1dc36b9).
+  * Report failed MAC detection instead of silently using random fallback
+    in l_add-server.py (#180, f977059).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 21 Jul 2026 21:26:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 21 Jul 2026 21:45:00 +0200
 
 linuxmuster-base7 (7.4.7) lmn74; urgency=low
 
