@@ -7,8 +7,10 @@ linuxmuster-base7 (7.4.8) lmn74; urgency=low
     in l_add-server.py (#180, f977059).
   * Avoid shell=True string concatenation in sophomorix schema provisioning
     (#181, 99299e7).
+  * Close race window between writing secrets and restricting permissions
+    (#182, 882dc86).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 21 Jul 2026 22:00:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 21 Jul 2026 22:15:00 +0200
 
 linuxmuster-base7 (7.4.7) lmn74; urgency=low
 
