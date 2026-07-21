@@ -2,7 +2,7 @@
 #
 # linuxmuster-import-subnets
 # thomas@linuxmuster.net
-# 20260326
+# 20260721
 #
 # Requirements (import_subnets.md):
 #  - Writes DHCP configuration to /etc/dhcp/subnets.conf
@@ -230,7 +230,7 @@ def updateNetplan(extra_subnets, gateway, servernet_router):
     with open(cfgfile) as f:
         netcfg = yaml.safe_load(f)
 
-    iface = str(netcfg['network']['ethernets']).split('\'')[1]
+    iface = list(netcfg['network']['ethernets'].keys())[0]
     ifcfg = netcfg['network']['ethernets'][iface]
 
     # remove deprecated gateway4 entry
