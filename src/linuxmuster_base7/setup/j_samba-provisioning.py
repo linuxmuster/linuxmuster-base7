@@ -2,7 +2,7 @@
 #
 # samba provisioning
 # thomas@linuxmuster.net
-# 20250729
+# 20260721
 #
 
 """
@@ -156,7 +156,8 @@ except Exception as error:
 msg = 'Provisioning sophomorix samba schema '
 printScript(msg, '', False, False, True)
 try:
-    subprocess.run(['sh', '-c', 'cd /usr/share/sophomorix/schema && ./sophomorix_schema_add.sh ' + basedn + ' . -H /var/lib/samba/private/sam.ldb -writechanges'], capture_output=True, text=True, check=False)  # Complex shell command requiring cd
+    subprocess.run(['./sophomorix_schema_add.sh', basedn, '.', '-H', '/var/lib/samba/private/sam.ldb', '-writechanges'],
+                   cwd='/usr/share/sophomorix/schema', capture_output=True, text=True, check=False)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))
