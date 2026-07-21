@@ -1,7 +1,7 @@
 #
 # Common helper functions for setup scripts
 # thomas@linuxmuster.net
-# 20251114
+# 20260721
 #
 
 """
@@ -39,7 +39,7 @@ CERT_VALIDITY_DAYS = 3650  # 10 years
 DEFAULT_LINBO_IP = '10.0.0.1'
 
 # Crypto Types
-CRYPTO_TYPES = ['dsa', 'ecdsa', 'ed25519', 'rsa']
+CRYPTO_TYPES = ['ecdsa', 'ed25519', 'rsa']
 
 # Files that should not be overwritten during template processing
 DO_NOT_OVERWRITE_FILES = ['dhcpd.custom.conf']
