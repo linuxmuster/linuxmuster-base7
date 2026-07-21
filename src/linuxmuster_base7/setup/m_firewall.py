@@ -116,9 +116,11 @@ def extractConfigValues(fwconftmp):
         soup = BeautifulSoup(content, features='xml')
 
         # save certain configuration values for later use
+        firmware_element = soup.find('firmware')
+        sysctl_element = soup.find('sysctl')
         config = {
-            'firmware': str(soup.find('firmware')),
-            'sysctl': str(soup.find('sysctl'))
+            'firmware': str(firmware_element) if firmware_element else '',
+            'sysctl': str(sysctl_element) if sysctl_element else ''
         }
 
         # get already configured interfaces
