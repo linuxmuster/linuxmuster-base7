@@ -2,7 +2,7 @@
 #
 # add additional servers to devices.csv
 # thomas@linuxmuster.net
-# 20251114
+# 20260721
 #
 
 """
@@ -181,14 +181,15 @@ for item in device_array:
         mac = getMacFromArp(ip)
 
     # Fallback to random MAC if discovery failed
-    if mac == '':
+    mac_detected = mac != ''
+    if not mac_detected:
         mac = getRandomMac(devices)
 
     # Add or update device entry in devices.csv
     devices = addServerDevice(hostname, mac, ip, devices)
-    if rc == False:
-        printScript(' Failed!', '', True, True, False, len(msg))
-        sys.exit(1)
+    if not mac_detected:
+        printScript(' Failed to detect MAC, using random ' + mac + '!',
+                    '', True, True, False, len(msg))
     else:
         printScript(' ' + ip + ' ' + mac, '', True, True, False, len(msg))
 
