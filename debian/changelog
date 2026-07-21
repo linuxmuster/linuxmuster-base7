@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.4.8) lmn74; urgency=low
+
+  * Fix TypeError crash when recreating firewall certificate (#178, f90437c).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 21 Jul 2026 21:17:28 +0200
+
 linuxmuster-base7 (7.4.7) lmn74; urgency=low
 
   * Fix AppArmor path mismatch for dhcpd-update-samba-dns.py (#176, f869da4).
