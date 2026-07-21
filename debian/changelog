@@ -5,8 +5,10 @@ linuxmuster-base7 (7.4.8) lmn74; urgency=low
     (#179, 1dc36b9).
   * Report failed MAC detection instead of silently using random fallback
     in l_add-server.py (#180, f977059).
+  * Avoid shell=True string concatenation in sophomorix schema provisioning
+    (#181, 99299e7).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 21 Jul 2026 21:45:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 21 Jul 2026 22:00:00 +0200
 
 linuxmuster-base7 (7.4.7) lmn74; urgency=low
 
