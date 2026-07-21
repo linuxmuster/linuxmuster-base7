@@ -9,8 +9,10 @@ linuxmuster-base7 (7.4.8) lmn74; urgency=low
     (#181, 99299e7).
   * Close race window between writing secrets and restricting permissions
     (#182, 882dc86).
+  * Fix literal 'None' string for missing firmware/sysctl tags in firewall
+    config (#183, 31df758).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 21 Jul 2026 22:15:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 21 Jul 2026 22:25:00 +0200
 
 linuxmuster-base7 (7.4.7) lmn74; urgency=low
 
