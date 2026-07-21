@@ -206,7 +206,8 @@ class CertificateRenewer:
         if self.skipfw:
             return
         try:
-            checkFwMajorVer()
+            if not checkFwMajorVer():
+                sys.exit(1)
             getFwConfig(self.firewallip)
             shutil.copyfile(self.fwconftmp, self.fwconfbak)
         except Exception as err:
