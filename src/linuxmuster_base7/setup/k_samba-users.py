@@ -2,7 +2,7 @@
 #
 # create samba users & shares
 # thomas@linuxmuster.net
-# 20251113
+# 20260721
 #
 
 """
@@ -36,7 +36,7 @@ sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
 from linuxmuster_base7.functions import mySetupLogfile, printScript, randomPassword, readTextfile
-from linuxmuster_base7.functions import replaceInFile, writeTextfile
+from linuxmuster_base7.functions import replaceInFile, writeSecretFile
 from linuxmuster_base7.setup.helpers import runWithLog
 
 logfile = mySetupLogfile(__file__)
@@ -177,9 +177,8 @@ try:
     runWithLog(['samba-tool', 'group', 'addmembers', 'DnsAdmins', 'dns-admin',
                 '--username=global-admin', '--password=' + adminpw],
                logfile, maskSecrets=[adminpw])
-    rc = writeTextfile(environment.DNSADMINSECRET, dnspw, 'w')
+    writeSecretFile(environment.DNSADMINSECRET, dnspw, 0o440)
     subprocess.run(['chgrp', 'dhcpd', environment.DNSADMINSECRET], check=True)
-    subprocess.run(['chmod', '440', environment.DNSADMINSECRET], check=True)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(error, '', True, True, False, len(msg))

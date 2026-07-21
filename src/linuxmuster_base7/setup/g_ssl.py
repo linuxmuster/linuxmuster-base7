@@ -2,7 +2,7 @@
 #
 # create ssl certificates
 # thomas@linuxmuster.net
-# 20251112
+# 20260721
 #
 
 """
@@ -33,7 +33,7 @@ sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
 from linuxmuster_base7.functions import createServerCert, encodeCertToBase64, mySetupLogfile, \
-    randomPassword, printScript, writeTextfile
+    randomPassword, printScript, writeSecretFile
 from linuxmuster_base7.setup.helpers import runWithLog, CERT_VALIDITY_DAYS
 
 logfile = mySetupLogfile(__file__)
@@ -72,8 +72,7 @@ msg = 'Creating private CA key & certificate '
 subj = subjbase + realm + '/subjectAltName=' + realm + '/'
 printScript(msg, '', False, False, True)
 try:
-    writeTextfile(environment.CAKEYSECRET, cakeypw, 'w')
-    os.chmod(environment.CAKEYSECRET, 0o400)
+    writeSecretFile(environment.CAKEYSECRET, cakeypw, 0o400)
     runWithLog(['openssl', 'genrsa', '-out', environment.CAKEY, '-aes128',
                 '-passout', 'pass:' + cakeypw, '2048'],
                logfile, checkErrors=False, maskSecrets=[cakeypw])

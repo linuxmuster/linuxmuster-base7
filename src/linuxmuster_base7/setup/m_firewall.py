@@ -2,7 +2,7 @@
 #
 # firewall setup
 # thomas@linuxmuster.net
-# 20260622
+# 20260721
 #
 
 """
@@ -29,7 +29,6 @@ import datetime
 import os
 import shlex
 import shutil
-import subprocess
 import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
@@ -37,7 +36,7 @@ import environment
 from bs4 import BeautifulSoup
 from linuxmuster_base7.functions import getFwConfig, getSetupValue, isValidHostIpv4, mySetupLogfile
 from linuxmuster_base7.functions import modIni, printScript, putFwConfig, putSftp, randomPassword
-from linuxmuster_base7.functions import readTextfile, sshExec, writeTextfile
+from linuxmuster_base7.functions import readTextfile, sshExec, writeSecretFile, writeTextfile
 from linuxmuster_base7.setup.helpers import runWithLog
 
 logfile = mySetupLogfile(__file__)
@@ -87,9 +86,7 @@ def createRadiusSecret():
     printScript(msg, '', False, False, True)
     try:
         radiussecret = randomPassword(16)
-        with open(environment.RADIUSSECRET, 'w') as secret:
-            secret.write(radiussecret)
-        runWithLog(['chmod', '400', environment.RADIUSSECRET], logfile)
+        writeSecretFile(environment.RADIUSSECRET, radiussecret, 0o400)
         printScript(' Success!', '', True, True, False, len(msg))
         return radiussecret
     except Exception as error:
@@ -261,9 +258,8 @@ def saveApiCredentials(apikey, apisecret):
     msg = '* Saving api credentials '
     printScript(msg, '', False, False, True)
     try:
-        rc = modIni(environment.FWAPIKEYS, 'api', 'key', apikey)
+        rc = modIni(environment.FWAPIKEYS, 'api', 'key', apikey, mode=0o400)
         rc = modIni(environment.FWAPIKEYS, 'api', 'secret', apisecret)
-        subprocess.run(['chmod', '400', environment.FWAPIKEYS], check=True)
         printScript(' Success!', '', True, True, False, len(msg))
     except Exception as error:
         printScript(f' Failed: {error}', '', True, True, False, len(msg))

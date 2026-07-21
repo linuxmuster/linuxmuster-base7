@@ -3,7 +3,7 @@
 # functions.py
 #
 # thomas@linuxmuster.net
-# 20260715
+# 20260721
 #
 
 from subprocess import Popen, PIPE
@@ -582,6 +582,21 @@ def writeTextfile(tfile, content, flag):
         return False
 
 
+# write a secret to a file, restricting its permissions from creation onward
+# (avoids the window between a plain write and a later chmod call)
+def writeSecretFile(tfile, content, mode=0o600):
+    try:
+        fd = os.open(tfile, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
+        try:
+            os.write(fd, content.encode('utf-8'))
+        finally:
+            os.close(fd)
+        return True
+    except Exception as error:
+        print(error)
+        return False
+
+
 # replace string in file
 def replaceInFile(tfile, search, replace):
     rc = False
@@ -600,12 +615,16 @@ def replaceInFile(tfile, search, replace):
 
 
 # modify and write ini file
-def modIni(inifile, section, option, value):
+def modIni(inifile, section, option, value, mode=None):
     try:
         i = configparser.RawConfigParser(delimiters=('='))
         if not os.path.isfile(inifile):
-            # create inifile
-            writeTextfile(inifile, '[' + section + ']\n', 'w')
+            # create inifile; if mode is given, create it with restrictive
+            # permissions from the start (e.g. for files holding secrets)
+            if mode is not None:
+                writeSecretFile(inifile, '[' + section + ']\n', mode)
+            else:
+                writeTextfile(inifile, '[' + section + ']\n', 'w')
         i.read(inifile)
         i.set(section, option, value)
         with open(inifile, 'w') as outfile:

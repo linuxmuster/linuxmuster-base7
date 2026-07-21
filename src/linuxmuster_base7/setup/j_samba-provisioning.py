@@ -38,7 +38,7 @@ sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
 from linuxmuster_base7.functions import getSetupValue, mySetupLogfile, printScript, randomPassword, \
-    readTextfile, writeTextfile
+    readTextfile, writeSecretFile, writeTextfile
 from linuxmuster_base7.setup.helpers import runWithLog
 
 logfile = mySetupLogfile(__file__)
@@ -80,9 +80,7 @@ msg = 'Generating AD admin password '
 printScript(msg, '', False, False, True)
 try:
     adadminpw = randomPassword(16)
-    with open(environment.ADADMINSECRET, 'w') as secret:
-        secret.write(adadminpw)
-    runWithLog(['chmod', '400', environment.ADADMINSECRET], logfile)
+    writeSecretFile(environment.ADADMINSECRET, adadminpw, 0o400)
     # symlink for sophomorix
     runWithLog(['ln', '-sf', environment.ADADMINSECRET, environment.SOPHOSYSDIR + '/sophomorix-samba.secret'], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
