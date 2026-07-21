@@ -2,7 +2,7 @@
 #
 # reset opnsense configuration to setup state
 # thomas@linuxmuster.net
-# 20251117
+# 20260721
 #
 
 import environment
@@ -15,6 +15,7 @@ import time
 
 from linuxmuster_base7.functions import createServerCert, datetime, enterPassword, firewallApi, \
     getSetupValue, printScript, sshExec, writeTextfile, waitForFw
+from linuxmuster_base7.setup.helpers import CERT_VALIDITY_DAYS
 
 
 INFOTXT = 'Sets the firewall to the state after setup.\n\
@@ -156,7 +157,7 @@ def ensureFirewallCert(logfile):
     cert_path = environment.SSLDIR + '/firewall.cert.pem'
     if not os.path.isfile(cert_path):
         printScript('Creating firewall SSL certificate...')
-        if not createServerCert('firewall', logfile):
+        if not createServerCert('firewall', str(CERT_VALIDITY_DAYS), logfile):
             sys.exit(1)
 
 
