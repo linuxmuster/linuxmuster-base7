@@ -2,7 +2,7 @@
 #
 # This script performs a release upgrade to linuxmuster.net 7.4.
 # thomas@linuxmuster.net
-# 20260709
+# 20260723
 #
 
 # get linuxmuster environment
@@ -186,8 +186,10 @@ rm -f /etc/apt/apt.conf.d/local
 
 # restore resolv.conf
 echo -e "\n## Restoring resolv.conf..."
-rm -f /etc/resolv.conf
-mv /etc/resolv.conf.release-upgrade /etc/resolv.conf
+if [ -f /etc/resolv.conf.release-upgrade ]; then
+    rm -f /etc/resolv.conf
+    mv /etc/resolv.conf.release-upgrade /etc/resolv.conf
+fi
 
 # reboot
 if [ -n "$autoreboot" ]; then
