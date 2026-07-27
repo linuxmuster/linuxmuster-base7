@@ -40,13 +40,12 @@
   - Hinweis: Bei der Image-Verteilung per torrent wurde ctorrent durch aria2 ersetzt.
   - Linbo-Gui hat sich nicht geändert, ggf. neue Screenshots wg. Versionsnummer
   - Änderungen in der start.conf:
-    - im Abschnitt [LINBO] sind die Optionen "Server" und "SystemType" weggefallen.
+    - im Abschnitt [LINBO] sind die Optionen `Server` und `SystemType` weggefallen.
             
 - Linux-Kernel
   - s.o.
   - LINBO-Kernel wechseln
-    Ein anderer Linbo-Kernel kann immer noch genutzt werden, indem eine Datei unter
-    `/etc/linuxmuster/linbo/custom_kernel` bereitgestellt wird:
+    Ein anderer Linbo-Kernel kann immer noch genutzt werden, indem eine Datei unter `/etc/linuxmuster/linbo/custom_kernel` bereitgestellt wird:
         ```
         ## currently active kernel image and modules used by the server
         ## path to kernel image
@@ -60,8 +59,7 @@
         #MODULESPATH="/path/to/my/lib/modules/n.n.n"
         ```
   - Torrent
-    - In `/etc/default/linbo-torrent` können jetzt die aria2-Optionen angepasst werden
-      (s. https://aria2.github.io/manual/en/html/aria2c.html):
+    - In `/etc/default/linbo-torrent` können jetzt die aria2-Optionen angepasst werden (s. https://aria2.github.io/manual/en/html/aria2c.html):
         ```
         # /etc/default/linbo-torrent
         #
@@ -80,6 +78,7 @@
         # used to seed torrents
         ARIA2C_SEED_OPTS="-V --seed-ratio=0.0"
         ```
+
 
 Thomas Schmitt
 thomas@linuxmuster.net
