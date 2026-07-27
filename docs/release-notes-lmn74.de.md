@@ -2,7 +2,7 @@
 
 **Codename:** Beacon
 **Zieldistribution:** Ubuntu 26.04 (Noble)
-**Paketversion:** 7.4.x
+**Paketversion:** 7.4.0 – 7.4.8
 
 ---
 
@@ -12,11 +12,12 @@ Version 7.4 ist eine umfangreiche Wartungs- und Refactoring-Version. Der gesamte
 Python-Code wurde auf die Debian Python Policy (PEP 517/518) umgestellt, kritische
 Sicherheitslücken wurden geschlossen und die OPNsense-Anbindung wurde auf die
 REST-API migriert. Daneben wurden zahlreiche Fehler behoben und die Testinfrastruktur
-grundlegend neu aufgebaut.
+grundlegend neu aufgebaut. Die Folgeversionen 7.4.1 bis 7.4.8 haben diese Basis
+mit weiteren Fehlerbehebungen und Sicherheitsverbesserungen abgerundet.
 
 ---
 
-## Wichtige Änderungen
+## Wichtige Änderungen (7.4.0)
 
 ### Neue Python-Paketstruktur (Debian Python Policy)
 
@@ -141,6 +142,58 @@ Eine vollständige Testinfrastruktur wurde neu aufgebaut:
 
 ---
 
+## Änderungen in den Folgeversionen (7.4.1 – 7.4.8)
+
+### Firewall / OPNsense
+
+- Absturz (TypeError) beim Neuerstellen des Firewall-Zertifikats behoben.
+- Rückgabewert von `checkFwMajorVer()` in `renew-certs` wird nicht mehr ignoriert.
+- Absturz und Race Condition bei der OPNsense-Firewall-API-Verarbeitung behoben.
+- Zeitzonen-Fix beim Firewall-Setup.
+- Fix für die Länge des API-Secrets beim Firewall-Setup.
+- Fehlerhafte Anzeige von `None` bei fehlenden Firmware-/Sysctl-Tags in der
+  Firewall-Konfiguration behoben.
+
+### Sicherheit
+
+- `shell=True`-Aufruf mit String-Konkatenation bei der Sophomorix-Schema-Provisionierung
+  durch sichere Variante ersetzt.
+- Race Window zwischen dem Schreiben von Secrets und dem Setzen der
+  Dateiberechtigungen geschlossen.
+- Nicht mehr unterstützter SSH-Host-Key-Typ `dsa` aus `CRYPTO_TYPES` entfernt.
+
+### Netzwerk / DNS
+
+- Fragile Netplan-Interface-Erkennung (basierte auf String-Split der
+  Dict-Repräsentation) durch robuste Lösung ersetzt.
+- DNS-Update-Hooks gegen unbekannte dynamische Clients abgesichert.
+- AppArmor-Pfad-Mismatch für `dhcpd-update-samba-dns.py` behoben.
+- AppArmor-Profile werden nach Änderungen automatisch neu geladen (kein Reboot
+  mehr nötig).
+- `events.conf` wird bei bereits eingerichteten Systemen auch während des
+  Paket-Upgrades synchronisiert.
+
+### Server-Setup
+
+- Fehlerhafte MAC-Adress-Erkennung in `l_add-server.py` wird jetzt gemeldet statt
+  stillschweigend einen Zufallswert zu verwenden.
+- Fstab- und Quota-Handling beim Setup korrigiert.
+- Aufruf von `ntpdate` beim Setup durch `ntpd` ersetzt; obsolete Abhängigkeiten
+  zu `ntpdate`/`ntp` entfernt.
+- Abhängigkeit zu `samba-ad-dc` hinzugefügt.
+- Fix für den Import des `environment`-Moduls.
+- Shell-Profil-Fix.
+
+### Sonstiges
+
+- Motd zeigt jetzt zusätzlich die Versionen von lmnapi, lmncli und lmntools an.
+- Kompatibilitätsfixes für Ubuntu 26.04 (Build-System, `postinst`-Versionsprüfung).
+- Fix für den Precheck von `linuxmuster-import-devices`.
+- Setuptools-Deprecation-Warnungen beim Paketbau behoben.
+- Versionsnummer bereinigt (kein Package-Revision-Suffix mehr).
+
+---
+
 ## Upgrade-Hinweise
 
 Da sich die interne Paketstruktur grundlegend geändert hat, ist ein direktes
@@ -149,3 +202,8 @@ Bitte die Anleitung `docs/upgrade-26.04.md` beachten.
 
 Konfigurationsdateien unter `/etc/linuxmuster/` und `/var/lib/linuxmuster/` werden
 durch das Upgrade nicht verändert.
+
+---
+
+Author: Thomas Schmitt
+Co-Author: Claude
