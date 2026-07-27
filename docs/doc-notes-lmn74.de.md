@@ -46,40 +46,40 @@
   - s.o.
   - LINBO-Kernel wechseln
     Ein anderer Linbo-Kernel kann immer noch genutzt werden, indem eine Datei unter `/etc/linuxmuster/linbo/custom_kernel` bereitgestellt wird:
-        ```
-        ## currently active kernel image and modules used by the server
-        ## path to kernel image
-        KERNELPATH="/boot/vmlinuz-$(uname -r)"
-        ## path to the corresponding modules directory
-        MODULESPATH="/lib/modules/$(uname -r)"
+    ```bash
+    ## currently active kernel image and modules used by the server
+    ## path to kernel image
+    KERNELPATH="/boot/vmlinuz-$(uname -r)"
+    ## path to the corresponding modules directory
+    MODULESPATH="/lib/modules/$(uname -r)"
 
-        ## custom kernel image and modules
-        #KERNELPATH="/path/to/my/kernelimage"
-        ## path to the corresponding modules directory
-        #MODULESPATH="/path/to/my/lib/modules/n.n.n"
-        ```
+    ## custom kernel image and modules
+    #KERNELPATH="/path/to/my/kernelimage"
+    ## path to the corresponding modules directory
+    #MODULESPATH="/path/to/my/lib/modules/n.n.n"
+    ```
   - Torrent
     - In `/etc/default/linbo-torrent` können jetzt die aria2-Optionen angepasst werden (s. https://aria2.github.io/manual/en/html/aria2c.html):
-        ```
-        # /etc/default/linbo-torrent
-        #
-        # aria2c options, only change that if you know exactly what you're doing.
-        #
-        # thomas@linuxmuster.net
-        # 20260625
-        #
+    ```bash
+    # /etc/default/linbo-torrent
+    #
+    # aria2c options, only change that if you know exactly what you're doing.
+    #
+    # thomas@linuxmuster.net
+    # 20260625
+    #
 
-        # used for both purposes
-        ARIA2C_GLOBAL_OPTS="--enable-color=false --enable-dht=false --disable-ipv6=true"
+    # used for both purposes
+    ARIA2C_GLOBAL_OPTS="--enable-color=false --enable-dht=false --disable-ipv6=true"
 
-        # used for torrent downloads
-        ARIA2C_DWNLD_OPTS="-c --console-log-level=notice --show-console-readout=true --summary-interval=3 --seed-time=0"
+    # used for torrent downloads
+    ARIA2C_DWNLD_OPTS="-c --console-log-level=notice --show-console-readout=true --summary-interval=3 --seed-time=0"
 
-        # used to seed torrents
-        ARIA2C_SEED_OPTS="-V --seed-ratio=0.0"
-        ```
+    # used to seed torrents
+    ARIA2C_SEED_OPTS="-V --seed-ratio=0.0"
+    ```
 
-
+---
 Thomas Schmitt
 thomas@linuxmuster.net
 27.07.2026
