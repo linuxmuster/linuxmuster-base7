@@ -58,8 +58,8 @@
     ## path to the corresponding modules directory
     #MODULESPATH="/path/to/my/lib/modules/n.n.n"
     ```
-  - Torrent
-    - In `/etc/default/linbo-torrent` können jetzt die aria2-Optionen angepasst werden (s. https://aria2.github.io/manual/en/html/aria2c.html):
+- Torrent
+  - In `/etc/default/linbo-torrent` können jetzt die aria2-Optionen angepasst werden (s. https://aria2.github.io/manual/en/html/aria2c.html):
     ```bash
     # /etc/default/linbo-torrent
     #
