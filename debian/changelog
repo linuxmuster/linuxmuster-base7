@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.4.9) lmn74; urgency=low
+
+  * Remove deprecated syslog command (#188).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 30 Jul 2026 19:34:00 +0200
+
 linuxmuster-base7 (7.4.8) lmn74; urgency=low
 
   * Fix TypeError crash when recreating firewall certificate (#178, f90437c).
