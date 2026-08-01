@@ -1,6 +1,6 @@
 linuxmuster-base7 (7.4.9) lmn74; urgency=low
 
-  * Remove deprecated syslog command (#188).
+  * fix(webui-sudoers): Remove deprecated syslog command (#188, 1e3211b).
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 30 Jul 2026 19:34:00 +0200
 
