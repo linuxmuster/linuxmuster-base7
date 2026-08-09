@@ -1,3 +1,9 @@
+linuxmuster-base7 (7.4.10) lmn74; urgency=low
+
+  * fix(e_fstab.py): remove undefined msg (4ba6014).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun,  9 Aug 2026 15:37:03 +0200
+
 linuxmuster-base7 (7.4.9) lmn74; urgency=low
 
   * fix(webui-sudoers): Remove deprecated syslog command (#188, 1e3211b).
