@@ -2,7 +2,7 @@
 #
 # linuxmuster-setup CLI entry point
 # thomas@linuxmuster.net
-# 20251111
+# 20260809
 #
 
 import sys
@@ -17,7 +17,7 @@ import shutil
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from linuxmuster_base7.functions import checkFwMajorVer, modIni, printScript, tee
+from linuxmuster_base7.functions import checkFwMajorVer, getSetupValue, modIni, printScript, tee
 
 
 def usage():
@@ -157,8 +157,15 @@ def main():
         # skip dialog in unattended mode
         if (unattended and 'dialog' in module_name):
             continue
-        # check firewall major version
-        if (not skipfw and 'templates' in module_name):
+        # Check firewall major version.
+        # Note: re-read skipfw from setup.ini rather than trusting the local
+        # variable above - it's only ever set by the standalone -s/--skip-fw
+        # flag. A skipfw value provided via -c/--config is copied straight
+        # into custom.ini (see above) and would otherwise be missed here.
+        # By this point in the module loop a_ini (which merges
+        # defaults.ini < prep.ini < setup.ini < custom.ini into setup.ini)
+        # has already run, since 'a_ini' sorts before 'd_templates'.
+        if (not getSetupValue('skipfw') and 'templates' in module_name):
             if not checkFwMajorVer():
                 sys.exit(1)
         # print module name (extract display name from module name)
