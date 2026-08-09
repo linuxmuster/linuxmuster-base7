@@ -2,7 +2,7 @@
 #
 # Configure ext4 filesystems for quota and ACL support
 # thomas@linuxmuster.net
-# 20260623
+# 20260809
 #
 
 """
@@ -44,7 +44,6 @@ def is_ssd(device):
             rotational = f.read().strip()
         return rotational == '0'
     except Exception:
-        printScript(' Failed!', '', True, True, False, len(msg))
         return False
 
 
