@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.4.11) lmn74; urgency=low
+
+  * add dracut to package dependencies (5684b4e).
+  * fix(setup.py): skipfw from a config file no longer bypasses the firewall
+    version check (2a7acca).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun,  9 Aug 2026 19:45:59 +0200
+
 linuxmuster-base7 (7.4.10) lmn74; urgency=low
 
   * fix(e_fstab.py): remove undefined msg (4ba6014).
