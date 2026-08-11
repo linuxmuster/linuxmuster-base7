@@ -2,7 +2,7 @@
 #
 # postinst script for linuxmuster-base
 # thomas@linuxmuster.net
-# 20260720
+# 20260811
 # GPL v3
 #
 
@@ -155,6 +155,9 @@ case "$1" in
     ntp_restart="no"
   fi
   [ "$ntp_restart" = "yes" ] && systemctl restart ntpsec.service
+
+  # fix cupsd.conf (#189 & #190)
+  "$SHAREDIR"/fix-cupsd.conf_189_190.sh
 
  ;;
 
