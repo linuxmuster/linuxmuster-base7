@@ -2,8 +2,7 @@
 #
 # final tasks
 # thomas@linuxmuster.net
-# 20251119
-
+# 20260811
 """
 Setup module z_final: Perform final setup tasks and cleanup.
 
@@ -13,6 +12,7 @@ This module (executed last in setup sequence):
 - Restarts apparmor service
 - Writes school name to sophomorix configuration
 - Imports devices from devices.csv into system
+- Restarts webui service
 - Waits for firewall to be ready (if not skipped)
 - Imports subnet configuration
 - Creates web proxy SSO keytab for authentication
@@ -112,6 +112,16 @@ msg = 'Starting device import '
 printScript(msg, '', False, False, True)
 try:
     runWithLog(['linuxmuster-import-devices'], logfile)
+    printScript(' Success!', '', True, True, False, len(msg))
+except Exception as error:
+    printScript(f' Failed: {error}', '', True, True, False, len(msg))
+    sys.exit(1)
+
+# Restart webui service
+msg = 'Restarting linuxmuster-webui service '
+printScript(msg, '', False, False, True)
+try:
+    runWithLog(['systemctl', 'restart', 'linuxmuster-webui.service'], logfile)
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
