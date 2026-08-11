@@ -1,3 +1,11 @@
+linuxmuster-base7 (7.4.12) lmn74; urgency=low
+
+  * fix(cupsd.conf): cups problem version >= cups-2.4.7-1.2ubuntu7.9 (#189).
+  * fix(cupsd.conf): require @SYSTEM auth for /admin/conf (#190).
+  * setup(z_final.py): add webui service restart (9114202).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 11 Aug 2026 09:57:29 +0200
+
 linuxmuster-base7 (7.4.11) lmn74; urgency=low
 
   * add dracut to package dependencies (5684b4e).
