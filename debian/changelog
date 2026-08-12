@@ -1,3 +1,17 @@
+linuxmuster-base7 (7.3.39-0) lmn73; urgency=low
+
+  * fix(cupsd.conf): cups problem version >= cups-2.4.7-1.2ubuntu7.9 (#189).
+  * fix(cupsd.conf): require @System auth for /admin/conf (#190).
+  * fix(linuxmuster-release-upgrade): use linuxmuster-distupgrade to upgrade linuxmuster packages (a89bba9).
+  * fix(linuxmuster-release-upgrade): guard resolv.conf, apt tweak removal and linbo
+    session stopping against re-runs (#191, dbf726f).
+  * fix(linuxmuster-release-upgrade): skip the OS release upgrade step if already done,
+    so a re-run after a later-failing step doesn't abort before reaching it (#191, 2421a03).
+  * fix(linuxmuster-release-upgrade): don't overwrite an existing resolv.conf backup on
+    a re-run (#191, 8fee984).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 12 Aug 2026 14:54:08 +0200
+
 linuxmuster-base7 (7.3.38-0) lmn73; urgency=low
 
   * linuxmuster-release-upgrade: fix #186, don't destroy resolv.conf if backup already restored (#187, c68e2bb).
