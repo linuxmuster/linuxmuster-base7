@@ -2,7 +2,7 @@
 #
 # This script performs a release upgrade to linuxmuster.net 7.4.
 # thomas@linuxmuster.net
-# 20260811
+# 20260812
 #
 
 # get linuxmuster environment
@@ -49,7 +49,12 @@ echo -e "\n## Adjusting system time..."
 ntpdate pool.ntp.org
 
 # save resolv.conf
-cp /etc/resolv.conf /etc/resolv.conf.release-upgrade
+res_conf="/etc/resolv.conf"
+res_conf_bak="/etc/resolv.conf.release-upgrade"
+if [ -f "$res_conf" ]; then
+    echo -e "\n## Saving $res_conf to $res_conf_bak..."
+    cp -f "$res_conf" "$res_conf_bak"
+fi
 
 # test if release upgrade is possible
 NEXT_RELEASE="26.04"
@@ -78,6 +83,14 @@ get_grub_disks() {
     done
     echo "$grub_disks" | xargs
 }
+
+# first stop linbo-torrent and multicast sessions
+for item in torrent multicast; do
+    if "linbo-$item" status | grep -q windows; then
+        echo -e "\n## Stopping linbo-$item sessions..."
+        "linbo-$item" stop &> /dev/null
+    fi
+done
 
 # detect grub boot disks
 echo -en "\n## Trying to auto-detect all grub boot disks: "
@@ -129,8 +142,10 @@ for s in isc-dhcp-server6 networkd-wait-online.service systemd-resolved; do
 done
 
 # restore resolv.conf
-echo -e "\n## Restoring resolv.conf..."
-mv /etc/resolv.conf.release-upgrade /etc/resolv.conf
+if [ -f "$res_conf_bak" ]; then
+    echo -e "\n## Restoring $res_conf from $res_conf_bak..."
+    mv -f "$res_conf_bak" "$res_conf"
+fi
 
 # ensure samba-ad-dc pkg is installed
 echo -e "\n## Ensuring samba-ad-dc package is installed..."
@@ -165,10 +180,6 @@ if ! apt list --upgradable 2>&1 | grep -q linuxmuster-webui7; then
     dpkg-reconfigure linuxmuster-webui7
 fi
 
-# stop linbo-torrent.service before upgrading linbo package
-echo -e "\n## Stopping linbo-torrent.service..."
-systemctl stop linbo-torrent.service
-
 # upgrade linuxmuster pkgs
 echo -e "\n## Upgrading linuxmuster packages..."
 DEBIAN_FRONTEND=noninteractive apt-get -yu install linuxmuster-prepare
@@ -181,14 +192,9 @@ if [ -n "$cleancache" ]; then
 fi
 
 # remove apt tweak
-echo -e "\n## Removing apt tweak..."
-rm -f /etc/apt/apt.conf.d/local
-
-# restore resolv.conf
-echo -e "\n## Restoring resolv.conf..."
-if [ -f /etc/resolv.conf.release-upgrade ]; then
-    rm -f /etc/resolv.conf
-    mv /etc/resolv.conf.release-upgrade /etc/resolv.conf
+if [ -e /etc/apt/apt.conf.d/local ]; then
+    echo -e "\n## Removing apt tweak..."
+    rm -f /etc/apt/apt.conf.d/local
 fi
 
 # reboot
