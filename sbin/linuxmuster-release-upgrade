@@ -48,10 +48,15 @@ fi
 echo -e "\n## Adjusting system time..."
 ntpdate pool.ntp.org
 
-# save resolv.conf
+# save resolv.conf, unless a backup already exists from a previous,
+# later-failing run - overwriting it here would replace the true
+# pre-upgrade resolv.conf with whatever the system's current one is by
+# now, which the later restore step would then wrongly treat as original
 res_conf="/etc/resolv.conf"
 res_conf_bak="/etc/resolv.conf.release-upgrade"
-if [ -f "$res_conf" ]; then
+if [ -f "$res_conf_bak" ]; then
+    echo -e "\n## $res_conf_bak already exists, keeping it as-is."
+elif [ -f "$res_conf" ]; then
     echo -e "\n## Saving $res_conf to $res_conf_bak..."
     cp -f "$res_conf" "$res_conf_bak"
 fi
