@@ -1,3 +1,15 @@
+linuxmuster-base7 (7.4.13) lmn74; urgency=low
+
+  * fix(e_fstab.py): drop legacy journaled-quota mount options
+    (usrjquota=/grpjquota=) from REQUIRED_MOUNT_OPTIONS and actively strip
+    them if already present, and mask the now-redundant
+    quotaon-root.service/quotaon.service systemd units, since both
+    conflict with the modern ext4 on-disk quota feature this module
+    enables. Verified end to end on an upgraded 7.4 host across a real
+    reboot.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Fri, 14 Aug 2026 16:50:29 +0200
+
 linuxmuster-base7 (7.4.12) lmn74; urgency=low
 
   * fix(cupsd.conf): cups problem version >= cups-2.4.7-1.2ubuntu7.9 (#189).

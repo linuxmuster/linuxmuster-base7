@@ -2,7 +2,10 @@
 #
 # Configure ext4 filesystems for quota and ACL support
 # thomas@linuxmuster.net
-# 20260809
+# 20260814
+#
+# Signed-off by: thomas@linuxmuster.net
+# Assisted by: Claude
 #
 
 """
@@ -25,7 +28,12 @@ from linuxmuster_base7.functions import mySetupLogfile, printScript
 
 logfile = mySetupLogfile(__file__)
 REQUIRED_EXT4_FEATURES = ['quota']
-REQUIRED_MOUNT_OPTIONS = ['acl', 'usrquota', 'usrjquota=aquota.user', 'grpquota', 'grpjquota=aquota.group']
+# usrjquota=/grpjquota= (and jqfmt=) are the legacy journaled-quota mount
+# options; they conflict with the modern ext4 on-disk quota feature this
+# module enables above ("EXT4-fs: Journaled quota options ignored when
+# QUOTA feature is enabled"). usrquota/grpquota (no "j") must stay: they
+# still gate DQUOT_LIMITS_ENABLED under the on-disk feature.
+REQUIRED_MOUNT_OPTIONS = ['acl', 'usrquota', 'grpquota']
 
 
 def is_ssd(device):
@@ -95,12 +103,34 @@ def enable_ext4_quota():
                 log.write('-' * 78 + '\n')
         except Exception:
             pass
+    if result.returncode == 0:
+        mask_redundant_quotaon_units()
     return result.returncode == 0
 
 
+def mask_redundant_quotaon_units():
+    """Mask systemd's auto-generated quotaon-root.service/quotaon.service.
+
+    Once the ext4 on-disk quota feature is active, the kernel enables quota
+    tracking automatically as soon as the filesystem is mounted (verified
+    with repquota showing real usage without these units ever having run
+    successfully). Calling quotaon afterwards to turn on what's already on
+    fails ("quotaon: using . on <dev> [<mnt>]: File exists"), permanently
+    failing the unit at every boot for no functional benefit - so mask it.
+    Masking a unit name systemd hasn't generated (yet) is a harmless no-op.
+    """
+    subprocess.run(['systemctl', 'mask', 'quotaon-root.service', 'quotaon.service'],
+                    capture_output=True, text=True, check=False)
+
+
+# legacy journaled-quota mount options; see the note on REQUIRED_MOUNT_OPTIONS
+LEGACY_QUOTA_OPTION_PREFIXES = ('usrjquota=', 'grpjquota=', 'jqfmt=')
+
+
 def merge_mount_options(current_options, required_options):
-    """Merge required mount options with existing options."""
-    options = list(current_options)
+    """Merge required mount options with existing options, dropping legacy
+    journaled-quota options that conflict with the on-disk quota feature."""
+    options = [opt for opt in current_options if not opt.startswith(LEGACY_QUOTA_OPTION_PREFIXES)]
     for required in required_options:
         # Check if option is not already present (handles both key and key=value options)
         option_key = required.split('=')[0]
