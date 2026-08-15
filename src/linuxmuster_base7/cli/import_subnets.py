@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 #
-# linuxmuster-import-subnets
-# thomas@linuxmuster.net
-# 20260721
+# Filename     : import_subnets.py
+# Description  : Import subnets to DHCP, netplan, NTP and OPNsense firewall
+# Signed-off by: thomas@linuxmuster.net
+# Assisted by  : Claude
+# Date         : 20260815
 #
 # Requirements (import_subnets.md):
 #  - Writes DHCP configuration to /etc/dhcp/subnets.conf
@@ -274,18 +276,21 @@ FW_MIN_VERSION = '26.1'
 def checkFwVersion():
     """Check that the firewall runs at least FW_MIN_VERSION.
 
-    Uses GET /core/firmware/info which returns 'product_version' at the
-    top level (e.g. "26.1.2" or "26.7").
-
-    Returns:
-        True  if installed version >= FW_MIN_VERSION
-        False on version mismatch or API error
+    Uses GET /core/firmware/status, which returns 'product_version' nested
+    under 'product' (e.g. "26.1.2" or "26.7"). /core/firmware/info also
+    exposes 'product_version', but its response additionally enumerates
+    every single installed package (megabytes of JSON on a system with
+    many plugins) - observed in practice to trip a chunked-transfer
+    decoding error (requests/urllib3 ChunkedEncodingError) on that much
+    larger payload, aborting the whole subnet import before it even reads
+    subnets.csv. /core/firmware/status returns just the product block and
+    is already used successfully against the same firewall by waitForFw().
     """
-    res = firewallApi('get', '/core/firmware/info')
+    res = firewallApi('get', '/core/firmware/status')
     if res is None:
         printScript('* Failed to retrieve firewall firmware info.')
         return False
-    version_str = res.get('product_version', '')
+    version_str = res.get('product', {}).get('product_version', '')
     if not version_str:
         printScript('* Could not determine firewall version.')
         return False
@@ -629,7 +634,7 @@ def main():
     if not skipfw and not checkFwVersion():
         printScript(f'Please upgrade your OPNsense at least to Version >= {FW_MIN_VERSION}')
         printScript('', 'end')
-        return
+        sys.exit(1)
 
     printScript('Setup values:')
     printScript('* Server address: ' + serverip)
@@ -641,7 +646,7 @@ def main():
     if not subnets:
         printScript('* No valid subnets found - aborting.')
         printScript('', 'end')
-        return
+        sys.exit(1)
 
     server_subnet    = next((s for s in subnets if s['is_server']), None)
     extra_subnets    = [s for s in subnets if not s['is_server']]
@@ -653,7 +658,7 @@ def main():
     # Step 3: write DHCP configuration
     if not writeDhcpConfig(subnets, serverip):
         printScript('', 'end')
-        return
+        sys.exit(1)
 
     # Step 4: restart DHCP service
     restartDhcp()
@@ -673,7 +678,7 @@ def main():
         if gw_changed is None:
             printScript('Gateway update failed - skipping routes and NAT.')
             printScript('', 'end')
-            return
+            sys.exit(1)
         if gw_changed:
             res = firewallApi('post', API_GW_RECONFIGURE)
             if res:
