@@ -1,3 +1,14 @@
+linuxmuster-base7 (7.3.40-0) lmn73; urgency=low
+
+  * fix(linuxmuster-release-upgrade): retrofit quota fstab fix and unit
+    masking onto the upgraded system, since neither lmn-prepare (bootstrap
+    only) nor e_fstab.py (fresh setup only) ever run during a 7.3->7.4
+    release upgrade, leaving legacy journaled-quota fstab options and an
+    unmasked, permanently failing quotaon-root.service on every upgraded
+    host.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 15 Aug 2026 20:15:00 +0200
+
 linuxmuster-base7 (7.3.39-0) lmn73; urgency=low
 
   * fix(cupsd.conf): cups problem version >= cups-2.4.7-1.2ubuntu7.9 (#189).

@@ -1,8 +1,10 @@
 #!/bin/bash
 #
-# This script performs a release upgrade to linuxmuster.net 7.4.
-# thomas@linuxmuster.net
-# 20260812
+# Filename     : linuxmuster-release-upgrade
+# Description  : Performs a release upgrade to linuxmuster.net 7.4
+# Signed-off by: thomas@linuxmuster.net
+# Assisted by  : Claude
+# Date         : 20260815
 #
 
 # get linuxmuster environment
@@ -200,6 +202,20 @@ fi
 echo -e "\n## Upgrading linuxmuster packages..."
 DEBIAN_FRONTEND=noninteractive apt-get -yu install linuxmuster-prepare
 linuxmuster-distupgrade
+
+# Retrofit ext4 quota fstab options and mask redundant quotaon units.
+# Neither lmn-prepare (only runs during initial appliance bootstrap,
+# before the OS is even installed) nor linuxmuster-setup's e_fstab.py
+# (only runs on a fresh install) ever touch an existing system being
+# upgraded here - so without this, an upgraded host keeps its legacy
+# journaled-quota fstab options and an unmasked quotaon-root.service that
+# fails at every boot. e_fstab.py is idempotent and safe to re-run against
+# an already-configured system.
+e_fstab="/usr/lib/python3/dist-packages/linuxmuster_base7/setup/e_fstab.py"
+if [ -x "$e_fstab" ]; then
+    echo -e "\n## Fixing ext4 quota configuration..."
+    "$e_fstab" || echo "WARNING: $e_fstab failed, please check quota configuration manually!"
+fi
 
 # clean apt cache
 if [ -n "$cleancache" ]; then
