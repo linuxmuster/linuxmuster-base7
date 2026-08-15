@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 #
-# Configure ext4 filesystems for quota and ACL support
-# thomas@linuxmuster.net
-# 20260814
-#
+# Filename     : e_fstab.py
+# Description  : Enable quota, ACL and extended attributes on ext4 filesystems
 # Signed-off by: thomas@linuxmuster.net
-# Assisted by: Claude
+# Assisted by  : Claude
+# Date         : 20260814
 #
 
 """
