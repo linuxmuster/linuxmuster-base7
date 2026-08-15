@@ -87,7 +87,17 @@ def get_ext4_features(device):
 
 
 def enable_ext4_quota():
-    """Enable quota feature on ext4 filesystem."""
+    """Enable the ext4 on-disk quota feature on the root filesystem.
+
+    Only usable for root. tune2fs refuses to touch the quota feature on
+    any mounted filesystem ("may only be changed when unmounted and not
+    in use") - root can't be unmounted live, so this rebuilds the
+    initramfs instead, and linuxmuster-prepare's pre-mount dracut hook
+    sets the feature via tune2fs at the next boot. Every other filesystem
+    is already fully mounted (and, if it holds live data, typically busy)
+    by the time this module runs, so the same approach isn't available
+    for them - see the non-root branch in main() for why that's fine.
+    """
     result = subprocess.run(['dracut', '--verbose', '--force', '--add', 'linuxmuster'], capture_output=True, text=True, check=False)
     if logfile:
         try:
@@ -239,9 +249,25 @@ def main():
 
         if 'quota' in features:
             printScript(' Enabled!', '', True, True, False, len(msg))
-        else:
+        elif mountpoint == '/':
+            # root can't be modified live while mounted - needs a dracut
+            # rebuild and a reboot, handled once after this loop
             enable_quota = True
             printScript(' Not enabled!', '', True, True, False, len(msg))
+        else:
+            # Every other filesystem is already fully mounted at this
+            # point (and, if it holds live data, typically busy), so
+            # tune2fs can't enable the feature here either - unlike root,
+            # there's no dracut+reboot path that would actually work for
+            # it either: dracut only activates the LVM volumes it needs to
+            # mount root, so a non-root LVM-backed filesystem (e.g.
+            # /srv/samba/*) is never visible to its blkid scan, no matter
+            # how many reboots happen. Not fatal though: plain
+            # usrquota/grpquota mount options (Phase 2/3/4 below) already
+            # give fully working quota via the older external-quota-file
+            # mechanism, without needing this feature at all - confirmed
+            # with a real quotacheck/quotaon/repquota run.
+            printScript(' Not enabled (using external quota files)', '', True, True, False, len(msg))
 
     if enable_quota:
         msg = 'Enabling ext4 quota '
@@ -275,44 +301,78 @@ def main():
                 printScript(' Failed!', '', True, True, False, len(msg))
                 sys.exit(1)
 
-    # Phase 3: Remount all ext4 filesystems (only if quota isn't active yet
-    # on this boot and wasn't just enabled this run - that needs a reboot
-    # via the freshly rebuilt initramfs, a remount alone wouldn't help)
+    # Phase 3: Remount filesystems that need quota activated this run, and
+    # verify it actually took effect. Quota-related mount options can only
+    # be set at the *initial* mount - the kernel silently keeps a
+    # filesystem's existing quota-related options across a remount once
+    # any of them are already active (confirmed live: no combination of
+    # remount option changes affects an already-active jqfmt-style mount).
+    # A filesystem where that happens needs a real unmount+mount cycle to
+    # pick up the new fstab options, i.e. a reboot - the same requirement
+    # as root, just for a different reason (already active rather than
+    # can't-unmount-the-boot-fs).
+    mounts_ready_for_activation = []
+    reboot_required_mounts = []
     if quota_needs_activation and not enable_quota:
-        for mountpoint, device, _ in ext4_mounts:
-            msg = ' * Remounting '
-            printScript(msg, '', False, False, True)
-
-            if subprocess.run(['mount', '-o', 'remount', f'{mountpoint}'],
-                            capture_output=True, text=True, check=False):
+        for mountpoint, device, current_options in ext4_mounts:
+            if 'quota' in current_options:
+                continue
+            msg = f' * Remounting {mountpoint} '
+            printScript(msg, '', False, False, True, len(msg))
+            subprocess.run(['mount', '-o', 'remount', mountpoint], capture_output=True, text=True, check=False)
+            if 'quota' in get_mounts().get(mountpoint, {}).get('options', []):
                 printScript('Success!', '', True, True, False, len(msg))
+                mounts_ready_for_activation.append(mountpoint)
             else:
-                printScript('Failed: remount error', '', True, True, False, len(msg))
-                sys.exit(1)
+                printScript('Needs a reboot!', '', True, True, False, len(msg))
+                reboot_required_mounts.append(mountpoint)
 
-    # Phase 4: Initialize and activate quota (only the first time it
-    # actually needs activating - quotaon on a filesystem where it's
-    # already active just fails trying to turn on what's already on)
-    if quota_needs_activation and not enable_quota:
-        msg = 'Initializing quota (quotacheck -a) '
+    # Phase 4: Initialize and activate quota, but only for filesystems that
+    # were just successfully remounted this run. Using quotacheck/quotaon
+    # -a here would risk erroring on filesystems that are already fully
+    # active from before, or still stuck on the old format
+    # (reboot_required_mounts) - operate on exactly the mountpoints that
+    # need it instead.
+    if mounts_ready_for_activation:
+        # Best-effort: a filesystem upgraded from the legacy journaled-quota
+        # setup (usrjquota=/jqfmt=) may already have quota turned on from
+        # before this run, and quotacheck refuses to scan a filesystem
+        # with quota currently enabled ("might damage the file"). Not
+        # checked for errors - quotaoff itself isn't fully idempotent
+        # either (a filesystem that's already off can still report one),
+        # and that's fine, it's just here to guarantee a clean slate for
+        # the quotacheck/quotaon call below wherever quota was left on.
+        subprocess.run(['quotaoff'] + mounts_ready_for_activation, capture_output=True, text=True, check=False)
+
+        msg = 'Initializing quota (quotacheck) '
         printScript(msg, '', False, False, True)
-        result = subprocess.run(['quotacheck', '-a'], capture_output=True, text=True, check=False)
+        # -m: don't try to remount read-only first for a paranoia-safe scan
+        # - on an already-live system (e.g. during a release upgrade) that
+        # remount fails because filesystems are actively being written to,
+        # which quotacheck otherwise treats as a hard failure.
+        result = subprocess.run(['quotacheck', '-m'] + mounts_ready_for_activation, capture_output=True, text=True, check=False)
         if result.returncode != 0:
             printScript('Failed: quotacheck error', '', True, True, False, len(msg))
             sys.exit(1)
         printScript('Success!', '', True, True, False, len(msg))
 
-        msg = 'Activating quota (quotaon -a) '
+        msg = 'Activating quota (quotaon) '
         printScript(msg, '', False, False, True)
-        result = subprocess.run(['quotaon', '-a'], capture_output=True, text=True, check=False)
+        result = subprocess.run(['quotaon'] + mounts_ready_for_activation, capture_output=True, text=True, check=False)
         if result.returncode != 0:
             printScript('Failed: quotaon error', '', True, True, False, len(msg))
             sys.exit(1)
         printScript('Success!', '', True, True, False, len(msg))
-    
+
     if enable_quota:
         printScript('Quota feature enabled on ext4 filesystems. Please reboot to apply changes.')
         printScript('Don\'t forget to invoke \'quotacheck -a\' and \'quotaon -a\' manually after reboot.')
+
+    if reboot_required_mounts:
+        printScript('The following filesystems already had quota active in an '
+                     'older format and could not be switched over live: '
+                     + ', '.join(reboot_required_mounts))
+        printScript('Please reboot to apply the new quota configuration on them.')
 
     # Phase 5: mask now-redundant quotaon units, regardless of whether this
     # run itself enabled the feature - it may already have been enabled by

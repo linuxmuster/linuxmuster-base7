@@ -14,6 +14,14 @@ linuxmuster-base7 (7.4.14) lmn74; urgency=low
   * fix(create-keytab.py): use StrictHostkeyChecking=no for firewall ssh
     calls, matching the rest of the codebase, so a reinstalled firewall
     (changed host key) no longer breaks keytab creation (7662592).
+  * fix(e_fstab.py): don't force the ext4 quota feature onto non-root
+    filesystems - dracut's pre-mount hook never activates non-root LVM
+    volumes and so never enables it there, no matter how many reboots -
+    plain usrquota/grpquota already works via the external quota-file
+    mechanism instead. Also verify remounts actually took effect (quota
+    options can only be set at the initial mount once any are already
+    active) and report per-filesystem when a reboot is genuinely needed,
+    instead of silently doing nothing or wrongly claiming success.
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 15 Aug 2026 17:59:26 +0200
 
