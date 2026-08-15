@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 #
-# create web proxy sso keytab
-# thomas@linuxmuster.net
-# 20260622
+# Filename     : create-keytab.py
+# Description  : Create OPNsense web proxy SSO keytab
+# Signed-off by: thomas@linuxmuster.net
+# Assisted by  : Claude
+# Date         : 20260815
 #
 
 import getopt
@@ -78,7 +80,7 @@ if not check:
     # reload relevant services
     for item in ['unbound', 'squid']:
         printScript('Restarting ' + item)
-        result = subprocess.run(['ssh', '-q', '-oBatchmode=yes', '-oStrictHostKeyChecking=accept-new',
+        result = subprocess.run(['ssh', '-q', '-oBatchmode=yes', '-oStrictHostkeyChecking=no',
                                 firewallip, 'pluginctl', '-s', item, 'restart'])
         if result.returncode != 0:
             sys.exit(1)
