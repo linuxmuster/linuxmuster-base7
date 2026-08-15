@@ -1,3 +1,12 @@
+linuxmuster-base7 (7.4.14) lmn74; urgency=low
+
+  * fix(e_fstab.py): mask redundant quotaon units unconditionally, not only
+    when this run itself enables the quota feature, and only run
+    remount/quotacheck/quotaon when quota isn't active on the mount yet,
+    fixing quotaon-root.service failing at boot and re-runs failing.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 15 Aug 2026 14:35:40 +0200
+
 linuxmuster-base7 (7.4.13) lmn74; urgency=low
 
   * fix(e_fstab.py): drop legacy journaled-quota mount options

@@ -4,7 +4,7 @@
 # Description  : Enable quota, ACL and extended attributes on ext4 filesystems
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260814
+# Date         : 20260815
 #
 
 """
@@ -102,8 +102,6 @@ def enable_ext4_quota():
                 log.write('-' * 78 + '\n')
         except Exception:
             pass
-    if result.returncode == 0:
-        mask_redundant_quotaon_units()
     return result.returncode == 0
 
 
@@ -202,6 +200,18 @@ def main():
     mounts = get_mounts()
     ext4_mounts = []
     enable_quota = False
+    # whether at least one ext4 mount is missing "quota" from its *active*
+    # mount options - i.e. quota isn't actually enforced yet on this boot,
+    # regardless of the on-disk feature bit. This must be checked
+    # separately from enable_quota: the feature may already have been
+    # turned on by linuxmuster-prepare's do_dracut() before
+    # linuxmuster-setup ever ran (the standard prepare -> reboot -> setup
+    # order), in which case enable_quota is False here even though
+    # enforcement hasn't been activated for this mount yet. Conversely, on
+    # a system that's already fully configured, quota is already active
+    # here too, so quotacheck/quotaon must not be re-run (quotaon fails
+    # trying to turn on what's already on).
+    quota_needs_activation = False
 
     # Phase 1: Enable quota feature on all ext4 filesystems
     for mountpoint, mount in mounts.items():
@@ -216,6 +226,9 @@ def main():
 
         ext4_mounts.append((mountpoint, device, mount['options']))
 
+        if 'quota' not in mount['options']:
+            quota_needs_activation = True
+
         msg = f'Checking quota feature on {device} '
         printScript(msg, '', False, False, True)
 
@@ -229,7 +242,7 @@ def main():
         else:
             enable_quota = True
             printScript(' Not enabled!', '', True, True, False, len(msg))
-    
+
     if enable_quota:
         msg = 'Enabling ext4 quota '
         printScript(msg, '', False, False, True, len(msg))
@@ -262,21 +275,25 @@ def main():
                 printScript(' Failed!', '', True, True, False, len(msg))
                 sys.exit(1)
 
-    # Phase 3: Remount all ext4 filesystems (only if quota was not enabled before)
-    if not enable_quota:
+    # Phase 3: Remount all ext4 filesystems (only if quota isn't active yet
+    # on this boot and wasn't just enabled this run - that needs a reboot
+    # via the freshly rebuilt initramfs, a remount alone wouldn't help)
+    if quota_needs_activation and not enable_quota:
         for mountpoint, device, _ in ext4_mounts:
             msg = ' * Remounting '
             printScript(msg, '', False, False, True)
 
-            if subprocess.run(['mount', '-o', 'remount', f'{mountpoint}'], 
+            if subprocess.run(['mount', '-o', 'remount', f'{mountpoint}'],
                             capture_output=True, text=True, check=False):
                 printScript('Success!', '', True, True, False, len(msg))
             else:
                 printScript('Failed: remount error', '', True, True, False, len(msg))
                 sys.exit(1)
 
-    # Phase 4: Initialize and activate quota
-    if ext4_mounts and not enable_quota:
+    # Phase 4: Initialize and activate quota (only the first time it
+    # actually needs activating - quotaon on a filesystem where it's
+    # already active just fails trying to turn on what's already on)
+    if quota_needs_activation and not enable_quota:
         msg = 'Initializing quota (quotacheck -a) '
         printScript(msg, '', False, False, True)
         result = subprocess.run(['quotacheck', '-a'], capture_output=True, text=True, check=False)
@@ -296,6 +313,18 @@ def main():
     if enable_quota:
         printScript('Quota feature enabled on ext4 filesystems. Please reboot to apply changes.')
         printScript('Don\'t forget to invoke \'quotacheck -a\' and \'quotaon -a\' manually after reboot.')
+
+    # Phase 5: mask now-redundant quotaon units, regardless of whether this
+    # run itself enabled the feature - it may already have been enabled by
+    # linuxmuster-prepare's do_dracut() before linuxmuster-setup even ran
+    # (the standard order: prepare, reboot, setup), in which case Phase 1
+    # never calls enable_ext4_quota() at all. Masking must not depend on
+    # that branch, or the units stay enabled and fail at the next boot.
+    if ext4_mounts:
+        msg = 'Masking redundant quotaon units '
+        printScript(msg, '', False, False, True, len(msg))
+        mask_redundant_quotaon_units()
+        printScript(' Success!', '', True, True, False, len(msg))
 
 
 main()
