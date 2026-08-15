@@ -1,3 +1,12 @@
+linuxmuster-base7 (7.3.41-0) lmn73; urgency=low
+
+  * fix(linuxmuster-release-upgrade): invoke e_fstab.py via python3 instead
+    of relying on its executable bit, which the installed file doesn't
+    have - the previous check ("[ -x ... ]") silently skipped the whole
+    quota retrofit step on every real upgrade, with no error at all.
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 15 Aug 2026 22:50:00 +0200
+
 linuxmuster-base7 (7.3.40-0) lmn73; urgency=low
 
   * fix(linuxmuster-release-upgrade): retrofit quota fstab fix and unit

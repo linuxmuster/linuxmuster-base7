@@ -211,10 +211,15 @@ linuxmuster-distupgrade
 # journaled-quota fstab options and an unmasked quotaon-root.service that
 # fails at every boot. e_fstab.py is idempotent and safe to re-run against
 # an already-configured system.
+# Invoked via "python3 <path>", not directly - the file is installed
+# without the executable bit (it's a Python module meant to be imported by
+# linuxmuster-setup, not run standalone), so an earlier version of this
+# check ("[ -x "$e_fstab" ]") always failed and silently skipped this
+# whole step on every real upgrade, with no error at all.
 e_fstab="/usr/lib/python3/dist-packages/linuxmuster_base7/setup/e_fstab.py"
-if [ -x "$e_fstab" ]; then
+if [ -f "$e_fstab" ]; then
     echo -e "\n## Fixing ext4 quota configuration..."
-    "$e_fstab" || echo "WARNING: $e_fstab failed, please check quota configuration manually!"
+    python3 "$e_fstab" || echo "WARNING: $e_fstab failed, please check quota configuration manually!"
 fi
 
 # clean apt cache
