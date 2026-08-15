@@ -11,8 +11,11 @@ linuxmuster-base7 (7.4.14) lmn74; urgency=low
     also exit non-zero on all failure paths in main() instead of
     silently returning, so a failed subnet import is no longer logged as
     success (5a8e9cb).
+  * fix(create-keytab.py): use StrictHostkeyChecking=no for firewall ssh
+    calls, matching the rest of the codebase, so a reinstalled firewall
+    (changed host key) no longer breaks keytab creation (7662592).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 15 Aug 2026 15:03:10 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 15 Aug 2026 17:59:26 +0200
 
 linuxmuster-base7 (7.4.13) lmn74; urgency=low
 
