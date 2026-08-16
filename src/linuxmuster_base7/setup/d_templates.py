@@ -2,7 +2,7 @@
 #
 # process config templates
 # thomas@linuxmuster.net
-# 20260618
+# 20260816
 #
 
 """
@@ -174,7 +174,14 @@ except subprocess.CalledProcessError:
     pass  # timedatectl not available or failed, skip NTP disable
 
 runWithLog(['systemctl', 'stop', 'ntpsec'], logfile, checkErrors=False)
-runWithLog(['ntpd', 'pool.ntp.org'], logfile, checkErrors=False)  # One-time sync
+# One-time sync, replacing the deprecated/removed ntpdate: plain
+# "ntpd pool.ntp.org" does NOT sync once and exit like ntpdate did - ntpd
+# is the persistent daemon, so without -q it forks into the background
+# and keeps running forever, permanently holding port 123 and making the
+# systemctl start below fail ("Address already in use"). -q makes it step
+# the clock once and quit; -g permits an arbitrarily large first step
+# instead of panicking on it (matching ntpdate's behavior).
+runWithLog(['ntpd', '-q', '-g', 'pool.ntp.org'], logfile, checkErrors=False)
 runWithLog(['systemctl', 'enable', 'ntpsec'], logfile, checkErrors=False)
 runWithLog(['systemctl', 'start', 'ntpsec'], logfile, checkErrors=False)  # Start continuous sync
 now = str(datetime.datetime.now()).split('.')[0]

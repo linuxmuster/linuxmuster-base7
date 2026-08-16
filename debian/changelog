@@ -19,8 +19,11 @@ linuxmuster-base7 (7.4.14) lmn74; urgency=low
   * fix(e_fstab.py): stop masking quotaon@.service, unmask it instead -
     masking it disabled quota reactivation on every future reboot, not
     just the one problematic first boot (9ba8072).
+  * fix(d_templates.py): use "ntpd -q -g" for the one-time sync instead of
+    bare "ntpd", which never exits and permanently blocks port 123,
+    making the following ntpsec.service start fail.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 14:26:29 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 14:45:00 +0200
 
 linuxmuster-base7 (7.4.13) lmn74; urgency=low
 
