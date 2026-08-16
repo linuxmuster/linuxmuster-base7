@@ -31,8 +31,17 @@ linuxmuster-base7 (7.4.14) lmn74; urgency=low
     group; and "quota" appearing in active mount options was wrongly
     used as a proxy for quota already being fully on, when a fresh mount
     shows that immediately regardless of whether quotaon ever ran.
+  * fix(e_fstab.py): don't let root needing a reboot (dracut+enable) skip
+    quotacheck/quotaon for unrelated non-root filesystems in the same
+    run - during a real release upgrade root essentially always needs
+    that reboot, since linuxmuster-prepare's dracut hook only takes
+    effect at the next boot, so this silently left every non-root
+    filesystem's quota unactivated even after the mandatory post-upgrade
+    reboot (nothing else retries it, quotaon@.service is masked on
+    purpose). Verified via an isolated logic simulation and live on a
+    real 7.3->7.4 upgrade test host.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 11:00:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 11:15:00 +0200
 
 linuxmuster-base7 (7.4.13) lmn74; urgency=low
 

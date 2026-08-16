@@ -338,14 +338,29 @@ def main():
     # any of them are already active (confirmed live: no combination of
     # remount option changes affects an already-active jqfmt-style mount).
     # A filesystem where that happens needs a real unmount+mount cycle to
-    # pick up the new fstab options, i.e. a reboot - the same requirement
-    # as root, just for a different reason (already active rather than
-    # can't-unmount-the-boot-fs).
+    # pick up the new fstab options, i.e. a reboot.
+    #
+    # This must NOT be gated on "not enable_quota" (root needing the
+    # dracut+reboot path) the way it used to be: root needing a reboot has
+    # nothing to do with whether some other, unrelated non-root filesystem
+    # can be activated live right now. Gating the whole loop on root alone
+    # meant that during a real release upgrade - where root essentially
+    # always needs enabling here, since linuxmuster-prepare's dracut hook
+    # only takes effect at the next boot - every non-root filesystem's
+    # quotacheck/quotaon got skipped for this run too, and nothing ever
+    # retried them afterwards (quotaon@.service is masked deliberately, see
+    # mask_redundant_quotaon_units()), leaving their quota silently never
+    # activated even after the mandatory post-upgrade reboot.
     mounts_ready_for_activation = []
     reboot_required_mounts = []
-    if quota_needs_activation and not enable_quota:
+    if quota_needs_activation:
         for mountpoint, device, current_options in ext4_mounts:
             if is_quota_on(mountpoint):
+                continue
+            if mountpoint == '/' and enable_quota:
+                # already being handled above (dracut rebuild + reboot) -
+                # attempting a remount here would be redundant, and root
+                # can't pick up the feature that way regardless
                 continue
             msg = f' * Remounting {mountpoint} '
             printScript(msg, '', False, False, True, len(msg))
