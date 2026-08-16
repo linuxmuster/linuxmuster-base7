@@ -7,8 +7,13 @@ linuxmuster-base7 (7.3.40-0) lmn73; urgency=low
     unmasked, permanently failing quotaon-root.service on every upgraded
     host. Invoke e_fstab.py via python3 rather than relying on its
     executable bit, which the installed file doesn't have.
+  * fix(linuxmuster-release-upgrade): purge modemmanager before the OS
+    release upgrade, if installed - pulled in by the ubuntu-server task
+    but useless on a linuxmuster.net server (no cellular modem hardware),
+    and its constant PolicyKit activation attempts have been observed to
+    badly slow down a release upgrade.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 11:00:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 13:30:00 +0200
 
 linuxmuster-base7 (7.3.39-0) lmn73; urgency=low
 

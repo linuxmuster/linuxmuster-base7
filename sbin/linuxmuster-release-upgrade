@@ -4,7 +4,7 @@
 # Description  : Performs a release upgrade to linuxmuster.net 7.4
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260815
+# Date         : 20260816
 #
 
 # get linuxmuster environment
@@ -132,6 +132,15 @@ else
     echo "grub-pc grub-pc/install_devices multiselect $boot_disk" | debconf-set-selections
     # install grub on detected boot disk
     script -q -c "dpkg-reconfigure --priority=critical grub-pc" || exit 1
+
+    # remove modemmanager, if installed - pulled in by the ubuntu-server
+    # task but useless on a linuxmuster.net server (no cellular modem
+    # hardware), and its constant PolicyKit activation attempts have been
+    # observed to badly slow down a release upgrade
+    if dpkg -l modemmanager 2>/dev/null | grep -q ^ii; then
+        echo -e "\n## Removing modemmanager..."
+        apt-get -yu purge modemmanager
+    fi
 
     # start release upgrade
     echo -e "\n## Starting release upgrade..."
