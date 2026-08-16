@@ -1,58 +1,26 @@
 linuxmuster-base7 (7.4.14) lmn74; urgency=low
 
-  * fix(e_fstab.py): mask redundant quotaon units unconditionally, not only
-    when this run itself enables the quota feature, and only run
-    remount/quotacheck/quotaon when quota isn't active on the mount yet,
-    fixing quotaon-root.service failing at boot and re-runs failing
-    (f163951).
-  * fix(import_subnets.py): use lighter /core/firmware/status endpoint
-    instead of /core/firmware/info for the firewall version check, whose
-    huge package-list response crashed with a chunked-encoding error;
-    also exit non-zero on all failure paths in main() instead of
-    silently returning, so a failed subnet import is no longer logged as
+  * fix(e_fstab.py): mask quotaon units unconditionally, only re-run
+    remount/quotacheck/quotaon when quota isn't active yet (f163951).
+  * fix(import_subnets.py): use lighter /core/firmware/status endpoint,
+    exit non-zero on all failure paths instead of silently logging
     success (5a8e9cb).
   * fix(create-keytab.py): use StrictHostkeyChecking=no for firewall ssh
-    calls, matching the rest of the codebase, so a reinstalled firewall
-    (changed host key) no longer breaks keytab creation (7662592).
+    calls, so a reinstalled firewall doesn't break keytab creation
+    (7662592).
   * fix(e_fstab.py): don't force the ext4 quota feature onto non-root
-    filesystems - dracut's pre-mount hook never activates non-root LVM
-    volumes and so never enables it there, no matter how many reboots -
-    plain usrquota/grpquota already works via the external quota-file
-    mechanism instead. Also verify remounts actually took effect (quota
-    options can only be set at the initial mount once any are already
-    active) and report per-filesystem when a reboot is genuinely needed,
-    instead of silently doing nothing or wrongly claiming success.
-  * fix(e_fstab.py): mask quotaon@.service template unit and fix quota
-    activation on non-root filesystems - quotaon@<mount>.service (a
-    systemd quota-package unit, separate from quotaon-root.service/
-    quotaon.service) was failing at every boot for every non-root
-    filesystem; quotacheck was silently only scanning the first of
-    several mountpoints given at once and only checking user quota, not
-    group; and "quota" appearing in active mount options was wrongly
-    used as a proxy for quota already being fully on, when a fresh mount
-    shows that immediately regardless of whether quotaon ever ran.
-  * fix(e_fstab.py): don't let root needing a reboot (dracut+enable) skip
-    quotacheck/quotaon for unrelated non-root filesystems in the same
-    run - during a real release upgrade root essentially always needs
-    that reboot, since linuxmuster-prepare's dracut hook only takes
-    effect at the next boot, so this silently left every non-root
-    filesystem's quota unactivated even after the mandatory post-upgrade
-    reboot (nothing else retries it, quotaon@.service is masked on
-    purpose). Verified via an isolated logic simulation and live on a
-    real 7.3->7.4 upgrade test host.
+    filesystems - dracut never enables it there; plain usrquota/grpquota
+    already works via the external quota-file mechanism (2562346).
+  * fix(e_fstab.py): mask quotaon@.service and fix quota activation on
+    non-root filesystems - quotacheck only scanned the first of several
+    mountpoints and only checked user, not group quota (bc2fd21).
+  * fix(e_fstab.py): don't let root's reboot need skip quotacheck/quotaon
+    for unrelated non-root filesystems in the same run (0b3476d).
   * fix(e_fstab.py): stop masking quotaon@.service, unmask it instead -
-    masking it (added in an earlier fix in this same release) turned out
-    to be wrong: it "fixed" a genuinely real but one-time problem (the
-    very first boot before e_fstab.py has ever created a filesystem's
-    aquota files, where quotaon fails with "cannot find ...
-    aquota.user/aquota.group") by disabling the mechanism forever,
-    silently turning quota off again on every subsequent reboot even
-    once the files existed - since nothing else reactivates quota
-    tracking for the external-quota-file mechanism after a reboot.
-    Found live: a fully migrated, working upgrade test host lost all
-    non-root quota enforcement on its very next unrelated reboot.
+    masking it disabled quota reactivation on every future reboot, not
+    just the one problematic first boot (9ba8072).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 14:15:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 14:26:29 +0200
 
 linuxmuster-base7 (7.4.13) lmn74; urgency=low
 
