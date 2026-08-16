@@ -1,17 +1,11 @@
 linuxmuster-base7 (7.3.40-0) lmn73; urgency=low
 
   * fix(linuxmuster-release-upgrade): retrofit quota fstab fix and unit
-    masking onto the upgraded system, since neither lmn-prepare (bootstrap
-    only) nor e_fstab.py (fresh setup only) ever run during a 7.3->7.4
-    release upgrade, leaving legacy journaled-quota fstab options and an
-    unmasked, permanently failing quotaon-root.service on every upgraded
-    host. Invoke e_fstab.py via python3 rather than relying on its
-    executable bit, which the installed file doesn't have.
+    masking onto upgraded systems, since neither lmn-prepare nor
+    e_fstab.py ever touch them otherwise (0d56f33, 50eb82d).
   * fix(linuxmuster-release-upgrade): purge modemmanager before the OS
-    release upgrade, if installed - pulled in by the ubuntu-server task
-    but useless on a linuxmuster.net server (no cellular modem hardware),
-    and its constant PolicyKit activation attempts have been observed to
-    badly slow down a release upgrade.
+    upgrade, if installed - useless here and slows the upgrade down
+    (7296d9e).
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 13:30:00 +0200
 
