@@ -21,7 +21,7 @@ linuxmuster-base7 (7.4.14) lmn74; urgency=low
     just the one problematic first boot (9ba8072).
   * fix(d_templates.py): use "ntpd -q -g" for the one-time sync instead of
     bare "ntpd", which never exits and permanently blocks port 123,
-    making the following ntpsec.service start fail.
+    making the following ntpsec.service start fail (7f731ce).
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 14:45:00 +0200
 
