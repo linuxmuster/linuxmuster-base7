@@ -40,8 +40,19 @@ linuxmuster-base7 (7.4.14) lmn74; urgency=low
     reboot (nothing else retries it, quotaon@.service is masked on
     purpose). Verified via an isolated logic simulation and live on a
     real 7.3->7.4 upgrade test host.
+  * fix(e_fstab.py): stop masking quotaon@.service, unmask it instead -
+    masking it (added in an earlier fix in this same release) turned out
+    to be wrong: it "fixed" a genuinely real but one-time problem (the
+    very first boot before e_fstab.py has ever created a filesystem's
+    aquota files, where quotaon fails with "cannot find ...
+    aquota.user/aquota.group") by disabling the mechanism forever,
+    silently turning quota off again on every subsequent reboot even
+    once the files existed - since nothing else reactivates quota
+    tracking for the external-quota-file mechanism after a reboot.
+    Found live: a fully migrated, working upgrade test host lost all
+    non-root quota enforcement on its very next unrelated reboot.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 11:15:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 14:15:00 +0200
 
 linuxmuster-base7 (7.4.13) lmn74; urgency=low
 
