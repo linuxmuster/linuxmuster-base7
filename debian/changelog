@@ -1,17 +1,3 @@
-linuxmuster-base7 (7.4.15) lmn74; urgency=low
-
-  * fix(e_fstab.py): mask quotaon@.service template unit and fix quota
-    activation on non-root filesystems - quotaon@<mount>.service (a
-    systemd quota-package unit, separate from quotaon-root.service/
-    quotaon.service) was failing at every boot for every non-root
-    filesystem; quotacheck was silently only scanning the first of
-    several mountpoints given at once and only checking user quota, not
-    group; and "quota" appearing in active mount options was wrongly
-    used as a proxy for quota already being fully on, when a fresh mount
-    shows that immediately regardless of whether quotaon ever ran.
-
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 08:55:00 +0200
-
 linuxmuster-base7 (7.4.14) lmn74; urgency=low
 
   * fix(e_fstab.py): mask redundant quotaon units unconditionally, not only
@@ -36,8 +22,17 @@ linuxmuster-base7 (7.4.14) lmn74; urgency=low
     options can only be set at the initial mount once any are already
     active) and report per-filesystem when a reboot is genuinely needed,
     instead of silently doing nothing or wrongly claiming success.
+  * fix(e_fstab.py): mask quotaon@.service template unit and fix quota
+    activation on non-root filesystems - quotaon@<mount>.service (a
+    systemd quota-package unit, separate from quotaon-root.service/
+    quotaon.service) was failing at every boot for every non-root
+    filesystem; quotacheck was silently only scanning the first of
+    several mountpoints given at once and only checking user quota, not
+    group; and "quota" appearing in active mount options was wrongly
+    used as a proxy for quota already being fully on, when a fresh mount
+    shows that immediately regardless of whether quotaon ever ran.
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Sat, 15 Aug 2026 17:59:26 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Sun, 16 Aug 2026 11:00:00 +0200
 
 linuxmuster-base7 (7.4.13) lmn74; urgency=low
 
