@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.4.15) lmn74; urgency=low
+
+  * fix(ntp.conf): drop obsolete notrap restrict flag, which ntpsec
+    ignores and logs on every start (#192, PR #193, debbab8).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 17 Aug 2026 09:45:00 +0200
+
 linuxmuster-base7 (7.4.14) lmn74; urgency=low
 
   * fix(e_fstab.py): mask quotaon units unconditionally, only re-run
