@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 #
-# process config templates
-# thomas@linuxmuster.net
-# 20260816
+# Filename     : d_templates.py
+# Description  : Process and deploy configuration file templates
+# Signed-off by: thomas@linuxmuster.net
+# Assisted by  : Claude
+# Date         : 20260818
 #
 
 """
@@ -98,7 +100,14 @@ for f in os.listdir(environment.TPLDIR):
             '@@schoolname@@': schoolname,
             '@@servername@@': servername,
             '@@serverip@@': serverip,
-            '@@ntpsockdir@@': environment.NTPSOCKDIR
+            '@@ntpsockdir@@': environment.NTPSOCKDIR,
+            # ntp.conf's per-subnet restrict lines are filled in later by
+            # linuxmuster-update-ntpconf (once subnets.csv is known) - default
+            # to an empty line here so the placeholder isn't left dangling in
+            # the file when this module's own one-time "ntpd -q -g" sync
+            # below reads it, which would otherwise choke on the literal
+            # "@@restricted_subnets@@" text as a config syntax error.
+            '@@restricted_subnets@@': '',
         }
         filedata = replaceTemplateVars(filedata, variables)
 
@@ -163,6 +172,15 @@ printScript(msg, '', False, False, True)
 runWithLog(['mkdir', '-p', environment.NTPSOCKDIR], logfile, checkErrors=False)
 runWithLog(['chgrp', 'ntpsec', environment.NTPSOCKDIR], logfile, checkErrors=False)
 runWithLog(['chmod', '750', environment.NTPSOCKDIR], logfile, checkErrors=False)
+
+# Ensure the ntpsec statistics log directory exists. On a fresh install this
+# is normally created by the package's postinst script, but postinst skips
+# that step entirely on first install - it gates on setup.ini already
+# existing, which it doesn't yet at package-install time. Without this, ntpd
+# logs "statistics directory /var/log/ntpsec/ does not exist" on every start
+# until the package is reconfigured (e.g. on the next apt upgrade).
+runWithLog(['mkdir', '-p', '/var/log/ntpsec'], logfile, checkErrors=False)
+runWithLog(['chown', 'ntpsec:ntpsec', '/var/log/ntpsec'], logfile, checkErrors=False)
 
 # Only disable systemd-timesyncd NTP if it's currently enabled
 try:
