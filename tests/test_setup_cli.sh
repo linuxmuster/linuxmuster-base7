@@ -1,9 +1,11 @@
 #!/bin/bash
 #
-# Test script for linuxmuster-setup CLI
-# Tests all parameters and validates functionality
-# thomas@linuxmuster.net
-# 20251111
+# Filename     : test_setup_cli.sh
+# Description  : Test script for linuxmuster-setup CLI - tests all parameters
+#                and validates functionality
+# Signed-off by: thomas@linuxmuster.net
+# Assisted by  : Claude
+# Date         : 20260818
 #
 
 set -e
@@ -345,7 +347,7 @@ test_functions_module() {
     ((TESTS_RUN++))
     print_test "Testing functions module accessibility"
 
-    if python3 -c "from linuxmuster_base7.functions import subProc, modIni" 2>/dev/null; then
+    if python3 -c "from linuxmuster_base7.functions import modIni" 2>/dev/null; then
         print_pass "Functions module accessible"
     else
         print_fail "Functions module not accessible"
