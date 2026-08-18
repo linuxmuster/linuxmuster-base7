@@ -14,6 +14,10 @@ linuxmuster-base7 (7.4.15) lmn74; urgency=low
   * refactor(functions.py): split into functions/ package with 8 cohesive
     submodules (core, files, network, samba, linbo, certs, remote,
     security); __init__.py re-exports every name unchanged (#129, 5f1841e)
+  * fix(d_templates.py): fill @@restricted_subnets@@ with a safe empty
+    default and create /var/log/ntpsec proactively - both were causing
+    ntpd errors on the very first start of a fresh install (found while
+    auditing srv_bancini setup logs, 4873245)
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 18 Aug 2026 10:54:59 +0200
 
