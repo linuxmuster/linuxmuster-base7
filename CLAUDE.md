@@ -55,7 +55,16 @@ linuxmuster-base7/
 │   │   ├── base.py               # Example CLI base class (Template Method pattern)
 │   │   └── logging.py            # Example unified logging module
 │   │
-│   ├── functions.py              # Shared utility functions used across all modules
+│   ├── functions/                # Shared utility functions, split by concern (#129)
+│   │   ├── __init__.py           # Re-exports every name for from-imports to keep working
+│   │   ├── core.py               # printScript/tee logging, getSetupValue, mySetupLogfile
+│   │   ├── files.py              # Text/secret/ini file read-write helpers
+│   │   ├── network.py            # Subnet/device CSV parsing, IP/hostname/MAC validation
+│   │   ├── samba.py              # Samba AD / samba-tool helpers
+│   │   ├── linbo.py              # LINBO start.conf and GRUB config helpers
+│   │   ├── certs.py              # SSL/TLS certificate generation and signing
+│   │   ├── remote.py             # OPNsense firewall API and SSH/SCP helpers
+│   │   └── security.py           # Password generation/validation helpers
 │   └── __init__.py               # Package initialization
 │
 ├── share/                        # Shared scripts and utilities
@@ -173,42 +182,54 @@ Setup modules are executed in alphabetical order (a → z). This ordering is cri
   - Consistent subprocess execution
   - Secret masking for passwords in logs
 
-## Core Shared Module: functions.py
+## Core Shared Module: functions/
 
-The `functions.py` module provides shared utilities used across all CLI and setup modules:
+`functions` is a package (split from a single 1497-line `functions.py` into cohesive
+submodules, see issue #129), providing shared utilities used across all CLI and setup
+modules. `functions/__init__.py` re-exports every name from every submodule, so all
+existing call sites keep working unchanged as `from linuxmuster_base7.functions import X`.
 
-### Key Functions (Categories)
+### Submodules & Key Functions
 
-**Setup & Configuration:**
+**`core.py` (logging & setup.ini):**
 - `getSetupValue(key)`: Read values from setup.ini
 - `mySetupLogfile(__file__)`: Generate setup logfile path
+- `printScript(msg, status)`: Consistent console output formatting (begin/end markers, progress indicators)
+- `tee`: Class that duplicates stdout/stderr to a logfile
 
-**Device Management:**
+**`files.py` (text/secret/ini file I/O):**
+- `readTextfile(path)`: Read text file with error handling
+- `writeTextfile(path, content, mode)`: Write text file atomically
+- `modIni(inifile, section, option, value)`: Modify/write an ini file
+
+**`network.py` (subnets, devices, validation):**
 - `getDevicesArray(fieldnrs, subnet, school)`: Read devices from CSV
 - `getSubnetArray(subnet)`: Read subnet definitions
+- `isValidHostIpv4()`, `isValidMac()`, `isValidHostname()`: Input validation
 
-**LINBO/GRUB Boot Configuration:**
+**`samba.py` (Samba AD):**
+- `adSearch(search_filter, search_base)`: Query Samba AD via LDAP
+- `sambaTool(options, logfile)`: Run `samba-tool` with secret masking
+
+**`linbo.py` (LINBO/GRUB boot configuration):**
 - `getGrubPart(partition)`: Convert partition to GRUB format (e.g., `/dev/sda1` → `(hd0,1)`)
 - `getGrubOstype(osname)`: Detect OS type (linux, windows, etc.)
 - `getStartconfOption(file, section, option)`: Parse LINBO start.conf files
 - `getStartconfOsValues(file)`: Extract OS definitions from start.conf
 - `getStartconfPartnr()`, `getStartconfPartlabel()`: Get partition metadata
 
-**File Operations:**
-- `readTextfile(path)`: Read text file with error handling
-- `writeTextfile(path, content, mode)`: Write text file atomically
+**`certs.py` (SSL/TLS certificates):**
+- `createServerCert(item, days, logfile)`: Generate key, CSR and CA-signed certificate
+- `encodeCertToBase64(certfile)`: Encode certificate for firewall upload
+- `renewCaCertificate()`, `signCertificateWithCa()`: CA renewal and signing
 
-**Network & Firewall:**
+**`remote.py` (OPNsense API & SSH/SCP):**
 - `waitForFw(wait)`: Wait for OPNsense firewall to become ready
 - `firewallApi(path, data, method)`: Make API calls to OPNsense
+- `sshExec()`, `scpTransfer()`: Remote command execution and file transfer
 
-**Logging & Output:**
-- `printScript(msg, status)`: Consistent console output formatting
-- Supports begin/end markers, progress indicators
-
-**Certificate Operations:**
-- `encodeCertToBase64(certfile)`: Encode certificate for firewall upload
-- `readCertFromBase64(base64str)`: Decode certificate from firewall
+**`security.py` (passwords):**
+- `randomPassword(size)`, `isValidPassword(password)`, `enterPassword()`
 
 ## Configuration Files
 
