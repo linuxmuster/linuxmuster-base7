@@ -5,6 +5,8 @@ linuxmuster-base7 (7.4.15) lmn74; urgency=low
   * refactor(e_fstab.py): split main() into named phase functions (#129, 354ea1b)
   * refactor(import_devices.py): split main() into named step functions,
     drop dead devices/serverip/domainname variables (#129, 22b07aa)
+  * refactor(import_subnets.py): split main() into readSetupValues(),
+    partitionSubnets() and updateFirewall() (#129, 2d405f4)
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 18 Aug 2026 10:54:59 +0200
 
