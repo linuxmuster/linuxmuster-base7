@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 #
-# linuxmuster-import-devices
-# thomas@linuxmuster.net
-# 20260529
+# Filename     : import_devices.py
+# Description  : Import devices from devices.csv into DHCP, DNS and LINBO/GRUB config
+# Signed-off by: thomas@linuxmuster.net
+# Assisted by  : Claude
+# Date         : 20260818
 #
 
 import configparser
@@ -21,7 +23,7 @@ from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 
-from linuxmuster_base7.functions import getDevicesArray, getGrubOstype, getGrubPart, getSetupValue, getStartconfOsValues, \
+from linuxmuster_base7.functions import getDevicesArray, getGrubOstype, getGrubPart, getStartconfOsValues, \
     getStartconfOption, getStartconfPartnr, getStartconfPartlabel, getSubnetArray, \
     getLinboVersion, printScript, readTextfile, writeTextfile
 
@@ -497,18 +499,12 @@ def doAllGroupLinks():
 # functions end
 
 
-def main():
-    """Main entry point for CLI tool.
+def parseArguments():
+    """Parse command-line arguments.
 
-    This function orchestrates the complete device import workflow:
-    1. Parses command-line arguments
-    2. Runs sophomorix-device syntax check
-    3. Generates DHCP configuration for all devices
-    4. Creates LINBO/GRUB boot configurations
-    5. Executes post-import hooks
-    6. Restarts DHCP service
+    Returns:
+        School name to import devices for (default: 'default-school')
     """
-    # Parse command-line arguments
     try:
         opts, args = getopt.getopt(sys.argv[1:], "s:", ["school="])
     except getopt.GetoptError as err:
@@ -516,40 +512,42 @@ def main():
         usage()
         sys.exit(2)
 
-    # Set default values
     school = 'default-school'
-
-    # Process command-line options
     for o, a in opts:
         if o in ("-s", "--school"):
             school = a
+    return school
 
-    # Get devices.csv path (currently unused, kept for compatibility)
-    devices = environment.WIMPORTDATA
 
-    # Read required setup configuration values
-    serverip = getSetupValue('serverip')
-    domainname = getSetupValue('domainname')
+def runSophomorixCommand(action):
+    """Run a single sophomorix-device command, logging its output.
 
-    # Log import start
-    printScript(os.path.basename(__file__), 'begin')
-    logToFile('=' * 78)
-    logToFile('linuxmuster-import-devices started')
-    logToFile('School: ' + school)
+    Args:
+        action: sophomorix-device subcommand, e.g. '--dry-run' or '--sync'
 
-    # Step 1: Run sophomorix-device dry-run first, then sync if dry-run succeeds
+    Returns:
+        CompletedProcess instance from subprocess.run()
+    """
+    with open(logfile, 'a') as log:
+        log.write('-' * 78 + '\n')
+        log.write(f'sophomorix-device {action} output:\n')
+        log.write('-' * 78 + '\n')
+        log.flush()
+        return subprocess.run(['sophomorix-device', action],
+                              stdout=log, stderr=subprocess.STDOUT,
+                              shell=False, check=False)
+
+
+def runSophomorixDeviceSync():
+    """Run sophomorix-device dry-run first, then sync if the dry-run succeeds.
+
+    Exits the process with status 1 if either step fails or raises an error.
+    """
     msg = 'Starting sophomorix-device dry-run:'
     printScript(msg)
     logToFile(msg)
     try:
-        with open(logfile, 'a') as log:
-            log.write('-' * 78 + '\n')
-            log.write('sophomorix-device --dry-run output:\n')
-            log.write('-' * 78 + '\n')
-            log.flush()
-            result = subprocess.run(['sophomorix-device', '--dry-run'],
-                                  stdout=log, stderr=subprocess.STDOUT,
-                                  shell=False, check=False)
+        result = runSophomorixCommand('--dry-run')
 
         if result.returncode != 0:
             msg = f'sophomorix-device --dry-run failed with return code {result.returncode}!'
@@ -561,14 +559,7 @@ def main():
         printScript(msg)
         logToFile(msg)
 
-        with open(logfile, 'a') as log:
-            log.write('-' * 78 + '\n')
-            log.write('sophomorix-device --sync output:\n')
-            log.write('-' * 78 + '\n')
-            log.flush()
-            result = subprocess.run(['sophomorix-device', '--sync'],
-                                  stdout=log, stderr=subprocess.STDOUT,
-                                  shell=False, check=False)
+        result = runSophomorixCommand('--sync')
 
         if result.returncode == 0:
             msg = 'sophomorix-device sync finished OK!'
@@ -586,10 +577,18 @@ def main():
         print(error)
         sys.exit(1)
 
-    # Step 2: Generate DHCP configuration for all devices
-    writeDhcpDevicesConfig(school=school)
 
-    # Step 3: Generate LINBO/GRUB boot configuration
+def generateGrubConfigsForGroups(school):
+    """Generate LINBO/GRUB boot configuration for all PXE-enabled device groups.
+
+    Creates PXE symlinks for the given school, resolves symlinks for all
+    schools, then writes/refreshes the grub.cfg for every PXE group.
+
+    Args:
+        school: School name to generate configs for
+    """
+    # Return value currently unused, kept to preserve original behavior
+    # (also acts as an implicit sanity check that the LINBO version string parses)
     linbo_version = int(getLinboVersion().split('.')[0])
     printScript('', 'begin')
     msg = 'Working on linbo/grub configuration for devices:'
@@ -613,7 +612,13 @@ def main():
     for group in pxe_groups:
         doLinboStartconf(group)
 
-    # Step 4: Execute post-import hooks (if any exist)
+
+def runPostImportHooks(school):
+    """Execute all executable post-device-import hook scripts.
+
+    Args:
+        school: School name, passed to each hook script via -s
+    """
     hookpath = environment.POSTDEVIMPORT
     hookscripts = [f for f in listdir(hookpath) if isfile(
         join(hookpath, f)) and os.access(join(hookpath, f), os.X_OK)]
@@ -632,7 +637,9 @@ def main():
                 print(output)
                 logToFile('Hook output: ' + output.strip())
 
-    # Step 5: Restart DHCP service to apply new configuration
+
+def restartDhcpService():
+    """Restart the ISC DHCP server to apply the newly generated configuration."""
     printScript('', 'begin')
     msg = 'Finally restarting dhcp service.'
     printScript(msg)
@@ -640,6 +647,32 @@ def main():
     result = subprocess.run(['service', 'isc-dhcp-server', 'restart'],
                            shell=False, check=False)
     logToFile(f'DHCP service restart: return code {result.returncode}')
+
+
+def main():
+    """Main entry point for CLI tool.
+
+    This function orchestrates the complete device import workflow:
+    1. Parses command-line arguments
+    2. Runs sophomorix-device syntax check and sync
+    3. Generates DHCP configuration for all devices
+    4. Creates LINBO/GRUB boot configurations
+    5. Executes post-import hooks
+    6. Restarts DHCP service
+    """
+    school = parseArguments()
+
+    # Log import start
+    printScript(os.path.basename(__file__), 'begin')
+    logToFile('=' * 78)
+    logToFile('linuxmuster-import-devices started')
+    logToFile('School: ' + school)
+
+    runSophomorixDeviceSync()
+    writeDhcpDevicesConfig(school=school)
+    generateGrubConfigsForGroups(school)
+    runPostImportHooks(school)
+    restartDhcpService()
 
     # Log completion
     printScript(os.path.basename(__file__), 'end')
