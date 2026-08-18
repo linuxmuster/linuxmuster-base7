@@ -198,8 +198,14 @@ runWithLog(['systemctl', 'stop', 'ntpsec'], logfile, checkErrors=False)
 # and keeps running forever, permanently holding port 123 and making the
 # systemctl start below fail ("Address already in use"). -q makes it step
 # the clock once and quit; -g permits an arbitrarily large first step
-# instead of panicking on it (matching ntpdate's behavior).
-runWithLog(['ntpd', '-q', '-g', 'pool.ntp.org'], logfile, checkErrors=False)
+# instead of panicking on it (matching ntpdate's behavior). -u ntpsec:ntpsec
+# matches what the systemd wrapper passes to the persistent service below -
+# without it this one-time run stays root, and AppArmor's usr.sbin.ntpd
+# profile denies root the dac_override capability it would otherwise use to
+# write into the ntpsec-owned stats directory, logging "Permission denied"
+# on every fresh install even though /var/log/ntpsec exists with the right
+# ownership.
+runWithLog(['ntpd', '-q', '-g', '-u', 'ntpsec:ntpsec', 'pool.ntp.org'], logfile, checkErrors=False)
 runWithLog(['systemctl', 'enable', 'ntpsec'], logfile, checkErrors=False)
 runWithLog(['systemctl', 'start', 'ntpsec'], logfile, checkErrors=False)  # Start continuous sync
 now = str(datetime.datetime.now()).split('.')[0]
