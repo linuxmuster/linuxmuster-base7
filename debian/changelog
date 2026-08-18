@@ -16,8 +16,11 @@ linuxmuster-base7 (7.4.15) lmn74; urgency=low
   * fix(d_templates.py): fill @@restricted_subnets@@ with a safe empty
     default and create /var/log/ntpsec proactively - both were causing
     ntpd errors on the very first start of a fresh install (4873245)
+  * fix(d_templates.py): run the one-time ntpd sync as ntpsec:ntpsec
+    instead of root, avoiding an AppArmor dac_override denial that still
+    caused "Permission denied" writing to /var/log/ntpsec (9cd111a)
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 18 Aug 2026 10:54:59 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 18 Aug 2026 18:50:48 +0200
 
 linuxmuster-base7 (7.4.14) lmn74; urgency=low
 
