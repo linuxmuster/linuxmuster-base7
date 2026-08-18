@@ -2,6 +2,8 @@ linuxmuster-base7 (7.4.15) lmn74; urgency=low
 
   * fix(ntp.conf): drop obsolete notrap restrict flag, which ntpsec
     ignores and logs on every start (#192, PR #193, debbab8).
+  * fix(ntp.conf): drop obsolete nopeer restrict flag, same reason
+    (found while auditing srv_bancini setup logs, 7505cbc).
   * refactor(e_fstab.py): split main() into named phase functions (#129, 354ea1b)
   * refactor(import_devices.py): split main() into named step functions,
     drop dead devices/serverip/domainname variables (#129, 22b07aa)
