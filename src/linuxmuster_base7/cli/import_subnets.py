@@ -4,7 +4,7 @@
 # Description  : Import subnets to DHCP, netplan, NTP and OPNsense firewall
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260815
+# Date         : 20260818
 #
 # Requirements (import_subnets.md):
 #  - Writes DHCP configuration to /etc/dhcp/subnets.conf
@@ -602,6 +602,90 @@ def updateFwNat(extra_subnets):
 # Main                                                                         #
 # --------------------------------------------------------------------------- #
 
+def readSetupValues():
+    """Read all setup.ini values needed for subnet import.
+
+    Returns:
+        Dict with keys: serverip, gateway, firewallip, skipfw, ipnet_setup
+    """
+    serverip      = getSetupValue('serverip')
+    gateway       = getSetupValue('gateway')
+    firewallip    = getSetupValue('firewallip')
+    skipfw        = getSetupValue('skipfw')
+    bitmask_setup = getSetupValue('bitmask')
+    network_setup = getSetupValue('network')
+    ipnet_setup   = network_setup + '/' + bitmask_setup
+
+    return {
+        'serverip':    serverip,
+        'gateway':     gateway,
+        'firewallip':  firewallip,
+        'skipfw':      skipfw,
+        'ipnet_setup': ipnet_setup,
+    }
+
+
+def partitionSubnets(subnets, firewallip):
+    """Split subnets into the server's own subnet and the extra subnets.
+
+    Args:
+        subnets: List of subnet dicts as returned by readSubnetsCSV()
+        firewallip: Fallback router IP if no server subnet is present
+
+    Returns:
+        Tuple (server_subnet, extra_subnets, servernet_router)
+    """
+    server_subnet    = next((s for s in subnets if s['is_server']), None)
+    extra_subnets    = [s for s in subnets if not s['is_server']]
+    servernet_router = server_subnet['router'] if server_subnet else firewallip
+    return server_subnet, extra_subnets, servernet_router
+
+
+def updateFirewall(extra_subnets, servernet_router, skipfw):
+    """Update the firewall (LAN gateway, static routes, outbound NAT) via API.
+
+    Skipped entirely when skipfw is set. Exits the process with status 1 if
+    the gateway update fails, since routes and NAT depend on a working
+    gateway.
+
+    Args:
+        extra_subnets: Subnets other than the server's own subnet
+        servernet_router: Router IP to use as the LAN gateway
+        skipfw: If truthy, skip all firewall updates
+    """
+    if skipfw:
+        printScript('Skipping firewall updates (skipfw=True).')
+        return
+
+    gw_changed = updateFwGateway(extra_subnets, servernet_router)
+    if gw_changed is None:
+        printScript('Gateway update failed - skipping routes and NAT.')
+        printScript('', 'end')
+        sys.exit(1)
+    if gw_changed:
+        res = firewallApi('post', API_GW_RECONFIGURE)
+        if res:
+            printScript('New gateway applied.')
+        else:
+            printScript('Failed to apply gateway configuration.')
+        # The configd 'interface gateways list' action has a 20-second
+        # cache (cache_ttl:20 in actions_interface.conf). Route creation
+        # validates against this cached list. Wait for the cache to expire
+        # so the newly created gateway is visible to route validation.
+        printScript('Waiting for gateway cache to expire...')
+        time.sleep(22)
+
+    rt_changed = updateFwRoutes(extra_subnets, servernet_router)
+    if rt_changed:
+        res = firewallApi('post', API_RT_RECONFIGURE)
+        if res:
+            printScript('New routes applied.')
+        else:
+            printScript('Failed to apply route configuration.')
+
+    updateFwNat(extra_subnets)
+
+
 def main():
     """Main entry point for linuxmuster-import-subnets.
 
@@ -617,90 +701,47 @@ def main():
        - Synchronise static routes via API
        - Synchronise outbound NAT rules via API
     """
-    # Step 1: read setup values
-    serverip      = getSetupValue('serverip')
-    gateway       = getSetupValue('gateway')
-    firewallip    = getSetupValue('firewallip')
-    skipfw        = getSetupValue('skipfw')
-    bitmask_setup = getSetupValue('bitmask')
-    network_setup = getSetupValue('network')
-    ipnet_setup   = network_setup + '/' + bitmask_setup
+    setup = readSetupValues()
 
     printScript('linuxmuster-import-subnets')
     printScript('', 'begin')
 
     # Version check - abort if firewall is too old
     printScript('Checking firewall version:')
-    if not skipfw and not checkFwVersion():
+    if not setup['skipfw'] and not checkFwVersion():
         printScript(f'Please upgrade your OPNsense at least to Version >= {FW_MIN_VERSION}')
         printScript('', 'end')
         sys.exit(1)
 
     printScript('Setup values:')
-    printScript('* Server address: ' + serverip)
-    printScript('* Server network: ' + ipnet_setup)
+    printScript('* Server address: ' + setup['serverip'])
+    printScript('* Server network: ' + setup['ipnet_setup'])
 
-    # Step 2: parse subnets.csv
+    # Parse subnets.csv
     printScript('Reading subnets:')
-    subnets = readSubnetsCSV(ipnet_setup)
+    subnets = readSubnetsCSV(setup['ipnet_setup'])
     if not subnets:
         printScript('* No valid subnets found - aborting.')
         printScript('', 'end')
         sys.exit(1)
 
-    server_subnet    = next((s for s in subnets if s['is_server']), None)
-    extra_subnets    = [s for s in subnets if not s['is_server']]
-    servernet_router = server_subnet['router'] if server_subnet else firewallip
+    _, extra_subnets, servernet_router = partitionSubnets(subnets, setup['firewallip'])
 
     printScript(f'* {len(subnets)} subnet(s) total, '
                 f'{len(extra_subnets)} extra subnet(s).')
 
-    # Step 3: write DHCP configuration
-    if not writeDhcpConfig(subnets, serverip):
+    # Write DHCP configuration
+    if not writeDhcpConfig(subnets, setup['serverip']):
         printScript('', 'end')
         sys.exit(1)
 
-    # Step 4: restart DHCP service
     restartDhcp()
+    updateNetplan(extra_subnets, setup['gateway'], servernet_router)
 
-    # Step 5: update netplan
-    updateNetplan(extra_subnets, gateway, servernet_router)
-
-    # Step 6: update NTP configuration
     printScript('Updating NTP configuration:')
     subprocess.call(['linuxmuster-update-ntpconf'])
 
-    # Step 7: update firewall
-    if skipfw:
-        printScript('Skipping firewall updates (skipfw=True).')
-    else:
-        gw_changed = updateFwGateway(extra_subnets, servernet_router)
-        if gw_changed is None:
-            printScript('Gateway update failed - skipping routes and NAT.')
-            printScript('', 'end')
-            sys.exit(1)
-        if gw_changed:
-            res = firewallApi('post', API_GW_RECONFIGURE)
-            if res:
-                printScript('New gateway applied.')
-            else:
-                printScript('Failed to apply gateway configuration.')
-            # The configd 'interface gateways list' action has a 20-second
-            # cache (cache_ttl:20 in actions_interface.conf). Route creation
-            # validates against this cached list. Wait for the cache to expire
-            # so the newly created gateway is visible to route validation.
-            printScript('Waiting for gateway cache to expire...')
-            time.sleep(22)
-
-        rt_changed = updateFwRoutes(extra_subnets, servernet_router)
-        if rt_changed:
-            res = firewallApi('post', API_RT_RECONFIGURE)
-            if res:
-                printScript('New routes applied.')
-            else:
-                printScript('Failed to apply route configuration.')
-
-        updateFwNat(extra_subnets)
+    updateFirewall(extra_subnets, servernet_router, setup['skipfw'])
 
     printScript('', 'end')
 
