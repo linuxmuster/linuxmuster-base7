@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 #
-# firewall setup
-# thomas@linuxmuster.net
-# 20260721
+# Filename     : m_firewall.py
+# Description  : firewall setup
+# Signed-off by: thomas@linuxmuster.net
+# Assisted by  : Claude
+# Date         : 20260819
 #
 
 """
@@ -178,20 +180,24 @@ def readCertificatesAndKeys():
 
 
 def createNoProxyAliasContent(network, serverip):
-    """Create list of first ten network IPs for NoProxy group alias."""
-    aliascontent = ''
-    netpre = network.split('.')[0] + '.' + network.split('.')[1] + '.' + network.split('.')[2] + '.'
-    c = 0
-    max = 10
-    while c < max:
-        c = c + 1
-        aliasip = netpre + str(c)
-        if aliascontent == '':
-            aliascontent = aliasip
-        else:
-            aliascontent = aliascontent + ' ' + aliasip
-    # add server ip if not already collected
-    if serverip not in aliascontent:
+    """Create NoProxy group alias content (OPNsense host alias, one entry per line).
+
+    OPNsense expects host alias entries to be newline-separated; a contiguous
+    range of IPs can be written as a single 'first-last' entry. A single
+    space-separated line (the previous format) is rejected by the OPNsense
+    GUI/backend as of 25.7.11_9 ("Unexpected error, check log for details"):
+    https://ask.linuxmuster.net/t/opnsense-v25-7-11-9-gruppe-noproxy-in-firewall-laesst-sich-nicht-editieren/12306/5
+    """
+    netpre = '.'.join(network.split('.')[:3]) + '.'
+    first_ip = netpre + '1'
+    last_ip = netpre + '10'
+    aliascontent = f'{first_ip}-{last_ip}'
+    # add server ip on its own line unless it already falls inside the range above
+    server_in_range = (
+        serverip.startswith(netpre) and serverip[len(netpre):].isdigit()
+        and 1 <= int(serverip[len(netpre):]) <= 10
+    )
+    if not server_in_range:
         aliascontent = aliascontent + '\n' + serverip
     return aliascontent
 
