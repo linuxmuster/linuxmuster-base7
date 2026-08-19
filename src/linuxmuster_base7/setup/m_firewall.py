@@ -32,6 +32,7 @@ import os
 import shlex
 import shutil
 import sys
+import uuid
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
@@ -203,7 +204,7 @@ def createNoProxyAliasContent(network, serverip):
 
 
 def createFirewallConfig(fwconftpl, fwconftmp, config, setup_data, productionpw,
-                        binduserpw, radiussecret, timezone, aliascontent,
+                        binduserpw, radiussecret, timezone, aliascontent, aliasuuid,
                         cacertb64, fwcertb64, fwkeyb64, authorizedkey):
     """Create new firewall configuration from template."""
     msg = '* Creating xml configuration file '
@@ -236,6 +237,7 @@ def createFirewallConfig(fwconftpl, fwconftmp, config, setup_data, productionpw,
             '@@network@@': setup_data['network'],
             '@@bitmask@@': setup_data['bitmask'],
             '@@aliascontent@@': aliascontent,
+            '@@aliasuuid@@': aliasuuid,
             '@@fwrootpw_hashed@@': fwrootpw_hashed,
             '@@authorizedkey@@': authorizedkey,
             '@@apikey@@': apikey,
@@ -368,11 +370,15 @@ def main():
 
     # Create NoProxy alias content
     aliascontent = createNoProxyAliasContent(setup_data['network'], setup_data['serverip'])
+    # OPNsense >= 25.7.11_9 requires the alias to carry a uuid attribute on the
+    # <alias> tag itself for the GUI edit dialog to load it - without it, editing
+    # fails with "Unexpected error, check log for details" (#194)
+    aliasuuid = str(uuid.uuid4())
 
     # Create new firewall configuration
     apikey, apisecret = createFirewallConfig(
         fwconftpl, fwconftmp, config, setup_data, productionpw,
-        binduserpw, radiussecret, timezone, aliascontent,
+        binduserpw, radiussecret, timezone, aliascontent, aliasuuid,
         cacertb64, fwcertb64, fwkeyb64, authorizedkey
     )
 

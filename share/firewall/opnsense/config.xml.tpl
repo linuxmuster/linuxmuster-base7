@@ -767,7 +767,7 @@
           <url/>
         </geoip>
         <aliases>
-          <alias>
+          <alias uuid="@@aliasuuid@@">
             <enabled>1</enabled>
             <name>NoProxy</name>
             <type>host</type>
