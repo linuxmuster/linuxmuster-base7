@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.4.16) lmn74; urgency=low
+
+  * fix(m_firewall.py): use IP range instead of space-separated list for
+    NoProxy alias, fixes editing it in OPNsense >= 25.7.11_9 (#194, 769e058).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 19 Aug 2026 09:35:53 +0200
+
 linuxmuster-base7 (7.4.15) lmn74; urgency=low
 
   * fix(ntp.conf): drop obsolete notrap restrict flag, which ntpsec
