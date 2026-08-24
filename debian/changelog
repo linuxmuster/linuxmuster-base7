@@ -3,6 +3,9 @@ linuxmuster-base7 (7.4.17) lmn74; urgency=low
   * fix(e_fstab.py): mask quotaon@<mount>.service for non-root ext4 mounts
     whose on-disk quota feature is already active, not just root's own
     quotaon-root.service/quotaon.service (#197, 5bb7f7e).
+  * fix(remote.py): quiet sshExec() polling in waitForFw(), so the expected
+    connection-refused retries while the firewall reboots no longer get
+    logged as if they were real setup errors (#196, c267505).
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 24 Aug 2026 20:34:50 +0200
 
