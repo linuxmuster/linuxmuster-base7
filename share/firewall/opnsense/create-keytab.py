@@ -4,7 +4,7 @@
 # Description  : Create OPNsense web proxy SSO keytab
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260815
+# Date         : 20260824
 #
 
 import getopt
@@ -22,6 +22,18 @@ skipfw = getSetupValue('skipfw')
 if skipfw:
     printScript('Firewall is skipped by setup!')
     sys.exit(0)
+
+
+def restartFirewallService(firewallip, item):
+    """Restart an OPNsense plugin service via pluginctl over ssh.
+
+    Exits the script on failure, matching the previous inline behaviour.
+    """
+    printScript('Restarting ' + item)
+    result = subprocess.run(['ssh', '-q', '-oBatchmode=yes', '-oStrictHostkeyChecking=no',
+                            firewallip, 'pluginctl', '-s', item, 'restart'])
+    if result.returncode != 0:
+        sys.exit(1)
 
 
 def usage():
@@ -79,11 +91,7 @@ if not check:
 
     # reload relevant services
     for item in ['unbound', 'squid']:
-        printScript('Restarting ' + item)
-        result = subprocess.run(['ssh', '-q', '-oBatchmode=yes', '-oStrictHostkeyChecking=no',
-                                firewallip, 'pluginctl', '-s', item, 'restart'])
-        if result.returncode != 0:
-            sys.exit(1)
+        restartFirewallService(firewallip, item)
 
     # create keytab
     payload = '{"admin_login": "' + adminlogin + '", "admin_password": "' + adminpw + '"}'
@@ -99,6 +107,12 @@ if not check:
         entry = entry.replace('\n', '')
         printScript('Adding servicePrincipalName ' + entry + ' for FIREWALL-K$')
         subprocess.run(['samba-tool', 'spn', 'add', entry, 'FIREWALL-K$'])
+
+    # squid was restarted above *before* the keytab (and possibly the SPN
+    # just added) existed - its Kerberos-negotiate helper needs a second
+    # restart now that both are actually in place, or SSO auth silently
+    # keeps failing until some unrelated later restart/reboot (#198)
+    restartFirewallService(firewallip, 'squid')
 
 
 # check success
