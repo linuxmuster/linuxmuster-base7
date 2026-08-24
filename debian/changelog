@@ -6,6 +6,10 @@ linuxmuster-base7 (7.4.17) lmn74; urgency=low
   * fix(remote.py): quiet sshExec() polling in waitForFw(), so the expected
     connection-refused retries while the firewall reboots no longer get
     logged as if they were real setup errors (#196, c267505).
+  * fix(create-keytab.py): restart squid again after the keytab (and any
+    newly added SPN) actually exists, instead of only before, so SSO auth
+    doesn't silently keep failing until some unrelated later restart
+    (#198, 78f6e53).
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 24 Aug 2026 20:34:50 +0200
 
