@@ -4,7 +4,7 @@
 # Description  : Enable quota, ACL and extended attributes on ext4 filesystems
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260818
+# Date         : 20260824
 #
 
 """
@@ -130,8 +130,18 @@ def enable_ext4_quota():
     return result.returncode == 0
 
 
-def mask_redundant_quotaon_units():
-    """Mask systemd's quotaon-root.service/quotaon.service (root only).
+def systemd_escape_path(mountpoint):
+    """Return the instance name systemd uses for <template>@<name>.service
+    units derived from a mountpoint (e.g. '/srv' -> 'srv', '/mnt/data' ->
+    'mnt-data'), or '' if systemd-escape itself fails."""
+    result = subprocess.run(['systemd-escape', '--path', mountpoint],
+                             capture_output=True, text=True, check=False)
+    return result.stdout.strip() if result.returncode == 0 else ''
+
+
+def mask_redundant_quotaon_units(ext4_mounts):
+    """Mask every quotaon unit that is now redundant because the kernel
+    already auto-activates quota tracking for its filesystem.
 
     Once the ext4 on-disk quota feature is active, the kernel enables
     quota tracking automatically as soon as the filesystem is mounted
@@ -139,25 +149,35 @@ def mask_redundant_quotaon_units():
     having run successfully). Calling quotaon afterwards to turn on what's
     already on fails ("quotaon: using . on <dev> [<mnt>]: File exists"),
     permanently failing the unit at every boot for no functional benefit.
-    This only applies to root: it's the only filesystem that ever gets the
-    on-disk feature here (see the non-root branch in main()).
 
-    quotaon@.service (systemd's own per-mount template unit for every
-    other, non-root filesystem) must NOT be masked, even though an earlier
-    version of this function did exactly that. Non-root filesystems use
-    the external-quota-file mechanism (aquota.user/aquota.group), which -
-    unlike the modern on-disk feature - needs an explicit quotaon call
-    after *every* boot to reactivate tracking; nothing else does this.
-    Masking the template broke that permanently: it "fixed" a genuinely
-    real but one-time problem (the very first boot before e_fstab.py has
-    ever created the aquota files, where quotaon fails with "cannot find
-    ... aquota.user/aquota.group") by disabling the mechanism forever,
-    silently turning quota off again on every subsequent reboot even once
-    the files existed - confirmed live: unmasking and starting an instance
-    succeeds immediately once its aquota files are present, which they
-    already are by the time this function is called this run for any
-    filesystem that has quota active (quotacheck already ran) or already
-    had it from before.
+    This is NOT root-only, even though an earlier version of this function
+    assumed so ("it's the only filesystem that ever gets the on-disk
+    feature here"). Confirmed live: a customer's /srv (on /dev/sdb1) came
+    out of curtin/mke2fs with the 'quota' feature already baked in, just
+    like root, without check_quota_features() ever having to call
+    enable_ext4_quota() for it - so quotaon@srv.service kept failing at
+    every boot with the exact same "File exists" error root's dedicated
+    units used to fail with. Every ext4_mounts entry whose filesystem
+    already carries the on-disk feature needs its own per-mount unit
+    masked too, not just root's quotaon-root.service/quotaon.service.
+
+    quotaon@.service (systemd's own per-mount template unit) must NOT be
+    masked as a whole, even though an earlier version of this function did
+    exactly that. Filesystems still on the external-quota-file mechanism
+    (aquota.user/aquota.group) - unlike the modern on-disk feature - need
+    an explicit quotaon call after *every* boot to reactivate tracking;
+    nothing else does this. Masking the template broke that permanently:
+    it "fixed" a genuinely real but one-time problem (the very first boot
+    before e_fstab.py has ever created the aquota files, where quotaon
+    fails with "cannot find ... aquota.user/aquota.group") by disabling
+    the mechanism forever, silently turning quota off again on every
+    subsequent reboot even once the files existed - confirmed live:
+    unmasking and starting an instance succeeds immediately once its
+    aquota files are present, which they already are by the time this
+    function is called this run for any filesystem that has quota active
+    (quotacheck already ran) or already had it from before. Only the
+    specific instances for mounts that already have the on-disk feature
+    get masked below; every other mount's instance stays live.
 
     Explicitly unmasks quotaon@.service in case an older linuxmuster-base7
     version already masked it on this host.
@@ -168,6 +188,20 @@ def mask_redundant_quotaon_units():
                     capture_output=True, text=True, check=False)
     subprocess.run(['systemctl', 'unmask', 'quotaon@.service'],
                     capture_output=True, text=True, check=False)
+
+    for mountpoint, device, _options in ext4_mounts:
+        if mountpoint == '/':
+            # root's on-disk feature is already covered by
+            # quotaon-root.service/quotaon.service above - root has no
+            # quotaon@.service instance of its own
+            continue
+        features = get_ext4_features(device)
+        if not features or 'quota' not in features:
+            continue
+        instance = systemd_escape_path(mountpoint)
+        if instance:
+            subprocess.run(['systemctl', 'mask', f'quotaon@{instance}.service'],
+                            capture_output=True, text=True, check=False)
 
 
 # legacy journaled-quota mount options; see the note on REQUIRED_MOUNT_OPTIONS
@@ -488,7 +522,7 @@ def mask_quotaon_units(ext4_mounts):
         return
     msg = 'Masking redundant quotaon units '
     printScript(msg, '', False, False, True, len(msg))
-    mask_redundant_quotaon_units()
+    mask_redundant_quotaon_units(ext4_mounts)
     printScript(' Success!', '', True, True, False, len(msg))
 
 
