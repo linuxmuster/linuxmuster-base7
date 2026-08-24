@@ -4,7 +4,7 @@
 # Description  : OPNsense firewall API and SSH/SCP remote-execution helpers
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260818
+# Date         : 20260824
 #
 
 import configparser
@@ -36,7 +36,14 @@ def waitForFw(timeout=300, wait=0):
             # cancel if it lasts longer than timeout
             printScript('Timeout!')
             return False
-        if sshExec(firewallip, 'exit'):
+        # The firewall is expected to refuse ssh connections for as long as
+        # it's still rebooting after fwsetup.sh - each failed attempt here
+        # is normal polling, not an error. quiet=True suppresses sshExec()'s
+        # per-attempt logging (including the raw CalledProcessError text),
+        # which otherwise made this retry loop look exactly like a real
+        # setup failure even though it always recovers once the firewall is
+        # back up (#196).
+        if sshExec(firewallip, 'exit', quiet=True):
             break
         count = count + 2
         time.sleep(2)
@@ -225,7 +232,7 @@ def putFwConfig(firewallip, fwconf=environment.FWCONFREMOTE, secret=''):
 # execute ssh command
 # note: paramiko key based connection is obviously broken in 18.04, so we use
 #   ssh shell command
-def sshExec(ip, cmd, secret=''):
+def sshExec(ip, cmd, secret='', quiet=False):
     """
     Execute command on remote host via SSH.
 
@@ -233,12 +240,17 @@ def sshExec(ip, cmd, secret=''):
         ip: Remote host IP address
         cmd: Command to execute remotely
         secret: SSH password (empty string for key-based auth)
+        quiet: Suppress the per-call progress/error logging. Used by
+            callers like waitForFw() that intentionally probe a connection
+            expected to fail while the remote host isn't up yet, so each
+            attempt doesn't get logged as if it were a real error (#196).
 
     Returns:
         True on success, False on failure
     """
-    printScript('Executing ssh command on ' + ip + ':')
-    printScript('* -> "' + cmd + '"')
+    if not quiet:
+        printScript('Executing ssh command on ' + ip + ':')
+        printScript('* -> "' + cmd + '"')
     sshopts = ['-q', '-oNumberOfPasswordPrompts=0', '-oStrictHostkeyChecking=no']
     # first test connection
     try:
@@ -251,11 +263,13 @@ def sshExec(ip, cmd, secret=''):
         else:
             # password auth: test connection with paramiko
             ssh.connect(ip, port=22, username='root', password=secret)
-        printScript('* SSH connection successfully established.')
+        if not quiet:
+            printScript('* SSH connection successfully established.')
         if cmd == 'exit':
             return True
     except (subprocess.CalledProcessError, Exception) as error:
-        print(error)
+        if not quiet:
+            print(error)
         return False
     # second execute command
     try:
@@ -266,9 +280,11 @@ def sshExec(ip, cmd, secret=''):
             # key-based auth: use subprocess with command as separate argument
             subprocess.run(['ssh'] + sshopts + ['-l', 'root', ip, cmd],
                           check=True, capture_output=True)
-        printScript('* SSH command execution finished successfully.')
+        if not quiet:
+            printScript('* SSH command execution finished successfully.')
     except (subprocess.CalledProcessError, Exception) as error:
-        print(error)
+        if not quiet:
+            print(error)
         return False
     if secret != '':
         ssh.close()
