@@ -2,9 +2,9 @@ linuxmuster-base7 (7.4.17) lmn74; urgency=low
 
   * fix(e_fstab.py): mask quotaon@<mount>.service for non-root ext4 mounts
     whose on-disk quota feature is already active, not just root's own
-    quotaon-root.service/quotaon.service (5bb7f7e).
+    quotaon-root.service/quotaon.service (#197, 5bb7f7e).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 24 Aug 2026 18:30:00 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 24 Aug 2026 20:34:50 +0200
 
 linuxmuster-base7 (7.4.16) lmn74; urgency=low
 
