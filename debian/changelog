@@ -10,8 +10,12 @@ linuxmuster-base7 (7.4.17) lmn74; urgency=low
     newly added SPN) actually exists, instead of only before, so SSO auth
     doesn't silently keep failing until some unrelated later restart
     (#198, 78f6e53).
+  * fix(config.xml.tpl): write the 7 built-in firewall rules directly in
+    OPNsense's new uuid-based rule schema, so they no longer show up as
+    needing a manual Migration Assistant run after every fresh setup
+    (#199, acc9f71).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 24 Aug 2026 20:34:50 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 25 Aug 2026 11:28:45 +0200
 
 linuxmuster-base7 (7.4.16) lmn74; urgency=low
 
