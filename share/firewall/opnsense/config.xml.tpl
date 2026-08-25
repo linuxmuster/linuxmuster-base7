@@ -225,6 +225,13 @@
     <outbound>
       <mode>hybrid</mode>
     </outbound>
+    <!--
+      These two port-forward rules stay in the legacy (pre-uuid) schema on
+      purpose: OPNsense >= 26.1 auto-migrates legacy nat.rule entries to the
+      new uuid/sequence-based schema in place, the first time it loads a
+      config containing them - confirmed live (#199), no admin action or
+      Migration Assistant click needed, unlike plain filter rules below.
+    -->
     <rule>
       <protocol>tcp</protocol>
       <interface>wan</interface>
@@ -286,149 +293,16 @@
       </created>
     </rule>
   </nat>
-  <filter>
-    <rule>
-      <type>pass</type>
-      <interface>lan</interface>
-      <ipprotocol>inet</ipprotocol>
-      <statetype>keep state</statetype>
-      <descr>Allow Web-Proxy-Access</descr>
-      <protocol>tcp</protocol>
-      <source>
-        <any>1</any>
-      </source>
-      <destination>
-        <network>lanip</network>
-        <port>3128</port>
-      </destination>
-      <updated>
-        <username>linuxmuster</username>
-        <time>1543334054.0884</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </updated>
-      <created>
-        <username>linuxmuster</username>
-        <time>1502370804,8546</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </created>
-    </rule>
-    <rule>
-      <type>pass</type>
-      <interface>lan</interface>
-      <ipprotocol>inet</ipprotocol>
-      <statetype>keep state</statetype>
-      <descr>Allow Radius Authentication</descr>
-      <protocol>tcp</protocol>
-      <source>
-        <any>1</any>
-      </source>
-      <destination>
-        <network>lanip</network>
-        <port>1812</port>
-      </destination>
-      <created>
-        <username>linuxmuster</username>
-        <time>1502370804,8546</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </created>
-    </rule>
-    <rule>
-      <type>pass</type>
-      <interface>lan</interface>
-      <ipprotocol>inet</ipprotocol>
-      <statetype>keep state</statetype>
-      <descr>Allow NoProxy-Group</descr>
-      <source>
-        <address>NoProxy</address>
-      </source>
-      <destination>
-        <any>1</any>
-      </destination>
-      <updated>
-        <username>linuxmuster</username>
-        <time>1543334093.1302</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </updated>
-      <created>
-        <username>linuxmuster</username>
-        <time>1502136054,2013</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </created>
-    </rule>
-    <rule>
-      <type>pass</type>
-      <interface>lan</interface>
-      <ipprotocol>inet</ipprotocol>
-      <statetype>keep state</statetype>
-      <descr>Allow entire LAN</descr>
-      <disabled>1</disabled>
-      <source>
-        <address>@@network@@/@@bitmask@@</address>
-      </source>
-      <destination>
-        <any>1</any>
-      </destination>
-      <updated>
-        <username>linuxmuster</username>
-        <time>1543334283.4894</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </updated>
-      <created>
-        <username>linuxmuster</username>
-        <time>1543255595.3165</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </created>
-    </rule>
-    <rule>
-      <type>block</type>
-      <interface>lan</interface>
-      <ipprotocol>inet</ipprotocol>
-      <statetype>keep state</statetype>
-      <descr>Default deny LAN</descr>
-      <source>
-        <network>lan</network>
-      </source>
-      <destination>
-        <network>wan</network>
-      </destination>
-      <updated>
-        <username>linuxmuster</username>
-        <time>1543334378.8434</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </updated>
-      <created>
-        <username>linuxmuster</username>
-        <time>1502135862,7289</time>
-        <description>/firewall_rules_edit.php made changes</description>
-      </created>
-    </rule>
-    <rule>
-      <type>pass</type>
-      <ipprotocol>inet</ipprotocol>
-      <descr>Default allow LAN to any rule</descr>
-      <interface>lan</interface>
-      <source>
-        <network>lan</network>
-      </source>
-      <destination>
-        <any/>
-      </destination>
-      <disabled>1</disabled>
-    </rule>
-    <rule>
-      <type>pass</type>
-      <ipprotocol>inet6</ipprotocol>
-      <descr>Default allow LAN IPv6 to any rule</descr>
-      <interface>lan</interface>
-      <source>
-        <network>lan</network>
-      </source>
-      <destination>
-        <any/>
-      </destination>
-      <disabled>1</disabled>
-    </rule>
-  </filter>
+  <!--
+    Empty on purpose: unlike nat.rule above, OPNsense's Filter model only
+    got its new uuid-based schema in 26.1 ("Firewall -> Rules [new]"), and
+    legacy filter.rule entries are never auto-migrated - they're left
+    exactly as-is and merely flagged for the (manual, human-driven)
+    Migration Assistant. Our 7 rules are written directly in the new
+    schema instead, under Firewall/Filter below, so there is nothing here
+    that ever needs migrating (#199).
+  -->
+  <filter/>
   <rrd>
     <enable/>
   </rrd>
@@ -789,7 +663,425 @@
         <categories/>
       </Category>
       <Filter version="1.0.4">
-        <rules/>
+        <rules>
+          <!--
+            Written directly in this (new, uuid-based) schema instead of
+            the legacy filter.rule format above, so these never show up as
+            needing migration in Firewall -> Rules (#199). Field values
+            and the resulting pf rules were verified live against a fresh
+            OPNsense 26.7 install (fw_bancini) - each of the 7 rules below
+            was created once through the actual /api/firewall/filter/
+            addRule endpoint, its persisted XML captured, and the
+            resulting pf.conf entry compared against the equivalent
+            legacy rule to confirm they compile identically.
+          -->
+          <rule uuid="@@ruleproxyuuid@@">
+            <enabled>1</enabled>
+            <statetype>keep</statetype>
+            <state-policy/>
+            <sequence>1</sequence>
+            <action>pass</action>
+            <quick>1</quick>
+            <interfacenot>0</interfacenot>
+            <interface>lan</interface>
+            <direction>in</direction>
+            <ipprotocol>inet</ipprotocol>
+            <protocol>TCP</protocol>
+            <icmptype/>
+            <icmp6type/>
+            <source_net>any</source_net>
+            <source_not>0</source_not>
+            <source_port/>
+            <destination_net>lanip</destination_net>
+            <destination_not>0</destination_not>
+            <destination_port>3128</destination_port>
+            <divert-to/>
+            <gateway/>
+            <replyto/>
+            <disablereplyto>0</disablereplyto>
+            <log>0</log>
+            <allowopts>0</allowopts>
+            <nosync>0</nosync>
+            <nopfsync>0</nopfsync>
+            <statetimeout/>
+            <udp-first/>
+            <udp-multiple/>
+            <udp-single/>
+            <max-src-nodes/>
+            <max-src-states/>
+            <max-src-conn/>
+            <max/>
+            <max-src-conn-rate/>
+            <max-src-conn-rates/>
+            <max-pkt-rate-number/>
+            <max-pkt-rate-seconds/>
+            <overload/>
+            <adaptivestart/>
+            <adaptiveend/>
+            <prio/>
+            <set-prio/>
+            <set-prio-low/>
+            <tag/>
+            <tagged/>
+            <tcpflags1/>
+            <tcpflags2/>
+            <tcpflags_any>0</tcpflags_any>
+            <categories/>
+            <sched/>
+            <tos/>
+            <shaper1/>
+            <shaper2/>
+            <description>Allow Web-Proxy-Access</description>
+          </rule>
+          <rule uuid="@@ruleradiusuuid@@">
+            <enabled>1</enabled>
+            <statetype>keep</statetype>
+            <state-policy/>
+            <sequence>2</sequence>
+            <action>pass</action>
+            <quick>1</quick>
+            <interfacenot>0</interfacenot>
+            <interface>lan</interface>
+            <direction>in</direction>
+            <ipprotocol>inet</ipprotocol>
+            <protocol>TCP</protocol>
+            <icmptype/>
+            <icmp6type/>
+            <source_net>any</source_net>
+            <source_not>0</source_not>
+            <source_port/>
+            <destination_net>lanip</destination_net>
+            <destination_not>0</destination_not>
+            <destination_port>1812</destination_port>
+            <divert-to/>
+            <gateway/>
+            <replyto/>
+            <disablereplyto>0</disablereplyto>
+            <log>0</log>
+            <allowopts>0</allowopts>
+            <nosync>0</nosync>
+            <nopfsync>0</nopfsync>
+            <statetimeout/>
+            <udp-first/>
+            <udp-multiple/>
+            <udp-single/>
+            <max-src-nodes/>
+            <max-src-states/>
+            <max-src-conn/>
+            <max/>
+            <max-src-conn-rate/>
+            <max-src-conn-rates/>
+            <max-pkt-rate-number/>
+            <max-pkt-rate-seconds/>
+            <overload/>
+            <adaptivestart/>
+            <adaptiveend/>
+            <prio/>
+            <set-prio/>
+            <set-prio-low/>
+            <tag/>
+            <tagged/>
+            <tcpflags1/>
+            <tcpflags2/>
+            <tcpflags_any>0</tcpflags_any>
+            <categories/>
+            <sched/>
+            <tos/>
+            <shaper1/>
+            <shaper2/>
+            <description>Allow Radius Authentication</description>
+          </rule>
+          <rule uuid="@@rulenoproxyuuid@@">
+            <enabled>1</enabled>
+            <statetype>keep</statetype>
+            <state-policy/>
+            <sequence>3</sequence>
+            <action>pass</action>
+            <quick>1</quick>
+            <interfacenot>0</interfacenot>
+            <interface>lan</interface>
+            <direction>in</direction>
+            <ipprotocol>inet</ipprotocol>
+            <protocol>any</protocol>
+            <icmptype/>
+            <icmp6type/>
+            <source_net>NoProxy</source_net>
+            <source_not>0</source_not>
+            <source_port/>
+            <destination_net>any</destination_net>
+            <destination_not>0</destination_not>
+            <destination_port/>
+            <divert-to/>
+            <gateway/>
+            <replyto/>
+            <disablereplyto>0</disablereplyto>
+            <log>0</log>
+            <allowopts>0</allowopts>
+            <nosync>0</nosync>
+            <nopfsync>0</nopfsync>
+            <statetimeout/>
+            <udp-first/>
+            <udp-multiple/>
+            <udp-single/>
+            <max-src-nodes/>
+            <max-src-states/>
+            <max-src-conn/>
+            <max/>
+            <max-src-conn-rate/>
+            <max-src-conn-rates/>
+            <max-pkt-rate-number/>
+            <max-pkt-rate-seconds/>
+            <overload/>
+            <adaptivestart/>
+            <adaptiveend/>
+            <prio/>
+            <set-prio/>
+            <set-prio-low/>
+            <tag/>
+            <tagged/>
+            <tcpflags1/>
+            <tcpflags2/>
+            <tcpflags_any>0</tcpflags_any>
+            <categories/>
+            <sched/>
+            <tos/>
+            <shaper1/>
+            <shaper2/>
+            <description>Allow NoProxy-Group</description>
+          </rule>
+          <rule uuid="@@rulelanuuid@@">
+            <enabled>0</enabled>
+            <statetype>keep</statetype>
+            <state-policy/>
+            <sequence>4</sequence>
+            <action>pass</action>
+            <quick>1</quick>
+            <interfacenot>0</interfacenot>
+            <interface>lan</interface>
+            <direction>in</direction>
+            <ipprotocol>inet</ipprotocol>
+            <protocol>any</protocol>
+            <icmptype/>
+            <icmp6type/>
+            <source_net>@@network@@/@@bitmask@@</source_net>
+            <source_not>0</source_not>
+            <source_port/>
+            <destination_net>any</destination_net>
+            <destination_not>0</destination_not>
+            <destination_port/>
+            <divert-to/>
+            <gateway/>
+            <replyto/>
+            <disablereplyto>0</disablereplyto>
+            <log>0</log>
+            <allowopts>0</allowopts>
+            <nosync>0</nosync>
+            <nopfsync>0</nopfsync>
+            <statetimeout/>
+            <udp-first/>
+            <udp-multiple/>
+            <udp-single/>
+            <max-src-nodes/>
+            <max-src-states/>
+            <max-src-conn/>
+            <max/>
+            <max-src-conn-rate/>
+            <max-src-conn-rates/>
+            <max-pkt-rate-number/>
+            <max-pkt-rate-seconds/>
+            <overload/>
+            <adaptivestart/>
+            <adaptiveend/>
+            <prio/>
+            <set-prio/>
+            <set-prio-low/>
+            <tag/>
+            <tagged/>
+            <tcpflags1/>
+            <tcpflags2/>
+            <tcpflags_any>0</tcpflags_any>
+            <categories/>
+            <sched/>
+            <tos/>
+            <shaper1/>
+            <shaper2/>
+            <description>Allow entire LAN</description>
+          </rule>
+          <rule uuid="@@ruledenylanuuid@@">
+            <enabled>1</enabled>
+            <statetype>keep</statetype>
+            <state-policy/>
+            <sequence>5</sequence>
+            <action>block</action>
+            <quick>1</quick>
+            <interfacenot>0</interfacenot>
+            <interface>lan</interface>
+            <direction>in</direction>
+            <ipprotocol>inet</ipprotocol>
+            <protocol>any</protocol>
+            <icmptype/>
+            <icmp6type/>
+            <source_net>lan</source_net>
+            <source_not>0</source_not>
+            <source_port/>
+            <destination_net>wan</destination_net>
+            <destination_not>0</destination_not>
+            <destination_port/>
+            <divert-to/>
+            <gateway/>
+            <replyto/>
+            <disablereplyto>0</disablereplyto>
+            <log>0</log>
+            <allowopts>0</allowopts>
+            <nosync>0</nosync>
+            <nopfsync>0</nopfsync>
+            <statetimeout/>
+            <udp-first/>
+            <udp-multiple/>
+            <udp-single/>
+            <max-src-nodes/>
+            <max-src-states/>
+            <max-src-conn/>
+            <max/>
+            <max-src-conn-rate/>
+            <max-src-conn-rates/>
+            <max-pkt-rate-number/>
+            <max-pkt-rate-seconds/>
+            <overload/>
+            <adaptivestart/>
+            <adaptiveend/>
+            <prio/>
+            <set-prio/>
+            <set-prio-low/>
+            <tag/>
+            <tagged/>
+            <tcpflags1/>
+            <tcpflags2/>
+            <tcpflags_any>0</tcpflags_any>
+            <categories/>
+            <sched/>
+            <tos/>
+            <shaper1/>
+            <shaper2/>
+            <description>Default deny LAN</description>
+          </rule>
+          <rule uuid="@@ruleallowlanuuid@@">
+            <enabled>0</enabled>
+            <statetype>keep</statetype>
+            <state-policy/>
+            <sequence>6</sequence>
+            <action>pass</action>
+            <quick>1</quick>
+            <interfacenot>0</interfacenot>
+            <interface>lan</interface>
+            <direction>in</direction>
+            <ipprotocol>inet</ipprotocol>
+            <protocol>any</protocol>
+            <icmptype/>
+            <icmp6type/>
+            <source_net>lan</source_net>
+            <source_not>0</source_not>
+            <source_port/>
+            <destination_net>any</destination_net>
+            <destination_not>0</destination_not>
+            <destination_port/>
+            <divert-to/>
+            <gateway/>
+            <replyto/>
+            <disablereplyto>0</disablereplyto>
+            <log>0</log>
+            <allowopts>0</allowopts>
+            <nosync>0</nosync>
+            <nopfsync>0</nopfsync>
+            <statetimeout/>
+            <udp-first/>
+            <udp-multiple/>
+            <udp-single/>
+            <max-src-nodes/>
+            <max-src-states/>
+            <max-src-conn/>
+            <max/>
+            <max-src-conn-rate/>
+            <max-src-conn-rates/>
+            <max-pkt-rate-number/>
+            <max-pkt-rate-seconds/>
+            <overload/>
+            <adaptivestart/>
+            <adaptiveend/>
+            <prio/>
+            <set-prio/>
+            <set-prio-low/>
+            <tag/>
+            <tagged/>
+            <tcpflags1/>
+            <tcpflags2/>
+            <tcpflags_any>0</tcpflags_any>
+            <categories/>
+            <sched/>
+            <tos/>
+            <shaper1/>
+            <shaper2/>
+            <description>Default allow LAN to any rule</description>
+          </rule>
+          <rule uuid="@@ruleallowlanv6uuid@@">
+            <enabled>0</enabled>
+            <statetype>keep</statetype>
+            <state-policy/>
+            <sequence>7</sequence>
+            <action>pass</action>
+            <quick>1</quick>
+            <interfacenot>0</interfacenot>
+            <interface>lan</interface>
+            <direction>in</direction>
+            <ipprotocol>inet6</ipprotocol>
+            <protocol>any</protocol>
+            <icmptype/>
+            <icmp6type/>
+            <source_net>lan</source_net>
+            <source_not>0</source_not>
+            <source_port/>
+            <destination_net>any</destination_net>
+            <destination_not>0</destination_not>
+            <destination_port/>
+            <divert-to/>
+            <gateway/>
+            <replyto/>
+            <disablereplyto>0</disablereplyto>
+            <log>0</log>
+            <allowopts>0</allowopts>
+            <nosync>0</nosync>
+            <nopfsync>0</nopfsync>
+            <statetimeout/>
+            <udp-first/>
+            <udp-multiple/>
+            <udp-single/>
+            <max-src-nodes/>
+            <max-src-states/>
+            <max-src-conn/>
+            <max/>
+            <max-src-conn-rate/>
+            <max-src-conn-rates/>
+            <max-pkt-rate-number/>
+            <max-pkt-rate-seconds/>
+            <overload/>
+            <adaptivestart/>
+            <adaptiveend/>
+            <prio/>
+            <set-prio/>
+            <set-prio-low/>
+            <tag/>
+            <tagged/>
+            <tcpflags1/>
+            <tcpflags2/>
+            <tcpflags_any>0</tcpflags_any>
+            <categories/>
+            <sched/>
+            <tos/>
+            <shaper1/>
+            <shaper2/>
+            <description>Default allow LAN IPv6 to any rule</description>
+          </rule>
+        </rules>
         <snatrules/>
         <npt/>
         <onetoone/>
