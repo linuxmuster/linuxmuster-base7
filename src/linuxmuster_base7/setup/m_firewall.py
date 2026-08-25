@@ -205,7 +205,7 @@ def createNoProxyAliasContent(network, serverip):
 
 def createFirewallConfig(fwconftpl, fwconftmp, config, setup_data, productionpw,
                         binduserpw, radiussecret, timezone, aliascontent, aliasuuid,
-                        cacertb64, fwcertb64, fwkeyb64, authorizedkey):
+                        cacertb64, fwcertb64, fwkeyb64, authorizedkey, rule_uuids):
     """Create new firewall configuration from template."""
     msg = '* Creating xml configuration file '
     printScript(msg, '', False, False, True)
@@ -250,6 +250,10 @@ def createFirewallConfig(fwconftpl, fwconftmp, config, setup_data, productionpw,
             '@@fwcertb64@@': fwcertb64,
             '@@fwkeyb64@@': fwkeyb64
         }
+        # the 7 built-in filter rules are written directly in OPNsense's
+        # new uuid-based Filter schema (#199) - each needs its own unique
+        # uuid, same reasoning as @@aliasuuid@@ above (#194)
+        replacements.update(rule_uuids)
 
         for placeholder, value in replacements.items():
             content = content.replace(placeholder, value)
@@ -375,11 +379,25 @@ def main():
     # fails with "Unexpected error, check log for details" (#194)
     aliasuuid = str(uuid.uuid4())
 
+    # OPNsense >= 26.1's Filter model needs a uuid per rule too, or the 7
+    # built-in rules land in the legacy schema and never get out of it
+    # automatically (unlike nat.rule, which self-migrates) - they'd sit
+    # there needing a manual Migration Assistant run forever (#199)
+    rule_uuids = {
+        '@@ruleproxyuuid@@': str(uuid.uuid4()),
+        '@@ruleradiusuuid@@': str(uuid.uuid4()),
+        '@@rulenoproxyuuid@@': str(uuid.uuid4()),
+        '@@rulelanuuid@@': str(uuid.uuid4()),
+        '@@ruledenylanuuid@@': str(uuid.uuid4()),
+        '@@ruleallowlanuuid@@': str(uuid.uuid4()),
+        '@@ruleallowlanv6uuid@@': str(uuid.uuid4()),
+    }
+
     # Create new firewall configuration
     apikey, apisecret = createFirewallConfig(
         fwconftpl, fwconftmp, config, setup_data, productionpw,
         binduserpw, radiussecret, timezone, aliascontent, aliasuuid,
-        cacertb64, fwcertb64, fwkeyb64, authorizedkey
+        cacertb64, fwcertb64, fwkeyb64, authorizedkey, rule_uuids
     )
 
     # Save API credentials
