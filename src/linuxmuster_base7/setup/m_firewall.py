@@ -4,7 +4,7 @@
 # Description  : firewall setup
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260819
+# Date         : 20260826
 #
 
 """
@@ -43,6 +43,11 @@ from linuxmuster_base7.functions import readTextfile, sshExec, writeSecretFile, 
 from linuxmuster_base7.setup.helpers import runWithLog
 
 logfile = mySetupLogfile(__file__)
+
+# packages fwsetup.sh installs via a plain `pkg install`, not through
+# OPNsense's own Firmware/Plugins GUI or API action - keep this list in
+# sync with fwsetup.sh's `pkg install -y ...` line
+REQUIRED_FIREWALL_PLUGINS = ['os-squid', 'os-web-proxy-sso', 'os-freeradius']
 
 
 def readSetupData():
@@ -110,6 +115,36 @@ def backupFirewallConfig(fwconftmp, timestamp):
         sys.exit(1)
 
 
+def ensureFirmwarePlugins(soup, firmware_element, required_plugins):
+    """Make sure `required_plugins` are listed in <firmware><plugins>.
+
+    fwsetup.sh installs os-squid/os-web-proxy-sso/os-freeradius via a plain
+    `pkg install`, not through OPNsense's own Firmware/Plugins GUI/API
+    action. Only that GUI/API action ever adds a package's name to
+    <system><firmware><plugins> - the bookkeeping list
+    FirmwareController.php's `configured` flag is based on
+    (in_array($name, $configPlugins) - see its FirmwareController.php).
+    Without an entry there, System > Firmware > Plugins shows the package
+    as "misconfigured" forever, even though it's genuinely installed and
+    working (#202) - <firmware> may not even exist yet on a fresh install
+    that's never had a plugin installed through the GUI before.
+
+    Creates <firmware>/<plugins> if missing, and merges into whatever
+    plugins are already listed there instead of overwriting them, so any
+    plugin installed by other means (or by hand, since) keeps its entry.
+    """
+    if firmware_element is None:
+        firmware_element = soup.new_tag('firmware')
+    plugins_element = firmware_element.find('plugins')
+    if plugins_element is None:
+        plugins_element = soup.new_tag('plugins')
+        firmware_element.append(plugins_element)
+    existing = [name for name in (plugins_element.string or '').split(',') if name]
+    merged = existing + [name for name in required_plugins if name not in existing]
+    plugins_element.string = ','.join(merged)
+    return firmware_element
+
+
 def extractConfigValues(fwconftmp):
     """Extract configuration values from current firewall config XML."""
     msg = '* Reading current config '
@@ -120,9 +155,10 @@ def extractConfigValues(fwconftmp):
 
         # save certain configuration values for later use
         firmware_element = soup.find('firmware')
+        firmware_element = ensureFirmwarePlugins(soup, firmware_element, REQUIRED_FIREWALL_PLUGINS)
         sysctl_element = soup.find('sysctl')
         config = {
-            'firmware': str(firmware_element) if firmware_element else '',
+            'firmware': str(firmware_element),
             'sysctl': str(sysctl_element) if sysctl_element else ''
         }
 
