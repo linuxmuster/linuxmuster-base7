@@ -1,9 +1,7 @@
 linuxmuster-base7 (7.4.18) lmn74; urgency=low
 
-  * fix(create-keytab.py): chgrp the templated squid config tree to
-    "squid" after a fresh install - configd's own hardened umask leaves
-    it owned root:wheel, unreadable to the squid worker process, which
-    runs as user/group "squid" from the start (#200, f8f7736).
+  * fix(create-keytab.py): fix squid config directory ownership on fresh
+    installs, fixing squid's "Permission denied" on boot (#200, f8f7736).
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 26 Aug 2026 16:15:28 +0200
 
