@@ -2,8 +2,11 @@ linuxmuster-base7 (7.4.18) lmn74; urgency=low
 
   * fix(create-keytab.py): fix squid config directory ownership on fresh
     installs, fixing squid's "Permission denied" on boot (#200, f8f7736).
+  * fix(opnsense_reset.py): don't abort recreateKeytab() when the firewall
+    has no keytab yet - that's the normal state on a fresh firewall, not
+    an error (#201, 0a14ae4).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 26 Aug 2026 16:15:28 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 26 Aug 2026 16:42:10 +0200
 
 linuxmuster-base7 (7.4.17) lmn74; urgency=low
 
