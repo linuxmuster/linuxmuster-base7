@@ -1,3 +1,16 @@
+linuxmuster-base7 (7.4.18) lmn74; urgency=low
+
+  * fix(create-keytab.py): fix squid config directory ownership on fresh
+    installs, fixing squid's "Permission denied" on boot (#200, f8f7736).
+  * fix(opnsense_reset.py): don't abort recreateKeytab() when the firewall
+    has no keytab yet - that's the normal state on a fresh firewall, not
+    an error (#201, 0a14ae4).
+  * fix(m_firewall.py): register os-squid/os-web-proxy-sso/os-freeradius
+    in system.firmware.plugins, so they no longer show as "misconfigured"
+    under System > Firmware > Plugins (#202, d6075fb).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 26 Aug 2026 18:30:03 +0200
+
 linuxmuster-base7 (7.4.17) lmn74; urgency=low
 
   * fix(e_fstab.py): mask quotaon@<mount>.service for non-root ext4 mounts

@@ -4,7 +4,7 @@
 # Description  : Create OPNsense web proxy SSO keytab
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260824
+# Date         : 20260826
 #
 
 import getopt
@@ -32,6 +32,51 @@ def restartFirewallService(firewallip, item):
     printScript('Restarting ' + item)
     result = subprocess.run(['ssh', '-q', '-oBatchmode=yes', '-oStrictHostkeyChecking=no',
                             firewallip, 'pluginctl', '-s', item, 'restart'])
+    if result.returncode != 0:
+        sys.exit(1)
+
+
+def fixSquidConfigOwnership(firewallip):
+    """Fix group ownership of the templated squid config tree (#200).
+
+    OPNsense's configd daemon applies a hardened umask (0o27) to itself
+    (service/modules/daemonize.py). The template renderer that writes
+    squid.conf and its pre-auth/post-auth/auth includes on the very first
+    boot after installing os-squid creates each directory with a bare
+    os.mkdir() - no explicit group - so it inherits root's own primary
+    group "wheel" instead of "squid". But OPNsense's own squid rc.d script
+    runs the squid master process directly as user/group "squid" from the
+    start (squid_user/squid_group both default to "squid" - no root, no
+    privilege drop), so it can't read the root:wheel 640/750 files/dirs
+    configd just created for it: squid dies on boot with "FATAL: Unable to
+    open configuration file: ... Permission denied".
+
+    Confirmed live: this only reproduces on a genuinely fresh OPNsense
+    install where /usr/local/etc/squid never existed before - most likely
+    triggered by fwsetup.sh's `pkg install os-squid` itself, which renders
+    the templates for the first time against the already-running (already
+    umask-hardened) configd daemon, before the reboot that follows ever
+    happens. A system upgraded from an older release already has this
+    directory tree from back then (with the correct group), and upgrades
+    never touch pre-existing files/directories - so the bug stays hidden
+    there. A plain reboot on its own does not reproduce it either -
+    confirmed live that a normal reboot leaves already-correct ownership
+    alone, which is exactly why this needs to run once, right here, after
+    fwsetup.sh's own reboot has completed.
+
+    A plain chgrp (no chmod) is enough to fix it - the existing 640/750
+    modes are correct as-is and must NOT be loosened to world-readable,
+    since the pre-auth/post-auth includes carry the LDAP bind password in
+    plain text. Verified live end-to-end (two full linuxmuster-opnsense-
+    reset runs, plus an independent reboot afterwards) that this makes
+    squid start reliably and stay that way.
+
+    Safe to run unconditionally and repeatedly: a no-op wherever the
+    ownership is already correct.
+    """
+    printScript('Fixing squid config directory ownership')
+    result = subprocess.run(['ssh', '-q', '-oBatchmode=yes', '-oStrictHostkeyChecking=no',
+                            firewallip, 'chgrp', '-R', 'squid', '/usr/local/etc/squid'])
     if result.returncode != 0:
         sys.exit(1)
 
@@ -88,6 +133,11 @@ if not check:
     if adminpw is None:
         rc, adminpw = readTextfile(environment.ADADMINSECRET)
         adminlogin = 'administrator'
+
+    # fix squid's config directory ownership *before* even attempting to
+    # restart it below, or the restart is a no-op against a still-broken
+    # config on a fresh install's very first boot (#200)
+    fixSquidConfigOwnership(firewallip)
 
     # reload relevant services
     for item in ['unbound', 'squid']:
