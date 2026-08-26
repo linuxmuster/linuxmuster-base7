@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 #
-# reset opnsense configuration to setup state
-# thomas@linuxmuster.net
-# 20260721
+# Filename     : opnsense_reset.py
+# Description  : Reset OPNsense configuration to setup state
+# Signed-off by: thomas@linuxmuster.net
+# Assisted by  : Claude
+# Date         : 20260826
 #
 
 import environment
@@ -183,12 +185,13 @@ def resetFirewallConfig(logfile):
 
 
 def recreateKeytab(logfile, sleep):
-    """Delete old kerberos keytab and create new one.
+    """Delete old kerberos keytab (if any) and create a new one.
 
     This function:
-    1. Deletes the old keytab via firewall API
-    2. Waits for the specified sleep time
-    3. Creates a new keytab using create-keytab.py script
+    1. Checks whether an old keytab exists; deletes it via the firewall
+       API and waits `sleep` seconds only if it does (#201) - a firewall
+       that never had a keytab yet has nothing to delete or wait for
+    2. Creates a new keytab using create-keytab.py script
 
     Args:
         logfile: Path to log file for command output
@@ -197,21 +200,27 @@ def recreateKeytab(logfile, sleep):
     Returns:
         0 if successful, 1 if failed
     """
-    # Step 1: Delete old keytab
+    # Step 1: check whether an old keytab exists, and only try to delete it
+    # if it does - "no keytab present" is the normal state on a firewall
+    # that has never had one yet (a fresh install, or an earlier keytab
+    # creation that never succeeded for some other reason), not a fatal
+    # error. Aborting here instead of continuing straight to creation
+    # permanently bricked opnsense-reset on such a firewall - it could
+    # never get past this check to actually create the missing keytab.
     with open(logfile, 'a') as log:
         result = subprocess.run([environment.FWSHAREDIR + '/create-keytab.py', '-c'],
             stdout=log, stderr=subprocess.STDOUT, check=False)
 
-    if result.returncode != 0:
-        return 1
+    if result.returncode == 0:
+        printScript('Deleting old keytab.')
+        apipath = '/proxysso/service/deletekeytab'
+        res = firewallApi('get', apipath)
+        print(res)
 
-    printScript('Deleting old keytab.')
-    apipath = '/proxysso/service/deletekeytab'
-    res = firewallApi('get', apipath)
-    print(res)
-
-    printScript('Waiting ' + str(sleep) + ' seconds.')
-    time.sleep(sleep)
+        printScript('Waiting ' + str(sleep) + ' seconds.')
+        time.sleep(sleep)
+    else:
+        printScript('No existing keytab found, creating a new one.')
 
     # Step 2: Create new keytab
     with open(logfile, 'a') as log:
