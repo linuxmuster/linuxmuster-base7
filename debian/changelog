@@ -1,3 +1,12 @@
+linuxmuster-base7 (7.4.19) lmn74; urgency=low
+
+  * fix(opnsense_reset.py): re-import subnets after firewall config reset,
+    restoring the LAN gateway's static routes and outbound NAT rules for
+    subnets other than the server's own, which the config reset wipes on
+    every run (b6e4878).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 02 Sep 2026 16:51:45 +0200
+
 linuxmuster-base7 (7.4.18) lmn74; urgency=low
 
   * fix(create-keytab.py): fix squid config directory ownership on fresh
