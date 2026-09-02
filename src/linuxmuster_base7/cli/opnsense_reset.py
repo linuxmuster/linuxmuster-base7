@@ -4,7 +4,7 @@
 # Description  : Reset OPNsense configuration to setup state
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260826
+# Date         : 20260902
 #
 
 import environment
@@ -17,7 +17,7 @@ import time
 
 from linuxmuster_base7.functions import createServerCert, datetime, enterPassword, firewallApi, \
     getSetupValue, printScript, sshExec, writeTextfile, waitForFw
-from linuxmuster_base7.setup.helpers import CERT_VALIDITY_DAYS
+from linuxmuster_base7.setup.helpers import CERT_VALIDITY_DAYS, runWithLog
 
 
 INFOTXT = 'Sets the firewall to the state after setup.\n\
@@ -236,6 +236,36 @@ def recreateKeytab(logfile, sleep):
     return rc
 
 
+def reimportSubnets(logfile):
+    """Re-run subnet import to restore what the config reset just wiped out.
+
+    The uploaded config template (config.xml.tpl) hardcodes an empty
+    <staticroutes/> and <filter/> section, so every run of m_firewall.py -
+    triggered here by resetFirewallConfig() - wipes any LAN gateway's static
+    routes and firewall pass rules for subnets other than the server's own
+    (see /etc/linuxmuster/subnets.csv), along with their outbound NAT rules.
+    The LAN gateway itself survives (the template has no <Gateways> section
+    at all), so afterwards it points nowhere. linuxmuster-import-subnets
+    already recreates gateway/routes/NAT idempotently from subnets.csv, so
+    simply calling it again here repairs exactly that gap - found live when
+    clients on an extra subnet could reach the firewall but not the internet
+    after a reset.
+
+    Args:
+        logfile: Path to log file for command output
+
+    Returns:
+        0 if successful, 1 if failed
+    """
+    printScript('Re-importing subnets to restore firewall routes and NAT rules.')
+    try:
+        runWithLog(['linuxmuster-import-subnets'], logfile)
+        return 0
+    except Exception as error:
+        printScript(f'Failed to re-import subnets: {error}')
+        return 1
+
+
 def main():
     """Main entry point for CLI tool.
 
@@ -248,11 +278,13 @@ def main():
     6. Ensure firewall SSL certificate exists
     7. Reset firewall configuration via setup module
     8. Wait for firewall to come back online
-    9. Recreate kerberos keytab
+    9. Wait for the firewall to stabilize
+    10. Re-import subnets (restores gateway/routes/NAT wiped by the reset)
+    11. Recreate kerberos keytab
 
     Exit codes:
         0: Success
-        1: Operation failed (SSH, cert, config reset, or keytab)
+        1: Operation failed (SSH, cert, config reset, subnet re-import, or keytab)
         2: Invalid command-line arguments
     """
     # Step 1: Check if firewall is enabled in setup configuration
@@ -303,10 +335,13 @@ def main():
     printScript('Waiting ' + str(sleep) + ' seconds.')
     time.sleep(sleep)
 
-    # Step 10: Recreate kerberos keytab
-    rc = recreateKeytab(logfile, sleep)
+    # Step 10: Re-import subnets to restore gateway/routes/NAT wiped by the reset
+    rc_subnets = reimportSubnets(logfile)
 
-    sys.exit(rc)
+    # Step 11: Recreate kerberos keytab
+    rc_keytab = recreateKeytab(logfile, sleep)
+
+    sys.exit(1 if rc_subnets != 0 or rc_keytab != 0 else 0)
 
 
 if __name__ == '__main__':
