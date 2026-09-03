@@ -1,3 +1,13 @@
+linuxmuster-base7 (7.3.41-0) lmn73; urgency=low
+
+  * fix(linuxmuster-release-upgrade): mask the correctly-named
+    systemd-networkd-wait-online.service instead of a nonexistent unit
+    name - masking the wrong name silently no-op'd, leaving boot to hang
+    at its ~120s timeout since systemd-resolved (masked, correctly, since
+    this is a Samba AD domain controller) is still masked too (#203).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 03 Sep 2026 14:04:50 +0200
+
 linuxmuster-base7 (7.3.40-0) lmn73; urgency=low
 
   * fix(linuxmuster-release-upgrade): retrofit quota fstab fix and unit
