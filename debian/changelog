@@ -4,9 +4,9 @@ linuxmuster-base7 (7.3.41-0) lmn73; urgency=low
     systemd-networkd-wait-online.service instead of a nonexistent unit
     name - masking the wrong name silently no-op'd, leaving boot to hang
     at its ~120s timeout since systemd-resolved (masked, correctly, since
-    this is a Samba AD domain controller) is still masked too (#203).
+    this is a Samba AD domain controller) is still masked too (#203, 72dd48e).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 03 Sep 2026 14:04:50 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 03 Sep 2026 14:42:46 +0200
 
 linuxmuster-base7 (7.3.40-0) lmn73; urgency=low
 
