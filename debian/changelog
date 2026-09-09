@@ -1,3 +1,12 @@
+linuxmuster-base7 (7.3.42-0) lmn73; urgency=low
+
+  * fix(linuxmuster-release-upgrade): disable systemd-resolved's DNS stub
+    listener (DNSStubListener=no) instead of masking systemd-resolved and
+    systemd-networkd-wait-online.service outright - verified on two
+    independent production systems (#203, 0a0f4b0).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 09 Sep 2026 10:55:33 +0200
+
 linuxmuster-base7 (7.3.41-0) lmn73; urgency=low
 
   * fix(linuxmuster-release-upgrade): mask the correctly-named
