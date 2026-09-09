@@ -1,9 +1,11 @@
 #!/bin/bash
 #
-# postinst script for linuxmuster-base
-# thomas@linuxmuster.net
-# 20260811
-# GPL v3
+# Filename     : postinst
+# Description  : postinst script for linuxmuster-base
+# Signed-off by: thomas@linuxmuster.net
+# Assisted by  : Claude
+# Date         : 20260909
+# License      : GPL v3
 #
 
 # see: dh_installdeb(1)
@@ -158,6 +160,12 @@ case "$1" in
 
   # fix cupsd.conf (#189 & #190)
   "$SHAREDIR"/fix-cupsd.conf_189_190.sh
+
+  # fix systemd-resolved/systemd-networkd-wait-online.service on a Samba
+  # AD DC still masking them from the old linuxmuster-release-upgrade
+  # (#203) - a restart failure here shouldn't fail the whole package
+  # configuration, unlike the fixes above
+  "$SHAREDIR"/fix-systemd-resolved_203.sh || echo "WARNING: fix-systemd-resolved_203.sh failed, please check systemd-resolved/systemd-networkd-wait-online.service manually!"
 
  ;;
 
