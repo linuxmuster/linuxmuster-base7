@@ -1,3 +1,12 @@
+linuxmuster-base7 (7.4.20) lmn74; urgency=low
+
+  * fix(postinst): repair systemd-resolved/systemd-networkd-wait-online.service
+    on package upgrade for Samba AD DCs left masked by an old
+    linuxmuster-release-upgrade run - idempotent, only disables
+    systemd-resolved's DNS stub listener instead (#203, 16d35c5).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 09 Sep 2026 12:30:54 +0200
+
 linuxmuster-base7 (7.4.19) lmn74; urgency=low
 
   * fix(opnsense_reset.py): re-import subnets after firewall config reset,
