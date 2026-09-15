@@ -38,24 +38,89 @@ def encodeCertToBase64(certpath, outpath=None):
         return False
 
 
-def renewCaCertificate(subj, addext, days, logfile=None):
+def buildCaSubjectAndSan(schoolname, sambadomain, realm):
     """
-    Renew CA certificate using password-protected CA key.
+    Build the CA certificate's Distinguished Name and SAN extension value.
+
+    Shared by both initial CA creation (g_ssl.py) and CA renewal
+    (renew_certs.py), so the DN/SAN format only needs to change in one
+    place. Returns a plain DN string (no "-subj" flag baked in - pass it
+    to openssl req's own -subj argument) and a value for -addext, the
+    correct way to add a SAN to a self-signed (req -x509) certificate (a
+    previous version baked "-subj " plus a bogus "/subjectAltName=.../"
+    RDN into a single string, which not only produced no real SAN
+    extension but - once also passed as a single subprocess.run() list
+    element instead of separate arguments - made openssl fail outright).
 
     Args:
-        subj: OpenSSL Distinguished Name string for the CA certificate,
-            e.g. '/O="School"/OU=example.com/CN=example.com/' - passed on
-            to openssl's own -subj flag, so it must NOT include "-subj"
-            itself (a previous version baked "-subj " plus a bogus
-            "/subjectAltName=.../" RDN into a single string and passed
-            that whole thing as ONE subprocess.run() list element; openssl
-            never got a real -subj flag with a separate value that way and
-            failed outright with "Multiple digest or unknown options",
-            confirmed live - CA renewal was completely broken, not just
-            missing a SAN)
-        addext: value for openssl's -addext flag, e.g.
-            'subjectAltName=DNS:example.com' - the correct way to add a
-            SAN to a self-signed (req -x509) certificate
+        schoolname: School/organization name (O=)
+        sambadomain: Samba/AD domain (OU=)
+        realm: Kerberos realm (CN=, and the SAN's DNS name)
+
+    Returns:
+        (subj, addext) tuple
+    """
+    subj = f'/O="{schoolname}"/OU={sambadomain}/CN={realm}/'
+    addext = f'subjectAltName=DNS:{realm}'
+    return subj, addext
+
+
+def writeCaCertificate(subj, addext, days, cakeypw, logfile=None):
+    """
+    Self-sign the CA certificate with the (already existing) CA key, then
+    install it as a trusted system CA.
+
+    Shared by both initial CA creation (g_ssl.py, right after generating
+    a fresh CAKEY) and CA renewal (renewCaCertificate() below, reusing
+    the existing CAKEY) - the actual cert/trust-store handling is
+    identical either way, only how CAKEY/cakeypw came to exist differs.
+    Consolidating this avoids exactly the kind of divergence that let
+    CA renewal skip the trust-store update below for a long time (#204).
+
+    Args:
+        subj: OpenSSL Distinguished Name string, see buildCaSubjectAndSan()
+        addext: value for openssl's -addext flag, see buildCaSubjectAndSan()
+        days: Certificate validity in days
+        cakeypw: CA private key password
+        logfile: Optional path to log file
+
+    Returns:
+        True on success, False on failure
+    """
+    try:
+        req_cmd = ['openssl', 'req', '-batch', '-x509', '-subj', subj, '-new', '-nodes',
+                   '-passin', 'pass:' + cakeypw, '-key', environment.CAKEY,
+                   '-addext', addext,
+                   '-sha256', '-days', str(days), '-out', environment.CACERT]
+        crt_cmd = ['openssl', 'x509', '-in', environment.CACERT, '-inform', 'PEM',
+                   '-out', environment.CACERTCRT]
+        # symlink the freshly written CRT into the system CA trust store and
+        # refresh it, so clients on this host trust the new CA immediately -
+        # renewCaCertificate() used to skip this entirely (#204)
+        install_cmd = ['ln', '-sf', environment.CACERTCRT,
+                        '/usr/local/share/ca-certificates/linuxmuster_cacert.crt']
+        update_cmd = ['update-ca-certificates']
+
+        if logfile:
+            with open(logfile, 'a') as log:
+                for cmd in (req_cmd, crt_cmd, install_cmd, update_cmd):
+                    subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, check=True)
+        else:
+            for cmd in (req_cmd, crt_cmd, install_cmd, update_cmd):
+                subprocess.run(cmd, check=True, capture_output=True)
+
+        return True
+    except Exception:
+        return False
+
+
+def renewCaCertificate(subj, addext, days, logfile=None):
+    """
+    Renew CA certificate using the existing, password-protected CA key.
+
+    Args:
+        subj: OpenSSL Distinguished Name string, see buildCaSubjectAndSan()
+        addext: value for openssl's -addext flag, see buildCaSubjectAndSan()
         days: Certificate validity in days
         logfile: Optional path to log file
 
@@ -63,39 +128,12 @@ def renewCaCertificate(subj, addext, days, logfile=None):
         True on success, False on failure
     """
     try:
-        # Read CA key password
         rc, cakeypw = readTextfile(environment.CAKEYSECRET)
         cakeypw = cakeypw.strip()
-
-        # Renew CA certificate
-        if logfile:
-            with open(logfile, 'a') as log:
-                subprocess.run(['openssl', 'req', '-batch', '-x509', '-subj', subj, '-new', '-nodes',
-                              '-passin', 'pass:' + cakeypw, '-key', environment.CAKEY,
-                              '-addext', addext,
-                              '-sha256', '-days', str(days), '-out', environment.CACERT],
-                             stdout=log, stderr=subprocess.STDOUT, check=True)
-        else:
-            subprocess.run(['openssl', 'req', '-batch', '-x509', '-subj', subj, '-new', '-nodes',
-                          '-passin', 'pass:' + cakeypw, '-key', environment.CAKEY,
-                          '-addext', addext,
-                          '-sha256', '-days', str(days), '-out', environment.CACERT],
-                         check=True, capture_output=True)
-
-        # Convert to CRT format
-        if logfile:
-            with open(logfile, 'a') as log:
-                subprocess.run(['openssl', 'x509', '-in', environment.CACERT, '-inform', 'PEM',
-                              '-out', environment.CACERTCRT],
-                             stdout=log, stderr=subprocess.STDOUT, check=True)
-        else:
-            subprocess.run(['openssl', 'x509', '-in', environment.CACERT, '-inform', 'PEM',
-                          '-out', environment.CACERTCRT],
-                         check=True, capture_output=True)
-
-        return True
     except Exception:
         return False
+
+    return writeCaCertificate(subj, addext, days, cakeypw, logfile)
 
 
 def signCertificateWithCa(csrfile, certfile, days, cnffile, logfile=None):

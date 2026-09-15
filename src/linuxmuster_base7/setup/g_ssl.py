@@ -34,8 +34,9 @@ import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from linuxmuster_base7.functions import createServerCert, encodeCertToBase64, mySetupLogfile, \
-    randomPassword, printScript, writeSecretFile
+from linuxmuster_base7.functions import buildCaSubjectAndSan, createServerCert, \
+    encodeCertToBase64, mySetupLogfile, randomPassword, printScript, writeCaCertificate, \
+    writeSecretFile
 from linuxmuster_base7.setup.helpers import runWithLog, CERT_VALIDITY_DAYS
 
 logfile = mySetupLogfile(__file__)
@@ -58,48 +59,28 @@ except Exception as error:
     printScript(f' Failed: {error}', '', True, True, False, len(msg))
     sys.exit(1)
 
-# basic subject string
-subjbase = '/O="' + schoolname + '"/OU=' + sambadomain + '/CN='
-
 # substring with sha and validation duration
 days = str(CERT_VALIDITY_DAYS)
-shadays = ' -sha256 -days ' + days
 
-# ca key password & string
+# ca key password
 cakeypw = randomPassword(16)
-passin = ' -passin pass:' + cakeypw
 
 # create ca stuff
 msg = 'Creating private CA key & certificate '
-subj = subjbase + realm + '/'
-# appending "/subjectAltName=<value>/" to -subj (the previous approach)
-# does not add a SAN extension at all - it just creates a bogus
-# "subjectAltName" RDN inside the certificate's Subject DN itself, visible
-# e.g. in "openssl x509 -noout -subject" but absent from
-# "X509v3 Subject Alternative Name" in the actual extensions. -addext is
-# the correct way to add a real SAN extension to a self-signed
-# (req -x509) certificate, confirmed live against both forms with openssl.
-addext = 'subjectAltName=DNS:' + realm
+# subj/addext construction and the actual req/CRT/trust-store handling are
+# shared with renew_certs.py's CA renewal via functions/certs.py, so both
+# stay in sync (#204: renewal used to build the DN/SAN differently, in a
+# way that didn't work at all, and skipped installing the result into the
+# system trust store)
+subj, addext = buildCaSubjectAndSan(schoolname, sambadomain, realm)
 printScript(msg, '', False, False, True)
 try:
     writeSecretFile(environment.CAKEYSECRET, cakeypw, 0o400)
     runWithLog(['openssl', 'genrsa', '-out', environment.CAKEY, '-aes128',
                 '-passout', 'pass:' + cakeypw, '2048'],
                logfile, checkErrors=False, maskSecrets=[cakeypw])
-    # Parse subj for openssl req
-    runWithLog(['openssl', 'req', '-batch', '-x509', '-subj', subj, '-new', '-nodes',
-                '-passin', 'pass:' + cakeypw, '-key', environment.CAKEY,
-                '-addext', addext,
-                '-sha256', '-days', days, '-out', environment.CACERT],
-               logfile, checkErrors=False, maskSecrets=[cakeypw])
-    runWithLog(['openssl', 'x509', '-in', environment.CACERT, '-inform', 'PEM',
-                '-out', environment.CACERTCRT],
-               logfile, checkErrors=False)
-    # install crt
-    runWithLog(['ln', '-sf', environment.CACERTCRT,
-                '/usr/local/share/ca-certificates/linuxmuster_cacert.crt'],
-               logfile, checkErrors=False)
-    runWithLog(['update-ca-certificates'], logfile, checkErrors=False)
+    if not writeCaCertificate(subj, addext, days, cakeypw, logfile):
+        raise Exception('Failed to create CA certificate')
     # create base64 encoded version for opnsense's config.xml using shared function
     if not encodeCertToBase64(environment.CACERT, environment.CACERTB64):
         printScript(' Failed!', '', True, True, False, len(msg))
