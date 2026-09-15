@@ -26,8 +26,9 @@ import shutil
 import subprocess
 import sys
 
-from linuxmuster_base7.functions import catFiles, checkFwMajorVer, createCertificateChain, createCnfFromTemplate, \
-    encodeCertToBase64, getFwConfig, getSetupValue, printScript, putFwConfig, readTextfile, renewCaCertificate, \
+from linuxmuster_base7.functions import buildCaSubjectAndSan, catFiles, checkFwMajorVer, \
+    createCertificateChain, createCnfFromTemplate, encodeCertToBase64, getFwConfig, \
+    getSetupValue, printScript, putFwConfig, readTextfile, renewCaCertificate, \
     replaceInFile, signCertificateWithCa, sshExec, tee
 
 
@@ -80,17 +81,14 @@ class CertificateRenewer:
         # Certificate paths and configuration
         self.ssldir = environment.SSLDIR  # Base SSL directory
         self.cacert = environment.CACERT  # CA certificate path
-        self.cacert_crt = environment.CACERTCRT  # CA certificate in CRT format
-        # CA certificate Distinguished Name and SAN extension (no "-subj"
-        # baked in here - renewCaCertificate() adds that flag itself, see
-        # its docstring for why the previous single-string-with-a-fake-SAN
-        # form was broken)
-        self.cacert_subject = f'/O="{self.schoolname}"/OU={self.sambadomain}/CN={self.realm}/'
-        self.cacert_addext = f'subjectAltName=DNS:{self.realm}'
-        self.cakey = environment.CAKEY  # CA private key path
-        # Read CA key password from secret file (created during setup in g_ssl.py)
-        rc, cakeypw = readTextfile(environment.CAKEYSECRET)
-        self.cakeypw = cakeypw.strip()
+        # CA certificate Distinguished Name and SAN extension - shared with
+        # g_ssl.py's initial CA creation via functions/certs.py, so both
+        # stay in sync (#204: this used to be built differently here, in a
+        # way that didn't produce a real SAN and, once passed to openssl as
+        # a single subprocess.run() argument instead of separate ones,
+        # made CA renewal fail outright)
+        self.cacert_subject, self.cacert_addext = buildCaSubjectAndSan(
+            self.schoolname, self.sambadomain, self.realm)
         # Firewall configuration paths
         self.fwconftmp = environment.FWCONFLOCAL  # Temporary firewall config
         now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')

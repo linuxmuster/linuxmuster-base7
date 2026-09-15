@@ -8,7 +8,7 @@
 #                core, files, network, samba, linbo, certs, remote, security.
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260818
+# Date         : 20260915
 #
 
 import datetime  # re-exported: some callers do "from ...functions import datetime"
@@ -28,7 +28,7 @@ from .linbo import getGrubPart, getGrubOstype, readStartconf, \
     setGlobalStartconfOption, getStartconfOsValues, getLinboVersion
 from .certs import encodeCertToBase64, renewCaCertificate, \
     signCertificateWithCa, createCertificateChain, createCnfFromTemplate, \
-    createServerCert
+    createServerCert, buildCaSubjectAndSan, writeCaCertificate
 from .remote import waitForFw, firewallApi, checkFwMajorVer, scpTransfer, \
     getSftp, getFwConfig, putSftp, putFwConfig, sshExec
 from .security import hasNumbers, randomPassword, isValidPassword, \
@@ -57,6 +57,7 @@ __all__ = [
     # certs
     'encodeCertToBase64', 'renewCaCertificate', 'signCertificateWithCa',
     'createCertificateChain', 'createCnfFromTemplate', 'createServerCert',
+    'buildCaSubjectAndSan', 'writeCaCertificate',
     # remote
     'waitForFw', 'firewallApi', 'checkFwMajorVer', 'scpTransfer', 'getSftp',
     'getFwConfig', 'putSftp', 'putFwConfig', 'sshExec',
