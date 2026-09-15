@@ -4,7 +4,7 @@
 # Description  : SSL/TLS certificate generation, signing and renewal helpers
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260818
+# Date         : 20260915
 #
 
 import datetime
@@ -92,7 +92,15 @@ def signCertificateWithCa(csrfile, certfile, days, cnffile, logfile=None):
         csrfile: Path to CSR file
         certfile: Path where signed certificate will be written
         days: Certificate validity in days
-        cnffile: Path to OpenSSL extension configuration file
+        cnffile: Path to OpenSSL extension configuration file - its
+            subjectAltName/keyUsage/extendedKeyUsage live under a named
+            [req_ext] section (see server_cert_ext.cnf/firewall_cert_ext.cnf),
+            which requires -extensions req_ext below to actually be read;
+            `openssl x509 -req -extfile` alone only looks at the file's
+            unnamed top-level section, which here is empty - without
+            -extensions, none of these extensions (including the SAN
+            customers were missing) were ever applied to the signed
+            certificate.
         logfile: Optional path to log file
 
     Returns:
@@ -110,14 +118,14 @@ def signCertificateWithCa(csrfile, certfile, days, cnffile, logfile=None):
                               '-CA', environment.CACERT, '-passin', 'pass:' + cakeypw,
                               '-CAkey', environment.CAKEY, '-CAcreateserial',
                               '-out', certfile, '-sha256', '-days', str(days),
-                              '-extfile', cnffile],
+                              '-extfile', cnffile, '-extensions', 'req_ext'],
                              stdout=log, stderr=subprocess.STDOUT, check=True)
         else:
             subprocess.run(['openssl', 'x509', '-req', '-in', csrfile,
                           '-CA', environment.CACERT, '-passin', 'pass:' + cakeypw,
                           '-CAkey', environment.CAKEY, '-CAcreateserial',
                           '-out', certfile, '-sha256', '-days', str(days),
-                          '-extfile', cnffile],
+                          '-extfile', cnffile, '-extensions', 'req_ext'],
                          check=True, capture_output=True)
 
         return True

@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 #
-# create ssl certificates
-# thomas@linuxmuster.net
-# 20260721
+# Filename     : g_ssl.py
+# Description  : Create SSL certificates
+# Signed-off by: thomas@linuxmuster.net
+# Assisted by  : Claude
+# Date         : 20260915
 #
 
 """
@@ -69,7 +71,15 @@ passin = ' -passin pass:' + cakeypw
 
 # create ca stuff
 msg = 'Creating private CA key & certificate '
-subj = subjbase + realm + '/subjectAltName=' + realm + '/'
+subj = subjbase + realm + '/'
+# appending "/subjectAltName=<value>/" to -subj (the previous approach)
+# does not add a SAN extension at all - it just creates a bogus
+# "subjectAltName" RDN inside the certificate's Subject DN itself, visible
+# e.g. in "openssl x509 -noout -subject" but absent from
+# "X509v3 Subject Alternative Name" in the actual extensions. -addext is
+# the correct way to add a real SAN extension to a self-signed
+# (req -x509) certificate, confirmed live against both forms with openssl.
+addext = 'subjectAltName=DNS:' + realm
 printScript(msg, '', False, False, True)
 try:
     writeSecretFile(environment.CAKEYSECRET, cakeypw, 0o400)
@@ -79,6 +89,7 @@ try:
     # Parse subj for openssl req
     runWithLog(['openssl', 'req', '-batch', '-x509', '-subj', subj, '-new', '-nodes',
                 '-passin', 'pass:' + cakeypw, '-key', environment.CAKEY,
+                '-addext', addext,
                 '-sha256', '-days', days, '-out', environment.CACERT],
                logfile, checkErrors=False, maskSecrets=[cakeypw])
     runWithLog(['openssl', 'x509', '-in', environment.CACERT, '-inform', 'PEM',
