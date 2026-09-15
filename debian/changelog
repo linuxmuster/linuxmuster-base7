@@ -5,8 +5,11 @@ linuxmuster-base7 (7.4.21) lmn74; urgency=low
   * fix(renew_certs.py,certs.py): fix CA certificate renewal
     (linuxmuster-renew-certs -c ca/all), which failed outright with an
     openssl argument error (#204, 217d7ef).
+  * refactor(certs.py,g_ssl.py,renew_certs.py): consolidate CA cert
+    generation into shared functions, fixing CA renewal never installing
+    the new cert into the system trust store (#204, df36a90).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 15 Sep 2026 13:43:23 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 15 Sep 2026 13:55:37 +0200
 
 linuxmuster-base7 (7.4.20) lmn74; urgency=low
 
