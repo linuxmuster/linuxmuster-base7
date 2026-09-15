@@ -1,3 +1,10 @@
+linuxmuster-base7 (7.4.21) lmn74; urgency=low
+
+  * fix(certs.py,g_ssl.py): add missing Subject Alternative Name to
+    generated server/firewall/CA certificates (#204, 1001215).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 15 Sep 2026 13:33:31 +0200
+
 linuxmuster-base7 (7.4.20) lmn74; urgency=low
 
   * fix(postinst): repair systemd-resolved/systemd-networkd-wait-online.service
