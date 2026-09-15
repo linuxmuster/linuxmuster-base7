@@ -2,8 +2,11 @@ linuxmuster-base7 (7.4.21) lmn74; urgency=low
 
   * fix(certs.py,g_ssl.py): add missing Subject Alternative Name to
     generated server/firewall/CA certificates (#204, 1001215).
+  * fix(renew_certs.py,certs.py): fix CA certificate renewal
+    (linuxmuster-renew-certs -c ca/all), which failed outright with an
+    openssl argument error (#204, 217d7ef).
 
- -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 15 Sep 2026 13:33:31 +0200
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Tue, 15 Sep 2026 13:43:23 +0200
 
 linuxmuster-base7 (7.4.20) lmn74; urgency=low
 
