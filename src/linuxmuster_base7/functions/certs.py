@@ -38,12 +38,24 @@ def encodeCertToBase64(certpath, outpath=None):
         return False
 
 
-def renewCaCertificate(cacert_subject, days, logfile=None):
+def renewCaCertificate(subj, addext, days, logfile=None):
     """
     Renew CA certificate using password-protected CA key.
 
     Args:
-        cacert_subject: OpenSSL subject string for CA certificate
+        subj: OpenSSL Distinguished Name string for the CA certificate,
+            e.g. '/O="School"/OU=example.com/CN=example.com/' - passed on
+            to openssl's own -subj flag, so it must NOT include "-subj"
+            itself (a previous version baked "-subj " plus a bogus
+            "/subjectAltName=.../" RDN into a single string and passed
+            that whole thing as ONE subprocess.run() list element; openssl
+            never got a real -subj flag with a separate value that way and
+            failed outright with "Multiple digest or unknown options",
+            confirmed live - CA renewal was completely broken, not just
+            missing a SAN)
+        addext: value for openssl's -addext flag, e.g.
+            'subjectAltName=DNS:example.com' - the correct way to add a
+            SAN to a self-signed (req -x509) certificate
         days: Certificate validity in days
         logfile: Optional path to log file
 
@@ -58,13 +70,15 @@ def renewCaCertificate(cacert_subject, days, logfile=None):
         # Renew CA certificate
         if logfile:
             with open(logfile, 'a') as log:
-                subprocess.run(['openssl', 'req', '-batch', '-x509', cacert_subject, '-new', '-nodes',
+                subprocess.run(['openssl', 'req', '-batch', '-x509', '-subj', subj, '-new', '-nodes',
                               '-passin', 'pass:' + cakeypw, '-key', environment.CAKEY,
+                              '-addext', addext,
                               '-sha256', '-days', str(days), '-out', environment.CACERT],
                              stdout=log, stderr=subprocess.STDOUT, check=True)
         else:
-            subprocess.run(['openssl', 'req', '-batch', '-x509', cacert_subject, '-new', '-nodes',
+            subprocess.run(['openssl', 'req', '-batch', '-x509', '-subj', subj, '-new', '-nodes',
                           '-passin', 'pass:' + cakeypw, '-key', environment.CAKEY,
+                          '-addext', addext,
                           '-sha256', '-days', str(days), '-out', environment.CACERT],
                          check=True, capture_output=True)
 

@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 #
-# renew self-signed server certs
-# thomas@linuxmuster.net
-# 20260721
+# Filename     : renew_certs.py
+# Description  : Renew self-signed server certs
+# Signed-off by: thomas@linuxmuster.net
+# Assisted by  : Claude
+# Date         : 20260915
 #
 
 """
@@ -79,8 +81,12 @@ class CertificateRenewer:
         self.ssldir = environment.SSLDIR  # Base SSL directory
         self.cacert = environment.CACERT  # CA certificate path
         self.cacert_crt = environment.CACERTCRT  # CA certificate in CRT format
-        # CA certificate subject line with organization, domain, and realm
-        self.cacert_subject = f'-subj /O="{self.schoolname}"/OU={self.sambadomain}/CN={self.realm}/subjectAltName={self.realm}/'
+        # CA certificate Distinguished Name and SAN extension (no "-subj"
+        # baked in here - renewCaCertificate() adds that flag itself, see
+        # its docstring for why the previous single-string-with-a-fake-SAN
+        # form was broken)
+        self.cacert_subject = f'/O="{self.schoolname}"/OU={self.sambadomain}/CN={self.realm}/'
+        self.cacert_addext = f'subjectAltName=DNS:{self.realm}'
         self.cakey = environment.CAKEY  # CA private key path
         # Read CA key password from secret file (created during setup in g_ssl.py)
         rc, cakeypw = readTextfile(environment.CAKEYSECRET)
@@ -278,7 +284,7 @@ class CertificateRenewer:
             if name == 'ca':
                 # CA certificate renewal is special - it's self-signed
                 printScript('Note that you have to renew and deploy also all certs which depend on cacert.')
-                if not renewCaCertificate(self.cacert_subject, self.days, self.logfile):
+                if not renewCaCertificate(self.cacert_subject, self.cacert_addext, self.days, self.logfile):
                     raise Exception('Failed to renew CA certificate')
             else:
                 # Server/firewall certificate renewal - signed by CA
