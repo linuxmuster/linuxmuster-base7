@@ -1,4 +1,4 @@
-# linuxmuster-base7 7.4.21
+# linuxmuster-base7 7.4
 
 linuxmuster-base7 ist das zentrale Werkzeugpaket für die Einrichtung und
 Verwaltung des Schulservers – Ersteinrichtung, Geräte- und Netzwerkverwaltung,
@@ -26,14 +26,16 @@ Zusatzangabe (Subject Alternative Name).
 In den Folgeversionen wurden zahlreiche kleinere Fehler behoben, die im
 laufenden Betrieb auftreten konnten – bei der Firewall-Einrichtung (etwa beim
 Zurücksetzen der Konfiguration und beim Single-Sign-On des Webproxys), bei
-der Quota- und Dateisystemverwaltung sowie beim Netzwerk-Setup. Der
-Systemstart läuft dadurch insgesamt zuverlässiger.
+der Quota- und Dateisystemverwaltung sowie beim Netzwerk-Setup (etwa bei der
+Prüfung von IP-Adressen in Subnetzen).
 
 ## Upgrade-Hinweis
 
 Wegen der grundlegend geänderten Paketstruktur ist ein Umstieg vom Branch 7.3
 nur gemeinsam mit dem Upgrade auf Ubuntu 26.04 möglich. Bestehende
 Konfigurationsdateien bleiben davon unberührt.
+
+Alle Änderungen im Detail gibt es [hier](https://github.com/linuxmuster/linuxmuster-base7/compare/v7.4.0...master).
 
 Signed-off by: thomas@linuxmuster.net
 Assisted by  : Claude
