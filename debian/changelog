@@ -1,3 +1,12 @@
+linuxmuster-base7 (7.4.22) lmn74; urgency=low
+
+  * fix(functions/network): make isValidHostIpv4() subnet-aware - the
+    octet-based .0/.255 "network"/"broadcast" heuristic was only correct
+    by coincidence for /24 subnets, wrongly rejecting or accepting host
+    addresses in larger or smaller subnets (#205, 9b94731).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Mon, 21 Sep 2026 15:24:12 +0200
+
 linuxmuster-base7 (7.4.21) lmn74; urgency=low
 
   * fix(certs.py,g_ssl.py): add missing Subject Alternative Name to
