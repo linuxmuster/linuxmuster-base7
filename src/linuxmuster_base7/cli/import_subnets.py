@@ -4,7 +4,7 @@
 # Description  : Import subnets to DHCP, netplan, NTP and OPNsense firewall
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260818
+# Date         : 20260921
 #
 # Requirements (import_subnets.md):
 #  - Writes DHCP configuration to /etc/dhcp/subnets.conf
@@ -103,11 +103,6 @@ def readSubnetsCSV(ipnet_setup):
             nextserver = field(5)
             setup_flag = field(6)
 
-            # router IP is mandatory
-            if not isValidHostIpv4(router):
-                printScript(f'* Skipping {ipnet}: invalid router IP "{router}"')
-                continue
-
             # compute network parameters from CIDR notation
             try:
                 n         = IP(ipnet, make_net=True)
@@ -119,8 +114,13 @@ def readSubnetsCSV(ipnet_setup):
                 printScript(f'* Skipping {ipnet}: invalid network notation: {e}')
                 continue
 
+            # router IP is mandatory
+            if not isValidHostIpv4(router, cidr):
+                printScript(f'* Skipping {ipnet}: invalid router IP "{router}"')
+                continue
+
             # validate optional IPs, clear on failure
-            if not isValidHostIpv4(range1) or not isValidHostIpv4(range2):
+            if not isValidHostIpv4(range1, cidr) or not isValidHostIpv4(range2, cidr):
                 range1 = range2 = ''
             if not isValidHostIpv4(nameserver):
                 nameserver = ''

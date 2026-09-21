@@ -2,7 +2,7 @@
 #
 # linuxmuster-update-ntpconf
 # thomas@linuxmuster.net
-# 20251113
+# 20260921
 #
 
 import datetime
@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import sys
 
-from linuxmuster_base7.functions import getSetupValue, getSubnetArray, isValidHostIpv4, \
+from linuxmuster_base7.functions import getSetupValue, getSubnetArray, \
     printScript, readTextfile, writeTextfile
 
 
@@ -38,13 +38,7 @@ def main():
 
     # get subnets
     printScript('* Processing subnets')
-    subnets = []
-    for row in getSubnetArray():
-        try:
-            isValidHostIpv4(row[0])
-            subnets.append(row[0])
-        except:
-            continue
+    subnets = [row[0] for row in getSubnetArray()]
 
     # create config lines for restricted subnets
     restricted_subnets = None

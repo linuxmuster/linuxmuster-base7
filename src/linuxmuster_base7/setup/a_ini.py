@@ -2,7 +2,7 @@
 #
 # process setup ini files
 # thomas@linuxmuster.net
-# 20251114
+# 20260921
 #
 
 """
@@ -119,7 +119,10 @@ msg = '* Bitmask '
 printScript(msg, '', False, False, True)
 try:
     bitmask = setup.get('setup', 'bitmask')
-    ip = IP(serverip + '/' + bitmask, make_net=True)
+    subnet = serverip + '/' + bitmask
+    ip = IP(subnet, make_net=True)
+    if not isValidHostIpv4(serverip, subnet):
+        raise ValueError(f'{serverip} is the network or broadcast address of {subnet}')
 except Exception as error:
     printScript(f' {bitmask} is not valid: {error}',
                 '', True, True, False, len(msg))
@@ -142,7 +145,7 @@ try:
     dhcprange = setup.get('setup', 'dhcprange')
     dhcprange1 = dhcprange.split(' ')[0]
     dhcprange2 = dhcprange.split(' ')[1]
-    if not isValidHostIpv4(dhcprange1) and not isValidHostIpv4(dhcprange2):
+    if not isValidHostIpv4(dhcprange1, subnet) and not isValidHostIpv4(dhcprange2, subnet):
         dhcprange = ''
 except Exception as error:
     dhcprange = ''
@@ -171,7 +174,7 @@ msg = '* Firewall IP '
 printScript(msg, '', False, False, True)
 try:
     firewallip = setup.get('setup', 'firewallip')
-    if not isValidHostIpv4(firewallip):
+    if not isValidHostIpv4(firewallip, subnet):
         printScript(' ' + firewallip + ' is not valid!',
                     '', True, True, False, len(msg))
         sys.exit(1)

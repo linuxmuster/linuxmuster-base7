@@ -2,7 +2,7 @@
 #
 # add additional servers to devices.csv
 # thomas@linuxmuster.net
-# 20260721
+# 20260921
 #
 
 """
@@ -33,7 +33,7 @@ from uuid import getnode
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from linuxmuster_base7.functions import getSetupValue, isValidHostIpv4, isValidMac, mySetupLogfile, \
+from linuxmuster_base7.functions import getSetupValue, isValidMac, mySetupLogfile, \
     printScript, readTextfile, writeTextfile
 from linuxmuster_base7.setup.helpers import runWithLog
 

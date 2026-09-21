@@ -5,7 +5,7 @@
 #                network interface helpers
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260818
+# Date         : 20260921
 #
 
 import csv
@@ -348,24 +348,43 @@ def isValidDomainname(domainname):
         return False
 
 
-def isValidHostIpv4(ip):
+def isValidHostIpv4(ip, subnet=None):
+    """
+    Validate that `ip` is a syntactically valid IPv4 address.
+
+    Without `subnet`, this is a syntax check only - whether an address is a
+    network/broadcast address depends on the subnet's prefix length, which
+    isn't knowable from the address alone (see #205; this used to guess via
+    an octet-based heuristic that was only correct by coincidence for /24
+    subnets, wrongly rejecting valid host addresses in larger subnets and
+    wrongly accepting network/broadcast addresses in smaller ones).
+
+    With `subnet` (anything netaddr.IPNetwork accepts, e.g. '10.0.0.0/24'),
+    also rejects `ip` if it's that subnet's network or broadcast address, or
+    outside the subnet entirely.
+    """
     try:
         ipv4 = IP(ip)
-        if not ipv4.version() == 4:
+        if ipv4.version() != 4:
             return False
-        ipv4str = IP(ipv4).strNormal(0)
-        if (int(ipv4str.split('.')[0]) == 0):
-            return False
-        c = 0
-        for i in ipv4str.split('.'):
-            c = c + 1
-            if c == 1 and int(i) > 254:
-                return False
-            if c == 4 and int(i) > 254:
-                return False
-        return True
     except Exception:
         return False
+
+    if subnet is None:
+        return True
+
+    try:
+        net = IPNetwork(subnet)
+        addr = IPAddress(str(ipv4))
+    except Exception:
+        return False
+    if addr not in net:
+        return False
+    if net.broadcast is None:
+        # /31 point-to-point or /32 host route (RFC 3021): no distinct
+        # network/broadcast address, every address in it is usable
+        return True
+    return addr != net.network and addr != net.broadcast
 
 
 # returns hostname and row from workstations file, search with ip, mac and hostname

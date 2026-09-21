@@ -4,7 +4,7 @@
 # Description  : firewall setup
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260826
+# Date         : 20260921
 #
 
 """
@@ -37,7 +37,7 @@ sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
 from bs4 import BeautifulSoup
-from linuxmuster_base7.functions import getFwConfig, getSetupValue, isValidHostIpv4, mySetupLogfile
+from linuxmuster_base7.functions import getFwConfig, getSetupValue, mySetupLogfile
 from linuxmuster_base7.functions import modIni, printScript, putFwConfig, putSftp, randomPassword
 from linuxmuster_base7.functions import readTextfile, sshExec, writeSecretFile, writeTextfile
 from linuxmuster_base7.setup.helpers import runWithLog

@@ -2,7 +2,7 @@
 #
 # setup ssh host keys
 # thomas@linuxmuster.net
-# 20251112
+# 20260921
 #
 
 """
@@ -30,7 +30,7 @@ import sys
 sys.path.insert(0, '/usr/lib/linuxmuster')
 import environment
 
-from linuxmuster_base7.functions import backupCfg, checkSocket, getSetupValue, isValidHostIpv4, modIni, \
+from linuxmuster_base7.functions import backupCfg, checkSocket, getSetupValue, modIni, \
     mySetupLogfile, printScript, replaceInFile, setupComment, writeTextfile
 from linuxmuster_base7.setup.helpers import runWithLog, CRYPTO_TYPES
 

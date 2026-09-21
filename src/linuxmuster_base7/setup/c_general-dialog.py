@@ -2,7 +2,7 @@
 #
 # general setup
 # thomas@linuxmuster.net
-# 20260618
+# 20260921
 #
 
 """
@@ -52,6 +52,7 @@ try:
     setup = configparser.RawConfigParser(delimiters=('='))
     setup.read(setupini)
     serverip = setup.get('setup', 'serverip')
+    bitmask = setup.get('setup', 'bitmask')
     servername = setup.get('setup', 'servername')
     domainname = setup.get('setup', 'domainname')
     dhcprange = setup.get('setup', 'dhcprange')
@@ -131,7 +132,8 @@ while True:
         sys.exit(1)
     dhcprange1 = dhcprange.split(' ')[0]
     dhcprange2 = dhcprange.split(' ')[1]
-    if isValidHostIpv4(dhcprange1) and isValidHostIpv4(dhcprange2):
+    subnet = serverip + '/' + bitmask
+    if isValidHostIpv4(dhcprange1, subnet) and isValidHostIpv4(dhcprange2, subnet):
         break
 print('DHCP range: ' + dhcprange)
 setup.set('setup', 'dhcprange', dhcprange)
