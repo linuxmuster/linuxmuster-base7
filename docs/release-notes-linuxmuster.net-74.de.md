@@ -33,8 +33,7 @@ Bei LINBO, der Boot- und Imaging-Umgebung für die Clients, wurde der Bauprozess
 ### Windows-Treiberprofile
 
 Linbo kann Windows-Treiber jetzt eigenständig anhand der Hardware-Kennung jedes Clients automatisch zuordnen und verteilen – ohne zusätzlichen Dienst oder Netzwerk-Port.
-
-Die Grundlage dafür steht in diesem Release, die Bedienung ist aber noch spartanisch: Profile werden über die API oder direkt im Dateisystem angelegt und den Images zugewiesen, Oberflächen in WebUI und Kommandozeile fehlen bislang, und die Treiberdateien selbst stellt die Administration bereit. Eine Schritt-für-Schritt-Anleitung gibt es [hier](https://github.com/linuxmuster/linuxmuster-linbo7/blob/main/docs/windows-treiberprofile-einrichten.de.md).
+Hinweis: Das ist bisher nur grundlegend implementiert und die Bedienung ist aber noch spartanisch: Profile werden über die API oder direkt im Dateisystem angelegt und den Images zugewiesen, Oberflächen in WebUI und Kommandozeile fehlen bislang. Eine Schritt-für-Schritt-Anleitung gibt es [hier](https://github.com/linuxmuster/linuxmuster-linbo7/blob/main/docs/windows-treiberprofile-einrichten.de.md).
 
 ### Linbo-Fernsteuerung überarbeitet
 
