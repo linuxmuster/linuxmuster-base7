@@ -4,7 +4,7 @@
 # Description  : Renew self-signed server certs
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260915
+# Date         : 20260928
 #
 
 """
@@ -232,38 +232,80 @@ class CertificateRenewer:
             print(err)
             sys.exit(1)
 
+    def _certBasename(self, item):
+        """
+        Return the file basename setup (g_ssl.py) used for a certificate.
+
+        g_ssl.py names the server's key/csr/cert files after the configured
+        servername (e.g. 'lmn.csr'), and smb.conf references them the same
+        way - only the OpenSSL extension template is always called
+        'server_cert_ext.cnf'. Using a fixed 'server' basename here made
+        renewal fail with a missing server.csr on every server whose
+        servername isn't 'server'.
+
+        Args:
+            item: Certificate identifier ('server' or 'firewall')
+
+        Returns:
+            File basename without extension
+        """
+        if item == 'server':
+            return self.servername
+        return item
+
+    def checkRequiredFiles(self):
+        """
+        Make sure every file the renewal needs exists, before anything is changed.
+
+        Without this check a missing CSR is only noticed after the CA has
+        already been renewed, leaving the CA and the certs signed by it out
+        of sync.
+        """
+        missing = []
+        for item in self.cert_list:
+            if item == 'ca':
+                required = [self.cacert, self.cacert + '.b64']
+            else:
+                base = self.ssldir + '/' + self._certBasename(item)
+                required = [base + '.key.pem', base + '.csr',
+                            environment.TPLDIR + '/' + item + '_cert_ext.cnf']
+                if item == 'firewall':
+                    required.append(base + '.cert.pem.b64')
+            missing += [path for path in required if not os.path.isfile(path)]
+        if missing:
+            printScript('Missing files, nothing has been changed:')
+            for path in missing:
+                printScript('* ' + path)
+            sys.exit(1)
+
     def renewCertificate(self, item):
         """
         Renew a specific certificate.
 
         This method handles the complete certificate renewal workflow:
-        1. Normalize certificate name (e.g., servername -> 'server')
-        2. Set up file paths for certificates, keys, and chains
-        3. Test firewall certificate compatibility (if applicable)
-        4. Generate new certificate (CA or signed cert)
-        5. Create certificate chains and bundles
-        6. Update firewall configuration with new certificate
+        1. Set up file paths for certificates, keys, and chains
+        2. Test firewall certificate compatibility (if applicable)
+        3. Generate new certificate (CA or signed cert)
+        4. Create certificate chains and bundles
+        5. Update firewall configuration with new certificate
 
         Args:
             item: Certificate identifier ('ca', 'server', or 'firewall')
         """
-        # Normalize certificate name (servername could be custom, but we use 'server' internally)
-        if item == self.servername and self.servername != 'server':
-            name = 'server'
-        else:
-            name = item
+        name = item
 
         # Set up certificate paths based on certificate type
         if item == 'ca':
             # CA certificate only needs PEM file
             pem = self.cacert
         else:
-            # Server/firewall certificates need multiple files
-            key = self.ssldir + '/' + name + '.key.pem'  # Private key
-            pem = self.ssldir + '/' + name + '.cert.pem'  # Certificate
-            csr = self.ssldir + '/' + name + '.csr'  # Certificate signing request
-            chn = self.ssldir + '/' + name + '.fullchain.pem'  # Full chain (cert + CA)
-            bdl = self.ssldir + '/' + name + '.cert.bundle.pem'  # Bundle (key + cert)
+            # Server/firewall certificates need multiple files, named like g_ssl.py does
+            base = self.ssldir + '/' + self._certBasename(item)
+            key = base + '.key.pem'  # Private key
+            pem = base + '.cert.pem'  # Certificate
+            csr = base + '.csr'  # Certificate signing request
+            chn = base + '.fullchain.pem'  # Full chain (cert + CA)
+            bdl = base + '.cert.bundle.pem'  # Bundle (key + cert)
             cnf_tpl = environment.TPLDIR + '/' + name + '_cert_ext.cnf'  # OpenSSL config template
 
         # Base64-encoded versions for firewall configuration
@@ -347,6 +389,9 @@ class CertificateRenewer:
 
         # Step 3: Ensure CA is processed first (dependency order)
         self.reorderCertList()
+
+        # Step 3a: Abort before changing anything if a required file is missing
+        self.checkRequiredFiles()
 
         # Step 4: Download firewall config if any firewall-related certs will be renewed
         if 'firewall' in self.cert_list or 'ca' in self.cert_list:
