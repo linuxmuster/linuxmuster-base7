@@ -4,7 +4,7 @@
 # Description  : postinst script for linuxmuster-base
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260909
+# Date         : 20261001
 # License      : GPL v3
 #
 
@@ -75,6 +75,9 @@ case "$1" in
     mkdir -p "$smbspool"
     chmod 1777 "$smbspool"
   fi
+
+  # pick up shipped systemd drop-ins (isc-dhcp-server.service.d)
+  systemctl daemon-reload || true
 
   # skip subsequent actions on configured systems
   [ -s "$SETUPINI" ] || exit 0

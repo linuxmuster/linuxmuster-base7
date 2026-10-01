@@ -3,3 +3,4 @@ share/*		usr/share/linuxmuster/
 docs/*      usr/share/doc/linuxmuster-base7/
 # Note: Python package and CLI entry points are installed via setup.py/pybuild
 # lib/ and sbin/ are replaced by src/ structure managed by setuptools
+systemd/isc-dhcp-server.service.d/*	usr/lib/systemd/system/isc-dhcp-server.service.d/
