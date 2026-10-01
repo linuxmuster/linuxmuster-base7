@@ -4,7 +4,7 @@
 # Description  : Import devices from devices.csv into DHCP, DNS and LINBO/GRUB config
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260818
+# Date         : 20261001
 #
 
 import configparser
@@ -25,7 +25,7 @@ from pathlib import Path
 
 from linuxmuster_base7.functions import getDevicesArray, getGrubOstype, getGrubPart, getStartconfOsValues, \
     getStartconfOption, getStartconfPartnr, getStartconfPartlabel, getSubnetArray, \
-    getLinboVersion, printScript, readTextfile, writeTextfile
+    getLinboGroupId, getLinboVersion, printScript, readTextfile, writeTextfile
 
 # Setup logging
 logfile = environment.LOGDIR + '/import-devices.log'
@@ -211,7 +211,7 @@ def doGrubCfg(startconf, group, kopts):
 
     Args:
         startconf: Path to start.conf file
-        group: Device group name
+        group: LINBO group id (see getLinboGroupId())
         kopts: Kernel options
 
     Returns:
@@ -258,7 +258,7 @@ def doLinboStartconf(group):
     checks configuration status, and generates corresponding GRUB boot configuration.
 
     Args:
-        group: Device group name
+        group: LINBO group id (see getLinboGroupId())
     """
     startconf = environment.LINBODIR + '/start.conf.' + group
     # provide unconfigured start.conf if there is none for this group
@@ -287,7 +287,7 @@ def buildDhcpHostDeclaration(hostname, group, mac, ip, dhcpopts, pxeflag):
 
     Args:
         hostname: Device hostname
-        group: Device group name
+        group: LINBO group id (see getLinboGroupId())
         mac: MAC address
         ip: IP address or 'DHCP'
         dhcpopts: DHCP options string (comma-separated)
@@ -359,6 +359,8 @@ def processDevicesForSubnet(outfile, subnet, school):
 
         # Unpack device fields (see DEVICE_FIELDS_DHCP constant for field mapping)
         hostname, group, mac, ip, dhcpopts, computertype, pxeflag = device_array
+        # school-qualified group id for the linbo dhcp options
+        group = getLinboGroupId(school, group)
         # Truncate long computer type names for clean output
         if len(computertype) > 15:
             computertype = computertype[0:15]
@@ -432,7 +434,8 @@ def doPxeGroupsBySchool(school='default-school'):
         school: School name (default: 'default-school')
 
     Returns:
-        List of unique PXE-enabled groups for this school
+        List of unique LINBO group ids (see getLinboGroupId()) of the
+        PXE-enabled devices of this school
     """
     pxe_groups = []
 
@@ -449,6 +452,8 @@ def doPxeGroupsBySchool(school='default-school'):
 
         for device_array in getDevicesArray(fieldnrs=DEVICE_FIELDS_LINKS, subnet='all', pxeflag='1,2,3', school=school):
             host, group, mac, ip, pxeflag = device_array
+            # school-qualified group id for all linbo file names below
+            group = getLinboGroupId(school, group)
             # collect groups with pxe for later use
             if group not in pxe_groups:
                 pxe_groups.append(group)
