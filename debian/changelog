@@ -1,3 +1,14 @@
+linuxmuster-base7 (7.4.24) lmn74; urgency=low
+
+  * fix(systemd): restart isc-dhcp-server on failure at boot - dhcpd could
+    start before the server address was configured and then stayed down
+    (#210, 1e22733).
+  * fix(postinst): idempotent fix script for isc-dhcp-server restart -
+    brings existing servers to the same state on package upgrade and
+    starts dhcpd if it failed at the last boot (#210, 7709672).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Thu, 01 Oct 2026 13:00:46 +0200
+
 linuxmuster-base7 (7.4.23) lmn74; urgency=low
 
   * fix(renew_certs.py): use the servername for server cert file names
