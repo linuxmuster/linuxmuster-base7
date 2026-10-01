@@ -4,7 +4,7 @@
 # Description  : LINBO start.conf and GRUB boot configuration helpers
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260818
+# Date         : 20261001
 #
 
 import configparser
@@ -208,6 +208,45 @@ def getStartconfOsValues(startconf):
     except Exception as error:
         print(error)
         return None
+
+
+# return school-qualified linbo group id (see issue #206)
+def getLinboGroupId(school, group):
+    """Return the school-qualified LINBO group id of a device group.
+
+    default-school keeps the plain group, so single-school installations keep
+    their file names. Every other school gets '<school>+<group>'. Neither
+    part can contain '+' (sophomorix restricts group names to [A-Za-z0-9_-],
+    and the school is part of every device hostname, which isValidHostname()
+    checks), so the id can be split again with splitLinboGroupId().
+
+    Args:
+        school: School name, e.g. 'default-school' or 'abc'
+        group: Device group from devices.csv, e.g. 'raum101'
+
+    Returns:
+        'raum101' for default-school, 'abc+raum101' otherwise
+    """
+    if school == 'default-school':
+        return group
+    return school + '+' + group
+
+
+# return school and group of a linbo group id
+def splitLinboGroupId(group_id):
+    """Split a LINBO group id into school and group, see getLinboGroupId().
+
+    Args:
+        group_id: LINBO group id, e.g. 'raum101' or 'abc+raum101'
+
+    Returns:
+        Tuple (school, group): ('default-school', 'raum101') for an id
+        without '+', otherwise split on the first '+', e.g. ('abc', 'raum101')
+    """
+    school, separator, group = group_id.partition('+')
+    if not separator:
+        return 'default-school', group_id
+    return school, group
 
 
 def getLinboVersion():
