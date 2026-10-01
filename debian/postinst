@@ -76,9 +76,6 @@ case "$1" in
     chmod 1777 "$smbspool"
   fi
 
-  # pick up shipped systemd drop-ins (isc-dhcp-server.service.d)
-  systemctl daemon-reload || true
-
   # skip subsequent actions on configured systems
   [ -s "$SETUPINI" ] || exit 0
 
@@ -169,6 +166,10 @@ case "$1" in
   # (#203) - a restart failure here shouldn't fail the whole package
   # configuration, unlike the fixes above
   "$SHAREDIR"/fix-systemd-resolved_203.sh || echo "WARNING: fix-systemd-resolved_203.sh failed, please check systemd-resolved/systemd-networkd-wait-online.service manually!"
+
+  # make isc-dhcp-server retry when it fails at boot (#210) - a failure here
+  # shouldn't fail the whole package configuration either
+  "$SHAREDIR"/fix-dhcpd-restart-on-failure_210.sh || echo "WARNING: fix-dhcpd-restart-on-failure_210.sh failed, please check isc-dhcp-server.service manually!"
 
  ;;
 
