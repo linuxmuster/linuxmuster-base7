@@ -523,7 +523,7 @@ def runSophomorixCommand(action):
     """Run a single sophomorix-device command, logging its output.
 
     Args:
-        action: sophomorix-device subcommand, e.g. '--dry-run' or '--sync'
+        action: sophomorix-device subcommand, e.g. '--sync'
 
     Returns:
         CompletedProcess instance from subprocess.run()
@@ -538,27 +538,54 @@ def runSophomorixCommand(action):
                               shell=False, check=False)
 
 
-def runSophomorixDeviceSync():
-    """Run sophomorix-device dry-run first, then sync if the dry-run succeeds.
+def checkDevices():
+    """Check the devices.csv of all schools with linuxmuster-tools.
 
-    Exits the process with status 1 if either step fails or raises an error.
+    Every problem is reported at once, with its file and line, where
+    sophomorix-device --dry-run stops at the first one and does not say
+    where it is.
+
+    Exits the process with status 1 if the check finds an error or can not
+    run at all.
     """
-    msg = 'Starting sophomorix-device dry-run:'
+    msg = 'Checking devices.csv:'
     printScript(msg)
     logToFile(msg)
     try:
-        result = runSophomorixCommand('--dry-run')
-
-        if result.returncode != 0:
-            msg = f'sophomorix-device --dry-run failed with return code {result.returncode}!'
-            printScript(msg)
-            logToFile(msg)
-            sys.exit(1)
-
-        msg = 'sophomorix-device dry-run OK, starting sync:'
+        # Imported here so that a linuxmuster-tools which can not be loaded
+        # is reported like any other failure of the check.
+        from linuxmusterTools.devices import check_all_schools
+        result = check_all_schools()
+    except Exception as error:
+        msg = f'Could not check devices.csv with linuxmuster-tools: {error}'
         printScript(msg)
         logToFile(msg)
+        sys.exit(1)
 
+    for line in result['report']:
+        print(line)
+        logToFile(line)
+
+    if not result['valid']:
+        msg = f"devices.csv check failed with {result['counts']['errors']} error(s)!"
+        printScript(msg)
+        logToFile(msg)
+        sys.exit(1)
+
+    msg = 'devices.csv check OK.'
+    printScript(msg)
+    logToFile(msg)
+
+
+def runSophomorixDeviceSync():
+    """Run sophomorix-device --sync.
+
+    Exits the process with status 1 if it fails or raises an error.
+    """
+    msg = 'Starting sophomorix-device sync:'
+    printScript(msg)
+    logToFile(msg)
+    try:
         result = runSophomorixCommand('--sync')
 
         if result.returncode == 0:
@@ -654,7 +681,7 @@ def main():
 
     This function orchestrates the complete device import workflow:
     1. Parses command-line arguments
-    2. Runs sophomorix-device syntax check and sync
+    2. Checks devices.csv with linuxmuster-tools, then runs sophomorix-device sync
     3. Generates DHCP configuration for all devices
     4. Creates LINBO/GRUB boot configurations
     5. Executes post-import hooks
@@ -668,6 +695,7 @@ def main():
     logToFile('linuxmuster-import-devices started')
     logToFile('School: ' + school)
 
+    checkDevices()
     runSophomorixDeviceSync()
     writeDhcpDevicesConfig(school=school)
     generateGrubConfigsForGroups(school)
