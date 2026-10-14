@@ -6,6 +6,10 @@ linuxmuster-base7 (7.4.25) lmn74; urgency=low
     (#212, 2d8c952).
   * fix(j_samba-provisioning): pin the host ip on domain provision
     (#212, 721ca60).
+  * fix(import_subnets): report firewall API auth failures instead of a
+    version error (#214, 47029bc).
+  * feat(opnsense_apikey): add linuxmuster-opnsense-apikey to deploy a new
+    firewall API key (#214, 401dd16).
 
  -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 14 Oct 2026 14:36:46 +0200
 
