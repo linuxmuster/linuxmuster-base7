@@ -30,6 +30,7 @@ linuxmuster-base7/
 │   │   ├── import_subnets.py    # Import network subnets to DHCP/firewall
 │   │   ├── setup.py              # Main setup orchestration
 │   │   ├── renew_certs.py        # Certificate renewal (CA, server, firewall)
+│   │   ├── opnsense_apikey.py    # Deploy a new firewall API key (after 401 errors)
 │   │   ├── opnsense_reset.py     # Reset firewall to post-setup state
 │   │   ├── modini.py             # INI file modification utility
 │   │   ├── update_ntpconf.py     # NTP configuration updates
@@ -140,6 +141,11 @@ All CLI tools are accessible via `linuxmuster-<command>`:
   - Generates certificate chains and bundles
   - Uploads certificates to OPNsense firewall via API
   - Can renew individual certificates or all at once
+
+- **`linuxmuster-opnsense-apikey`**: Deploy a new OPNsense API key
+  - For HTTP 401 "Authentication Failed" (e.g. firewall restored from older snapshot)
+  - Creates the key on the firewall via ssh, stores it in `firewall.api.ini`
+  - `--check` only tests the current key, `--deploy` rolls out a new one unless the current one works (`--deploy --force` replaces it anyway); no option shows help
 
 - **`linuxmuster-opnsense-reset`**: Reset firewall to post-setup state
   - Validates firewall access

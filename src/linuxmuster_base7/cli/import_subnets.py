@@ -4,7 +4,7 @@
 # Description  : Import subnets to DHCP, netplan, NTP and OPNsense firewall
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260921
+# Date         : 20261014
 #
 # Requirements (import_subnets.md):
 #  - Writes DHCP configuration to /etc/dhcp/subnets.conf
@@ -26,7 +26,7 @@ import yaml
 
 from IPy import IP
 from linuxmuster_base7.functions import (
-    firewallApi, getSetupValue, isValidHostIpv4, printScript
+    FirewallAuthError, firewallApi, getSetupValue, isValidHostIpv4, printScript
 )
 
 # LAN gateway constants
@@ -708,10 +708,20 @@ def main():
 
     # Version check - abort if firewall is too old
     printScript('Checking firewall version:')
-    if not setup['skipfw'] and not checkFwVersion():
-        printScript(f'Please upgrade your OPNsense at least to Version >= {FW_MIN_VERSION}')
-        printScript('', 'end')
-        sys.exit(1)
+    if not setup['skipfw']:
+        try:
+            version_ok = checkFwVersion()
+        except FirewallAuthError as error:
+            # credentials problem, not a version problem - don't suggest an upgrade
+            printScript(f'* {error}')
+            printScript('* The firewall API key is invalid or missing on the firewall.')
+            printScript('* Run linuxmuster-opnsense-apikey --deploy to deploy a new one.')
+            printScript('', 'end')
+            sys.exit(1)
+        if not version_ok:
+            printScript(f'Please upgrade your OPNsense at least to Version >= {FW_MIN_VERSION}')
+            printScript('', 'end')
+            sys.exit(1)
 
     printScript('Setup values:')
     printScript('* Server address: ' + setup['serverip'])

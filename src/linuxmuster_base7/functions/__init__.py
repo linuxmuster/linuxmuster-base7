@@ -8,7 +8,7 @@
 #                core, files, network, samba, linbo, certs, remote, security.
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260915
+# Date         : 20261014
 #
 
 import datetime  # re-exported: some callers do "from ...functions import datetime"
@@ -29,7 +29,7 @@ from .linbo import getGrubPart, getGrubOstype, readStartconf, \
 from .certs import encodeCertToBase64, renewCaCertificate, \
     signCertificateWithCa, createCertificateChain, createCnfFromTemplate, \
     createServerCert, buildCaSubjectAndSan, writeCaCertificate
-from .remote import waitForFw, firewallApi, checkFwMajorVer, scpTransfer, \
+from .remote import FirewallAuthError, waitForFw, firewallApi, checkFwMajorVer, scpTransfer, \
     getSftp, getFwConfig, putSftp, putFwConfig, sshExec
 from .security import hasNumbers, randomPassword, isValidPassword, \
     enterPassword
@@ -59,7 +59,7 @@ __all__ = [
     'createCertificateChain', 'createCnfFromTemplate', 'createServerCert',
     'buildCaSubjectAndSan', 'writeCaCertificate',
     # remote
-    'waitForFw', 'firewallApi', 'checkFwMajorVer', 'scpTransfer', 'getSftp',
+    'FirewallAuthError', 'waitForFw', 'firewallApi', 'checkFwMajorVer', 'scpTransfer', 'getSftp',
     'getFwConfig', 'putSftp', 'putFwConfig', 'sshExec',
     # security
     'hasNumbers', 'randomPassword', 'isValidPassword', 'enterPassword',

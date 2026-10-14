@@ -4,7 +4,7 @@
 # Description  : OPNsense firewall API and SSH/SCP remote-execution helpers
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20260824
+# Date         : 20261014
 #
 
 import configparser
@@ -23,6 +23,16 @@ from .core import getSetupValue, printScript
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 warnings.filterwarnings(action='ignore', module='.*paramiko.*')
+
+
+class FirewallAuthError(Exception):
+    """The firewall API rejected our credentials (HTTP 401/403).
+
+    Raised instead of returning None so callers can tell a credential
+    problem (stale or missing API key, e.g. after the firewall was restored
+    from an older snapshot) apart from an unreachable or too old firewall
+    and point the admin to linuxmuster-opnsense-apikey.
+    """
 
 
 # wait for firewall to come up, after timeout seconds loop will be canceled
@@ -58,8 +68,12 @@ def waitForFw(timeout=300, wait=0):
         if count > timeout:
             printScript('Timeout waiting for api!')
             return False
-        if firewallApi('get', '/core/firmware/status', retries=1) is not None:
-            return True
+        try:
+            if firewallApi('get', '/core/firmware/status', retries=1) is not None:
+                return True
+        except FirewallAuthError:
+            # not fatal here: keep polling like for any other not-yet-ready state
+            pass
         count = count + 2
         time.sleep(2)
 
@@ -95,8 +109,10 @@ def firewallApi(request, path, data='', retries=3, retry_wait=3):
         # get response
         if req.status_code == 200:
             return json.loads(req.text)
+        elif req.status_code in (401, 403):
+            raise FirewallAuthError(f'Firewall API authentication failed (HTTP {req.status_code}): {req.text}')
         else:
-            printScript('Connection / Authentication issue, response received:')
+            printScript('Connection issue, response received:')
             print(req.text)
             return None
 
