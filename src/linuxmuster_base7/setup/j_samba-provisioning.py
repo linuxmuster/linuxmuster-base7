@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 #
-# samba provisioning
-# thomas@linuxmuster.net
-# 20260721
+# Filename     : j_samba-provisioning.py
+# Description  : Provision the Samba Active Directory domain controller
+# Signed-off by: thomas@linuxmuster.net
+# Assisted by  : Claude
+# Date         : 20261014
 #
 
 """
@@ -97,8 +99,11 @@ if os.path.isfile(smbconf):
 msg = 'Provisioning samba '
 printScript(msg, '', False, False, True)
 try:
+    # pin the host ip, otherwise provision picks the first address it finds,
+    # which may belong to a docker or VPN bridge on the server (#212)
     runWithLog(['samba-tool', 'domain', 'provision', '--use-rfc2307', '--server-role=dc',
-                '--domain=' + sambadomain, '--realm=' + realm, '--adminpass=' + adadminpw],
+                '--domain=' + sambadomain, '--realm=' + realm, '--host-ip=' + serverip,
+                '--adminpass=' + adadminpw],
                logfile, maskSecrets=[adadminpw])
     printScript(' Success!', '', True, True, False, len(msg))
 except Exception as error:

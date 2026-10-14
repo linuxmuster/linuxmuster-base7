@@ -4,7 +4,7 @@
 # Description  : postinst script for linuxmuster-base
 # Signed-off by: thomas@linuxmuster.net
 # Assisted by  : Claude
-# Date         : 20261001
+# Date         : 20261014
 # License      : GPL v3
 #
 
@@ -170,6 +170,10 @@ case "$1" in
   # make isc-dhcp-server retry when it fails at boot (#210) - a failure here
   # shouldn't fail the whole package configuration either
   "$SHAREDIR"/fix-dhcpd-restart-on-failure_210.sh || echo "WARNING: fix-dhcpd-restart-on-failure_210.sh failed, please check isc-dhcp-server.service manually!"
+
+  # register only the server address as samba dc dns records (#212) - a
+  # failure here shouldn't fail the whole package configuration either
+  "$SHAREDIR"/fix-samba-interfaces_212.sh || echo "WARNING: fix-samba-interfaces_212.sh failed, please check the interfaces option in /etc/samba/smb.conf manually!"
 
  ;;
 
