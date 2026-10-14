@@ -1,3 +1,14 @@
+linuxmuster-base7 (7.4.25) lmn74; urgency=low
+
+  * fix(smb.conf): register only the server address as DC DNS records
+    (#212, 8ea4203).
+  * fix(postinst): idempotent fix script for samba dns registration
+    (#212, 2d8c952).
+  * fix(j_samba-provisioning): pin the host ip on domain provision
+    (#212, 721ca60).
+
+ -- Thomas Schmitt <thomas@linuxmuster.net>  Wed, 14 Oct 2026 14:36:46 +0200
+
 linuxmuster-base7 (7.4.24) lmn74; urgency=low
 
   * fix(systemd): restart isc-dhcp-server on failure at boot - dhcpd could
