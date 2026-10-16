@@ -1,26 +1,28 @@
 # linuxmuster.net 7.4 – Entwicklungsstatistik
 
-Erhebungsstand: 22.09.2026. Erfasst sind elf Repositories der Organisation
+Erhebungsstand: 15.10.2026. Erfasst sind elf Repositories der Organisation
 `linuxmuster` auf GitHub.
 
 ## Zahlen
 
 | Repository | Commits | Issues | PRs | + Zeilen |
 |---|---:|---:|---:|---:|
-| linuxmuster-base7 | 304 | 36 | 4 | 21.152 |
-| linuxmuster-tools | 226 | 11 | 12 | 23.504 |
-| linuxmuster-linbo7 | 201 | 20 | 3 | 24.364 |
-| linuxmuster-api | 148 | 13 | 7 | 10.230 |
-| linuxmuster-webui7 | 85 | 8 | 1 | 2.108 |
-| linuxmuster-cli7 | 56 | 1 | 0 | 5.509 |
+| linuxmuster-base7 | 327 | 37 | 7 | 21.952 |
+| linuxmuster-tools | 277 | 17 | 12 | 26.955 |
+| linuxmuster-linbo7 | 235 | 26 | 9 | 23.867 |
+| linuxmuster-api | 169 | 19 | 8 | 10.919 |
+| linuxmuster-webui7 | 141 | 16 | 1 | 4.114 |
+| linuxmuster-cli7 | 61 | 1 | 0 | 5.655 |
 | linuxmuster-common | 32 | 0 | 0 | 261 |
 | linuxmuster-prepare | 22 | 1 | 0 | 819 |
-| sophomorix4 | 12 | 1 | 1 | 247 |
+| sophomorix4 | 20 | 2 | 1 | 331 |
+| linuxmuster-linbo-gui | 4 | 2 | 3 | 77 |
 | linuxmuster-fileserver | 3 | 0 | 0 | 77 |
-| linuxmuster-linbo-gui | 1 | 2 | 1 | 7 |
-| **Summe** | **1.090** | **93** | **29** | **88.278** |
+| **Summe** | **1.291** | **121** | **41** | **95.027** |
 
-Dazu 56.343 gelöschte Zeilen (netto +31.935) in 1.034 geänderten Dateien.
+Dazu 57.781 gelöschte Zeilen (netto +37.246) in 1.204 geänderten Dateien.
+Die Zeilen- und Dateizahlen sind um generierte Dokumentation und mitgelieferte
+Fremddateien bereinigt, siehe Einschränkungen.
 
 ## Methodik
 
@@ -63,11 +65,16 @@ des jeweiligen Bereichs.
   7.4-Branches bereits 2025 abgezweigt. Deren Issue-Zahlen können vereinzelt
   Vorgänge enthalten, die inhaltlich noch zu 7.3 gehören. Commit- und
   Zeilenzahlen sind davon nicht betroffen, sie gehören zur 7.4-Linie.
-- Von den 88.278 hinzugefügten Zeilen entfallen 1.613 auf das mitgelieferte
-  Test-Framework `shunit2` in `linuxmuster-linbo7` und 32 auf generierte
-  Dateien in `linuxmuster-webui7`. Bereinigt sind es rund 86.600 eigene Zeilen.
-  Weitere eingebettete Fremdbibliotheken oder generierte Artefakte enthält der
-  Diff nicht.
+- Die Zeilen- und Dateizahlen sind bereinigt. Nicht gezählt werden
+  - die generierte Sphinx-Dokumentation unter `docs/` in `linuxmuster-tools`
+    (43.186 Zeilen) und `linuxmuster-webui7` (64.829 Zeilen; HTML, Suchindex,
+    JavaScript und CSS aus dem Sphinx-Build, die Quellen liegen in `docs_src/`),
+  - das mitgelieferte Test-Framework `shunit2` in `linuxmuster-linbo7`
+    (1.613 Zeilen).
+
+  Unbereinigt wären es 204.655 hinzugefügte und 107.662 gelöschte Zeilen in
+  2.163 geänderten Dateien. Weitere eingebettete Fremdbibliotheken oder
+  generierte Artefakte enthält der Diff nicht.
 - Die Zahlen umfassen die zum Erhebungsstand veröffentlichten Stände der
   jeweiligen 7.4-Branches.
 
@@ -104,12 +111,15 @@ gh api -X GET search/issues \
   -f q="repo:linuxmuster/<repo> is:pr is:merged merged:>=<datum>" --jq '.total_count'
 ```
 
-Hinzugefügte und gelöschte Zeilen (lokaler Klon, `git clone --bare` genügt):
+Hinzugefügte und gelöschte Zeilen (lokaler Klon, `git clone --bare` genügt).
+`<ausschluss>` ist ein Regex für nicht zu zählende Pfade, z. B. `^docs/` für
+`linuxmuster-tools` und `linuxmuster-webui7` (generierte Sphinx-Doku) oder
+`^tests/shell/shunit2$` für `linuxmuster-linbo7`, sonst `^$`:
 
 ```sh
 git log --no-merges --numstat --pretty=tformat: <basis>..<7.4-linie> \
-  | awk '$1 ~ /^[0-9]+$/ {plus+=$1; minus+=$2} END {print plus, minus}'
-git diff --name-only <basis>..<7.4-linie> | wc -l
+  | awk -v ex='<ausschluss>' '$1 ~ /^[0-9]+$/ && $3 !~ ex {plus+=$1; minus+=$2} END {print plus, minus}'
+git diff --name-only <basis>..<7.4-linie> | grep -Ev '<ausschluss>' | wc -l
 ```
 
 Größte Einzelbeiträge zur Zeilenzahl prüfen (Erkennung von Fremd- und
