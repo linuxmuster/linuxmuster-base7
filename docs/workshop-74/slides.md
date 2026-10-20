@@ -521,7 +521,7 @@ Lösen mit [CTRL+B]+[D]
 
 ### Client
 ```text
-# linbo-ssh multi-1
+# linbo-ssh client1
 # tmux ls
 debian_qcow2_torrent: 1 windows (created Sun Oct 18 14:16:27 2026)
 debian_qdiff_torrent: 1 windows (created Sun Oct 18 14:16:43 2026)
