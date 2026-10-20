@@ -154,6 +154,8 @@ linuxmuster-release-upgrade      # Sicherheitsabfrage mit "YES" bestätigen, ode
 reboot
 ```
 
+<div class="text-sm">
+
 <v-clicks>
 
 - prüft, ob Ubuntu 26.04 als Upgrade-Release verfügbar ist,
@@ -167,6 +169,8 @@ reboot
 - stellt Quota auf dem Root-Dateisystem auf das **interne ext4-Feature** um, andere Dateisysteme bleiben bei externen Quota-Dateien (Details: Folien „Quota“)
 
 </v-clicks>
+
+</div>
 
 <!-- Das Upgrade dauert zu lang für live: vorbereiteten, bereits laufenden Lauf oder Log zeigen. -->
 
@@ -275,6 +279,8 @@ linuxmuster-opnsense-reset      # zurück in den Zustand nach dem Setup
 linuxmuster-import-subnets      # Subnetze: DHCP, Routen, NAT, NTP
 ```
 
+<div class="text-sm">
+
 - `opnsense-reset` spielt die Default-Konfiguration ein, legt den **Kerberos-Keytab** neu an und wartet, bis die Firewall wieder da ist
 - Neu: **Subnetze werden nach dem Reset automatisch neu importiert**. Statische Routen und Outbound-NAT für weitere Subnetze gingen vorher verloren.
 - Keytab/SSO: Squid wird neu gestartet, *nachdem* der Keytab existiert
@@ -284,6 +290,8 @@ linuxmuster-import-subnets      # Subnetze: DHCP, Routen, NAT, NTP
   - In `10.0.0.0/26` ist `10.0.0.63` die Broadcastadresse, wurde aber akzeptiert
   - Jetzt: echte Netz- und Broadcastadresse aus der Präfixlänge berechnet, Adressen außerhalb des Subnetzes abgelehnt
   - Gilt für Server-, Firewall-IP und DHCP-Bereich im Setup sowie Router und DHCP-Bereich in `import-subnets`
+
+</div>
 
 ---
 
@@ -485,6 +493,7 @@ Der vorkompilierte Kernel-Pfad (4.3) wird nicht auf 7.4 portiert.
 
 <style>
 .optab td:first-child { white-space: nowrap; }
+.optab td, .optab th { padding-top: 0.3rem; padding-bottom: 0.3rem; }
 </style>
 
 ---
@@ -547,7 +556,7 @@ FILE: /cache/debian.qcow2
 
 # opentracker, Hashdateien und Torrent-Werkzeuge
 
-<div class="grid grid-cols-2 gap-6 text-sm">
+<div class="grid grid-cols-2 gap-6 text-xs" style="--slidev-code-font-size: 11px; --slidev-code-line-height: 1.4">
 <div>
 
 ### Neu: Hashdateien
@@ -768,3 +777,8 @@ layout: section
 - Quellcode: https://github.com/linuxmuster
 
 <div class="mt-10 text-3xl">Fragen?</div>
+
+<div class="absolute bottom-[52px] left-14 text-xs opacity-70 leading-relaxed">
+Signed-off by: Thomas Schmitt &lt;thomas@linuxmuster.net&gt;<br>
+Assisted by: Claude
+</div>
